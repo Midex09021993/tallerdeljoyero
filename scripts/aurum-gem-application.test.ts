@@ -706,7 +706,7 @@ test("Aurum Render production BVH includes ruby while keeping center-only restri
   const profiles = readFileSync("src/lib/aurum/aurum-gem-bvh-profiles.ts", "utf8");
 
   expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"]');
-  expect(render).toContain("diamondCenterOnly: true");
+  expect(render).toContain("diamondCenterOnly: false");
   expect(runtime).toContain('const isRuby = family === "rubí" || family === "rubi"');
   expect(runtime).toContain("if (family === \"diamante\" && options.diamondCenterOnly)");
   expect(runtime).toContain("resolveAurumRubyBvhProfile(materials[0])");
@@ -721,4 +721,17 @@ test("Aurum Render BVH master switch disables and restores diamond and ruby fami
   expect(render).toContain('runtime.setFamilyEnabled(family, false)');
   expect(render).toContain('setFamilyEnabled?.(family, detail.enabled)');
   expect(render).toContain("diamante central y los rubíes compatibles");
+});
+
+
+test("Aurum Render requests BVH for secondary SMALL and MICRO diamonds, not only the center stone", () => {
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+
+  expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"]');
+  expect(render).toContain("diamondCenterOnly: false");
+  expect(runtime).toContain('const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant"');
+  expect(runtime).toContain('const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro"');
+  expect(runtime).toContain('const isNeutralSmallDiamond = family === "diamante" && screenTier === "small"');
+  expect(runtime).toContain('setTier: (nextTier) => {');
 });
