@@ -6,6 +6,20 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 const CHUNK_SIZE = 4 * 1024 * 1024;
+// Solo se admiten vídeos: extensión permitida, firma de contenedor válida y tamaño máximo.
+const VIDEO_EXTENSION = /\.(mp4|mov|webm|m4v|avi|mkv)$/i;
+const MAX_VIDEO_BYTES = 10 * 1024 * 1024 * 1024; // 10 GiB por vídeo
+const MAX_CHUNKS = Math.ceil(MAX_VIDEO_BYTES / CHUNK_SIZE);
+const ISO_BMFF_BOXES = new Set(["ftyp", "moov", "mdat", "wide", "free", "skip", "pnot"]);
+
+/** Reconoce la cabecera de MP4/MOV/M4V (ISO BMFF), WebM/MKV (EBML) y AVI (RIFF). */
+function isVideoSignature(bytes: Uint8Array) {
+  if (bytes.length < 12) return false;
+  const ascii = (start: number, end: number) => String.fromCharCode(...bytes.slice(start, end));
+  if (ISO_BMFF_BOXES.has(ascii(4, 8))) return true;
+  if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) return true;
+  return ascii(0, 4) === "RIFF" && ascii(8, 12) === "AVI ";
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -139,8 +153,13 @@ Deno.serve(async (req) => {
       const chunkIndex = Number(form.get("chunkIndex"));
       const totalChunks = Number(form.get("totalChunks"));
       const chunk = form.get("chunk");
-      if (!/^[A-Za-z0-9-]{20,50}$/.test(uploadId) || !folder || !filename || !Number.isInteger(chunkIndex) || !Number.isInteger(totalChunks) || totalChunks < 1 || totalChunks > 10000 || chunkIndex < 0 || chunkIndex >= totalChunks || !(chunk instanceof File) || chunk.size > CHUNK_SIZE + 1024) {
+      if (!/^[A-Za-z0-9-]{20,50}$/.test(uploadId) || !folder || !filename || !Number.isInteger(chunkIndex) || !Number.isInteger(totalChunks) || totalChunks < 1 || totalChunks > 10000 || chunkIndex < 0 || chunkIndex >= totalChunks || !(chunk instanceof File) || chunk.size < 1 || chunk.size > CHUNK_SIZE) {
         return json({ error: "Fragmento de vídeo no válido." }, 400);
+      }
+      if (!VIDEO_EXTENSION.test(filename)) return json({ error: "Solo se pueden subir vídeos MP4, MOV, WEBM, M4V, AVI o MKV al NAS." }, 415);
+      if (totalChunks > MAX_CHUNKS) return json({ error: "El vídeo supera el tamaño máximo permitido (10 GB)." }, 413);
+      if (chunkIndex === 0 && !isVideoSignature(new Uint8Array(await chunk.slice(0, 16).arrayBuffer()))) {
+        return json({ error: "El archivo no tiene un formato de vídeo válido." }, 415);
       }
       const uploadRoot = ["remote.php", "dav", "uploads", username, uploadId];
       const mkcol = await fetch(new URL(uploadRoot.map(encodeURIComponent).join("/"), baseUrl.endsWith("/") ? baseUrl + "/" : baseUrl + "/"), { method: "MKCOL", headers: { Authorization: auth }, redirect: "error" });
@@ -179,6 +198,8 @@ Deno.serve(async (req) => {
       const filename = safeSegment(typeof body.filename === "string" ? body.filename : "");
       const totalBytes = Number(body.totalBytes);
       if (!/^[A-Za-z0-9-]{20,50}$/.test(uploadId) || !folder || !filename || !Number.isSafeInteger(totalBytes) || totalBytes < 1) return json({ error: "Datos de finalización no válidos." }, 400);
+      if (!VIDEO_EXTENSION.test(filename)) return json({ error: "Solo se pueden subir vídeos MP4, MOV, WEBM, M4V, AVI o MKV al NAS." }, 415);
+      if (totalBytes > MAX_VIDEO_BYTES) return json({ error: "El vídeo supera el tamaño máximo permitido (10 GB)." }, 413);
       await ensureCollection(["AurumLab", participantId, user.id, folder]);
       const source = new URL(["remote.php", "dav", "uploads", username, uploadId, ".file"].map(encodeURIComponent).join("/"), baseUrl.endsWith("/") ? baseUrl + "/" : baseUrl + "/");
       const destination = dav([...root, folder, filename]);
@@ -216,6 +237,33 @@ Deno.serve(async (req) => {
         } else {
           await verification.body?.cancel();
         }
+      }
+      // Comprobar la cabecera del archivo ensamblado; si no es un vídeo real se elimina.
+      const head = await fetch(destination, { headers: { Authorization: auth, Range: "bytes=0-15" }, redirect: "error" });
+      let headBytes = new Uint8Array();
+      if (head.ok && head.body) {
+        // Leer solo los primeros bytes aunque el servidor ignore la cabecera Range.
+        const reader = head.body.getReader();
+        const parts: Uint8Array[] = [];
+        let read = 0;
+        while (read < 16) {
+          const { value, done } = await reader.read();
+          if (done || !value) break;
+          parts.push(value);
+          read += value.length;
+        }
+        await reader.cancel();
+        headBytes = new Uint8Array(read);
+        let offset = 0;
+        for (const part of parts) { headBytes.set(part, offset); offset += part.length; }
+        headBytes = headBytes.slice(0, 16);
+      } else {
+        await head.body?.cancel();
+      }
+      if (!isVideoSignature(headBytes)) {
+        const removed = await fetch(destination, { method: "DELETE", headers: { Authorization: auth }, redirect: "error" });
+        await removed.body?.cancel();
+        return json({ error: "El archivo no tiene un formato de vídeo válido y se descartó." }, 415);
       }
       if (verifiedBytes !== totalBytes) {
         return json({
