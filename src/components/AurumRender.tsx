@@ -1339,7 +1339,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // center diamond. Other gemstone families and melee diamonds keep
             // their existing material pipelines; ?aurumBvhTest=off disables it.
             targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante"],
-            diamondCenterOnly: true,
+            // Every diamond in Gem 01–04, including melee stones, receives the diamond BVH path.
+            // Screen-space tiers still tune quality/energy for tiny stones; center-only is not a material eligibility rule.
+            diamondCenterOnly: false,
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
@@ -2463,7 +2465,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const nameKey=layerName?"rhino-layer:"+encodeURIComponent(layerName.toLocaleLowerCase()):"";
             const indexKey=layerIndex!=null?"rhino-index:"+String(layerIndex):"";
             const idKey=layerId?"rhino-id:"+layerId:"";
-            const layerKey=context.layerKey??("mesh:"+mesh.uuid);
+            // Rhino layer IDs can be duplicated across Gem 01–04 in imported files. Group by the explicit layer name first so every CAD gem layer receives its own initial material assignment.
+            const layerKey=nameKey||indexKey||idKey||context.layerKey||("mesh:"+mesh.uuid);
             const ownMeta=mesh.userData?.aurumRhino??{};
             const savedAssignment=savedGemAssignments[layerKey]
               ??(nameKey?savedGemAssignments[nameKey]:undefined)
