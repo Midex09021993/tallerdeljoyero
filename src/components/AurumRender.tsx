@@ -3029,6 +3029,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(!modelo)return false;
           const visited=new Set<string>();
           let gemMeshes=0;
+          let appliedLayers=0;
+          let failedLayers=0;
           modelo.traverse((x:any)=>{
             if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
             const meta=x.userData?.aurumRhino??{};
@@ -3056,7 +3058,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // assigned once instead of repeating the same full-layer operation.
             if(visited.has(key))return;
             visited.add(key);
-            aplicarGema(g,x,false,false);
+            if(aplicarGema(g,x,false,false))appliedLayers++;
+            else failedLayers++;
           });
           // An explicit CAD-tree/viewport selection is a safe manual target
           // when an imported GLB has no semantic or Rhino layer metadata.
@@ -3075,7 +3078,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               aplicarGema(g,parteActiva,false,false);
             }
           }
-          console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
+          console.info("[AURUM][CATALOG GEM] Selección aplicada", {
+            gemId:g.id,
+            gemMeshes,
+            layers:visited.size,
+            appliedLayers,
+            failedLayers,
+            source:"canonical-rhino-layer-identity",
+          });
           viewerLoopRef.current?.renderNow?.();
           // Batch public-catalog BVH reconciliation once, after the new physical
           // materials have painted; do not refresh the full runtime per layer.
