@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { createAurumGemEnvironment } from "../src/lib/aurum/gem-environment";
-import { applyAurumGemToTarget, prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
+import { applyAurumGemToTarget, getAurumGemLayerIdentity, isAurumGemTarget, prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 import { setAurumGemShaderQuality } from "../src/lib/aurum/scintillation";
 import { createAurumDiamondMicroPipeline } from "../src/lib/aurum/diamond-micro-pipeline";
@@ -116,14 +116,19 @@ test("source-only Rhino Gem 02 metadata assigns every mesh in the selected layer
     mesh.name = name;
     // Simulate GLB hydration where the original Rhino layer identity survives
     // only in aurumRhinoSource, with no normalized aurumRhino category object.
-    mesh.userData = { aurumRhinoSource: { layerName } };
+    mesh.userData = {
+      aurumRhinoSource: { layerName },
+      ...(name === "Gem02-A" ? { aurumRhino: { categoria: "metal" } } : {}),
+    };
     scene.add(mesh);
     return mesh;
   };
-  const gem02a = makeMesh("Gem02-A", "Gem 02");
+  const gem02a = makeMesh("Gem02-A", "Gem::Gem 02");
   const gem02b = makeMesh("Gem02-B-selected", "Gem 02");
-  const gem02c = makeMesh("Gem02-C", "Gem 02");
-  const gem03 = makeMesh("Gem03-control", "Gem 03");
+  const gem02c = makeMesh("Gem02-C", "Gem\\Gem 02");
+  const gem03 = makeMesh("Gem03-control", "Gem::Gem 03");
+  expect(getAurumGemLayerIdentity(gem02a).layerName).toBe("gem 02");
+  expect(isAurumGemTarget(gem02a)).toBe(true);
   const untouchedMaterial = gem03.material;
   const resolvedEnvironments: readonly any[][] = [];
 
@@ -165,6 +170,21 @@ test("source-only Rhino Gem 02 metadata assigns every mesh in the selected layer
   });
 });
 
+test("catalog gem assignment shares canonical source-layer identity with material application", () => {
+  const source = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const catalogStart = source.indexOf("gemaCatalogo:(g:GemaConfig):boolean=>");
+  const catalogEnd = source.indexOf("materialCatalogo:", catalogStart);
+  const catalog = source.slice(catalogStart, catalogEnd);
+  expect(catalogStart).toBeGreaterThan(-1);
+  expect(catalog).toContain("getAurumGemLayerIdentity(x)");
+  expect(catalog).toContain("isAurumGemTarget(x)");
+  expect(catalog).toContain("getAurumLayerCategoryOverride(modelo.userData?.aurumLayerCategoryOverrides,identity)");
+  const initialStart = source.indexOf("const initialDiamond=GEMAS.find");
+  const initialEnd = source.indexOf('console.info("[AURUM][GEM INITIAL]"', initialStart);
+  const initial = source.slice(initialStart, initialEnd);
+  expect(initial).toContain("if(!isAurumGemTarget(mesh))return;");
+  expect(initial).toContain("getAurumGemLayerIdentity(mesh)");
+});
 test("selected gem paints before optional enrichment and thickness work", () => {
   const source = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const start = source.indexOf("export function applyAurumGemToTarget");
