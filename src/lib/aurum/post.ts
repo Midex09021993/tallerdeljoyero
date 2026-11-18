@@ -1297,7 +1297,7 @@ export async function createAurumPostPipeline(
     applyDiamondPostModules(getAurumPostControls());
   };
 
-  let taaRequested=false;
+  const taaRequested=false;
   let temporalMotionActive=false;
   let lastPX=NaN,lastPY=NaN,lastPZ=NaN,lastQX=NaN,lastQY=NaN,lastQZ=NaN,lastQW=NaN;
   let lastLoggedFocus=NaN;

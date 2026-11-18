@@ -116,7 +116,7 @@ export const listarDirectorioAlumnosFormacion = createServerFn({ method: "POST" 
   .inputValidator((input: BuscarAlumnoInput) => {
     const base = validarDirectorioInput(input);
     const usuario = typeof input?.usuario === "string" ? input.usuario.trim() : "";
-    if (usuario.length < 3 || usuario.length > 80 || /[\u0000-\u001f]/.test(usuario)) {
+    if (usuario.length < 3 || usuario.length > 80 || Array.from(usuario).some((caracter) => caracter.charCodeAt(0) <= 0x1f)) {
       throw new Error("Escribe el usuario exacto del alumno (mínimo 3 caracteres).");
     }
     return { ...base, usuario };
