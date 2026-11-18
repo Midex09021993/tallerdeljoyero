@@ -2464,7 +2464,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               ??(indexKey?savedGemAssignments[indexKey]:undefined)
               ??(idKey?savedGemAssignments[idKey]:undefined)
               ??Object.values(savedGemAssignments).find((assignment:any)=>
-                (layerName&&String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase())
+                (layerName&&getAurumGemLayerIdentity({userData:{aurumRhinoSource:{layerName:assignment?.layerName}}}).layerName===layerName.toLocaleLowerCase())
                 ||(layerIndex!=null&&assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex))
                 ||(layerId&&String(assignment?.layerId??"").trim()===layerId)
               );
