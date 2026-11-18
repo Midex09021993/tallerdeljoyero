@@ -404,6 +404,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           && Boolean(mesh.userData?.aurumDiamondMicroCenterProtected)
           && !isBlueDiamond
           && !isPinkDiamond;
+        // All diamond tiers deliberately share this one central gem EXR texture.
+        // MICRO/SMALL/BRILLIANT may vary optical energy and dispersion below,
+        // but must never select or load a different environment map by size.
+        const sharedDiamondEnvironmentMap = environmentMap;
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
           // The approved A/B reference uses zero direct transmission; internal
@@ -413,7 +417,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
-          environmentMap,
+          environmentMap: sharedDiamondEnvironmentMap,
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
