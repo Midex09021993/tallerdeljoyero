@@ -41,6 +41,37 @@ function diagnosticMaterial(category:string){
 // pieza todavía no tiene material asignado y evita que AURUM la convierta en
 // diamante por defecto. El usuario puede reemplazarlo libremente por cualquier
 // metal o gema desde las bibliotecas.
+function resolveInitialRhinoLayer(model:any, mesh:any){
+  const root=model?.userData??{};
+  const layers=[
+    root.aurumRhinoSourceLayers,
+    root.layers,
+    root.rhinoLayers,
+  ].find((value:any)=>Array.isArray(value)&&value.length)??[];
+  const meta=mesh?.userData?.aurumRhino??{};
+  const source=mesh?.userData?.aurumRhinoSource??{};
+  const instance=mesh?.userData?.aurumRhinoInstanceSource??{};
+  const attrs=mesh?.userData?.attributes??{};
+  const rawIndex=instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??mesh?.userData?.layerIndex??mesh?.userData?.LayerIndex??meta.layerIndex;
+  const layerIndex=rawIndex===null||rawIndex===undefined||rawIndex===""?-1:Number(rawIndex);
+  const layerId=instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??mesh?.userData?.layerId??mesh?.userData?.LayerId??meta.rhinoLayerId;
+  const explicitName=instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??mesh?.userData?.layerName??mesh?.userData?.LayerName??meta.capa;
+  let layer=Number.isInteger(layerIndex)&&layerIndex>=0?layers[layerIndex]:undefined;
+  if(!layer&&layerId!=null)layer=layers.find((item:any)=>String(item?.id??item?.Id??"")===String(layerId));
+  if(!layer&&explicitName)layer=layers.find((item:any)=>String(item?.name??item?.Name??"").trim().toLocaleLowerCase()===String(explicitName).trim().toLocaleLowerCase());
+  const layerName=String(layer?.name??layer?.Name??explicitName??"").trim();
+  return {layer,layerName,layerIndex:Number.isInteger(layerIndex)&&layerIndex>=0?layerIndex:(layer?layers.indexOf(layer):-1),layerId:layer?.id??layer?.Id??layerId??null};
+}
+
+function inferInitialLayerCategory(layerName:string):"gema"|"metal"|undefined{
+  const name=String(layerName??"").trim().toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ");
+  // Gem 01, Gem_02, Gema 03, Piedra 01 and Stone 01 are explicit CAD layer
+  // conventions. Do not classify prongs, settings, or other jewelry geometry.
+  if(/^(?:gem|gema|piedra|stone)(?:\\s*0*\\d+)?$/.test(name))return "gema";
+  if(/^(?:metal|metales|oro|gold|plata|silver|platino|platinum|metalico|metálico)(?:\\s*0*\\d+)?$/.test(name))return "metal";
+  return undefined;
+}
+
 function createAurumNeutralMaterial(){
   const m=new THREE.MeshPhysicalMaterial({
     color:0xc98fa7,
@@ -78,8 +109,24 @@ export function applyAurumInitialModelMaterials(
   const categoryDiagnostic=getAurumCategoryDiagnostic();
   model?.traverse?.((x:any)=>{
     if(!x.isMesh) return;
-    const meta=x.userData?.aurumRhino;
-    const category=meta?.categoria ?? "otro";
+    const existingMeta=x.userData?.aurumRhino??{};
+    const sourceLayer=resolveInitialRhinoLayer(model,x);
+    const inferredCategory=inferInitialLayerCategory(sourceLayer.layerName);
+    // Preserve explicit CAD/user assignments. Only hydrate a missing/unknown
+    // category from a clearly named source layer such as "Gem 01".
+    const category=existingMeta.categoria==="gema"||existingMeta.categoria==="metal"
+      ? existingMeta.categoria
+      : inferredCategory??"otro";
+    const meta={
+      ...existingMeta,
+      ...(sourceLayer.layerName?{capa:sourceLayer.layerName}:{}),
+      ...(sourceLayer.layerIndex>=0?{layerIndex:sourceLayer.layerIndex}:{}),
+      ...(sourceLayer.layerId!=null?{rhinoLayerId:sourceLayer.layerId}:{}),
+      ...(category!=="otro"?{categoria:category}:{}),
+    };
+    if(category!=="otro"||sourceLayer.layerName){
+      x.userData={...(x.userData??{}),aurumRhino:meta};
+    }
     // Gem transmission already performs an expensive optical pass. Gems do not
     // need to cast a second shadow pass in the live viewer.
     x.castShadow=category !== "gema";
