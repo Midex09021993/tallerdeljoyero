@@ -27,10 +27,16 @@ export type AurumDiamondMicroProfile = {
   sharedAcrossTiers: boolean;
 };
 
-export function classifyAurumDiamondScreenSize(diameterPx: number): Exclude<AurumDiamondMicroTier, "mixed"> {
+export function classifyAurumDiamondScreenSize(
+  diameterPx: number,
+  referenceDiameterPx = 0,
+): Exclude<AurumDiamondMicroTier, "mixed"> {
   const px = Number.isFinite(diameterPx) ? Math.max(0, diameterPx) : 0;
+  const reference = Number.isFinite(referenceDiameterPx) ? Math.max(0, referenceDiameterPx) : 0;
   if (px <= 12) return "micro";
-  if (px <= 36) return "small";
+  // Secondary melee can exceed the absolute 36px threshold at close camera
+  // distances. Classify it relative to a clearly dominant center stone too.
+  if (px <= 36 || (reference > px && px <= reference * 0.35)) return "small";
   return "brilliant";
 }
 
@@ -41,19 +47,24 @@ export function classifyAurumDiamondScreenSize(diameterPx: number): Exclude<Auru
 export function stabilizeAurumDiamondScreenTier(
   diameterPx: number,
   previousTier?: Exclude<AurumDiamondMicroTier, "mixed">,
+  referenceDiameterPx = 0,
 ): Exclude<AurumDiamondMicroTier, "mixed"> {
   const px = Number.isFinite(diameterPx) ? Math.max(0, diameterPx) : 0;
-  if (!previousTier) return classifyAurumDiamondScreenSize(px);
+  const reference = Number.isFinite(referenceDiameterPx) ? Math.max(0, referenceDiameterPx) : 0;
+  const relativeSmall = reference > px && px <= reference * 0.35;
+  const relativeSmallExit = reference > px && px <= reference * 0.40;
+  if (!previousTier) return classifyAurumDiamondScreenSize(px, reference);
   if (previousTier === "micro") {
-    if (px > 40) return "brilliant";
+    if (px > 40 && !relativeSmall) return "brilliant";
     return px > 14 ? "small" : "micro";
   }
   if (previousTier === "small") {
     if (px <= 10) return "micro";
-    return px > 40 ? "brilliant" : "small";
+    return px > 40 && !relativeSmallExit ? "brilliant" : "small";
   }
   if (px <= 10) return "micro";
-  return px <= 32 ? "small" : "brilliant";
+  if (px <= 32 || relativeSmall) return "small";
+  return "brilliant";
 }
 
 /** Shared screen-space classification used by both the physical and BVH diamond paths. */
@@ -76,7 +87,7 @@ export function classifyAurumDiamondMeshTiers(
     const explicitlyProtected = Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
       || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""));
     const protectedCenter = explicitlyProtected || (hasDistinctCenter && mesh === centerMesh);
-    tiers.set(mesh, protectedCenter ? "brilliant" : classifyAurumDiamondScreenSize(diameter));
+    tiers.set(mesh, protectedCenter ? "brilliant" : classifyAurumDiamondScreenSize(diameter, hasDistinctCenter ? largest : 0));
   }
   return tiers;
 }
@@ -210,20 +221,21 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
   const update = () => {
     const viewportHeight = Number(getViewportHeight?.() ?? 0);
     if (!enabled || !Number.isFinite(viewportHeight) || viewportHeight < 2 || !meshes.length) return lastReport;
-    const byMaterial = new Map<any, number[]>();
+    const byMaterial = new Map<any, Array<{ diameter: number; tier: Exclude<AurumDiamondMicroTier, "mixed"> }>>();
     const projected = meshes.map(mesh => ({ mesh, diameter: getAurumDiamondProjectedDiameterPx(mesh, camera, viewportHeight) }));
     const sortedDiameters = projected.map(item => item.diameter).sort((a, b) => b - a);
     const largest = sortedDiameters[0] ?? 0;
     const secondLargest = sortedDiameters[1] ?? 0;
     const hasDistinctCenter = largest > 12 && largest > Math.max(secondLargest, 0.01) * 1.35;
     const centerMesh = projected.find(item => item.diameter === largest)?.mesh;
+    const relativeCenterDiameter = hasDistinctCenter ? largest : 0;
 
     for (const { mesh, diameter } of projected) {
       const explicitlyProtected = Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
         || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""));
       const isProtectedCenter = explicitlyProtected || (hasDistinctCenter && mesh === centerMesh);
       const previousTier = mesh.userData?.aurumDiamondMicroTier as Exclude<AurumDiamondMicroTier, "mixed"> | undefined;
-      const tier = isProtectedCenter ? "brilliant" : stabilizeAurumDiamondScreenTier(diameter, previousTier);
+      const tier = isProtectedCenter ? "brilliant" : stabilizeAurumDiamondScreenTier(diameter, previousTier, relativeCenterDiameter);
       mesh.userData = {
         ...(mesh.userData ?? {}),
         aurumDiamondMicroScreenDiameterPx: Number(diameter.toFixed(2)),
@@ -235,29 +247,28 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
         // participate in the same classification used during scene discovery.
         if (!isDiamondMaterial(material, mesh)) continue;
         const values = byMaterial.get(material) ?? [];
-        values.push(diameter);
+        values.push({ diameter, tier });
         byMaterial.set(material, values);
       }
     }
 
     const report: AurumDiamondMicroProfile[] = [];
-    for (const [material, sizes] of byMaterial) {
+    for (const [material, entries] of byMaterial) {
       let min = Number.POSITIVE_INFINITY;
       let max = 0;
-      for (const size of sizes) {
-        min = Math.min(min, size);
-        max = Math.max(max, size);
+      for (const entry of entries) {
+        min = Math.min(min, entry.diameter);
+        max = Math.max(max, entry.diameter);
       }
-      const mid = median(sizes);
-      const minTier = classifyAurumDiamondScreenSize(min);
-      const maxTier = classifyAurumDiamondScreenSize(max);
-      const sharedAcrossTiers = minTier !== maxTier && max / Math.max(min, 0.01) > 2.5;
+      const mid = median(entries.map(entry => entry.diameter));
+      const distinctTiers = new Set(entries.map(entry => entry.tier));
+      const sharedAcrossTiers = distinctTiers.size > 1;
       report.push({
-        tier: sharedAcrossTiers ? "mixed" : classifyAurumDiamondScreenSize(mid),
+        tier: sharedAcrossTiers ? "mixed" : (entries[0]?.tier ?? classifyAurumDiamondScreenSize(mid)),
         minDiameterPx: Number(min.toFixed(2)),
         maxDiameterPx: Number(max.toFixed(2)),
         medianDiameterPx: Number(mid.toFixed(2)),
-        meshCount: sizes.length,
+        meshCount: entries.length,
         sharedAcrossTiers,
       });
       material.userData = {
