@@ -557,8 +557,17 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
       );
       const used = new Set<THREE.Object3D>();
       let patchedReferences = 0;
-      const closeMatrix = (a:THREE.Matrix4,b:THREE.Matrix4) =>
-        a.elements.every((value,index) => Math.abs(value-(b.elements[index] ?? value)) < 1e-5);
+      const closeMatrix = (a:THREE.Matrix4,b:THREE.Matrix4) => {
+        const ae=a.elements,be=b.elements;
+        for(let index=0;index<16;index++){
+          const av=ae[index],bv=be[index];
+          const tolerance=index>=12&&index<=14
+            ? 1e-3 + Math.max(Math.abs(av),Math.abs(bv))*1e-7
+            : 1e-4 + Math.max(Math.abs(av),Math.abs(bv))*1e-5;
+          if(Math.abs(av-bv)>tolerance)return false;
+        }
+        return true;
+      };
       for (const reference of references) {
         const values = reference.geometry.xform.array;
         if (!Array.isArray(values) && !ArrayBuffer.isView(values)) continue;
