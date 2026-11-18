@@ -795,3 +795,16 @@ test("all neutral white diamond sizes use the center optical profile and expose 
   expect(runtime).toContain("environmentTextureUuid: environmentMap?.uuid ?? null");
   expect(runtime).toContain("skippedTargetMeshes: [...skippedTargetMeshes]");
 });
+
+
+test("diamond EXR rotation is globally aligned to the center stone world orientation", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const editor = readFileSync("src/components/AurumRender.tsx", "utf8");
+
+  expect(runtime).toContain("environmentRotationRadians?: number");
+  expect(runtime).toContain("const centerReferenceMesh = explicitCenterMesh ?? inferredCenterMesh");
+  expect(runtime).toContain("centerEnvironmentRotationOffsetRadians = -centerWorldEuler.y");
+  expect(runtime).toContain("requestedRotation + centerEnvironmentRotationOffsetRadians");
+  expect(runtime).toContain('"[AURUM][DIAMOND][CENTER_EXR_ALIGNMENT]"');
+  expect(editor).toContain("environmentRotationRadians: gemEnvironmentRotation");
+});
