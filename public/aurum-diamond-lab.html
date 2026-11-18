@@ -164,6 +164,12 @@ function createShaderMaterial(geometry,env,camera,settings){
 }
 async function startAJRW(geometry,env){
  const canvas=$("muCanvas"),base=makeBase(canvas),{renderer,scene,camera,controls}=base;
+ renderer.debug.checkShaderErrors=true;
+ renderer.debug.onShaderError=(gl,program,vertexShader,fragmentShader)=>{
+  const details=[gl.getProgramInfoLog(program),gl.getShaderInfoLog(vertexShader),gl.getShaderInfoLog(fragmentShader)].filter(Boolean).join(" | ");
+  $("muInfo").textContent="Error de compilación GLSL: "+(details||"consulta la consola del navegador");
+  console.error("[AURUM AJRW GLSL]",details||"Shader compilation failed");
+ };
  state.renderers.push(renderer);state.controls.push(controls);state.cameras.push(camera);fitCamera(camera,controls,geometry);
  const cubeTarget=new THREE.WebGLCubeRenderTarget(256,{generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter});cubeTarget.fromEquirectangularTexture(renderer,env);
  const geo=geometry.clone();
