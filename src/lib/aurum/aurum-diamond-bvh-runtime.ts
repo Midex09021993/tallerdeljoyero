@@ -453,7 +453,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           reflectivity: family === "diamante" ? 0.46 : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: 1.09,
+          gamma: family === "diamante" && isPinkDiamond ? 0.90 : 1.09,
           // Every diamond starts with the same EXR orientation. Later global
           // environment rotation is applied uniformly through updateEnvironment().
           // Per-mesh family offsets must not rotate melee stones away from the center.
@@ -527,9 +527,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             ior: family === "diamante" ? 2.417 : prepared.diagnostics.ior,
             transmission: !isBlueDiamond && !isPinkDiamond ? 0 : 0.05,
             dispersion: 0.004,
-            gamma: 1.09,
+            gamma: isPinkDiamond ? 0.90 : 1.09,
             reflectivity: 0.46,
-            environmentIntensity: 1.30,
+            environmentIntensity: isPinkDiamond ? 1.25 : 1.30,
             rayBounces: currentRayBounces,
             environmentTextureUuid: environmentMap?.uuid ?? null,
           });
