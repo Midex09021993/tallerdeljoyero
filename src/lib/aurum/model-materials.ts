@@ -163,17 +163,33 @@ export function applyAurumInitialModelMaterials(
       const layerId=String(meta?.rhinoLayerId??meta?.layerId??"").trim();
       const layerIndexKey=layerIndex!=null ? "rhino-index:"+String(layerIndex) : "";
       const layerIdKey=layerId ? "rhino-id:"+layerId : "";
-      const savedAssignment=
-        savedAssignments[layerKey] ??
-        (layerNameKey ? savedAssignments[layerNameKey] : undefined) ??
-        (layerIndexKey ? savedAssignments[layerIndexKey] : undefined) ??
-        (layerIdKey ? savedAssignments[layerIdKey] : undefined) ??
-        Object.values(savedAssignments).find((assignment:any) =>
-          (layerName && String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()) ||
-          (layerIndex!=null && assignment?.layerIndex!=null && String(assignment.layerIndex)===String(layerIndex)) ||
-          (layerId && String(assignment?.layerId??"").trim()===layerId)
-        );
-      const assignedGemId=String(savedAssignment?.gemId??options.initialGemByLayer?.[layerKey]??(layerNameKey ? options.initialGemByLayer?.[layerNameKey] : "")??x.userData?.aurumActiveGemId??meta?.gemId??"");
+      const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);
+      // For the four MatrixGold gem layers, Diamante blanco 1 is the explicit
+      // first-load standard. Ignore stale per-mesh/material IDs from older
+      // imports so an obsolete preset cannot silently override the catalog.
+      // For other gem layers, resolve saved choices only by the strongest
+      // available identity; never OR-match a shared Rhino ID against a named layer.
+      const savedAssignment=isDefaultWhiteDiamondLayer
+        ? undefined
+        : layerName
+          ? (layerNameKey ? savedAssignments[layerNameKey] : undefined)
+            ?? Object.values(savedAssignments).find((assignment:any)=>
+              String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()
+            )
+          : layerIndex!=null
+            ? (layerIndexKey ? savedAssignments[layerIndexKey] : undefined)
+              ?? Object.values(savedAssignments).find((assignment:any)=>
+                assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex)
+              )
+            : layerId
+              ? (layerIdKey ? savedAssignments[layerIdKey] : undefined)
+              : undefined;
+      const configuredLayerGemId=layerName
+        ? options.initialGemByLayer?.[layerNameKey]
+        : options.initialGemByLayer?.[layerKey];
+      const assignedGemId=isDefaultWhiteDiamondLayer
+        ? "diamante_natural"
+        : String(savedAssignment?.gemId??configuredLayerGemId??x.userData?.aurumActiveGemId??meta?.gemId??"");
       const initialGemId=assignedGemId || String(options.initialGemId??"");
       const gem=initialGemId ? options.gems.find((g:any)=>g.id===initialGemId) : undefined;
       if(gem){
