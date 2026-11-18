@@ -828,7 +828,9 @@ test("diamond environment compensation composes a complete 3D optical-frame quat
 test("Aurum gem HDR A/B diagnostic is opt-in and leaves production rotation unchanged by default", () => {
   const source = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(source).toContain('get("aurumGemHdriTest")');
-  expect(source).toContain('value === "180" ? Math.PI : 0');
+  expect(source).toContain('if (value === "90") return Math.PI / 2;');
+  expect(source).toContain('if (value === "180") return Math.PI;');
+  expect(source).toContain('mode: diagnosticOffset === Math.PI / 2 ? "C_ROTATED_90"');
   expect(source).toContain('mode: diagnosticOffset ? "B_ROTATED_180" : "A_BASELINE"');
   expect(source).toContain("baselineRotationRadians: baselineRotation");
   expect(source).toContain("metalEnvironmentUntouched: true");
