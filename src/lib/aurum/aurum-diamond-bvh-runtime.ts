@@ -400,6 +400,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Chromatic splitting is restrained on small white melee to avoid
           // unstable sub-pixel color fragments that read as moving particles.
+          // Neutral white diamonds keep a unified gamma of 1.0 at every size tier.
           dispersion: family === "diamante"
             ? (isNeutralMicroDiamond ? 0.0003
               : isNeutralSmallDiamond ? 0.0008
@@ -419,7 +420,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           reflectivity: family === "diamante" ? (activeGemId === "diamante_natural" ? 0.5 : 0.46) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" ? (isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : isNeutralWhiteDiamond ? 1.0 : isBlueDiamond ? 1.09 : 0.90) : 1.09,
+          gamma: family === "diamante" ? (isNeutralWhiteDiamond ? 1.0 : isBlueDiamond ? 1.09 : 0.90) : 1.09,
           // Optical Lab AURUM BVH reference forces a zero-degree environment rotation.
           // Do not inherit the regular gem-family orientation offset on the protected center diamond.
           environmentRotationRadians: isCenterWhiteDiamond ? 0 : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
@@ -448,7 +449,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 rgbBoost: [1, 1, 1],
                 environmentIntensity: isMicro ? 1.20 : 1.30,
                 dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : 0.010,
-                gamma: isMicro ? 0.96 : isSmall ? 0.94 : 1.0,
+                gamma: 1.0,
                 rayBounces: 5,
               });
             }
