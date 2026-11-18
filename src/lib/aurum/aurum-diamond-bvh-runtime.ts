@@ -15,10 +15,6 @@ type RecordEntry = {
   activeGemFamily: string;
   originalDiamondOpticalFamily: unknown;
   baseEnvironmentIntensity: number;
-  invisibleMaterial?: THREE.Material;
-  proxyMesh?: THREE.Mesh;
-  proxyGeometry?: THREE.BufferGeometry;
-  cameraProxy?: { update: () => THREE.Camera };
   setQuality: (quality: "interactive" | "high" | "final") => void;
   readonly tier: "micro" | "small" | "brilliant";
   setTier: (tier: "micro" | "small" | "brilliant") => void;
@@ -148,105 +144,12 @@ export async function createAurumDiamondBvhRuntime(options: {
   const familyCounts: Record<string, number> = {};
   const skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }> = [];
 
-  // Optical Lab 01 geometry preparation, adapted to CAD assemblies without
-  // mutating the source geometry or its transform.
-  const createOpticalLabDiamondProxy = (source: THREE.Mesh) => {
-    let sceneRoot: THREE.Object3D = source;
-    while (sceneRoot.parent) sceneRoot = sceneRoot.parent;
-    sceneRoot.updateMatrixWorld(true);
-    source.updateWorldMatrix(true, false);
-
-    // Preserve exact CAD placement by baking only source-to-scene-root transform.
-    const inverseRoot = new THREE_NS.Matrix4().copy(sceneRoot.matrixWorld).invert();
-    const sourceToRoot = new THREE_NS.Matrix4().multiplyMatrices(inverseRoot, source.matrixWorld);
-    const geometry = source.geometry.clone();
-    geometry.applyMatrix4(sourceToRoot);
-    geometry.computeVertexNormals();
-    const position = geometry.getAttribute("position");
-    if (!position?.count) {
-      geometry.dispose();
-      throw new Error("[AURUM Diamond BVH] La geometría preparada quedó vacía.");
-    }
-    const bounds = new THREE_NS.Box3().setFromBufferAttribute(position);
-    const center = bounds.getCenter(new THREE_NS.Vector3());
-    const size = bounds.getSize(new THREE_NS.Vector3());
-    const labRadius = Math.max(size.x, size.y, size.z) * 0.5 || 1;
-    // Optical Lab 01 fitCamera() places its camera at radius * 3.4.
-    // Production keeps its own framing for the jewel, but the BVH shader must
-    // receive the same camera-to-stone distance or its internal ray directions
-    // and facet reflections differ even with identical geometry and EXR.
-    const labCameraDistance = labRadius * 3.4;
-    geometry.translate(-center.x, -center.y, -center.z);
-    geometry.computeBoundingSphere();
-
-    const proxy = new THREE_NS.Mesh(geometry, source.material);
-    // Restore the center so the render proxy occupies the original CAD position.
-    proxy.position.copy(center);
-    proxy.quaternion.identity();
-    proxy.scale.set(1, 1, 1);
-    proxy.userData = { ...source.userData, aurumOpticalLabProxy: true };
-    proxy.layers.mask = source.layers.mask;
-    proxy.renderOrder = source.renderOrder;
-    proxy.frustumCulled = false;
-    proxy.raycast = () => undefined;
-    sceneRoot.add(proxy);
-
-    // The lab's centered mesh is at identity, so its camera is the original
-    // world camera translated by the same geometry center, not by the CAD root.
-    const cameraProxy = options.camera.clone() as THREE.Camera;
-    const cameraWorldPosition = new THREE_NS.Vector3();
-    const cameraLocalPosition = new THREE_NS.Vector3();
-    const rootWorldPosition = new THREE_NS.Vector3();
-    const rootWorldQuaternion = new THREE_NS.Quaternion();
-    const rootWorldScale = new THREE_NS.Vector3();
-    const inverseRootQuaternion = new THREE_NS.Quaternion();
-    const cameraWorldQuaternion = new THREE_NS.Quaternion();
-    const cameraLocalQuaternion = new THREE_NS.Quaternion();
-    const cameraDirection = new THREE_NS.Vector3();
-    const cameraProxyAdapter = {
-      update: () => {
-        sceneRoot.updateMatrixWorld(true);
-        options.camera.updateWorldMatrix(true, false);
-        sceneRoot.matrixWorld.decompose(rootWorldPosition, rootWorldQuaternion, rootWorldScale);
-        options.camera.getWorldPosition(cameraWorldPosition);
-        cameraLocalPosition.copy(cameraWorldPosition).applyMatrix4(inverseRoot);
-        cameraDirection.copy(cameraLocalPosition).sub(center);
-        if (cameraDirection.lengthSq() < 1e-12) cameraDirection.set(0, 0, 1);
-        cameraDirection.normalize().multiplyScalar(labCameraDistance);
-        cameraProxy.position.copy(cameraDirection);
-        options.camera.getWorldQuaternion(cameraWorldQuaternion);
-        inverseRootQuaternion.copy(rootWorldQuaternion).invert();
-        cameraLocalQuaternion.copy(inverseRootQuaternion).multiply(cameraWorldQuaternion);
-        cameraProxy.quaternion.copy(cameraLocalQuaternion);
-        cameraProxy.scale.set(1, 1, 1);
-        cameraProxy.updateMatrix();
-        cameraProxy.updateMatrixWorld(true);
-        return cameraProxy;
-      },
-    };
-    cameraProxyAdapter.update();
-
-    return {
-      mesh: proxy,
-      geometry,
-      camera: cameraProxy,
-      cameraAdapter: cameraProxyAdapter,
-      dispose: () => {
-        if (proxy.parent) proxy.parent.remove(proxy);
-        geometry.dispose();
-      },
-    };
-  };
-
   const releaseEntry = (mesh: THREE.Mesh, restore: boolean) => {
     const entry = entries.get(mesh);
     if (!entry) return;
-    if (restore && (mesh.material === entry.experimentalMaterial || mesh.material === entry.invisibleMaterial)) {
+    if (restore && mesh.material === entry.experimentalMaterial) {
       mesh.material = entry.originalMaterial;
     }
-    if (entry.proxyMesh?.parent) entry.proxyMesh.parent.remove(entry.proxyMesh);
-    entry.proxyGeometry?.dispose();
-    entry.invisibleMaterial?.dispose();
     if (entry.family === "diamante") {
       if (entry.originalDiamondOpticalFamily === undefined) delete mesh.userData.aurumDiamondOpticalFamily;
       else mesh.userData.aurumDiamondOpticalFamily = entry.originalDiamondOpticalFamily;
@@ -446,7 +349,6 @@ export async function createAurumDiamondBvhRuntime(options: {
       const isChrysoberyl = family === "crisoberilo" || family === "chrysoberyl" || family === "alejandrita" || family === "alexandrite";
       const isQuartz = family === "cuarzo" || family === "quartz" || family === "ametrino" || family === "ametrine";
       const isOtherTourmaline = family === "turmalina" || family === "tourmaline";
-      let labProxy: any = null;
       try {
         const emeraldProfile = useEmeraldBvhOptics ? resolveAurumEmeraldBvhProfile(materials[0]) : null;
         const rubyProfile = isRuby ? resolveAurumRubyBvhProfile(materials[0]) : null;
@@ -462,13 +364,8 @@ export async function createAurumDiamondBvhRuntime(options: {
         // White melee keeps the same IOR/BVH depth and only compensates energy,
         // dispersion and gamma for its screen-space size.
         const isNeutralWhiteDiamond = family === "diamante" && !isBlueDiamond && !isPinkDiamond;
-        // Match Optical Lab 01: world-transform the CAD geometry into a private
-        // clone, recompute facet normals, center it, and render at that center.
-        // The original CAD mesh stays in place as an invisible raycast target.
-        const materialMesh = family === "diamante"
-          ? (labProxy = createOpticalLabDiamondProxy(mesh), labProxy.mesh)
-          : mesh;
-        const prepared = prepareAurumDiamondBvhExperiment(packageApi, materialMesh, {
+        // Use the original imported CAD mesh and its untouched BufferGeometry.
+        const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
           // The approved A/B reference uses zero direct transmission; internal
           // BVH refraction supplies the visible diamond response.
@@ -478,7 +375,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
           environmentMap,
-          camera: labProxy?.camera ?? options.camera,
+          camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
           quality: family === "diamante" ? "final" : (options.quality ?? "interactive"),
@@ -519,17 +416,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentRotationRadians: family === "diamante" ? 0 : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
-        const invisibleMaterial = labProxy
-          ? new THREE_NS.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE_NS.DoubleSide })
-          : undefined;
         entries.set(mesh, {
           originalMaterial: mesh.material,
           experimentalMaterial: prepared.material,
           family,
-          invisibleMaterial,
-          proxyMesh: labProxy?.mesh,
-          proxyGeometry: labProxy?.geometry,
-          cameraProxy: labProxy?.cameraAdapter,
           gemId: activeGemId,
           activeGemFamily,
           originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
@@ -570,12 +460,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         // created. Without this call, setQuality only runs during later quality
         // transitions, leaving emeralds at the shader package's generic default.
         entries.get(mesh)?.setQuality(family === "diamante" ? "final" : (options.quality ?? "interactive"));
-        if (labProxy) {
-          labProxy.mesh.material = prepared.material;
-          mesh.material = invisibleMaterial!;
-        } else {
-          mesh.material = prepared.material;
-        }
+        mesh.material = prepared.material;
         // Preserve the CAD stone identity on the mesh while BVH replaces its physical material.
         // Downstream diamond-only classifiers must not depend on experimental shader metadata.
         if (family === "diamante") {
@@ -606,7 +491,6 @@ export async function createAurumDiamondBvhRuntime(options: {
           });
         }
       } catch (error) {
-        labProxy?.dispose?.();
         // Keep the current physical/scintillation material if BVH setup fails.
         options.onError?.(error);
       }
@@ -655,8 +539,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       }
       if (cameraUnchanged) return;
       for (const entry of entries.values()) {
-        const camera = entry.cameraProxy?.update?.() ?? options.camera;
-        packageApi.updateDiamondCamera(entry.experimentalMaterial, camera);
+        packageApi.updateDiamondCamera(entry.experimentalMaterial, options.camera);
       }
       // Commit only after every material accepted the camera update. If one
       // update throws, the next render frame retries instead of staying stale.
