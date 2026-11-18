@@ -117,10 +117,6 @@ export async function createAurumDiamondBvhRuntime(options: {
   const disabledFamilies = new Set<string>();
   let lastModel: THREE.Object3D | null = null;
   let disposed = false;
-  // The center stone defines the reference orientation. Each secondary
-  // diamond receives its own inverse world-yaw compensation so mirrored CAD
-  // placements see the same EXR direction in their local optical frame.
-  let centerWorldYawRadians = 0;
   const requestedEnvironmentRotationRadians = Number.isFinite(options.environmentRotationRadians)
     ? Number(options.environmentRotationRadians)
     : 0;
@@ -249,23 +245,66 @@ export async function createAurumDiamondBvhRuntime(options: {
       : null;
     const explicitCenterMesh = diamondMeshes.find((mesh) => isAurumDiamondBvhCenterTarget(mesh));
     const centerReferenceMesh = explicitCenterMesh ?? inferredCenterMesh;
-    if (centerReferenceMesh) {
-      centerReferenceMesh.updateWorldMatrix(true, false);
-      const centerWorldQuaternion = centerReferenceMesh.getWorldQuaternion(new THREE_NS.Quaternion());
-      const centerWorldEuler = new THREE_NS.Euler().setFromQuaternion(centerWorldQuaternion, "YXZ");
-      centerWorldYawRadians = centerWorldEuler.y;
-    } else {
-      centerWorldYawRadians = 0;
-    }
-    const getMeshEnvironmentRotation = (mesh: THREE.Mesh) => {
+    // Derive each diamond's optical frame from local geometry: the thinnest
+    // bounding-box axis approximates the table normal; the longest remaining
+    // axis supplies an in-plane reference direction for elongated cuts.
+    const getDiamondOpticalFrame = (mesh: THREE.Mesh) => {
+      const geometry = mesh.geometry;
+      if (!geometry.boundingBox) geometry.computeBoundingBox();
+      const bounds = geometry.boundingBox;
+      if (!bounds) return null;
+      const size = bounds.getSize(new THREE_NS.Vector3());
+      const extents = [size.x, size.y, size.z];
+      const axes = [0, 1, 2].sort((x, y) => extents[x] - extents[y]);
+      const normalAxis = axes[0];
+      const referenceAxis = axes[2];
+      if (extents[normalAxis] <= 1e-8 || extents[referenceAxis] <= 1e-8
+        || extents[normalAxis] / extents[referenceAxis] > 0.9) return null;
+      const axisVector = (axis: number) => new THREE_NS.Vector3(axis === 0 ? 1 : 0, axis === 1 ? 1 : 0, axis === 2 ? 1 : 0);
       mesh.updateWorldMatrix(true, false);
       const worldQuaternion = mesh.getWorldQuaternion(new THREE_NS.Quaternion());
-      const worldEuler = new THREE_NS.Euler().setFromQuaternion(worldQuaternion, "YXZ");
-      const offsetRadians = centerWorldYawRadians - worldEuler.y;
       return {
-        offsetRadians,
-        rotationRadians: requestedEnvironmentRotationRadians + offsetRadians,
-        worldYawRadians: worldEuler.y,
+        worldNormal: axisVector(normalAxis).applyQuaternion(worldQuaternion).normalize(),
+        worldReference: axisVector(referenceAxis).applyQuaternion(worldQuaternion).normalize(),
+        localNormalAxis: normalAxis,
+        localReferenceAxis: referenceAxis,
+      };
+    };
+    const centerOpticalFrame = centerReferenceMesh ? getDiamondOpticalFrame(centerReferenceMesh) : null;
+    const getMeshEnvironmentRotation = (mesh: THREE.Mesh) => {
+      const frame = getDiamondOpticalFrame(mesh);
+      if (!frame || !centerOpticalFrame) {
+        return {
+          offsetRadians: 0,
+          rotationRadians: requestedEnvironmentRotationRadians,
+          opticalAxisAlignmentDegrees: null,
+          tableNormal: frame?.worldNormal.toArray() ?? null,
+          referenceAxis: frame?.worldReference.toArray() ?? null,
+          localNormalAxis: frame?.localNormalAxis ?? null,
+          localReferenceAxis: frame?.localReferenceAxis ?? null,
+          frameValid: false,
+        };
+      }
+      const centerNormal = centerOpticalFrame.worldNormal.clone();
+      const meshNormal = frame.worldNormal.clone();
+      if (centerNormal.dot(meshNormal) < 0) meshNormal.negate();
+      const centerReference = centerOpticalFrame.worldReference.clone()
+        .addScaledVector(centerNormal, -centerOpticalFrame.worldReference.dot(centerNormal)).normalize();
+      const meshReference = frame.worldReference.clone()
+        .addScaledVector(centerNormal, -frame.worldReference.dot(centerNormal)).normalize();
+      const signedAngle = Math.atan2(
+        centerNormal.dot(new THREE_NS.Vector3().crossVectors(centerReference, meshReference)),
+        THREE_NS.MathUtils.clamp(centerReference.dot(meshReference), -1, 1),
+      );
+      return {
+        offsetRadians: -signedAngle,
+        rotationRadians: requestedEnvironmentRotationRadians - signedAngle,
+        opticalAxisAlignmentDegrees: THREE_NS.MathUtils.radToDeg(Math.acos(THREE_NS.MathUtils.clamp(centerNormal.dot(meshNormal), -1, 1))),
+        tableNormal: frame.worldNormal.toArray(),
+        referenceAxis: frame.worldReference.toArray(),
+        localNormalAxis: frame.localNormalAxis,
+        localReferenceAxis: frame.localReferenceAxis,
+        frameValid: true,
       };
     };
 
@@ -610,29 +649,31 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (!found.has(mesh)) releaseEntry(mesh, mesh.material === entries.get(mesh)?.experimentalMaterial);
     }
 
-    // Apply each stone's own inverse yaw relative to the center reference.
-    // This compensates mirrored CAD placements without changing geometry/normals.
+    // Apply compensation using the geometry-derived table frame, not Euler Y.
     const perDiamondAlignment = [...entries.entries()]
       .filter(([, entry]) => entry.family === "diamante")
       .map(([mesh, entry]) => {
         const alignment = getMeshEnvironmentRotation(mesh);
         entry.environmentRotationOffsetRadians = alignment.offsetRadians;
         const rotationDegrees = THREE_NS.MathUtils.radToDeg(alignment.rotationRadians);
-        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, {
-          x: 0,
-          y: rotationDegrees,
-          z: 0,
-        });
+        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 });
         return {
           mesh: mesh.name || mesh.uuid,
-          worldYawRadians: alignment.worldYawRadians,
-          relativeYawRadians: alignment.offsetRadians,
+          relativeOpticalRotationRadians: alignment.offsetRadians,
           appliedRotationRadians: alignment.rotationRadians,
+          opticalAxisAlignmentDegrees: alignment.opticalAxisAlignmentDegrees,
+          tableNormalWorld: alignment.tableNormal,
+          inPlaneReferenceWorld: alignment.referenceAxis,
+          localNormalAxis: alignment.localNormalAxis,
+          localReferenceAxis: alignment.localReferenceAxis,
+          frameValid: alignment.frameValid,
         };
       });
     console.info("[AURUM][DIAMOND][CENTER_RELATIVE_EXR_ALIGNMENT]", {
       referenceMesh: centerReferenceMesh?.name || centerReferenceMesh?.uuid || null,
-      centerWorldYawRadians,
+      referenceTableNormalWorld: centerOpticalFrame?.worldNormal.toArray() ?? null,
+      referenceInPlaneAxisWorld: centerOpticalFrame?.worldReference.toArray() ?? null,
+      referenceFrameValid: Boolean(centerOpticalFrame),
       requestedRotationRadians: requestedEnvironmentRotationRadians,
       alignedDiamondMeshes: perDiamondAlignment.length,
       perDiamondAlignment,
