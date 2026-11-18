@@ -45,7 +45,7 @@ export function isAurumDiamondBvhCenterTarget(mesh: THREE.Mesh): boolean {
 }
 
 const normalizeGemFamily = (value: unknown) =>
-  String(value ?? "").trim().toLocaleLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+  String(value ?? "").trim().toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 const getGemFamily = (material: any) =>
   normalizeGemFamily(
@@ -203,10 +203,9 @@ export async function createAurumDiamondBvhRuntime(options: {
 
     // A targeted non-diamond change must not scan the full CAD assembly.
     // Only diamond refreshes need the model-wide size ratio used for melee optics.
-    const targetContainsDiamond = !targetSet || [...targetSet].some((mesh) => {
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      return getMeshGemFamilies(mesh).some((family) => family === "diamante");
-    });
+    const targetContainsDiamond = !targetSet || [...targetSet].some((mesh) =>
+      getMeshGemFamilies(mesh).some((family) => family === "diamante"),
+    );
     if (targetContainsDiamond) model.updateMatrixWorld(true);
     else targetSet?.forEach((mesh) => mesh.updateWorldMatrix(true, false));
 
