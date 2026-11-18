@@ -5627,14 +5627,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div>
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR de gemas · comparar piedras</div>
                 <div className="grid grid-cols-1 gap-2.5">
-                  {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map((preset)=>{
+                  {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map((preset,index)=>{
                     return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={gemHdriId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-left "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
                       <span className={"relative mb-1.5 block aspect-[16/5] overflow-hidden rounded-xl border transition "+(gemHdriId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-[#d8d1c2] group-hover:border-[#92743b]")}>
                         <span className="absolute inset-0" style={{background:"radial-gradient(ellipse at 50% 20%,#fffdf4 0%,#e9dfc5 22%,#9da3a6 48%,#4c5359 72%,#171b20 100%)"}}/>
                         <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent"/>
                         <span className="absolute left-2 top-2 rounded-md border border-white/35 bg-black/25 px-1.5 py-0.5 text-[8px] font-semibold text-white">EXR · HDR</span>
                         {gemHdriId===preset.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#92743b] text-[10px] text-white">✓</span>}
-                        <span className="absolute inset-x-0 bottom-2 text-center text-[9px] font-medium tracking-wide text-white drop-shadow">01 · HDR ÚNICO DE GEMAS</span>
+                        <span className="absolute inset-x-0 bottom-2 text-center text-[9px] font-medium tracking-wide text-white drop-shadow">{String(index+1).padStart(2,"0")} · HDR DE GEMAS</span>
                       </span>
                       <span className="block truncate text-[10px]">{preset.name}</span>
                     </button>;
