@@ -516,6 +516,12 @@ export async function createAurumDiamondBvhRuntime(options: {
               const rayBounces = quality === "final" ? 5 : quality === "high" ? 4 : 3;
               packageApi.setDiamondOptions(prepared.material, { rayBounces });
               currentRayBounces = rayBounces;
+              console.info("[AURUM][DIAMOND][BVH_QUALITY_UPDATED]", {
+                mesh: mesh.name || mesh.uuid,
+                tier: currentDiamondTier,
+                quality,
+                rayBounces: currentRayBounces,
+              });
               return;
             }
             if (isEmerald) {
