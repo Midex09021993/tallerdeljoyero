@@ -169,6 +169,13 @@ export async function createAurumDiamondBvhRuntime(options: {
     }
     const bounds = new THREE_NS.Box3().setFromBufferAttribute(position);
     const center = bounds.getCenter(new THREE_NS.Vector3());
+    const size = bounds.getSize(new THREE_NS.Vector3());
+    const labRadius = Math.max(size.x, size.y, size.z) * 0.5 || 1;
+    // Optical Lab 01 fitCamera() places its camera at radius * 3.4.
+    // Production keeps its own framing for the jewel, but the BVH shader must
+    // receive the same camera-to-stone distance or its internal ray directions
+    // and facet reflections differ even with identical geometry and EXR.
+    const labCameraDistance = labRadius * 3.4;
     geometry.translate(-center.x, -center.y, -center.z);
     geometry.computeBoundingSphere();
 
@@ -189,11 +196,17 @@ export async function createAurumDiamondBvhRuntime(options: {
     // world camera translated by the same geometry center, not by the CAD root.
     const cameraProxy = options.camera.clone() as THREE.Camera;
     const cameraWorldPosition = new THREE_NS.Vector3();
+    const cameraDirection = new THREE_NS.Vector3();
     const cameraProxyAdapter = {
       update: () => {
         options.camera.updateWorldMatrix(true, false);
         options.camera.getWorldPosition(cameraWorldPosition);
-        cameraProxy.position.copy(cameraWorldPosition).sub(center);
+        cameraDirection.copy(cameraWorldPosition).sub(center);
+        if (cameraDirection.lengthSq() < 1e-12) cameraDirection.set(0, 0, 1);
+        cameraDirection.normalize().multiplyScalar(labCameraDistance);
+        // Match the lab's optical camera distance while preserving the user's
+        // current viewing direction. The production camera itself is untouched.
+        cameraProxy.position.copy(cameraDirection);
         options.camera.getWorldQuaternion(cameraProxy.quaternion);
         cameraProxy.scale.set(1, 1, 1);
         cameraProxy.updateMatrix();
