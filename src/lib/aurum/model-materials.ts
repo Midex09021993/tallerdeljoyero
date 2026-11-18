@@ -67,7 +67,7 @@ function inferInitialLayerCategory(layerName:string):"gema"|"metal"|undefined{
   const segments=String(layerName??"")
     .split(/::|[\\/]/)
     .map((part)=>part.trim().toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[_]+/g," ").replace(/\s+/g," "));
-  const gemLayer=/^(?:gem|gems|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes)(?:\s*0*\d+(?:\.\d+)?(?:\s*mm)?(?:\s*[- ]\s*[\p{L}\p{N} .-]+)?)?$/u;
+  const gemLayer=/^(?:gem|gems|gemstone|gemstones|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes|zafiro|sapphire|rubi|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)(?:\s*0*\d+(?:\.\d+)?(?:\s*mm)?(?:\s*[- ]\s*[\p{L}\p{N} .-]+)?)?$/u;
   const metalLayer=/^(?:metal|metales|oro|gold|plata|silver|platino|platinum|acero|steel)(?:\s*0*\d+)?$/u;
   if(segments.some((name)=>gemLayer.test(name)))return "gema";
   if(segments.some((name)=>metalLayer.test(name)))return "metal";
