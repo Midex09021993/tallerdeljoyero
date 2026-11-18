@@ -2338,6 +2338,33 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } else {
           setLayerCategoryOverrides({});
         }
+        // Layer overrides are applied after the first material pass. A gem layer
+        // that was recovered from embedded CAD metadata here must still receive
+        // the default natural-white diamond profile before the BVH is prepared.
+        // Only touch explicitly classified gem meshes; never guess from position,
+        // dimensions, color, or a metal/prong mesh.
+        const initialDiamond=GEMAS.find((gem:any)=>gem.id==="diamante_natural");
+        if(initialDiamond){
+          const assignedGemLayers=new Set<string>();
+          let initialDiamondMeshes=0;
+          interno.traverse((mesh:any)=>{
+            if(!mesh?.isMesh||mesh.userData?.aurumInternalInclusion)return;
+            const meta=mesh.userData?.aurumRhino??{};
+            if(String(meta.categoria??"").toLowerCase()!=="gema")return;
+            if(String(mesh.userData?.aurumActiveGemId??"").trim())return;
+            const layerKey=String(meta.layerKey??meta.capa??mesh.uuid).trim().toLocaleLowerCase();
+            if(assignedGemLayers.has(layerKey))return;
+            assignedGemLayers.add(layerKey);
+            if(aplicarGema(initialDiamond,mesh,false,false))initialDiamondMeshes++;
+          });
+          if(initialDiamondMeshes>0){
+            console.info("[AURUM][GEM INITIAL]",{
+              gemId:initialDiamond.id,
+              assignedLayers:initialDiamondMeshes,
+              reason:"gem-layer-classified-after-initial-material-pass",
+            });
+          }
+        }
         // Register the loaded model's diamond meshes before BVH setup. The micro
         // pipeline was created with an empty scene, so its initial refresh cannot
         // discover gems that are loaded later.
