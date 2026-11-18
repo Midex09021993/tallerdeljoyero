@@ -9,6 +9,10 @@ test("classifies projected diamond sizes into stable screen-space tiers", () => 
   expect(classifyAurumDiamondScreenSize(20)).toBe("small");
   expect(classifyAurumDiamondScreenSize(36)).toBe("small");
   expect(classifyAurumDiamondScreenSize(80)).toBe("brilliant");
+  // A melee stone can exceed 36px at close zoom and still be small relative
+  // to a clearly dominant center diamond.
+  expect(classifyAurumDiamondScreenSize(56, 229)).toBe("small");
+  expect(classifyAurumDiamondScreenSize(56, 0)).toBe("brilliant");
   expect(classifyAurumDiamondScreenSize(Number.NaN)).toBe("micro");
 });
 
@@ -49,6 +53,45 @@ test("shares screen-space tiers across diamond paths and protects an explicitly 
   const tiers = classifyAurumDiamondMeshTiers([center, melee], camera, 600);
   expect(tiers.get(center)).toBe("brilliant");
   expect(tiers.get(melee)).toBe("micro");
+});
+
+test("classifies six secondary melee diamonds as small relative to a dominant oval center", () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld(true);
+
+  const centerMaterial = new THREE.MeshPhysicalMaterial();
+  centerMaterial.userData.aurumGemFamily = "Diamante";
+  const center = new THREE.Mesh(new THREE.SphereGeometry(2), centerMaterial);
+  scene.add(center);
+
+  const secondaryMeshes: THREE.Mesh[] = [];
+  for (let index = 0; index < 6; index += 1) {
+    const material = new THREE.MeshPhysicalMaterial();
+    material.userData.aurumGemFamily = "Diamante";
+    const angle = (index / 6) * Math.PI * 2;
+    const melee = new THREE.Mesh(new THREE.SphereGeometry(0.5), material);
+    melee.position.set(Math.cos(angle) * 2.5, Math.sin(angle) * 2.5, 0);
+    scene.add(melee);
+    secondaryMeshes.push(melee);
+  }
+
+  const tiers = classifyAurumDiamondMeshTiers([center, ...secondaryMeshes], camera, 825);
+  expect(tiers.get(center)).toBe("brilliant");
+  for (const melee of secondaryMeshes) {
+    const diameter = getAurumDiamondProjectedDiameterPx(melee, camera, 825);
+    expect(diameter).toBeGreaterThan(36);
+    expect(tiers.get(melee)).toBe("small");
+  }
+
+  const pipeline = createAurumDiamondMicroPipeline(scene, camera, () => 825);
+  const report = pipeline.update();
+  expect(report.reduce((sum, item) => sum + (item.tier === "small" ? item.meshCount : 0), 0)).toBe(6);
+  expect(report.reduce((sum, item) => sum + (item.tier === "brilliant" ? item.meshCount : 0), 0)).toBe(1);
+  expect(report.some(item => item.sharedAcrossTiers)).toBe(false);
+  pipeline.dispose();
 });
 
 test("does not auto-protect a lone melee diamond as the center stone", () => {
