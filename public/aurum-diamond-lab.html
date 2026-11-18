@@ -242,7 +242,7 @@ window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.
 window.addEventListener("pagehide",clearRenderers);
 $("exrUpload").addEventListener("change",async(event)=>{
  const file=event.target.files?.[0];if(!file)return;
- if(!/\\.exr$/i.test(file.name)){setStatus("Selecciona un archivo con extensión .exr.");event.target.value="";return;}
+ if(!/\.exr$/i.test(file.name)){setStatus("Selecciona un archivo con extensión .exr.");event.target.value="";return;}
  try{
   setStatus("Cargando entorno EXR: "+file.name+"…");
   const buffer=await file.arrayBuffer();
