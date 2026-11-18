@@ -1335,6 +1335,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             RGBELoader,
             EXRLoader,
             url: requestedEnvironmentUrl,
+            environmentRotationRadians: gemEnvironmentRotation,
             camera: camara,
             getViewportHeight: () => renderer.domElement.height,
             quality: "interactive",
