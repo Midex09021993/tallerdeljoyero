@@ -700,7 +700,7 @@ test("diamond scintillation widens only the diamond angular response and reports
 });
 
 
-test("Aurum Render production BVH includes ruby while keeping center-only restriction exclusive to diamonds", () => {
+test("Aurum Render production BVH includes ruby and all diamond sizes", () => {
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const profiles = readFileSync("src/lib/aurum/aurum-gem-bvh-profiles.ts", "utf8");
@@ -720,7 +720,7 @@ test("Aurum Render BVH master switch disables and restores diamond and ruby fami
   expect(render).toContain('if (!diamondBvhEnabledRef.current) {');
   expect(render).toContain('runtime.setFamilyEnabled(family, false)');
   expect(render).toContain('setFamilyEnabled?.(family, detail.enabled)');
-  expect(render).toContain("diamante central y los rubíes compatibles");
+  expect(render).toContain("diamantes de todos los tamaños y rubíes compatibles");
 });
 
 
