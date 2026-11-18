@@ -1052,15 +1052,8 @@ function InicioPublico() {
       </section>
 
       <section id="guias-tecnicas" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 560px" }} className="scroll-mt-24 border-y border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
-          <div className="flex flex-col gap-8 lg:gap-7">
-            <div className="flex flex-col items-start">
-              <p className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#876500]"><BookOpen className="size-3.5" /> Biblioteca práctica del oficio</p>
-              <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Aprende sobre joyería y materiales.</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Encuentra explicaciones sencillas sobre metales, gemas y técnicas de joyería.</p>
-              <Link to="/guias" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar todas las guías <ArrowRight className="size-4" /></Link>
-            </div>
-            <CarruselHerramientas />
+        <div className="mx-auto max-w-[1440px] px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
+          <CarruselHerramientas />
           </div>
         </div>
       </section>
