@@ -1334,10 +1334,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             camera: camara,
             getViewportHeight: () => renderer.domElement.height,
             quality: "interactive",
-            // Production BVH is deliberately restricted to the white/colored
-            // center diamond. Other gemstone families and melee diamonds keep
-            // their existing material pipelines; ?aurumBvhTest=off disables it.
-            targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante"],
+            // Production BVH covers the protected center diamond and rubies.
+            // The center-only restriction is enforced only for diamonds inside
+            // the runtime; ruby meshes use their dedicated color-preserving profile.
+            // ?aurumBvhTest=off disables all production BVH families.
+            targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"],
             diamondCenterOnly: true,
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
