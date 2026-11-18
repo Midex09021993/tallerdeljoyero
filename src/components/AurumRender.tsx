@@ -2468,7 +2468,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Rhino layer IDs can be duplicated across Gem 01–04 in imported files. Group by the explicit layer name first so every CAD gem layer receives its own initial material assignment.
             const layerKey=nameKey||indexKey||idKey||context.layerKey||("mesh:"+mesh.uuid);
             const ownMeta=mesh.userData?.aurumRhino??{};
-            const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);
+            const isDefaultWhiteDiamondLayer=/^gem\s*0*[1-4]$/i.test(layerName);
             // Gem 01–04 always start with the approved Diamante blanco 1 profile.
             // Ignore stale embedded/saved IDs for these layers; they came from
             // previous catalog generations and must not override the current default.
