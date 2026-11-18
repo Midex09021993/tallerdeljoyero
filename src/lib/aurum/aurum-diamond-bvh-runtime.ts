@@ -44,13 +44,34 @@ export function isAurumDiamondBvhCenterTarget(mesh: THREE.Mesh): boolean {
     || /center|central|main|principal/i.test(String(data.aurumDiamondRole ?? ""));
 }
 
+const normalizeGemFamily = (value: unknown) =>
+  String(value ?? "").trim().toLocaleLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+
 const getGemFamily = (material: any) =>
-  String(
+  normalizeGemFamily(
     material?.userData?.aurumGemFamily ??
     material?.userData?.aurumOpticalProfile?.familia ??
     material?.userData?.aurumRuntimeGemOptics?.family ??
     "",
-  ).toLocaleLowerCase();
+  );
+
+/**
+ * Resolve family from explicit material metadata first. Some Rhino CAD stones
+ * carry the catalog family only on the mesh/layer; use that fallback only when
+ * every material slot is unlabelled, never to overwrite mixed gem/metal slots.
+ */
+const getMeshGemFamilies = (mesh: THREE.Mesh) => {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const materialFamilies = materials.map((material) => getGemFamily(material));
+  const meshFamily = normalizeGemFamily(
+    mesh.userData?.aurumActiveGemFamily ??
+    mesh.userData?.aurumGemFamily ??
+    mesh.userData?.aurumDiamondOpticalFamily ??
+    "",
+  );
+  const hasAnyMaterialFamily = materialFamilies.some(Boolean);
+  return materialFamilies.map((family) => family || (!hasAnyMaterialFamily ? meshFamily : ""));
+};
 
 /**
  * Experimental, opt-in-by-call BVH runtime. The caller controls when it is
@@ -184,10 +205,7 @@ export async function createAurumDiamondBvhRuntime(options: {
     // Only diamond refreshes need the model-wide size ratio used for melee optics.
     const targetContainsDiamond = !targetSet || [...targetSet].some((mesh) => {
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      const family = materials.length === 1
-        ? getGemFamily(materials[0]) || String(mesh.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase()
-        : "";
-      return family === "diamante";
+      return getMeshGemFamilies(mesh).some((family) => family === "diamante");
     });
     if (targetContainsDiamond) model.updateMatrixWorld(true);
     else targetSet?.forEach((mesh) => mesh.updateWorldMatrix(true, false));
@@ -199,11 +217,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       model.traverse((object) => {
         const candidate = object as THREE.Mesh;
         if (!candidate.isMesh || !candidate.geometry) return;
-        const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
-        if (candidateMaterials.length !== 1) return;
-        const candidateFamily = getGemFamily(candidateMaterials[0])
-          || String(candidate.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase();
-        if (candidateFamily !== "diamante") return;
+        if (!getMeshGemFamilies(candidate).some((family) => family === "diamante")) return;
         if (!candidate.geometry.boundingSphere) candidate.geometry.computeBoundingSphere();
         const localRadius = candidate.geometry.boundingSphere?.radius ?? 0;
         const worldScale = candidate.getWorldScale(new THREE_NS.Vector3());
@@ -254,8 +268,9 @@ export async function createAurumDiamondBvhRuntime(options: {
       // Layer assignment is the source of truth when a single material lacks
       // family metadata. Never infer a family from a neighboring stone.
       const rawMaterialFamilies = materials.map((material) => getGemFamily(material));
-      const canUseLayerFamilyFallback = materials.length === 1 && !rawMaterialFamilies[0] && !!activeGemFamily;
-      const materialFamilies = rawMaterialFamilies.map((family) => family || (canUseLayerFamilyFallback ? activeGemFamily : ""));
+      const hasAnyMaterialFamily = rawMaterialFamilies.some(Boolean);
+      const canUseLayerFamilyFallback = !hasAnyMaterialFamily && !!activeGemFamily;
+      const materialFamilies = rawMaterialFamilies.map((family) => family || (canUseLayerFamilyFallback ? normalizeGemFamily(activeGemFamily) : ""));
       if (!targetedRefresh) {
         for (const materialFamily of materialFamilies) {
           const key = materialFamily || "(sin familia)";
@@ -370,7 +385,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The approved A/B reference uses zero direct transmission; internal
           // BVH refraction supplies the visible diamond response.
           transmission: family === "diamante"
-            ? (isNeutralWhiteDiamond ? 0 : activeGemId === "diamante_natural" ? 0 : 0.05)
+            ? 0
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
@@ -382,15 +397,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
           // White diamonds use neutral RGB energy (1, 1, 1) across every size tier;
           // optical differences remain controlled by their dedicated parameters.
-          rgbBoost: family === "diamante"
-            ? (isNeutralMicroDiamond ? [1, 1, 1]
-              : isNeutralSmallDiamond ? [1, 1, 1]
-              : isNeutralWhiteDiamond ? [1, 1, 1]
-              : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1.18, 1.18, 1.18])
-            : undefined,
-          // Small white melee: lower internal energy to prevent dense, sand-like
-          // flicker while retaining enough neutral radiance to read as diamond.
-          // Center, blue/pink diamonds and every non-diamond gemstone keep their calibration.
+          rgbBoost: family === "diamante" ? [1, 1, 1] : undefined,
+          // Every diamond size uses the exact same Optical Lab 01 energy.
+          // The screen-space tier is diagnostic/performance metadata only.
           environmentIntensity: family === "diamante" ? 1.30
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Chromatic splitting is restrained on small white melee to avoid
