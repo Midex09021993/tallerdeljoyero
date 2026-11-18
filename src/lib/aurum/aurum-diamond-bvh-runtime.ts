@@ -83,11 +83,24 @@ export async function createAurumDiamondBvhRuntime(options: {
   const environmentMap = options.environmentMap ?? await new Promise<THREE.Texture>((resolve, reject) => {
     const isExr = /\.exr(?:$|[?#])/i.test(options.url);
     const Loader = isExr && options.EXRLoader ? options.EXRLoader : options.RGBELoader;
-    new Loader().load(
+    const loader = new Loader();
+
+    // Match Diamond Optical Lab exactly: EXRLoader.setDataType(THREE.FloatType).
+    // The lab parses the same equirectangular EXR into a FloatType DataTexture;
+    // production must not silently decode it using the loader's default HalfFloatType.
+    if (isExr && typeof loader.setDataType === "function") {
+      loader.setDataType(THREE_NS.FloatType);
+    }
+
+    loader.load(
       options.url,
       (texture: THREE.Texture) => {
         texture.mapping = THREE_NS.EquirectangularReflectionMapping;
         texture.colorSpace = THREE_NS.LinearSRGBColorSpace;
+        texture.generateMipmaps = false;
+        texture.minFilter = THREE_NS.LinearFilter;
+        texture.magFilter = THREE_NS.LinearFilter;
+        texture.unpackAlignment = 1;
         texture.needsUpdate = true;
         resolve(texture);
       },
