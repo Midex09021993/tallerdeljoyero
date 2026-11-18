@@ -2441,14 +2441,30 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const initialDiamond=GEMAS.find((gem:any)=>gem.id==="diamante_natural");
         if(initialDiamond){
           const gemLayers=new Map<string,{target:any;gemId:string}>();
+          const savedGemAssignments=interno.userData?.aurumGemLayerAssignments??{};
           interno.traverse((mesh:any)=>{
             if(!mesh?.isMesh||mesh.userData?.aurumInternalInclusion)return;
             const meta=mesh.userData?.aurumRhino??{};
             if(String(meta.categoria??"").toLowerCase()!=="gema")return;
-            const layerKey=String(meta.layerKey??meta.capa??mesh.uuid).trim().toLocaleLowerCase();
+            const layerName=String(meta.capa??meta.layerName??"").trim();
+            const layerKey=String(meta.layerKey??layerName??mesh.uuid).trim().toLocaleLowerCase();
+            const layerIndex=meta.indice??meta.layerIndex??null;
+            const layerId=String(meta.rhinoLayerId??meta.layerId??"").trim();
+            const nameKey=layerName?"rhino-layer:"+encodeURIComponent(layerName.toLocaleLowerCase()):"";
+            const indexKey=layerIndex!=null?"rhino-index:"+String(layerIndex):"";
+            const idKey=layerId?"rhino-id:"+layerId:"";
+            const savedAssignment=savedGemAssignments[layerKey]
+              ??(nameKey?savedGemAssignments[nameKey]:undefined)
+              ??(indexKey?savedGemAssignments[indexKey]:undefined)
+              ??(idKey?savedGemAssignments[idKey]:undefined)
+              ??Object.values(savedGemAssignments).find((assignment:any)=>
+                (layerName&&String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase())
+                ||(layerIndex!=null&&assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex))
+                ||(layerId&&String(assignment?.layerId??"").trim()===layerId)
+              );
             const activeGemId=String(mesh.userData?.aurumActiveGemId??"").trim();
             const pendingGemId=String(mesh.userData?.aurumPendingInitialGemId??mesh.userData?.aurumInitialLayerGemId??"").trim();
-            const resolvedGemId=pendingGemId||activeGemId||initialDiamond.id;
+            const resolvedGemId=String(savedAssignment?.gemId??pendingGemId??activeGemId??meta.gemId??initialDiamond.id);
             const current=gemLayers.get(layerKey);
             if(current)return;
             gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId});
