@@ -985,7 +985,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Quality presets may lower this value, but never exceed 1.25 desktop / 1.0 mobile.
       const getAurumViewportPixelRatio = () => {
         const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
-        return Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
+        return Math.min(window.devicePixelRatio || 1, 1.75);
       };
       const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
         pixelRatio: getAurumViewportPixelRatio(),
@@ -1600,7 +1600,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ? THREE.NoToneMapping
           : THREE.ACESFilmicToneMapping;
       renderer.toneMapping = toneModeOverride;
-      renderer.toneMappingExposure = PUBLIC_VIEWER_PRESENTATION_MODE ? 1.0 : photoInicial.exposure;
+      renderer.toneMappingExposure = 1.0;
       const toneMappingLabel = (value: number) => value === THREE.ACESFilmicToneMapping
         ? "ACESFilmic"
         : value === THREE.AgXToneMapping
