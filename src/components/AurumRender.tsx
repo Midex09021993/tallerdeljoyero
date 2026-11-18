@@ -2444,19 +2444,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // dimensions, color, or a metal/prong mesh.
         const initialDiamond=GEMAS.find((gem:any)=>gem.id==="diamante_natural");
         if(initialDiamond){
-          const gemLayers=new Map<string,{target:any;gemId:string}>();
+          const gemLayers=new Map<string,{target:any;gemId:string;layerName:string;layerIndex:number|null;layerId:string|null}>();
           const savedGemAssignments=interno.userData?.aurumGemLayerAssignments??{};
+          let classifiedGemMeshes=0;
+          let overriddenGemMeshes=0;
           interno.traverse((mesh:any)=>{
             if(!mesh?.isMesh||mesh.userData?.aurumInternalInclusion)return;
-            const meta=mesh.userData?.aurumRhino??{};
-            if(String(meta.categoria??"").toLowerCase()!=="gema")return;
-            const layerName=String(meta.capa??meta.layerName??"").trim();
-            const layerKey=String(meta.layerKey??layerName??mesh.uuid).trim().toLocaleLowerCase();
-            const layerIndex=meta.indice??meta.layerIndex??null;
-            const layerId=String(meta.rhinoLayerId??meta.layerId??"").trim();
+            // Share the ancestry + Rhino layer-manifest resolver with the material picker and CAD tree.
+            const context=resolveAurumMeshLayerContext(mesh,interno);
+            const layerName=String(context.layerName??"").trim();
+            const layerIndex=Number.isInteger(context.layerIndex)?context.layerIndex:null;
+            const layerId=context.layerId==null?null:String(context.layerId).trim();
+            const manualOverride=getAurumLayerCategoryOverride(interno.userData?.aurumLayerCategoryOverrides,{layerId,layerIndex,layerName});
+            const category=manualOverride??context.category;
+            if(category!=="gema")return;
+            classifiedGemMeshes++;
+            if(manualOverride==="gema")overriddenGemMeshes++;
             const nameKey=layerName?"rhino-layer:"+encodeURIComponent(layerName.toLocaleLowerCase()):"";
             const indexKey=layerIndex!=null?"rhino-index:"+String(layerIndex):"";
             const idKey=layerId?"rhino-id:"+layerId:"";
+            const layerKey=context.layerKey??("mesh:"+mesh.uuid);
+            const ownMeta=mesh.userData?.aurumRhino??{};
             const savedAssignment=savedGemAssignments[layerKey]
               ??(nameKey?savedGemAssignments[nameKey]:undefined)
               ??(indexKey?savedGemAssignments[indexKey]:undefined)
@@ -2468,28 +2476,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               );
             const activeGemId=String(mesh.userData?.aurumActiveGemId??"").trim();
             const pendingGemId=String(mesh.userData?.aurumPendingInitialGemId??mesh.userData?.aurumInitialLayerGemId??"").trim();
-            const resolvedGemId=String(savedAssignment?.gemId??pendingGemId??activeGemId??meta.gemId??initialDiamond.id);
-            const current=gemLayers.get(layerKey);
-            if(current)return;
-            gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId});
+            const inheritedGemId=String(context.metadata?.gemId??context.source?.gemId??context.instance?.gemId??"").trim();
+            const resolvedGemId=String(savedAssignment?.gemId??pendingGemId??activeGemId??ownMeta.gemId??inheritedGemId??initialDiamond.id);
+            if(!gemLayers.has(layerKey))gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId,layerName,layerIndex,layerId});
           });
           let initialDiamondMeshes=0;
           let assignedLayers=0;
-          gemLayers.forEach(({target,gemId})=>{
+          let failedLayers=0;
+          gemLayers.forEach(({target,gemId,layerName,layerIndex,layerId})=>{
             const selectedGem=GEMAS.find((gem:any)=>gem.id===gemId)||initialDiamond;
             if(aplicarGema(selectedGem,target,false,false)){
               assignedLayers++;
               if(selectedGem.id===initialDiamond.id)initialDiamondMeshes++;
+            }else{
+              failedLayers++;
+              console.error("[AURUM][GEM INITIAL APPLICATION FAILED]",{targetName:target?.name??null,layerName,layerIndex,layerId,requestedGemId:selectedGem.id});
             }
           });
-          if(assignedLayers>0){
-            console.info("[AURUM][GEM INITIAL]",{
-              defaultGemId:initialDiamond.id,
-              assignedLayers,
-              defaultDiamondLayers:initialDiamondMeshes,
-              reason:"official-gem-application-after-layer-classification",
-            });
-          }
+          console.info("[AURUM][GEM INITIAL]",{defaultGemId:initialDiamond.id,classifiedGemMeshes,assignedLayers,defaultDiamondLayers:initialDiamondMeshes,failedLayers,manualOverrideGemMeshes:overriddenGemMeshes,resolver:"ancestry-and-rhino-layer-manifest"});
         }
         // Register the loaded model's diamond meshes before BVH setup. The micro
         // pipeline was created with an empty scene, so its initial refresh cannot
