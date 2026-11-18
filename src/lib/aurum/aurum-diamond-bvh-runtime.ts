@@ -466,12 +466,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
           get tier() { return currentDiamondTier; },
           setTier: (nextTier) => {
-            if (family !== "diamante" || nextTier === currentDiamondTier || !packageApi.setDiamondOptions) return;
-            // Keep blue/pink catalog calibrations untouched. Neutral white diamonds
-            // follow the same MICRO/SMALL profiles as the physical shader, and
-            // restore their original center/natural profile when they grow again.
-            // Tier transitions only update diagnostics. They do not alter
-            // the shared white-diamond optical material profile.
+            if (family !== "diamante" || nextTier === currentDiamondTier) return;
+            // Tier transitions update classification diagnostics only. They do
+            // not rewrite the shared neutral-white diamond optical material.
             currentDiamondTier = nextTier;
           },
           setQuality: (quality) => {
