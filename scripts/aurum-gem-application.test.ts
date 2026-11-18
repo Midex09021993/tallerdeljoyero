@@ -239,6 +239,15 @@ test("AURUM gem transition snapshots before material replacement and blends only
   expect(source).toContain("BVH may replace the physical material, so it must wait");
 });
 
+test("BVH reports why each selected diamond is accepted or rejected as center target", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const component = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(runtime).toContain("centerTargetDiagnostics");
+  expect(runtime).toContain('reason: centerProtected ? "centro-protegido" : "sin-marca-de-centro"');
+  expect(runtime).toContain("if (!centerProtected) return;");
+  expect(component).toContain('console.info("[AURUM][GEM BVH][TARGET REFRESH]"');
+  expect(component).toContain("centerTargetDiagnostics:targetBvhDiagnostics.centerTargetDiagnostics");
+});
 test("diamond live optical tuning matches the approved diamond-only calibration", () => {
   const source = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
   expect(source).toContain("internalContrast: 1.04");
