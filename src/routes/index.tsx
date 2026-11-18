@@ -490,7 +490,7 @@ function CarruselHerramientas() {
     <div
       ref={carouselRef}
       data-aurum-reveal
-      className="aurum-tools-carousel group relative min-w-0 overflow-hidden rounded-[22px] border border-[#dce3eb] bg-[linear-gradient(145deg,#fbfcfe_0%,#f4f7fa_100%)] shadow-[0_18px_48px_rgba(21,35,48,.075),0_2px_8px_rgba(21,35,48,.035)]"
+      className="aurum-tools-carousel group relative min-w-0 w-full"
       onMouseEnter={() => setInteractuando(true)}
       onMouseLeave={() => setInteractuando(false)}
       onFocusCapture={() => setInteractuando(true)}
@@ -498,7 +498,7 @@ function CarruselHerramientas() {
       onTouchStart={() => setInteractuando(true)}
       onTouchEnd={() => setInteractuando(false)}
     >
-      <div className="relative flex items-center justify-between gap-3 border-b border-[#e1e7ee] px-5 py-4 sm:px-6 sm:py-[18px]">
+      <div className="relative flex items-end justify-between gap-4 pb-4 sm:pb-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="h-px w-5 bg-[#c69b22]" />
@@ -527,7 +527,7 @@ function CarruselHerramientas() {
           tabIndex={0}
           onWheel={() => setInteractuando(true)}
           onPointerDown={() => setInteractuando(true)}
-          className="aurum-tools-track flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-5 py-5 sm:gap-[18px] sm:px-6 sm:py-[21px]"
+          className="aurum-tools-track flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain py-2 sm:gap-4 sm:py-3"
         >
           {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }, index) => (
             <Link
@@ -535,7 +535,7 @@ function CarruselHerramientas() {
               to={ruta as any}
               data-tool-card
               aria-label={`${titulo}: ${detalle}`}
-              className="group/tool relative flex min-h-[224px] w-[min(78vw,264px)] shrink-0 snap-start flex-col overflow-hidden rounded-[17px] border border-[#e0e6ed] bg-white p-[17px] shadow-[0_3px_12px_rgba(23,35,45,.025)] transition-all duration-300 hover:-translate-y-1 hover:border-[#d6bd72] hover:shadow-[0_14px_30px_rgba(23,35,45,.09)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a] sm:w-[264px]"
+              className="group/tool relative flex min-h-[218px] w-[min(84vw,340px)] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-[#e3e8ef] bg-white p-5 shadow-[0_5px_18px_rgba(23,35,45,.035)] transition-all duration-300 hover:-translate-y-1 hover:border-[#d6bd72] hover:shadow-[0_16px_34px_rgba(23,35,45,.085)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a] sm:w-[min(48vw,390px)] lg:w-[calc((100%-2rem)/3)]"
             >
               <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-gradient-to-r from-[#b38a18] via-[#e8d18a] to-transparent transition-transform duration-500 group-hover/tool:scale-x-100" />
               <span className="flex items-start justify-between">
@@ -555,7 +555,7 @@ function CarruselHerramientas() {
         <div className="pointer-events-none absolute inset-y-0 right-0 w-7 bg-gradient-to-l from-[#f5f8fb] to-transparent sm:w-9" />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-[#e1e7ee] bg-white/80 px-5 py-3 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-3">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5" aria-label={`Herramienta ${activeIndex + 1} de ${herramientasDestacadas.length}`}>
             {herramientasDestacadas.map((item, index) => (
@@ -1053,8 +1053,8 @@ function InicioPublico() {
 
       <section id="guias-tecnicas" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 560px" }} className="scroll-mt-24 border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
-          <div className="grid items-start gap-8 lg:grid-cols-[.85fr_1.15fr] lg:gap-14">
-            <div className="max-w-xl">
+          <div className="flex flex-col gap-8 lg:gap-7">
+            <div className="flex flex-col items-start">
               <p className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#876500]"><BookOpen className="size-3.5" /> Biblioteca práctica del oficio</p>
               <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Aprende sobre joyería y materiales.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Encuentra explicaciones sencillas sobre metales, gemas y técnicas de joyería.</p>
