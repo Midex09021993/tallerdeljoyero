@@ -1153,9 +1153,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let gemEnvironmentRequestId = 0;
       let metalHdriOverride: string | null = null;
       let gemHdriOverride: string | null = null;
+      // Controlled A/B diagnostic: append ?aurumGemHdriTest=180 to rotate
+      // ONLY the gemstone environment by 180 degrees. No production default,
+      // metal HDRI, material, geometry, BVH profile or intensity is changed.
+      const getGemHdriDiagnosticOffset = () => {
+        if (typeof window === "undefined") return 0;
+        const value = new URLSearchParams(window.location.search).get("aurumGemHdriTest");
+        return value === "180" ? Math.PI : 0;
+      };
       const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1, onLoaded?:()=>void, onError?:()=>void) => {
         gemEnvironmentUrl = AURUM_GEM_ENVIRONMENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
-        gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .54;
+        const baselineRotation = Number.isFinite(rotation) ? rotation : .54;
+        const diagnosticOffset = getGemHdriDiagnosticOffset();
+        gemEnvironmentRotation = baselineRotation + diagnosticOffset;
+        console.info("[AURUM][GEM HDR][A_B_TEST]", {
+          mode: diagnosticOffset ? "B_ROTATED_180" : "A_BASELINE",
+          baselineRotationRadians: baselineRotation,
+          diagnosticOffsetRadians: diagnosticOffset,
+          appliedRotationRadians: gemEnvironmentRotation,
+          restoresProductionDefault: diagnosticOffset === 0,
+          metalEnvironmentUntouched: true,
+        });
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
         const requestId = ++gemEnvironmentRequestId;
         gemEnvironmentController.load(
