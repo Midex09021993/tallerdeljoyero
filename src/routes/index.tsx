@@ -426,6 +426,7 @@ function CarruselHerramientas() {
     if (!track || !cards?.length) return;
     const safeIndex = (index + cards.length) % cards.length;
     const card = cards[safeIndex];
+    if (!card) return;
     const left = card.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
     track.scrollTo({ left, behavior });
     activeIndexRef.current = safeIndex;
