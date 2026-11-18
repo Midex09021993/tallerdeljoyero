@@ -127,7 +127,10 @@ test("source-only Rhino Gem 02 metadata assigns every mesh in the selected layer
   const gem02b = makeMesh("Gem02-B-selected", "Gem 02");
   const gem02c = makeMesh("Gem02-C", "Gem\\Gem 02");
   const gem03 = makeMesh("Gem03-control", "Gem::Gem 03");
+  const nestedGem02 = makeMesh("Nested-Gem02", "Ring::Gem 02");
+  const nestedGemMaterial = nestedGem02.material;
   expect(getAurumGemLayerIdentity(gem02a).layerName).toBe("gem 02");
+  expect(getAurumGemLayerIdentity(nestedGem02).layerName).toBe("ring::gem 02");
   expect(isAurumGemTarget(gem02a)).toBe(true);
   const untouchedMaterial = gem03.material;
   const resolvedEnvironments: any[][] = [];
@@ -160,6 +163,8 @@ test("source-only Rhino Gem 02 metadata assigns every mesh in the selected layer
   }
   expect(gem03.material).toBe(untouchedMaterial);
   expect(gem03.userData.aurumActiveGemId).toBeUndefined();
+  expect(nestedGem02.material).toBe(nestedGemMaterial);
+  expect(nestedGem02.userData.aurumActiveGemId).toBeUndefined();
 
   scene.traverse((object) => {
     if (object instanceof THREE.Mesh) {
