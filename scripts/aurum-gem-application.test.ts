@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { createAurumGemEnvironment } from "../src/lib/aurum/gem-environment";
+import { getAurumDiamondEnvironmentRotationEuler } from "../src/lib/aurum/aurum-diamond-bvh-runtime";
 import { applyAurumGemToTarget, getAurumGemLayerIdentity, isAurumGemTarget, prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 import { setAurumGemShaderQuality } from "../src/lib/aurum/scintillation";
@@ -797,6 +798,31 @@ test("all neutral white diamond sizes use the center optical profile and expose 
 });
 
 
+
+test("diamond environment compensation composes around the world table normal instead of forcing Y-only rotation", () => {
+  const axis = new THREE.Vector3(1, 0, 0);
+  const baseRadians = THREE.MathUtils.degToRad(30);
+  const correctionRadians = THREE.MathUtils.degToRad(-90);
+  const euler = getAurumDiamondEnvironmentRotationEuler(baseRadians, axis, correctionRadians);
+  const actual = new THREE.Matrix4().makeRotationFromEuler(
+    new THREE.Euler(
+      THREE.MathUtils.degToRad(euler.x),
+      THREE.MathUtils.degToRad(euler.y),
+      THREE.MathUtils.degToRad(euler.z),
+      "YXZ",
+    ),
+  );
+  const expected = new THREE.Matrix4()
+    .makeRotationFromEuler(new THREE.Euler(0, baseRadians, 0, "YXZ"))
+    .multiply(new THREE.Matrix4().makeRotationAxis(axis, correctionRadians));
+  const actualElements = actual.elements;
+  const expectedElements = expected.elements;
+  for (let index = 0; index < 16; index += 1) {
+    expect(actualElements[index]).toBeCloseTo(expectedElements[index] ?? 0, 8);
+  }
+  expect(Math.abs(euler.x) + Math.abs(euler.z)).toBeGreaterThan(1);
+});
+
 test("each diamond EXR orientation is compensated from its geometry-derived table frame", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const editor = readFileSync("src/components/AurumRender.tsx", "utf8");
@@ -811,7 +837,10 @@ test("each diamond EXR orientation is compensated from its geometry-derived tabl
   expect(runtime).toContain("frameValid");
   expect(runtime).not.toContain("centerWorldYawRadians = centerWorldEuler.y");
   expect(runtime).not.toContain("const offsetRadians = centerWorldYawRadians - worldEuler.y");
-  expect(runtime).toContain("requestedRotation + entry.environmentRotationOffsetRadians");
+  expect(runtime).toContain("getAurumDiamondEnvironmentRotationEuler");
+  expect(runtime).toContain("entry.environmentRotationAxisWorld");
+  expect(runtime).toContain("requestedRotation,");
+  expect(runtime).not.toContain("setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 })");
   expect(runtime).toContain('"[AURUM][DIAMOND][CENTER_RELATIVE_EXR_ALIGNMENT]"');
   expect(editor).toContain("environmentRotationRadians: gemEnvironmentRotation");
 });
