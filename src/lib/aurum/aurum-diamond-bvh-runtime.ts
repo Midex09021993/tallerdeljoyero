@@ -368,7 +368,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The approved A/B reference uses zero direct transmission; internal
           // BVH refraction supplies the visible diamond response.
           transmission: family === "diamante"
-            ? (isNeutralWhiteDiamond && isCenterWhiteDiamond ? 0 : isNeutralWhiteDiamond ? 0.05 : activeGemId === "diamante_natural" ? 0 : 0.05)
+            ? (isNeutralWhiteDiamond ? 0 : activeGemId === "diamante_natural" ? 0 : 0.05)
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
@@ -390,9 +390,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // flicker while retaining enough neutral radiance to read as diamond.
           // Center, blue/pink diamonds and every non-diamond gemstone keep their calibration.
           environmentIntensity: family === "diamante"
-            ? (isNeutralMicroDiamond ? 1.20
-              : isNeutralSmallDiamond ? 1.30
-              : isCenterWhiteDiamond ? 1.30
+            ? (isNeutralWhiteDiamond ? 1.30
               : isSmallSecondaryDiamond ? 1.32
               : isBlueDiamond ? 1.30
               : isPinkDiamond ? 1.25
@@ -443,9 +441,9 @@ export async function createAurumDiamondBvhRuntime(options: {
               const isSmall = nextTier === "small";
               packageApi.setDiamondOptions(prepared.material, {
                 ior: 2.6,
-                transmission: isMicro || isSmall ? 0.05 : 0,
+                transmission: 0,
                 rgbBoost: [1, 1, 1],
-                environmentIntensity: isMicro ? 1.20 : 1.30,
+                environmentIntensity: 1.30,
                 dispersion: 0.010,
                 gamma: 1.0,
                 rayBounces: 5,
