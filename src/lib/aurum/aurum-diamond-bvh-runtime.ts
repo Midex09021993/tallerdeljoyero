@@ -469,11 +469,15 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
           gamma: family === "diamante" ? (activeGemId === "diamante_natural" ? 1.0 : isCenterWhiteDiamond || isBlueDiamond ? 1.09 : isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : 0.90) : 1.09,
-          // Optical Lab AURUM BVH reference forces a zero-degree environment rotation.
-          // Do not inherit the regular gem-family orientation offset on the protected center diamond.
-          environmentRotationRadians: isCenterWhiteDiamond ? 0 : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
+          // Every diamond starts with the same EXR orientation. Later global
+          // environment rotation is applied uniformly through updateEnvironment().
+          // Per-mesh family offsets must not rotate melee stones away from the center.
+          environmentRotationRadians: family === "diamante"
+            ? 0
+            : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
+        let currentRayBounces = prepared.diagnostics.rayBounces;
         entries.set(mesh, {
           originalMaterial: mesh.material,
           experimentalMaterial: prepared.material,
@@ -499,7 +503,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 environmentIntensity: isMicro ? 1.20 : isSmall ? 1.30 : baseEnvironment,
                 dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : baseDispersion,
                 gamma: isNaturalWhiteOne ? 1.0 : isMicro ? 0.96 : isSmall ? 0.94 : 0.90,
-                rayBounces: isNaturalWhiteOne ? 5 : isMicro ? 2 : isSmall ? 3 : 5,
+                // BVH quality is controlled only by setQuality(), never by screen tier.
               });
             }
             currentDiamondTier = nextTier;
@@ -507,13 +511,11 @@ export async function createAurumDiamondBvhRuntime(options: {
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
             if (family === "diamante") {
-              // Match the audited secondary-diamond minimum while preserving calibrated center/blue values.
-              // Secondary melee uses 4; blue uses 6 and center white references use 5.
-              packageApi.setDiamondOptions(prepared.material, {
-                // Fewer internal bounces on tiny white melee reduce unstable
-                // high-frequency sparkle; the center and colored variants stay calibrated.
-                rayBounces: activeGemId === "diamante_natural" ? 5 : currentDiamondTier === "micro" ? 2 : currentDiamondTier === "small" ? 3 : isBlueDiamond ? 6 : isCenterWhiteDiamond ? 4 : 5,
-              });
+              // One source of truth: the requested BVH quality determines
+              // internal ray bounces for every diamond, regardless of size or color.
+              const rayBounces = quality === "final" ? 5 : quality === "high" ? 4 : 3;
+              packageApi.setDiamondOptions(prepared.material, { rayBounces });
+              currentRayBounces = rayBounces;
               return;
             }
             if (isEmerald) {
@@ -537,6 +539,15 @@ export async function createAurumDiamondBvhRuntime(options: {
         // created. Without this call, setQuality only runs during later quality
         // transitions, leaving emeralds at the shader package's generic default.
         entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
+        if (family === "diamante") {
+          console.info("[AURUM][DIAMOND][BVH_QUALITY_APPLIED]", {
+            mesh: mesh.name || mesh.uuid,
+            tier: currentDiamondTier,
+            quality: "high",
+            rayBounces: currentRayBounces,
+            environmentRotationRadians: 0,
+          });
+        }
         mesh.material = prepared.material;
         // Preserve the CAD stone identity on the mesh while BVH replaces its physical material.
         // Downstream diamond-only classifiers must not depend on experimental shader metadata.
