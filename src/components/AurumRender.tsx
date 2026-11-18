@@ -981,12 +981,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       let renderQuality = getAurumRenderQuality(renderQualityId);
       let measuredQualityId: AurumRenderQualityId = renderQualityId;
-      // Match the Public Viewer drawing-buffer ceiling on every viewport.
-      // Quality presets may lower this value, but never exceed 1.25 desktop / 1.0 mobile.
-      const getAurumViewportPixelRatio = () => {
-        const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
-        return Math.min(window.devicePixelRatio || 1, 1.75);
-      };
+      // Match the diamond laboratory drawing-buffer ceiling on every viewport.
+      // Dense CAD scenes retain their separate runtime-budget cap.
+      const getAurumViewportPixelRatio = () => Math.min(window.devicePixelRatio || 1, 1.75);
       const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
         pixelRatio: getAurumViewportPixelRatio(),
         maxDistance: 100,
