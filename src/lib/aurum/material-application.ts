@@ -1,7 +1,5 @@
 import * as THREE from "three";
-import { resolveAurumLayerKey } from "./layer-identity";
 import { resolveAurumMeshLayerContext } from "./mesh-layer-context";
-import { classifyAurumSemanticObject } from "./semantic-object-recognition";
 import { getAurumSourceMaterials, hadAurumSourceMaterialArray } from "./gem-material-baseline";
 import { applyAurumIJEWELReferenceFromMaterial } from "../aurum-material-engine";
 import { createAurumGemAdapter } from "./core/gem-adapter";

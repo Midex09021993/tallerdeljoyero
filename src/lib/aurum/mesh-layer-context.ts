@@ -24,7 +24,7 @@ const validIndex=(value:any):number|null=>{
 };
 const layerCategory=(value:string):"metal"|"gema"|"otro"=>{
   const segments=value.split(/::|[\\/]/).map(part=>part.trim().toLowerCase().replace(/[_-]+/g," "));
-  const gem=/^(?:gem|gems|gemstone|gemstones|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes|zafiro|sapphire|rubi|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)(?:\\s*0*\\d+(?:\\.\\d+)?(?:\\s*mm)?(?:\\s*[- ]\\s*[a-z0-9 .-]+)?)?$/;
+  const gem=/^(?:gem|gems|gemstone|gemstones|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes|zafiro|sapphire|rubi|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)(?:\s*0*\\d+(?:\.\\d+)?(?:\s*mm)?(?:\s*[- ]\s*[a-z0-9 .-]+)?)?$/;
   if(segments.some(segment=>gem.test(segment)))return "gema";
   if(/(?:metal|oro|gold|plata|silver|platino|platinum|metalico|metálico|acero|steel)/i.test(value))return "metal";
   return "otro";

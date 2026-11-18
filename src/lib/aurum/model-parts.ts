@@ -34,6 +34,7 @@ export function getAurumModelParts(
   clasificarCapa: (capa: string, colorCapa?: string) => "metal" | "gema" | "otro"
 ): AurumModelPart[] {
   const result: AurumModelPart[] = [];
+  void clasificarCapa;
   object.traverse((x: any) => {
     if (x === object) return;
     const isMesh = !!x.isMesh;
