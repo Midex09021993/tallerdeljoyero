@@ -45,7 +45,7 @@ export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS
 // One controlled gem environment: the EXR supplied for AURUM diamond calibration.
 // All legacy gem-environment keys remain aliases to this single asset so existing
 // scene profiles cannot silently load a different gem HDRI.
-export const AURUM_GEM_HDRI_ASSET_URL = "/aurum/hdri/env_gem_002_30251392af.exr";
+export const AURUM_GEM_HDRI_ASSET_URL = "/env_gem_002_30251392af.exr";
 export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   gemDiamond:AURUM_GEM_HDRI_ASSET_URL,
   gemWhite:AURUM_GEM_HDRI_ASSET_URL,
