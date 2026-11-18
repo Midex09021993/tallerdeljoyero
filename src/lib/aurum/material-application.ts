@@ -212,11 +212,15 @@ const selectionLayerIdentity=(part:any)=>{
 };
 const normalizeGemLayerName=(value:any)=>{
   const raw=String(value??"").trim();
-  // Rhino/MatrixGold may serialize a full layer path (for example
-  // "Gem::Gem 02") while sibling GLB meshes retain only the leaf name.
-  // Group by the actual leaf layer, not by the serialized path prefix.
-  const leaf=raw.split(/::|[\\/]/).filter(Boolean).pop()??raw;
-  return leaf.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ").trim();
+  const segments=raw.split(/::|[\\/]/).filter(Boolean).map((part)=>
+    part.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ").trim()
+  );
+  const leaf=segments[segments.length-1]??"";
+  // Collapse only Rhino’s generic Gem::Gem 0N container prefix. Preserve
+  // meaningful parent paths so two separate CAD groups with a repeated
+  // leaf name can never be merged accidentally.
+  const genericGemContainer=segments.length===2&&/^(?:gem|gems|gemstone|gemstones)$/.test(segments[0]);
+  return (genericGemContainer?[leaf]:segments).filter(Boolean).join("::");
 };
 const selectionLayerName=(part:any)=>selectionLayerIdentity(part).layerName;
 export const getAurumGemLayerIdentity=(part:any)=>{
