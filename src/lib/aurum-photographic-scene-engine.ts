@@ -76,7 +76,7 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
 export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>={
   gemUserHdr:{
     id:"gemUserHdr",
-    name:"HDR Diamante · Personalizado",
+    name:"env-gem-002-30251392",
     url:AURUM_GEM_HDRI_ASSET_URL,
     rotation:0,
     intensity:1,
