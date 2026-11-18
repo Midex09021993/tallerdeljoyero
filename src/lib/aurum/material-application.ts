@@ -216,7 +216,7 @@ const normalizeGemLayerName=(value:any)=>{
   // "Gem::Gem 02") while sibling GLB meshes retain only the leaf name.
   // Group by the actual leaf layer, not by the serialized path prefix.
   const leaf=raw.split(/::|[\\/]/).filter(Boolean).pop()??raw;
-  return leaf.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ").trim();
+  return leaf.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ").trim();
 };
 const selectionLayerName=(part:any)=>selectionLayerIdentity(part).layerName;
 export const getAurumGemLayerIdentity=(part:any)=>{
@@ -228,7 +228,7 @@ const isExplicitGemSlot=(part:any)=>{
   const layerName=normalizeGemLayerName(selectionLayerName(part));
   // MatrixGold/Rhino gemstone slots are authoritative even when an imported
   // material or stale semantic tag incorrectly labels the mesh as metal.
-  return /\\b(?:gem|gema|piedra|stone|diamond|diamante)\\s*[_-]?\\s*0?[1-4]\\b/.test(layerName);
+  return /\b(?:gem|gema|piedra|stone|diamond|diamante)\s*[_-]?\s*0?[1-4]\b/.test(layerName);
 };
 const selectionCategory=(part:any)=>{
   const declared=String(selectionMeta(part).categoria||"").toLowerCase();
