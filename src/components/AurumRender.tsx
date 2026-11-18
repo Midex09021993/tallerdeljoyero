@@ -1673,7 +1673,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const presetInicial = PUBLIC_VIEWER_PRESENTATION_MODE ? null : sceneAdapter.apply("ijewelReference");
       // The initial selected UI preset is confirmed only after both HDR maps load.
       cargarEntornoGema(
-        PUBLIC_VIEWER_PRESENTATION_MODE ? "ijewelGem" : "predeterminado",
+        "gemDiamondWhite1",
         PUBLIC_VIEWER_PRESENTATION_MODE ? 0 : ambientInicial.rotation,
         PUBLIC_VIEWER_PRESENTATION_MODE ? 1 : ambientInicial.intensity,
         () => { initialGemReady = true; confirmarAmbienteInicial(); },
