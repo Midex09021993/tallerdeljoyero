@@ -64,11 +64,13 @@ function resolveInitialRhinoLayer(model:any, mesh:any){
 }
 
 function inferInitialLayerCategory(layerName:string):"gema"|"metal"|undefined{
-  const name=String(layerName??"").trim().toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");
-  // Gem 01, Gem_02, Gema 03, Piedra 01 and Stone 01 are explicit CAD layer
-  // conventions. Do not classify prongs, settings, or other jewelry geometry.
-  if(/^(?:gem|gema|piedra|stone)(?:\s*0*\d+)?$/.test(name))return "gema";
-  if(/^(?:metal|metales|oro|gold|plata|silver|platino|platinum|metalico|metálico)(?:\s*0*\d+)?$/.test(name))return "metal";
+  const segments=String(layerName??"")
+    .split(/::|[\\/]/)
+    .map((part)=>part.trim().toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[_]+/g," ").replace(/\s+/g," "));
+  const gemLayer=/^(?:gem|gems|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes)(?:\s*0*\d+(?:\.\d+)?(?:\s*mm)?(?:\s*[- ]\s*[\p{L}\p{N} .-]+)?)?$/u;
+  const metalLayer=/^(?:metal|metales|oro|gold|plata|silver|platino|platinum|acero|steel)(?:\s*0*\d+)?$/u;
+  if(segments.some((name)=>gemLayer.test(name)))return "gema";
+  if(segments.some((name)=>metalLayer.test(name)))return "metal";
   return undefined;
 }
 
@@ -148,8 +150,10 @@ export function applyAurumInitialModelMaterials(
     }
 
     if(meta?.categoria==="gema"){
-      // Preserve the imported GLB/CAD material unless this layer has an explicit
-      // saved/catalog gem assignment. Never guess that every unassigned gem is a diamond.
+      // Keep the authored CAD material as a baseline. This preliminary pass
+      // resolves the requested catalog gem only; it must not claim an active
+      // assignment or create an opaque provisional diamond. The official
+      // aplicarGema path runs after category overrides and activates the shader.
       captureAurumSourceMaterials(x);
       const layerKey=String(meta?.layerKey??"");
       const savedAssignments=model.userData?.aurumGemLayerAssignments??{};
@@ -159,9 +163,6 @@ export function applyAurumInitialModelMaterials(
       const layerId=String(meta?.rhinoLayerId??meta?.layerId??"").trim();
       const layerIndexKey=layerIndex!=null ? "rhino-index:"+String(layerIndex) : "";
       const layerIdKey=layerId ? "rhino-id:"+layerId : "";
-      // Gem application stores assignments using a canonical layer key, while
-      // imported GLB metadata may retain a different key format. Resolve by
-      // stable layer identity before considering explicit source metadata.
       const savedAssignment=
         savedAssignments[layerKey] ??
         (layerNameKey ? savedAssignments[layerNameKey] : undefined) ??
@@ -175,42 +176,13 @@ export function applyAurumInitialModelMaterials(
       const assignedGemId=String(savedAssignment?.gemId??options.initialGemByLayer?.[layerKey]??(layerNameKey ? options.initialGemByLayer?.[layerNameKey] : "")??meta?.gemId??"");
       const initialGemId=assignedGemId || String(options.initialGemId??"");
       const gem=initialGemId ? options.gems.find((g:any)=>g.id===initialGemId) : undefined;
-      if(!gem) {
-        x.userData={...(x.userData??{}),aurumActiveGemId:"",aurumActiveGemFamily:""};
-        return;
+      if(gem){
+        x.userData={
+          ...(x.userData??{}),
+          aurumPendingInitialGemId:String(gem.id),
+          aurumInitialLayerGemId:String(gem.id),
+        };
       }
-      const m=new THREE.MeshPhysicalMaterial();
-      const box=new THREE.Box3().setFromObject(x);
-      const size=box.getSize(new THREE.Vector3());
-      const preset=options.gemPresetFromConfig(gem);
-      options.applyGem(m,preset,Math.min(size.x,size.y,size.z)*.85);
-      if (preset?.familia) {
-        applyAurumOpticalProfile(m,getAurumOpticalProfile(preset.familia));
-        if (preset.familia==="Diamante") {
-          applyAurumDiamondOptics(m);
-          m.userData={
-            ...(m.userData??{}),
-            aurumIJEWELActive:true,
-            aurumDiamondShaderMode:"native-ijewel-approx-v1",
-          };
-          applyAurumDynamicScintillation(m,getAurumOpticalProfile(preset.familia));
-        }
-      }
-      x.material=m;
-      x.userData={
-        ...(x.userData??{}),
-        aurumActiveGemId:String(gem.id??""),
-        aurumActiveGemFamily:String(gem.familia??"").toLocaleLowerCase(),
-        aurumInitialLayerGemId:String(gem.id??""),
-      };
-      m.userData={
-        ...(m.userData??{}),
-        aurumGemFamily:String(gem.familia??"").toLocaleLowerCase(),
-        aurumActiveGemId:String(gem.id??""),
-      };
-      // Procedural inclusions are deferred to CAPTURE. Creating dozens of
-      // transparent meshes during every model load is unnecessary for LIVE.
-      options.applyGemEnvironment();
     }else if(meta?.categoria==="metal"){
       // Keep recognized imported iJewel/MatrixGold alloy assignments separate.
       // Only source-material names that explicitly identify green gold or white
