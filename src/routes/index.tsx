@@ -416,6 +416,7 @@ function CarruselHerramientas() {
   const activeIndexRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [pausado, setPausado] = useState(false);
+  const [interactuando, setInteractuando] = useState(false);
   const [visible, setVisible] = useState(false);
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
@@ -439,14 +440,16 @@ function CarruselHerramientas() {
     if (!track || !root) return;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let observer: IntersectionObserver | null = null;
-    const updateVisibility = () => setVisible(document.visibilityState === "visible");
+    const intersectandoRef = { current: false };
+    const updateVisibility = () => setVisible(intersectandoRef.current && document.visibilityState === "visible");
     updateVisibility();
     document.addEventListener("visibilitychange", updateVisibility);
     if (typeof IntersectionObserver !== "undefined") {
-      observer = new IntersectionObserver(([entry]) => setVisible(Boolean(entry?.isIntersecting) && document.visibilityState === "visible"), { threshold: 0.2 });
+      observer = new IntersectionObserver(([entry]) => { intersectandoRef.current = Boolean(entry?.isIntersecting); updateVisibility(); }, { threshold: 0.2 });
       observer.observe(root);
     } else {
-      setVisible(true);
+      intersectandoRef.current = true;
+      updateVisibility();
     }
     const onScroll = () => {
       const cards = Array.from(track.querySelectorAll<HTMLElement>("[data-tool-card]"));
@@ -477,21 +480,21 @@ function CarruselHerramientas() {
   }, []);
 
   useEffect(() => {
-    if (pausado || !visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (pausado || interactuando || !visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => irA(activeIndexRef.current + 1), 4400);
     return () => window.clearInterval(timer);
-  }, [pausado, visible]);
-
-  const pausarPorInteraccion = () => setPausado(true);
+  }, [pausado, interactuando, visible]);
 
   return (
     <div
       ref={carouselRef}
       data-aurum-reveal
       className="aurum-tools-carousel group relative min-w-0 overflow-hidden rounded-[22px] border border-[#dce3eb] bg-[linear-gradient(145deg,#fbfcfe_0%,#f4f7fa_100%)] shadow-[0_18px_48px_rgba(21,35,48,.075),0_2px_8px_rgba(21,35,48,.035)]"
-      onMouseEnter={pausarPorInteraccion}
-      onFocusCapture={pausarPorInteraccion}
-      onTouchStart={pausarPorInteraccion}
+      onMouseEnter={() => setInteractuando(true)}
+      onMouseLeave={() => setInteractuando(false)}
+      onFocusCapture={() => setInteractuando(true)}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setInteractuando(false); }}
+      onTouchStart={() => setInteractuando(true)}
     >
       <div className="relative flex items-center justify-between gap-3 border-b border-[#e1e7ee] px-5 py-4 sm:px-6 sm:py-[18px]">
         <div className="min-w-0">
@@ -520,8 +523,8 @@ function CarruselHerramientas() {
           aria-label="Carrusel automático de herramientas de AURUM LAB"
           aria-roledescription="carrusel"
           tabIndex={0}
-          onWheel={pausarPorInteraccion}
-          onPointerDown={pausarPorInteraccion}
+          onWheel={() => setInteractuando(true)}
+          onPointerDown={() => setInteractuando(true)}
           className="aurum-tools-track flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-5 py-5 sm:gap-[18px] sm:px-6 sm:py-[21px]"
         >
           {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }, index) => (
