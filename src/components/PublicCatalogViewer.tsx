@@ -55,33 +55,30 @@ const ensurePhysicalGemMaterial = (material: any): THREE.MeshPhysicalMaterial =>
   return physical;
 };
 
-// Fallback inspired by MiniAurumRender: CAD exports may give every part a generic
-// name. Only run geometry inference when no explicit gemstone mesh was found.
+// Geometry inference complements explicit gem metadata instead of disabling
+// itself when a model contains side stones but its center diamond is unnamed.
+// Only a central, compact candidate that outranks explicitly named side stones
+// is inferred. Metal-classified meshes are never eligible in mixed assemblies.
 export const inferGemMeshes = (model: THREE.Object3D): number => {
   const meshes: THREE.Mesh[] = [];
   model.traverse((object) => {
     if (object instanceof THREE.Mesh && object.visible && object.geometry?.getAttribute("position")) meshes.push(object);
   });
-
-  // Match MiniAurumRender: explicit gem names/materials are authoritative.
-  // Geometry fallback is only for models with no explicitly identified stones.
-  const explicitlyIdentified = meshes.filter((mesh) => classifyMesh(mesh) === "gema");
-  if (explicitlyIdentified.length > 0) {
-    console.info("[PUBLIC VIEWER][GEM AUDIT] Gemas identificadas por nombre/metadatos; se omite inferencia geométrica para no teñir el engaste.", {
-      explicitlyIdentified: explicitlyIdentified.length,
-    });
-    return 0;
-  }
+  const explicitlyIdentified = new Set(meshes.filter((mesh) => classifyMesh(mesh) === "gema"));
 
   model.updateMatrixWorld(true);
   const modelBounds = new THREE.Box3().setFromObject(model);
   if (modelBounds.isEmpty()) return 0;
   const modelSize = modelBounds.getSize(new THREE.Vector3());
   const modelCenter = modelBounds.getCenter(new THREE.Vector3());
-  const candidates: Array<{ mesh: THREE.Mesh; score: number }> = [];
+  const candidates: Array<{ mesh: THREE.Mesh; score: number; explicit: boolean }> = [];
 
   model.traverse((object) => {
     if (!(object instanceof THREE.Mesh) || !object.visible || !object.geometry?.getAttribute("position")) return;
+    const explicit = explicitlyIdentified.has(object);
+    // In a mixed model, only unclassified meshes may be inferred; never
+    // reinterpret a mesh explicitly classified as metal.
+    if (explicitlyIdentified.size > 0 && (explicit || classifyMesh(object) === "metal")) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     if (materials.length !== 1) return;
     object.updateWorldMatrix(true, false);
@@ -97,8 +94,7 @@ export const inferGemMeshes = (model: THREE.Object3D): number => {
     const depthRatio = size.z / Math.max(modelSize.z, 1e-6);
     const compactness = Math.max(size.x, size.y, size.z) / Math.max(Math.min(size.x, size.y, size.z), 1e-5);
 
-    // Keep MiniAurumRender's stricter filters. The previous 0.012 threshold
-    // admitted prongs, rails and metal setting parts as supposed side gemstones.
+    // Strict filters exclude long prongs, rails and most setting components.
     if (
       heightRatio > 0.48 ||
       topRatio < 0.62 ||
@@ -112,21 +108,24 @@ export const inferGemMeshes = (model: THREE.Object3D): number => {
     const footprint = widthRatio * depthRatio;
     const score = topRatio * 3 - xOffset * 2 - zOffset * 2 + footprint * 5 -
       Math.abs(heightRatio - 0.22) - Math.max(0, compactness - 2.2) * 0.16;
-    candidates.push({ mesh: object, score });
+    candidates.push({ mesh: object, score, explicit });
   });
 
   candidates.sort((a, b) => b.score - a.score);
-  const inferredGem = candidates[0]?.mesh;
-  if (!inferredGem) {
-    console.warn("[PUBLIC VIEWER][GEM AUDIT] No se encontró una gema aislada por geometría.", {
+  const inferred = candidates[0];
+  if (!inferred) {
+    console.warn("[PUBLIC VIEWER][GEM AUDIT] No se encontró una gema central aislada por geometría.", {
       meshCount: meshes.length,
+      explicitlyIdentified: explicitlyIdentified.size,
     });
     return 0;
   }
-  inferredGem.userData = { ...(inferredGem.userData ?? {}), aurumPublicInferredGem: true };
-  console.info("[PUBLIC VIEWER][GEM AUDIT] Gema central inferida con el mismo criterio estricto de MiniAurumRender.", {
-    mesh: inferredGem.name || inferredGem.uuid,
+  if (inferred.explicit) return 0;
+  inferred.mesh.userData = { ...(inferred.mesh.userData ?? {}), aurumPublicInferredGem: true };
+  console.info("[PUBLIC VIEWER][GEM AUDIT] Diamante central inferido sin alterar gemas explícitas ni metales.", {
+    mesh: inferred.mesh.name || inferred.mesh.uuid,
     candidates: candidates.length,
+    explicitlyIdentified: explicitlyIdentified.size,
   });
   return 1;
 };
