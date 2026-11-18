@@ -133,11 +133,15 @@ test("provides conservative optical tiers while preserving the brilliant baselin
   const micro = getAurumDiamondMicroOpticalProfile("micro");
   const small = getAurumDiamondMicroOpticalProfile("small");
   const brilliant = getAurumDiamondMicroOpticalProfile("brilliant");
-  expect(micro).toEqual({ scintillationScale: 0.22, facetContrastScale: 0.72, dispersionScale: 0.72, virtualFacetWeight: 0.004, fireScale: 0.38 });
-  expect(small).toEqual({ scintillationScale: 0.62, facetContrastScale: 0.84, dispersionScale: 0.86, virtualFacetWeight: 0.022, fireScale: 0.72 });
+  expect(micro).toEqual({ scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 });
+  expect(small).toEqual({ scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 });
   expect(micro.scintillationScale).toBeLessThan(small.scintillationScale);
-  expect(micro.dispersionScale).toBeLessThan(small.dispersionScale);
-  expect(micro.virtualFacetWeight).toBeLessThan(small.virtualFacetWeight);
+  expect(micro.dispersionScale).toBe(1);
+  expect(small.dispersionScale).toBe(1);
+  expect(micro.virtualFacetWeight).toBe(brilliant.virtualFacetWeight);
+  expect(small.virtualFacetWeight).toBe(brilliant.virtualFacetWeight);
+  expect(micro.fireScale).toBe(1);
+  expect(small.fireScale).toBe(1);
   expect(brilliant).toEqual({ scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 });
 });
 
@@ -165,9 +169,9 @@ test("applies per-mesh optical profiles to diamonds sharing one material and res
   large.onBeforeRender(null as any, scene, camera, large.geometry, material, null as any);
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
   tiny.onBeforeRender(null as any, scene, camera, tiny.geometry, material, null as any);
-  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.22);
-  expect(material.userData.aurumDiamondMicroUniforms.virtualFacetWeight.value).toBeCloseTo(0.004);
-  expect(tiny.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(0.22);
+  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.42);
+  expect(material.userData.aurumDiamondMicroUniforms.virtualFacetWeight.value).toBeCloseTo(0.06);
+  expect(tiny.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(0.42);
   pipeline.dispose();
   expect(large.userData.aurumDiamondMicroTier).toBe("brilliant");
   expect(large.userData.aurumDiamondMicroOpticalProfile).toEqual(getAurumDiamondMicroOpticalProfile("brilliant"));
@@ -200,7 +204,7 @@ test("refresh discovers meshes reassigned to diamond and releases meshes reassig
   pipeline.update();
   mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, diamondMaterial, null as any);
   expect(mesh.userData.aurumDiamondMicroTier).toBe("micro");
-  expect(diamondMaterial.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.22);
+  expect(diamondMaterial.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.42);
 
   mesh.material = new THREE.MeshBasicMaterial();
   pipeline.refresh();
