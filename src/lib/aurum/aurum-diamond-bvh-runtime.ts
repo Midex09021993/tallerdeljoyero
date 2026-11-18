@@ -37,6 +37,13 @@ export type AurumDiamondBvhRuntime = {
   diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
 
+/** True only for the center stone protected by the shared screen-space analyzer or explicit CAD metadata. */
+export function isAurumDiamondBvhCenterTarget(mesh: THREE.Mesh): boolean {
+  const data = mesh?.userData ?? {};
+  return Boolean(data.aurumDiamondMicroCenterProtected || data.aurumDiamondCenter || data.aurumDiamondIsCenter)
+    || /center|central|main|principal/i.test(String(data.aurumDiamondRole ?? ""));
+}
+
 const getGemFamily = (material: any) =>
   String(
     material?.userData?.aurumGemFamily ??
@@ -64,6 +71,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   getViewportHeight?: () => number;
   quality?: "interactive" | "high" | "final";
   targetFamilies?: string[];
+  /** When true, BVH is reserved for the explicitly/inferred protected center diamond. */
+  diamondCenterOnly?: boolean;
   onError?: (error: unknown) => void;
 }): Promise<AurumDiamondBvhRuntime> {
   const THREE_NS = options.THREE;
@@ -295,6 +304,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           || Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
           || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? "")),
       };
+      // The production editor can opt into BVH for the center stone only.
+      // Secondary diamonds remain on their existing MeshPhysicalMaterial path.
+      if (family === "diamante" && options.diamondCenterOnly && !isAurumDiamondBvhCenterTarget(mesh)) return;
       const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant";
       const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro" && !isBlueDiamond && !isPinkDiamond;
       const isNeutralSmallDiamond = family === "diamante" && screenTier === "small" && !isBlueDiamond && !isPinkDiamond;
