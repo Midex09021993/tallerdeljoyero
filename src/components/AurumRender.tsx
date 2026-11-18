@@ -2183,39 +2183,131 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (ext === "3dm") {
           objeto.rotation.x = -Math.PI / 2;
           objeto.updateMatrixWorld(true);
+          const rootData = objeto.userData ?? {};
+          // Rhino3dmLoader stores the layer manifest on the model root. Mesh
+          // attributes usually contain only layerIndex, so resolve that index
+          // before classifying the mesh. Otherwise Gem 01 is incorrectly
+          // treated as an unknown/default metal during the first-load pass.
+          const layerManifest = [
+            rootData.layers,
+            rootData.rhinoLayers,
+            rootData.aurumRhinoSourceLayers,
+          ].find((value: any) => Array.isArray(value) && value.length) ?? [];
+          const layerById = new Map<string, any>();
+          layerManifest.forEach((layer: any) => {
+            const id = layer?.id ?? layer?.Id;
+            if (id !== null && id !== undefined) layerById.set(String(id), layer);
+          });
+          let gemLayerMeshes = 0;
+          let metalLayerMeshes = 0;
+          let defaultMetalMeshes = 0;
           objeto.userData = {
-            ...(objeto.userData ?? {}),
+            ...rootData,
             aurumPublicSourceFormat: "3dm",
             aurumSourceFormat: "3dm",
           };
           objeto.traverse((node: any) => {
-            if (!node?.isMesh || !node.material) return;
-            const meta = node.userData?.aurumRhino ?? {};
-            const source = node.userData?.aurumRhinoSource ?? {};
-            const instanceSource = node.userData?.aurumRhinoInstanceSource ?? {};
-            const attributes = node.userData?.attributes ?? {};
-            const materials = Array.isArray(node.material) ? node.material : [node.material];
+            if (!node?.isMesh) return;
+            const data = node.userData ?? {};
+            const meta = data.aurumRhino ?? {};
+            const source = data.aurumRhinoSource ?? {};
+            const instanceSource = data.aurumRhinoInstanceSource ?? {};
+            const instanceReference = data.aurumRhinoInstanceReference ?? {};
+            const rhinoLayer = data.rhinoLayer ?? data.RhinoLayer ?? {};
+            const attributes = data.attributes ?? {};
+            const rawLayerIndex =
+              instanceSource.layerIndex ?? instanceReference.layerIndex ??
+              source.layerIndex ?? attributes.layerIndex ?? attributes.LayerIndex ??
+              data.layerIndex ?? data.LayerIndex ?? meta.layerIndex;
+            const layerIndex = rawLayerIndex === null || rawLayerIndex === undefined || rawLayerIndex === ""
+              ? -1 : Number(rawLayerIndex);
+            const layerId =
+              instanceSource.layerId ?? instanceReference.layerId ?? source.layerId ??
+              attributes.layerId ?? attributes.LayerId ?? data.layerId ?? data.LayerId ??
+              rhinoLayer.id ?? rhinoLayer.Id ?? meta.rhinoLayerId;
+            let sourceLayer = Number.isInteger(layerIndex) && layerIndex >= 0
+              ? layerManifest[layerIndex]
+              : undefined;
+            if (!sourceLayer && layerId !== null && layerId !== undefined) {
+              sourceLayer = layerById.get(String(layerId));
+            }
             const layerName = String(
-              meta.capa ?? meta.layerName ?? source.layerName ??
-              instanceSource.layerName ?? attributes.layerName ??
-              attributes.LayerName ?? node.name ?? ""
-            );
+              sourceLayer?.fullPath ?? sourceLayer?.FullPath ??
+              sourceLayer?.name ?? sourceLayer?.Name ??
+              rhinoLayer.fullPath ?? rhinoLayer.FullPath ??
+              rhinoLayer.name ?? rhinoLayer.Name ??
+              instanceSource.layerName ?? instanceReference.layerName ??
+              source.layerName ?? attributes.layerName ?? attributes.LayerName ??
+              data.layerName ?? data.LayerName ?? meta.capa ?? meta.layerName ?? node.name ?? ""
+            ).trim();
+            const layerColor = sourceLayer?.color ?? sourceLayer?.Color ??
+              source.layerColor ?? attributes.layerColor ?? attributes.LayerColor ?? null;
+            const materials = Array.isArray(node.material)
+              ? node.material : node.material ? [node.material] : [];
             const materialColor = materials.find((entry: any) => entry?.color)?.color;
+            const colorHex = colorRhinoHex(layerColor ?? materialColor);
+            const layerFamily = clasificarCapa(layerName, colorHex);
+            const manualCategory = meta.aurumManualCategoryAssignment === true &&
+              (meta.categoria === "gema" || meta.categoria === "metal" || meta.categoria === "otro")
+              ? meta.categoria
+              : undefined;
             const publicFamily = classifyPublicMesh(node);
-            const detected = publicFamily !== "otro"
-              ? publicFamily
-              : meta.categoria === "gema" || meta.categoria === "metal"
-                ? meta.categoria
-                : clasificarCapa(layerName, materialColor ? colorRhinoHex(materialColor) : undefined);
-            // The public viewer treats otherwise-unclassified direct 3DM meshes
-            // as metal so the selected metal profile remains visible.
-            node.userData = { ...(node.userData ?? {}), aurumPublicDefaultMetal: detected === "otro" };
-            node.userData.aurumRhino = {
-              ...meta,
-              categoria: detected === "otro" ? "metal" : detected,
-              capa: meta.capa ?? layerName,
+            // The explicit Rhino layer name is authoritative over generic
+            // imported material/object names. Manual user overrides remain
+            // strongest and are never overwritten by automatic detection.
+            const detected = manualCategory ??
+              (layerFamily !== "otro" ? layerFamily :
+                publicFamily !== "otro" ? publicFamily :
+                  meta.categoria === "gema" || meta.categoria === "metal"
+                    ? meta.categoria : "otro");
+            const resolvedLayerKey = resolveAurumLayerKey({
+              layerId: sourceLayer?.id ?? sourceLayer?.Id ?? layerId,
+              layerIndex: Number.isInteger(layerIndex) && layerIndex >= 0
+                ? layerIndex : sourceLayer ? layerManifest.indexOf(sourceLayer) : meta.layerIndex,
+              layerName,
+              layerColor: colorHex ?? meta.colorCapa,
+              category: detected,
+              existingKey: meta.layerKey,
+            });
+            const finalCategory = detected === "otro" ? "metal" : detected;
+            if (finalCategory === "gema") gemLayerMeshes++;
+            else if (finalCategory === "metal") metalLayerMeshes++;
+            if (detected === "otro") defaultMetalMeshes++;
+            node.userData = {
+              ...data,
+              aurumRhinoSource: {
+                ...source,
+                layerIndex: Number.isInteger(layerIndex) && layerIndex >= 0
+                  ? layerIndex : sourceLayer ? layerManifest.indexOf(sourceLayer) : source.layerIndex ?? null,
+                layerId: sourceLayer?.id ?? sourceLayer?.Id ?? layerId ?? source.layerId ?? null,
+                layerName: layerName || source.layerName || null,
+                layerColor: colorHex ?? source.layerColor ?? null,
+              },
+              aurumRhino: {
+                ...meta,
+                categoria: finalCategory,
+                capa: layerName || meta.capa || undefined,
+                layerName: layerName || meta.layerName || undefined,
+                layerIndex: Number.isInteger(layerIndex) && layerIndex >= 0
+                  ? layerIndex : sourceLayer ? layerManifest.indexOf(sourceLayer) : meta.layerIndex ?? -1,
+                rhinoLayerId: sourceLayer?.id ?? sourceLayer?.Id ?? layerId ?? meta.rhinoLayerId ?? null,
+                colorCapa: colorHex ?? meta.colorCapa ?? undefined,
+                layerKey: resolvedLayerKey ?? meta.layerKey,
+                ...(manualCategory ? { aurumManualCategoryAssignment: true } : {}),
+              },
+              aurumPublicDefaultMetal: detected === "otro",
             };
           });
+          objeto.userData = {
+            ...(objeto.userData ?? {}),
+            aurum3dmLayerClassificationAudit: {
+              sourceLayerCount: layerManifest.length,
+              gemLayerMeshes,
+              metalLayerMeshes,
+              defaultMetalMeshes,
+            },
+          };
+          console.info("[AURUM][3DM LAYER CLASSIFICATION]", objeto.userData.aurum3dmLayerClassificationAudit);
         }
 
         informar("Archivo leído. Preparando modelo...");
