@@ -198,13 +198,19 @@ const inspectAurumGemGeometry=(target:any)=>{
 };
 
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
-const selectionLayerName=(part:any)=>String(
-  selectionMeta(part).capa
-  || part?.userData?.attributes?.layerName
-  || part?.userData?.attributes?.LayerName
-  || part?.userData?.aurumRhinoSource?.layerName
-  || "",
-).trim();
+const selectionLayerIdentity=(part:any)=>{
+  const data=part?.userData??{};
+  const instance=data.aurumRhinoInstanceSource??{};
+  const source=data.aurumRhinoSource??{};
+  const attrs=data.attributes??{};
+  const meta=selectionMeta(part);
+  return {
+    layerName:String(instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??meta.capa??"").trim(),
+    layerIndex:instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??data.layerIndex??data.LayerIndex??meta.layerIndex,
+    layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??meta.rhinoLayerId??null,
+  };
+};
+const selectionLayerName=(part:any)=>selectionLayerIdentity(part).layerName;
 const isExplicitGemSlot=(part:any)=>{
   const layerName=selectionLayerName(part).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
   // MatrixGold/Rhino gemstone slots are authoritative even when an imported
@@ -213,6 +219,8 @@ const isExplicitGemSlot=(part:any)=>{
 };
 const selectionCategory=(part:any)=>{
   const declared=String(selectionMeta(part).categoria||"").toLowerCase();
+  // Source/instance layer identity is authoritative across Rhino -> GLB hydration.
+  // A MatrixGold Gem 01–04 slot remains a gem even if cached category metadata is stale.
   if(isExplicitGemSlot(part))return "gema";
   if(declared==="metal"||declared==="gema")return declared;
   const semantic=classifyAurumSemanticObject(part,null);
@@ -222,7 +230,9 @@ const selectionCategory=(part:any)=>{
 };
 const selectionLayerIndex=(part:any):number|null=>{
   const meta=selectionMeta(part);
+  const identity=selectionLayerIdentity(part);
   const candidates=[
+    identity.layerIndex,
     meta.layerIndex,
     part?.userData?.attributes?.layerIndex,
     part?.userData?.attributes?.LayerIndex,
@@ -268,10 +278,10 @@ const getAurumGemLayerIndex=(modelRoot:any):AurumGemLayerIndex=>{
   modelRoot?.traverse?.((part:any)=>{
     if(!part?.isMesh||part.userData?.aurumInternalInclusion||selectionCategory(part)!=="gema")return;
     index.gemMeshCount++;
-    const meta=selectionMeta(part);
-    const layerName=String(meta.capa||part.userData?.attributes?.layerName||part.userData?.attributes?.LayerName||"").trim().toLocaleLowerCase();
+    const identity=selectionLayerIdentity(part);
+    const layerName=identity.layerName.toLocaleLowerCase();
     const layerIndex=selectionLayerIndex(part);
-    const layerId=meta.rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??part.userData?.layerId??part.userData?.LayerId??null;
+    const layerId=identity.layerId;
     addGemIndexEntry(index.byLayerName,layerName,part);
     addGemIndexEntry(index.byLayerIndex,layerIndex,part);
     if(layerId!==null&&String(layerId).trim()!=="")addGemIndexEntry(index.byLayerId,String(layerId).trim(),part);
@@ -433,11 +443,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
   const selectedMeta=selectionMeta(target);
-  const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||target.userData?.attributes?.LayerName||"").trim();
+  const selectedIdentity=selectionLayerIdentity(target);
+  const selectedLayer=selectedIdentity.layerName;
   const selectedLayerNormalized=selectedLayer.toLocaleLowerCase();
   const selectedLayerIndex=selectionLayerIndex(target);
-  const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
-  const selectedLayerColor=String(selectedMeta.colorCapa??target.userData?.attributes?.layerColor??target.userData?.attributes?.LayerColor??"").trim().toLowerCase();
+  const selectedLayerId=selectedIdentity.layerId;
+  const selectedLayerColor=String(selectedMeta.colorCapa??target.userData?.aurumRhinoSource?.layerColor??target.userData?.attributes?.layerColor??target.userData?.attributes?.LayerColor??"").trim().toLowerCase();
 
   // MatrixGold's Gem 01–04 names are the user-visible source of truth.
   // Some 3DM/GLB metadata paths can carry a stale/shared Rhino ID, so exact
