@@ -381,6 +381,9 @@ test("legacy Post Engine preferences migrate to mask-isolated AA without enablin
   expect(post).toContain("removePass(taaPass);");
   expect(post).toContain("diamondTaaSavePass, taaPass, diamondTaaCompositePass");
   expect(post).toContain("const taaEnabled=diamondMaskReady && controls?.diamondTaaEnabled===true && !temporalMotionActive");
+  expect(post).toContain("taaPass.sampleLevel=0;");
+  expect(post).not.toContain("taaPass.sampleLevel=5;");
+  expect(post).toContain("one jittered sample per idle frame");
   expect(post).not.toContain("taaRequested=Boolean(options.capture && postControls.taaEnabled)");
 });
 
