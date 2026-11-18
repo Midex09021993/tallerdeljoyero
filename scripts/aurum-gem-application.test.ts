@@ -239,6 +239,15 @@ test("AURUM gem transition snapshots before material replacement and blends only
   expect(source).toContain("BVH may replace the physical material, so it must wait");
 });
 
+test("BVH infers only a clearly dominant center diamond when Rhino center metadata is absent", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  expect(runtime).toContain("projectedDiamondSizes");
+  expect(runtime).toContain("largestProjectedDiamond.diameterPx >= secondLargestProjectedDiamond.diameterPx * 1.5");
+  expect(runtime).toContain("const inferredCenter = mesh === inferredCenterMesh;");
+  expect(runtime).toContain('"centro-inferido-por-tamano"');
+  expect(runtime).toContain('aurumDiamondCenterDetection: "projected-size"');
+  expect(runtime).toContain("if (!centerProtected) return;");
+});
 test("BVH reports why each selected diamond is accepted or rejected as center target", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const component = readFileSync("src/components/AurumRender.tsx", "utf8");
