@@ -359,12 +359,16 @@ export async function createAurumDiamondBvhRuntime(options: {
           && Boolean(mesh.userData?.aurumDiamondMicroCenterProtected)
           && !isBlueDiamond
           && !isPinkDiamond;
+        // Blanco 1 uses the large center stone as the optical master.
+        // White melee keeps the same IOR/BVH depth and only compensates energy,
+        // dispersion and gamma for its screen-space size.
+        const isNeutralWhiteDiamond = family === "diamante" && !isBlueDiamond && !isPinkDiamond;
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
           // The approved A/B reference uses zero direct transmission; internal
           // BVH refraction supplies the visible diamond response.
           transmission: family === "diamante"
-            ? ((isCenterWhiteDiamond || activeGemId === "diamante_natural") ? 0 : 0.05)
+            ? (isNeutralWhiteDiamond && isCenterWhiteDiamond ? 0 : isNeutralWhiteDiamond ? 0.05 : activeGemId === "diamante_natural" ? 0 : 0.05)
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
@@ -372,7 +376,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
-          quality: family === "diamante" && !isSmallSecondaryDiamond ? "high" : (options.quality ?? "interactive"),
+          quality: isNeutralWhiteDiamond ? "final" : family === "diamante" && !isSmallSecondaryDiamond ? "high" : (options.quality ?? "interactive"),
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
           // Small white melee stones need a gentle neutral energy lift so their
           // compact facets read bright instead of graphite-grey; keep colored
@@ -391,8 +395,8 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentIntensity: family === "diamante"
             ? (isNeutralMicroDiamond ? 1.20
               : isNeutralSmallDiamond ? 1.30
-              : isSmallSecondaryDiamond ? 1.32
               : isCenterWhiteDiamond ? 1.30
+              : isSmallSecondaryDiamond ? 1.32
               : isBlueDiamond ? 1.30
               : isPinkDiamond ? 1.25
               : 1.42)
@@ -402,10 +406,11 @@ export async function createAurumDiamondBvhRuntime(options: {
           dispersion: family === "diamante"
             ? (isNeutralMicroDiamond ? 0.0003
               : isNeutralSmallDiamond ? 0.0008
+              : isNeutralWhiteDiamond ? 0.010
               : isSmallSecondaryDiamond ? 0.0015
-              : activeGemId === "diamante_natural" ? 0.010 : 0.004)
+              : 0.004)
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
-          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (activeGemId === "diamante_natural" ? 2.6 : 2.417) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
+          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (isNeutralWhiteDiamond ? 2.6 : 2.417) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
           // only for this variant; other emerald profiles remain untouched.
           absorption: useEmeraldBvhOptics
@@ -417,7 +422,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           reflectivity: family === "diamante" ? (activeGemId === "diamante_natural" ? 0.5 : 0.46) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" ? (activeGemId === "diamante_natural" ? 1.0 : isCenterWhiteDiamond || isBlueDiamond ? 1.09 : isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : 0.90) : 1.09,
+          gamma: family === "diamante" ? (isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : isNeutralWhiteDiamond ? 1.0 : isBlueDiamond ? 1.09 : 0.90) : 1.09,
           // Optical Lab AURUM BVH reference forces a zero-degree environment rotation.
           // Do not inherit the regular gem-family orientation offset on the protected center diamond.
           environmentRotationRadians: isCenterWhiteDiamond ? 0 : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
@@ -448,7 +453,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 environmentIntensity: isMicro ? 1.20 : isSmall ? 1.30 : baseEnvironment,
                 dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : baseDispersion,
                 gamma: isNaturalWhiteOne ? 1.0 : isMicro ? 0.96 : isSmall ? 0.94 : 0.90,
-                rayBounces: isNaturalWhiteOne ? 5 : isMicro ? 2 : isSmall ? 3 : 5,
+                rayBounces: isNaturalWhiteOne || !isBlueDiamond && !isPinkDiamond ? 5 : isMicro ? 2 : isSmall ? 3 : 5,
               });
             }
             currentDiamondTier = nextTier;
@@ -461,7 +466,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               packageApi.setDiamondOptions(prepared.material, {
                 // Fewer internal bounces on tiny white melee reduce unstable
                 // high-frequency sparkle; the center and colored variants stay calibrated.
-                rayBounces: activeGemId === "diamante_natural" ? 5 : currentDiamondTier === "micro" ? 2 : currentDiamondTier === "small" ? 3 : isBlueDiamond ? 6 : isCenterWhiteDiamond ? 4 : 5,
+                rayBounces: !isBlueDiamond && !isPinkDiamond ? 5 : isBlueDiamond ? 6 : 5,
               });
               return;
             }
