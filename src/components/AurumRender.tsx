@@ -1952,6 +1952,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // O(k) for non-diamond changes; only the selected meshes are
               // reconsidered and unrelated BVH entries remain untouched.
               diamondBvhRuntime.refreshTargets(modelo,currentTargets);
+              diamondBvhRuntime.update();
+              const targetBvhDiagnostics=diamondBvhRuntime.diagnostics();
+              console.info("[AURUM][GEM BVH][TARGET REFRESH]", {
+                targetCount:currentTargets.length,
+                targets:currentTargets.map((mesh:any)=>({
+                  mesh:mesh.name||mesh.uuid,
+                  gemId:String(mesh.userData?.aurumActiveGemId??""),
+                  family:String(mesh.userData?.aurumActiveGemFamily??""),
+                  centerProtected:Boolean(mesh.userData?.aurumDiamondMicroCenterProtected),
+                  tier:String(mesh.userData?.aurumDiamondMicroTier??""),
+                })),
+                activeMeshes:targetBvhDiagnostics.activeMeshes,
+                diamondMeshes:targetBvhDiagnostics.diamondMeshes,
+                centerTargetDiagnostics:targetBvhDiagnostics.centerTargetDiagnostics,
+                skippedTargetMeshes:targetBvhDiagnostics.skippedTargetMeshes,
+              });
+              setDiamondControlDiagnostics((current:any)=>({...(current??{}),bvh:targetBvhDiagnostics}));
               // BVH swaps the material after the initial micro registry refresh.
               // Re-index from the stable mesh-level diamond identity it publishes.
               diamondMicroPipeline.refresh();
