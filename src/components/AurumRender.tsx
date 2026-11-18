@@ -160,7 +160,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
-  const [gemHdriId, setGemHdriId] = useState("predeterminado");
+  const [gemHdriId, setGemHdriId] = useState("gemUserHdr");
   const [ambienteId, setAmbienteId] = useState<string|null>(null);
   const ambienteIdRef = useRef<string|null>(null);
   ambienteIdRef.current = ambienteId;
@@ -5626,31 +5626,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {uxSection==="hdrGemas"&&<div className="space-y-4 pb-5">
                 <div>
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR de gemas · comparar piedras</div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map((preset,index)=>{
-                    const looks=[
-                      "radial-gradient(ellipse at 30% 24%,#fff9df 0 8%,transparent 32%),linear-gradient(125deg,#d9d1b7 0%,#f7f5ed 34%,#77766d 58%,#f3e5bd 78%,#343630 100%)",
-                      "radial-gradient(ellipse at 70% 22%,#ffffff 0 7%,transparent 30%),linear-gradient(135deg,#f4f4f1 0%,#aeb6bd 30%,#f9fafb 47%,#5d6670 69%,#e3e7e8 100%)",
-                      "radial-gradient(ellipse at 24% 30%,#fff4d9 0 9%,transparent 31%),linear-gradient(115deg,#3c454b 0%,#d8d5c9 25%,#f9f6e9 43%,#4e555b 64%,#b5a47e 100%)",
-                      "radial-gradient(ellipse at 72% 25%,#ffffff 0 8%,transparent 30%),linear-gradient(135deg,#d5d9dc 0%,#f9faf9 25%,#747f8a 50%,#e8e9e6 72%,#353c43 100%)",
-                      "radial-gradient(ellipse at 30% 20%,#fff2c6 0 8%,transparent 30%),linear-gradient(125deg,#4d3b2b 0%,#c8a96c 25%,#fff0c9 43%,#5d5040 66%,#d8d0bb 100%)",
-                      "radial-gradient(ellipse at 60% 18%,#ffffff 0 7%,transparent 30%),linear-gradient(120deg,#f0eee6 0%,#8b939a 27%,#ffffff 45%,#59636d 69%,#d3d5d4 100%)",
-                      "radial-gradient(ellipse at 24% 22%,#fff9e8 0 8%,transparent 30%),linear-gradient(130deg,#3e4146 0%,#aeb4b8 25%,#f8f6ee 45%,#737a80 68%,#c6b58d 100%)",
-                      "radial-gradient(ellipse at 75% 20%,#fff3d5 0 8%,transparent 31%),linear-gradient(130deg,#8d7150 0%,#f6e3b5 27%,#fffdf5 45%,#4d4b46 68%,#b3a28a 100%)",
-                      "radial-gradient(ellipse at 32% 22%,#ffffff 0 8%,transparent 30%),linear-gradient(130deg,#d9dedf 0%,#ffffff 26%,#7e878d 48%,#f3f3ef 70%,#454b50 100%)",
-                      "radial-gradient(ellipse at 72% 24%,#fff3c9 0 8%,transparent 30%),linear-gradient(130deg,#514637 0%,#dfc58b 25%,#fff8e8 44%,#565b5e 68%,#e4dfd0 100%)"
-                    ];
-                    return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={gemHdriId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-center "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
-                      <span className={"relative mb-1.5 block aspect-[4/3] overflow-hidden rounded-xl border transition "+(gemHdriId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-transparent group-hover:border-black/15")}>
-                        <span className="absolute inset-0" style={{background:looks[index]}}/>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map((preset)=>{
+                    return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={gemHdriId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-left "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
+                      <span className={"relative mb-1.5 block aspect-[16/5] overflow-hidden rounded-xl border transition "+(gemHdriId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-[#d8d1c2] group-hover:border-[#92743b]")}>
+                        <span className="absolute inset-0" style={{background:"radial-gradient(ellipse at 50% 20%,#fffdf4 0%,#e9dfc5 22%,#9da3a6 48%,#4c5359 72%,#171b20 100%)"}}/>
                         <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent"/>
-                        <span className="absolute left-1.5 top-1.5 rounded-md border border-white/35 bg-black/25 px-1.5 py-0.5 text-[8px] font-semibold text-white">HDR</span>
-                        {gemHdriId===preset.id&&<span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-[#92743b] text-[9px] text-white">✓</span>}
-                        <span className="absolute inset-x-0 bottom-1.5 text-[9px] font-medium tracking-wide text-white drop-shadow">{String(index+1).padStart(2,"0")}</span>
+                        <span className="absolute left-2 top-2 rounded-md border border-white/35 bg-black/25 px-1.5 py-0.5 text-[8px] font-semibold text-white">EXR · HDR</span>
+                        {gemHdriId===preset.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#92743b] text-[10px] text-white">✓</span>}
+                        <span className="absolute inset-x-0 bottom-2 text-center text-[9px] font-medium tracking-wide text-white drop-shadow">01 · HDR ÚNICO DE GEMAS</span>
                       </span>
                       <span className="block truncate text-[10px]">{preset.name}</span>
                     </button>;
                   })}
+                </div>
                 </div>
 
                 </div>
