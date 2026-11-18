@@ -13,7 +13,7 @@ export type AurumMeshLayerContext = {
   layerId: string | number | null;
   layerColor: any;
   category: "metal" | "gema" | "otro";
-  layerKey?: string;
+  layerKey?: string | undefined;
 };
 
 const firstValue=(values:any[])=>values.find(value=>value!==undefined&&value!==null&&value!=="");

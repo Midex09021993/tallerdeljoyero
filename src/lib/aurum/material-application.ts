@@ -483,11 +483,11 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       identityResolved:hasStableLayerIdentity,
       matches:targets.map((part:any)=>({
         mesh:part.name||part.uuid,
-        layer:selectionMeta(part).capa??part.userData?.attributes?.layerName??null,
-        layerKey:selectionMeta(part).layerKey??null,
+        layer:selectionMeta(part)["capa"]??part.userData?.attributes?.layerName??null,
+        layerKey:selectionMeta(part)["layerKey"]??null,
         category:selectionCategory(part),
         layerIndex:selectionLayerIndex(part),
-        layerId:selectionMeta(part).rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
+        layerId:selectionMeta(part)["rhinoLayerId"]??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
       })),
     });
   }

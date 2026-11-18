@@ -43,8 +43,8 @@ export function getAurumModelParts(
     const context=resolveAurumMeshLayerContext(x,object);
     const attrs=x.userData?.attributes||{};
     const sourceMeta=context.source;
-    const sourceId=sourceMeta.objectId??attrs.id??attrs.Id??x.userData?.objectId??x.userData?.ObjectId;
-    const sourceName=sourceMeta.objectName??attrs.name??attrs.Name??x.userData?.objectName??x.userData?.ObjectName;
+    const sourceId=sourceMeta["objectId"]??attrs.id??attrs.Id??x.userData?.objectId??x.userData?.ObjectId;
+    const sourceName=sourceMeta["objectName"]??attrs.name??attrs.Name??x.userData?.objectName??x.userData?.ObjectName;
     const nombre=typeof x.name==="string"&&x.name.trim()
       ? x.name.trim()
       : (typeof sourceName==="string"&&sourceName.trim()
@@ -55,8 +55,8 @@ export function getAurumModelParts(
     const colorCapa=colorRhinoHex(context.layerColor)||undefined;
     const layerId=context.layerId;
     const categoria=context.category;
-    const matrixSlot=Number.isFinite(Number(context.metadata?.matrixSlot))
-      ? Number(context.metadata.matrixSlot)
+    const matrixSlot=Number.isFinite(Number(context.metadata?.["matrixSlot"]))
+      ? Number(context.metadata["matrixSlot"])
       : (layerIndex>=0&&context.layer?matrixLayerSlot(context.layer,layerIndex,categoria,colorCapa):undefined);
     const layerKey=context.layerKey;
     const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== object ? 1 : 0));
