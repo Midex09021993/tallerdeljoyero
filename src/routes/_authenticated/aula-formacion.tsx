@@ -508,6 +508,7 @@ function AulaFormacionPage() {
   const [tituloCursoEditado, setTituloCursoEditado] = useState("");
   const [nombreAlumno, setNombreAlumno] = useState("");
   const [emailAlumno, setEmailAlumno] = useState("");
+  const [tallerAlumnoFiltro, setTallerAlumnoFiltro] = useState("todos");
   const [busquedaAlumno, setBusquedaAlumno] = useState("");
   const [alumnosSeleccionados, setAlumnosSeleccionados] = useState<string[]>([]);
   const listarDirectorio = useServerFn(listarDirectorioAlumnosFormacion);
@@ -888,42 +889,20 @@ function AulaFormacionPage() {
       return (data ?? []) as Omit<Inscripcion, "formacion_cursos">[];
     },
   });
-  const [candidatosAlumno, setCandidatosAlumno] = useState<any[]>([]);
-  const [buscandoAlumno, setBuscandoAlumno] = useState(false);
-  const [errorBusquedaAlumno, setErrorBusquedaAlumno] = useState("");
-  const [busquedaRealizada, setBusquedaRealizada] = useState(false);
-  useEffect(() => {
-    setCandidatosAlumno([]);
-    setAlumnosSeleccionados([]);
-    setBusquedaRealizada(false);
-    setErrorBusquedaAlumno("");
-  }, [participanteId, cursoActivoId]);
-  async function buscarAlumnoPorUsuario() {
-    const usuario = busquedaAlumno.trim();
-    if (!participanteId || !cursoActivoId || usuario.length < 3) {
-      setErrorBusquedaAlumno("Escribe el usuario exacto del alumno (mínimo 3 caracteres).");
-      return;
-    }
-    setBuscandoAlumno(true);
-    setErrorBusquedaAlumno("");
-    try {
-      const resultado = await listarDirectorio({ data: { participanteDocenteId: participanteId, cursoId: cursoActivoId, usuario } });
-      const encontrados = resultado?.alumnos ?? [];
-      setCandidatosAlumno((actual) => {
-        const porId = new Map(actual.map((a: any) => [a.userId, a]));
-        for (const alumno of encontrados) porId.set(alumno.userId, alumno);
-        return [...porId.values()];
-      });
-      setBusquedaRealizada(true);
-      if (!encontrados.length) setErrorBusquedaAlumno("No encontramos una cuenta disponible con ese usuario exacto.");
-      else setBusquedaAlumno("");
-    } catch (cause) {
-      setErrorBusquedaAlumno(cause instanceof Error ? cause.message : "No se pudo buscar el alumno.");
-    } finally {
-      setBuscandoAlumno(false);
-    }
-  }
-  const alumnosFiltrados = candidatosAlumno;
+  const directorioQuery = useQuery({
+    queryKey: ["aula-formacion-directorio", participanteId, cursoActivoId],
+    enabled: Boolean(esDocente && participanteId && cursoActivoId),
+    queryFn: () => listarDirectorio({ data: { participanteDocenteId: participanteId!, cursoId: cursoActivoId } }),
+  });
+  const alumnosDirectorio = directorioQuery.data?.alumnos ?? [];
+  const talleresDirectorio = directorioQuery.data?.talleres ?? [];
+  const alumnosFiltrados = alumnosDirectorio.filter((alumno: any) => {
+    const coincideTaller = tallerAlumnoFiltro === "todos" || alumno.participanteIds.includes(tallerAlumnoFiltro);
+    const termino = busquedaAlumno.trim().toLocaleLowerCase();
+    const coincideBusqueda = !termino || [alumno.nombre, alumno.usuario, alumno.taller]
+      .some((valor) => String(valor ?? "").toLocaleLowerCase().includes(termino));
+    return coincideTaller && coincideBusqueda;
+  });
   const examenesQuery = useQuery({
     queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId],
     enabled: Boolean(esDocente && participanteId && cursoActivoId),
@@ -2999,16 +2978,21 @@ function AulaFormacionPage() {
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3f8] text-[#496782]"><Users className="size-5" /></span>
                   <div><p className="text-sm font-semibold text-[#253446]">Incorpora participantes</p><p className="mt-1 text-xs leading-5 text-[#718096]">Selecciona personas de las cuentas existentes de Taller del Joyero. No se crean usuarios nuevos.</p></div>
                 </div>
-                <form className="flex flex-col gap-2 sm:flex-row sm:items-end" onSubmit={e => { e.preventDefault(); void buscarAlumnoPorUsuario(); }}>
-                  <label className="block flex-1 text-xs font-semibold text-[#425466]">Usuario exacto del alumno
-                    <input value={busquedaAlumno} onChange={e => setBusquedaAlumno(e.target.value)} maxLength={80} autoComplete="off" placeholder="Ej. jperez" className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none placeholder:text-[#9aa7b5] focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block text-xs font-semibold text-[#425466]">Filtrar por taller
+                    <select value={tallerAlumnoFiltro} onChange={e => setTallerAlumnoFiltro(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15">
+                      <option value="todos">Todos los talleres</option>
+                      {talleresDirectorio.map((t: any) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                    </select>
                   </label>
-                  <button type="submit" disabled={buscandoAlumno || busquedaAlumno.trim().length < 3} className="rounded-xl border border-[#c7d3de] bg-white px-4 py-2.5 text-sm font-semibold text-[#294760] transition hover:bg-[#f0f5f9] disabled:cursor-not-allowed disabled:opacity-50">{buscandoAlumno ? "Buscando…" : "Buscar"}</button>
-                </form>
-                <p className="text-[11px] leading-5 text-[#718096]">Por privacidad, solo se muestran cuentas cuyo usuario coincida exactamente. Pide al alumno su usuario de Taller del Joyero.</p>
+                  <label className="block text-xs font-semibold text-[#425466]">Buscar alumno
+                    <input value={busquedaAlumno} onChange={e => setBusquedaAlumno(e.target.value)} placeholder="Nombre, usuario o taller" className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none placeholder:text-[#9aa7b5] focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" />
+                  </label>
+                </div>
                 <div className="max-h-80 space-y-2 overflow-y-auto rounded-xl border border-[#e4e9ef] bg-[#fbfcfd] p-2">
-                  {errorBusquedaAlumno ? <p className="p-4 text-xs text-destructive">{errorBusquedaAlumno}</p> : null}
-                  {alumnosFiltrados.length === 0 ? <div className="p-5 text-center"><Users className="mx-auto size-6 text-[#9aa7b5]" /><p className="mt-2 text-xs text-[#718096]">{busquedaRealizada ? "Aún no has agregado alumnos a la selección." : "Busca a cada alumno por su usuario para agregarlo."}</p></div>
+                  {directorioQuery.isLoading ? <p className="p-4 text-xs text-[#718096]">Cargando directorio…</p>
+                    : directorioQuery.isError ? <p className="p-4 text-xs text-destructive">{directorioQuery.error instanceof Error ? directorioQuery.error.message : "No se pudo cargar el directorio."}</p>
+                    : alumnosFiltrados.length === 0 ? <div className="p-5 text-center"><Users className="mx-auto size-6 text-[#9aa7b5]" /><p className="mt-2 text-xs text-[#718096]">No hay participantes que coincidan con la búsqueda.</p></div>
                     : alumnosFiltrados.map((alumno: any) => <label key={alumno.userId} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${alumnosSeleccionados.includes(alumno.userId) ? "border-[#a9bfd2] bg-[#f0f5f9]" : "border-[#e8edf2] bg-white hover:border-[#c7d3de]"}`}>
                       <input type="checkbox" checked={alumnosSeleccionados.includes(alumno.userId)} onChange={e => setAlumnosSeleccionados(actual => e.target.checked ? [...actual, alumno.userId] : actual.filter(id => id !== alumno.userId))} className="mt-1 size-4 accent-[#496782]" />
                       <span className="min-w-0 flex-1">

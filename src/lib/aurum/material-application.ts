@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { resolveAurumLayerKey } from "./layer-identity";
-import { resolveAurumMeshLayerContext } from "./mesh-layer-context";
 import { classifyAurumSemanticObject } from "./semantic-object-recognition";
 import { getAurumSourceMaterials, hadAurumSourceMaterialArray } from "./gem-material-baseline";
 import { applyAurumIJEWELReferenceFromMaterial } from "../aurum-material-engine";
@@ -198,10 +197,31 @@ const inspectAurumGemGeometry=(target:any)=>{
   };
 };
 
-const selectionContext=(part:any)=>resolveAurumMeshLayerContext(part);
-const selectionMeta=(part:any)=>selectionContext(part).metadata??{};
-const selectionCategory=(part:any)=>selectionContext(part).category;
-const selectionLayerIndex=(part:any):number|null=>selectionContext(part).layerIndex;
+const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
+const selectionCategory=(part:any)=>{
+  const declared=String(selectionMeta(part).categoria||"").toLowerCase();
+  if(declared==="metal"||declared==="gema")return declared;
+  const semantic=classifyAurumSemanticObject(part,null);
+  return semantic.confidence>=.7 && (semantic.classification==="metal"||semantic.classification==="gem")
+    ? semantic.classification==="gem"?"gema":"metal"
+    : declared||"otro";
+};
+const selectionLayerIndex=(part:any):number|null=>{
+  const meta=selectionMeta(part);
+  const candidates=[
+    meta.layerIndex,
+    part?.userData?.attributes?.layerIndex,
+    part?.userData?.attributes?.LayerIndex,
+    part?.userData?.layerIndex,
+    part?.userData?.LayerIndex,
+  ];
+  for(const raw of candidates){
+    if(raw===null||raw===undefined||raw==="")continue;
+    const value=Number(raw);
+    if(Number.isInteger(value)&&value>=0)return value;
+  }
+  return null;
+};
 
 type AurumGemLayerIndex = {
   byLayerName: Map<string, any[]>;
@@ -234,10 +254,10 @@ const getAurumGemLayerIndex=(modelRoot:any):AurumGemLayerIndex=>{
   modelRoot?.traverse?.((part:any)=>{
     if(!part?.isMesh||part.userData?.aurumInternalInclusion||selectionCategory(part)!=="gema")return;
     index.gemMeshCount++;
-    const context=selectionContext(part);
-    const layerName=context.layerName.toLocaleLowerCase();
-    const layerIndex=context.layerIndex;
-    const layerId=context.layerId;
+    const meta=selectionMeta(part);
+    const layerName=String(meta.capa||part.userData?.attributes?.layerName||part.userData?.attributes?.LayerName||"").trim().toLocaleLowerCase();
+    const layerIndex=selectionLayerIndex(part);
+    const layerId=meta.rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??part.userData?.layerId??part.userData?.LayerId??null;
     addGemIndexEntry(index.byLayerName,layerName,part);
     addGemIndexEntry(index.byLayerIndex,layerIndex,part);
     if(layerId!==null&&String(layerId).trim()!=="")addGemIndexEntry(index.byLayerId,String(layerId).trim(),part);
@@ -272,13 +292,12 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     });
   }
   if (!activePart?.isMesh) return false;
-  const selectedContext=selectionContext(activePart);
-  const selectedMeta=selectedContext.metadata;
-  const selectedLayer=selectedContext.layerName||null;
-  const selectedLayerIndex=selectedContext.layerIndex;
-  const selectedCategory=selectedContext.category;
-  const selectedLayerId=selectedContext.layerId;
-  const selectedLayerKey=selectedContext.layerKey;
+  const selectedMeta=selectionMeta(activePart);
+  const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
+  const selectedLayerIndex=selectionLayerIndex(activePart);
+  const selectedCategory=selectionCategory(activePart);
+  const selectedLayerId=selectedMeta.rhinoLayerId??activePart?.userData?.attributes?.layerId??activePart?.userData?.attributes?.LayerId??activePart?.userData?.layerId??activePart?.userData?.LayerId??null;
+  const selectedLayerKey=resolveAurumLayerKey({layerId:selectedLayerId,layerIndex:selectedLayerIndex,layerName:selectedLayer,layerColor:selectedMeta.colorCapa,category:selectedCategory,existingKey:selectedMeta.layerKey});
   if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
   const isWaxMaterial=String(materialConfig?.id??"")==="cera_microfusion_roja";
   // La cera tiene un perfil físico independiente: nunca pasa por la calibración
@@ -294,8 +313,10 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     const category=selectionCategory(x);
     x.castShadow=category !== "gema";
     x.receiveShadow=true;
-    const partContext=selectionContext(x);
-    const partLayerKey=partContext.layerKey;
+    const meta=selectionMeta(x);
+    const partLayerIndex=selectionLayerIndex(x);
+    const partLayerId=meta.rhinoLayerId??x?.userData?.attributes?.layerId??x?.userData?.attributes?.LayerId??x?.userData?.layerId??x?.userData?.LayerId??null;
+    const partLayerKey=meta.layerKey??resolveAurumLayerKey({layerId:partLayerId,layerIndex:partLayerIndex,layerName:meta.capa,layerColor:meta.colorCapa,category,existingKey:meta.layerKey});
     const sameLayerIdentity=Boolean(selectedLayerKey&&partLayerKey&&selectedLayerKey===partLayerKey);
     const sameLayer=sameLayerIdentity&&category===selectedCategory;
     const shouldApply=applyAll ? (category==="metal"||category==="otro") : (x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer));
@@ -397,13 +418,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
-  const selectedContext=selectionContext(target);
-  const selectedMeta=selectedContext.metadata;
-  const selectedLayer=selectedContext.layerName;
+  const selectedMeta=selectionMeta(target);
+  const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||target.userData?.attributes?.LayerName||"").trim();
   const selectedLayerNormalized=selectedLayer.toLocaleLowerCase();
-  const selectedLayerIndex=selectedContext.layerIndex;
-  const selectedLayerId=selectedContext.layerId;
-  const selectedLayerColor=String(selectedContext.layerColor??"").trim().toLowerCase();
+  const selectedLayerIndex=selectionLayerIndex(target);
+  const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
+  const selectedLayerColor=String(selectedMeta.colorCapa??target.userData?.attributes?.layerColor??target.userData?.attributes?.LayerColor??"").trim().toLowerCase();
 
   // MatrixGold's Gem 01–04 names are the user-visible source of truth.
   // Some 3DM/GLB metadata paths can carry a stale/shared Rhino ID, so exact
@@ -483,11 +503,11 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       identityResolved:hasStableLayerIdentity,
       matches:targets.map((part:any)=>({
         mesh:part.name||part.uuid,
-        layer:selectionMeta(part)["capa"]??part.userData?.attributes?.layerName??null,
-        layerKey:selectionMeta(part)["layerKey"]??null,
+        layer:selectionMeta(part).capa??part.userData?.attributes?.layerName??null,
+        layerKey:selectionMeta(part).layerKey??null,
         category:selectionCategory(part),
         layerIndex:selectionLayerIndex(part),
-        layerId:selectionMeta(part)["rhinoLayerId"]??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
+        layerId:selectionMeta(part).rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
       })),
     });
   }

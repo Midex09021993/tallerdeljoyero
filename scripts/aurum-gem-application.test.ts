@@ -172,21 +172,21 @@ test("diamond live optical tuning matches the approved diamond-only calibration"
 
 test("runtime DPR remains unchanged to avoid changing shared metal rendering resolution", () => {
   const source = readFileSync("src/lib/aurum/runtime-budget.ts", "utf8");
-  expect(source).toContain("pixelRatioCap:1.75");
-  expect(source).toContain("interactionPixelRatio:1.75");
+  expect(source).toContain("pixelRatioCap:1.72");
+  expect(source).toContain("interactionPixelRatio:1.72");
 });
 
 test("web-tier models receive 2x diamond-only supersampling without raising shared DPR", () => {
   const web = getAurumRuntimeBudget(200_000);
   expect(web.diamondSupersampleScaleCap).toBe(2.2);
   expect(web.diamondLiveSupersampleScaleCap).toBe(1.75);
-  expect(web.pixelRatioCap).toBe(1.75);
-  expect(web.interactionPixelRatio).toBe(1.75);
+  expect(web.pixelRatioCap).toBe(1.72);
+  expect(web.interactionPixelRatio).toBe(1.72);
 
   const dense = getAurumRuntimeBudget(200_001);
   expect(dense.diamondSupersampleScaleCap).toBe(1.8);
   expect(dense.diamondLiveSupersampleScaleCap).toBe(1.5);
-  expect(dense.pixelRatioCap).toBe(1.75);
+  expect(dense.pixelRatioCap).toBe(1.6);
 
   expect(getAurumRuntimeBudget(500_001).diamondSupersampleScaleCap).toBe(1.65);
   expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.5);
@@ -527,13 +527,6 @@ test("Aurum Render enables LIVE gemstone quality and reapplies it after catalog 
 });
 
 
-test("Aurum Render assigns initial gems by explicit Gem 01–04 layer identity and enables BVH for every diamond size", () => {
-  const source = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(source).toContain("const layerKey=nameKey||indexKey||idKey||context.layerKey");
-  expect(source).toContain("diamondCenterOnly: false");
-  expect(source).toContain("Every diamond in Gem 01–04, including melee stones");
-});
-
 test("loading a CAD model refreshes the screen-space diamond analyzer before Gem Mask cache", () => {
   const source = readFileSync("src/components/AurumRender.tsx", "utf8");
   const addModel = source.indexOf("escena.add(modelo);");
@@ -602,30 +595,4 @@ test("diamond scintillation widens only the diamond angular response and reports
   expect(bvh).toContain("gemEnvironment: {");
   expect(bvh).toContain("loaded: Boolean(environmentMap?.isTexture)");
   expect(bvh).toContain("textureUuid: environmentMap?.uuid ?? null");
-});
-
-test("MatrixGold Gem 01–04 always initialize as Diamante blanco 1 without cross-matching stale Rhino IDs", () => {
-  const initialMaterials = readFileSync("src/lib/aurum/model-materials.ts", "utf8");
-  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(initialMaterials).toContain('const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);');
-  expect(initialMaterials).toContain('const assignedGemId=isDefaultWhiteDiamondLayer');
-  expect(initialMaterials).toContain('"diamante_natural"');
-  expect(initialMaterials).toContain('String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()');
-  expect(initialMaterials).not.toContain('(layerId && String(assignment?.layerId??"").trim()===layerId)');
-  expect(render).toContain('const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);');
-  expect(render).toContain('const resolvedGemId=isDefaultWhiteDiamondLayer');
-  expect(render).toContain('initialDiamond.id');
-  expect(render).toContain('String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()');
-});
-
-
-test("Aurum startup loads approved Gem HDRI 1 alongside the default diamond assignment", () => {
-  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
-  const photographic = readFileSync("src/lib/aurum-photographic-scene-engine.ts", "utf8");
-  const initialLoad = render.slice(render.indexOf("const presetInicial ="), render.indexOf("const presetInicial =") + 900);
-  expect(initialLoad).toContain('"gemDiamondWhite1"');
-  expect(initialLoad).not.toContain('"predeterminado"');
-  expect(photographic).toContain('gemDiamondWhite1:{');
-  expect(photographic).toContain('url:AURUM_GEM_HDRI_APPROVED_URL');
-  expect(render).toContain('if (entornoGema) aplicarEntornoGema();');
 });

@@ -338,11 +338,11 @@ export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality
   // Profiling showed the same ~1.1M scene triangles at 0.82 transmission scale
   // running around 11 FPS, while 0.40 reached around 22 FPS. Keep Low at the
   // existing fast path and use a measured middle ground for production tiers.
-  low:{pixelRatio:1.75,shadows:true,shadowMapSize:512,transmissionScale:.40},
-  // All quality presets match the diamond laboratory's 1.75 DPR ceiling;
-  // shadow and transmission costs remain independently tiered.
-  high:{pixelRatio:1.75,shadows:true,shadowMapSize:768,transmissionScale:.42},
-  ultra:{pixelRatio:1.75,shadows:true,shadowMapSize:1536,transmissionScale:.62},
+  low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.40},
+  // Interactive production preview: preserve facet readability while avoiding
+  // an unnecessary full-screen transmission buffer at high DPR.
+  high:{pixelRatio:1.10,shadows:true,shadowMapSize:768,transmissionScale:.42},
+  ultra:{pixelRatio:1.50,shadows:true,shadowMapSize:1536,transmissionScale:.62},
 };
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
 
