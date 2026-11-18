@@ -1,5 +1,5 @@
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
@@ -420,7 +420,7 @@ function CarruselHerramientas() {
   const [visible, setVisible] = useState(false);
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
-  const irA = (index: number, behavior: ScrollBehavior = "smooth") => {
+  const irA = useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
     const track = trackRef.current;
     const cards = track?.querySelectorAll<HTMLElement>("[data-tool-card]");
     if (!track || !cards?.length) return;
@@ -430,7 +430,7 @@ function CarruselHerramientas() {
     track.scrollTo({ left, behavior });
     activeIndexRef.current = safeIndex;
     setActiveIndex(safeIndex);
-  };
+  }, []);
 
   const mover = (direccion: -1 | 1) => irA(activeIndexRef.current + direccion);
 
@@ -483,7 +483,7 @@ function CarruselHerramientas() {
     if (pausado || interactuando || !visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => irA(activeIndexRef.current + 1), 4400);
     return () => window.clearInterval(timer);
-  }, [pausado, interactuando, visible]);
+  }, [pausado, interactuando, visible, irA]);
 
   return (
     <div
@@ -495,6 +495,7 @@ function CarruselHerramientas() {
       onFocusCapture={() => setInteractuando(true)}
       onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setInteractuando(false); }}
       onTouchStart={() => setInteractuando(true)}
+      onTouchEnd={() => setInteractuando(false)}
     >
       <div className="relative flex items-center justify-between gap-3 border-b border-[#e1e7ee] px-5 py-4 sm:px-6 sm:py-[18px]">
         <div className="min-w-0">
