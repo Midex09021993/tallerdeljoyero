@@ -1159,7 +1159,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const getGemHdriDiagnosticOffset = () => {
         if (typeof window === "undefined") return 0;
         const value = new URLSearchParams(window.location.search).get("aurumGemHdriTest");
-        return value === "180" ? Math.PI : 0;
+        if (value === "90") return Math.PI / 2;
+        if (value === "180") return Math.PI;
+        return 0;
       };
       const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1, onLoaded?:()=>void, onError?:()=>void) => {
         gemEnvironmentUrl = AURUM_GEM_ENVIRONMENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
@@ -1167,9 +1169,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const diagnosticOffset = getGemHdriDiagnosticOffset();
         gemEnvironmentRotation = baselineRotation + diagnosticOffset;
         console.info("[AURUM][GEM HDR][A_B_TEST]", {
-          mode: diagnosticOffset ? "B_ROTATED_180" : "A_BASELINE",
+          mode: diagnosticOffset === Math.PI / 2 ? "C_ROTATED_90" : diagnosticOffset === Math.PI ? "B_ROTATED_180" : "A_BASELINE",
           baselineRotationRadians: baselineRotation,
           diagnosticOffsetRadians: diagnosticOffset,
+          diagnosticOffsetDegrees: Math.round(diagnosticOffset * 180 / Math.PI),
           appliedRotationRadians: gemEnvironmentRotation,
           restoresProductionDefault: diagnosticOffset === 0,
           metalEnvironmentUntouched: true,
