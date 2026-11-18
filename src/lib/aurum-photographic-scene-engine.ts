@@ -56,6 +56,22 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
 
+/** One coordinated studio preset. Gem illumination always uses the supplied
+ * optical-lab EXR; only the metal environment varies independently. */
+export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string;metalKey?:string;metalRotation?:number;metalIntensity?:number}>={
+  predeterminado:{
+    id:"predeterminado",
+    name:"Ambiente Premium",
+    url:AURUM_GEM_HDRI_ASSET_URL,
+    rotation:0,
+    intensity:1,
+    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
+    metalKey:"ijewelMetal",
+    metalRotation:0,
+    metalIntensity:1,
+  },
+};
+
 // The gem selector intentionally exposes one calibrated HDRI only.
 export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>={
   gemUserHdr:{
