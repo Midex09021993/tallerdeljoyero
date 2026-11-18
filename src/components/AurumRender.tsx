@@ -41,6 +41,7 @@ import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarg
 import { captureAurumGemTransitionState, createAurumGemTransition } from "../lib/aurum/gem-transition";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
 import { classifyAurumSemanticObject } from "../lib/aurum/semantic-object-recognition";
+import { resolveAurumMeshLayerContext } from "../lib/aurum/mesh-layer-context";
 
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
@@ -2952,14 +2953,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             let ignoredMeshes=0;
             modelo.traverse((x:any)=>{
               if(!x?.isMesh||x.userData?.aurumInternalInclusion){ignoredMeshes++;return;}
+              const context=resolveAurumMeshLayerContext(x,modelo);
               const meta=x.userData?.aurumRhino??{};
               const attrs=x.userData?.attributes??{};
-              const source=x.userData?.aurumRhinoSource??{};
-              const instance=x.userData?.aurumRhinoInstanceSource??{};
               const manualOverride=getAurumLayerCategoryOverride(modelo.userData?.aurumLayerCategoryOverrides,{
-                layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??meta.rhinoLayerId,
-                layerIndex:instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??meta.layerIndex,
-                layerName:instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??meta.capa,
+                layerId:context.layerId,
+                layerIndex:context.layerIndex,
+                layerName:context.layerName,
               });
               if(manualOverride){
                 x.userData={...(x.userData??{}),aurumRhino:{...meta,categoria:manualOverride,aurumManualCategoryAssignment:true,aurumManualGemAssignment:manualOverride==="gema"}};
@@ -2968,10 +2968,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 else ignoredMeshes++;
                 return;
               }
-              const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
+              const name=[x.name,context.layerName].filter(Boolean).join(" ");
               const mats=Array.isArray(x.material)?x.material:[x.material];
-              const semantic=classifyAurumSemanticObject(x,null);
-              const sourceCategory=String(meta.categoria??"").toLowerCase();
+              const semantic=classifyAurumSemanticObject(x,context.layer);
+              const sourceCategory=context.category;
               const hasExplicitGemSignal=sourceCategory==="gema"
                 || semantic.classification==="gem"&&semantic.confidence>=.7
                 || Boolean(x.userData?.aurumActiveGemId)
@@ -3024,32 +3024,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           let gemMeshes=0;
           modelo.traverse((x:any)=>{
             if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
+            const context=resolveAurumMeshLayerContext(x,modelo);
             const meta=x.userData?.aurumRhino??{};
-            const attrs=x.userData?.attributes??{};
-            const layerName=String(meta.capa??attrs.layerName??attrs.LayerName??x.name??"").trim();
-            // Prefer an explicit gem category. If metadata is absent or only
-            // says "otro", recover the category from a clearly named source layer.
-            // Never infer gem identity from color or recolor the whole model.
-            const source=x.userData?.aurumRhinoSource??{};
-            const instance=x.userData?.aurumRhinoInstanceSource??{};
+            const layerName=context.layerName||String(x.name??"").trim();
             const manualOverride=getAurumLayerCategoryOverride(modelo.userData?.aurumLayerCategoryOverrides,{
-              layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??meta.rhinoLayerId,
-              layerIndex:instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??meta.layerIndex,
-              layerName:instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??meta.capa,
+              layerId:context.layerId,
+              layerIndex:context.layerIndex,
+              layerName,
             });
-            const sourceCategory=String(meta.categoria??"").toLowerCase();
-            const layerCategory=clasificarCapa(layerName,colorRhinoHex(meta.colorCapa));
-            const semantic=classifyAurumSemanticObject(x,null);
-            const semanticCategory=semantic.confidence>=.7
-              ? semantic.classification==="gem" ? "gema" : semantic.classification==="metal" ? "metal" : null
-              : null;
-            const category=manualOverride ?? (sourceCategory==="gema" || layerCategory==="gema" || semanticCategory==="gema" ? "gema" :
-              sourceCategory==="metal" || layerCategory==="metal" || semanticCategory==="metal" ? "metal" :
-              sourceCategory || "otro");
+            const category=manualOverride??context.category;
             if(category!=="gema")return;
             gemMeshes++;
-            const layer=layerName.toLocaleLowerCase();
-            const key=layer||String(meta.layerKey??x.uuid);
+            const key=context.layerKey??("mesh:"+x.uuid);
             // applyAurumGemToTarget resolves and updates every mesh in a layer.
             // Deduplicate here so a CAD layer with many tessellated meshes is
             // assigned once instead of repeating the same full-layer operation.
