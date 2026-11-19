@@ -153,6 +153,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const diamondBvhRuntimeRef = useRef<Awaited<ReturnType<typeof createAurumDiamondBvhRuntime>> | null>(null);
   const gemEnvironmentReadyRef = useRef<Promise<THREE.Texture | null> | null>(null);
   const bvhCameraStateRef = useRef<Float64Array | null>(null);
@@ -243,6 +244,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const viewerPixelRatio = Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: viewerPixelRatio, controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
+        rendererRef.current = renderer as THREE.WebGLRenderer;
         // Public viewer only: align highlight roll-off with the photographic reference.
         // Keep this override local; createAurumWebGLViewer is shared with Aurum Render.
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -689,6 +691,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         diamondBvhRuntimeRef.current = null;
       }
       cameraRef.current = null;
+      if (rendererRef.current === renderer) rendererRef.current = null;
       cameraActionsRef.current = null;
       onResetViewReady?.(null);
       setCameraReady(false);
@@ -764,7 +767,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // then applies the same geometry-derived per-stone optical-frame correction.
         environmentRotationRadians: Math.PI / 2,
         camera,
-        getViewportHeight: () => renderer.domElement.height,
+        getViewportHeight: () => rendererRef.current?.domElement.height ?? hostRef.current?.clientHeight ?? 1,
         quality: "high",
         targetFamilies: [selectedFamily],
         diamondCenterOnly: false,
