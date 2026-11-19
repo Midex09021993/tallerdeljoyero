@@ -6,7 +6,7 @@ export type AurumVideoOptions = {
   signal?: AbortSignal | undefined;
   onProgress?: ((elapsedSeconds: number, durationSeconds: number) => void) | undefined;
   /** Called before each frame is encoded; the existing AURUM viewer remains the renderer. */
-  onFrame?: (elapsedSeconds: number, durationSeconds: number) => void;
+  onFrame?: (elapsedSeconds: number, durationSeconds: number) => void | Promise<void>;
   /** DOM element whose CSS backdrop sits behind AURUM's transparent WebGL canvas. */
   backgroundElement?: HTMLElement | null;
 };
@@ -305,7 +305,8 @@ export async function recordAurumCanvasVideo(
 
     for (const frame of framePlan) {
       if (options.signal?.aborted) throw new DOMException("Exportación cancelada.", "AbortError");
-      options.onFrame?.(frame.timestampSeconds, framePlan.length / fps);
+      // Allow the live renderer to finish a full-quality settled frame before encoding.
+      await options.onFrame?.(frame.timestampSeconds, framePlan.length / fps);
       // Background first, then the transparent live WebGL canvas.
       if (backgroundSnapshot) recordingContext.drawImage(backgroundSnapshot, 0, 0, compositeCanvas.width, compositeCanvas.height);
       else recordingContext.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
