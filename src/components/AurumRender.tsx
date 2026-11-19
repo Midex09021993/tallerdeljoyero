@@ -282,10 +282,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     if (!snapshotAspectCameraSnapshotRef.current) {
       snapshotAspectCameraSnapshotRef.current = apiRef.current?.captureCameraState?.() ?? null;
     }
-    const dimensions = getAurumAspectDimensions(ratio, "image");
+    const ratioValue = getAurumAspectRatio(ratio);
+    const longEdge = snapshotResolution === "8k" ? 7680 : 3840;
+    let width = ratioValue >= 1 ? longEdge : Math.round(longEdge * ratioValue);
+    let height = ratioValue >= 1 ? Math.round(longEdge / ratioValue) : longEdge;
+    const scale = Math.min(1, Math.sqrt(36_000_000 / (width * height)));
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
     setSnapshotAspect(ratio);
-    setSnapshotWidth(String(dimensions.width));
-    setSnapshotHeight(String(dimensions.height));
+    setSnapshotWidth(String(width));
+    setSnapshotHeight(String(height));
     requestAnimationFrame(() => apiRef.current?.fitAspect(getAurumAspectRatio(ratio)));
   };
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
@@ -6197,6 +6203,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <button type="button" onClick={()=>handleSnapshotAspect("3:2")} aria-pressed={snapshotAspect==="3:2"} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(snapshotAspect==="3:2"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">3:2</span><span className="mt-0.5 block opacity-75">Fotografía clásica</span></button>
             </div>
             <div className="mt-2"><div className="mb-1 text-[10px] font-medium text-[#66645e]">Guías de composición</div><div className="grid grid-cols-3 gap-1.5"><button type="button" onClick={()=>setSnapshotGuide("none")} aria-pressed={snapshotGuide==="none"} className={"rounded-lg border px-2 py-1.5 text-[10px] "+(snapshotGuide==="none"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}>Sin guías</button><button type="button" onClick={()=>setSnapshotGuide("thirds")} aria-pressed={snapshotGuide==="thirds"} className={"rounded-lg border px-2 py-1.5 text-[10px] "+(snapshotGuide==="thirds"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}>Tercios</button><button type="button" onClick={()=>setSnapshotGuide("complete")} aria-pressed={snapshotGuide==="complete"} className={"rounded-lg border px-2 py-1.5 text-[10px] "+(snapshotGuide==="complete"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}>Completa</button></div></div>
+            <div className="mb-1.5 text-[10px] font-medium text-[#66645e]">Resolución de fotografía</div>
+            <div className="mb-2 grid grid-cols-2 gap-1.5">
+              <button type="button" onClick={()=>{setSnapshotResolution("4k");const ratio=snapshotAspect?getAurumAspectRatio(snapshotAspect):16/9;const w=ratio>=1?3840:Math.round(3840*ratio);const h=ratio>=1?Math.round(3840/ratio):3840;setSnapshotWidth(String(w));setSnapshotHeight(String(h));}} aria-pressed={snapshotResolution==="4k"} className={"rounded-lg border px-2 py-2 text-left text-[10px] "+(snapshotResolution==="4k"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}><span className="block font-semibold">4K UHD</span><span className="mt-0.5 block opacity-75">3840 × 2160</span></button>
+              <button type="button" onClick={()=>{setSnapshotResolution("8k");const ratio=snapshotAspect?getAurumAspectRatio(snapshotAspect):16/9;let w=ratio>=1?7680:Math.round(7680*ratio);let h=ratio>=1?Math.round(7680/ratio):7680;const scale=Math.min(1,Math.sqrt(36_000_000/(w*h)));w=Math.round(w*scale);h=Math.round(h*scale);setSnapshotWidth(String(w));setSnapshotHeight(String(h));}} aria-pressed={snapshotResolution==="8k"} className={"rounded-lg border px-2 py-2 text-left text-[10px] "+(snapshotResolution==="8k"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}><span className="block font-semibold">8K UHD</span><span className="mt-0.5 block opacity-75">7680 × 4320</span></button>
+            </div>
             <div className="mb-1.5 text-[10px] text-[#66645e]">También puedes ajustar las dimensiones manualmente.</div>
             <div className="grid grid-cols-2 gap-2">
               <label className="text-[10px] text-[#66645e]">Ancho (px)<input type="number" min={320} max={8192} step={160} value={snapshotWidth} onChange={e=>setSnapshotWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
