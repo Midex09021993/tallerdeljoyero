@@ -3503,8 +3503,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   camara.lookAt(controles.target);
                   controles.update?.();
                 }
-                // Render synchronously through the viewer's actual live path before
-                // requestFrame samples the original WebGL drawing buffer.
+                // Render synchronously through AURUM's actual live path before
+                // canvas-record snapshots the original WebGL canvas into a VideoFrame.
                 loop?.renderNow?.();
               },
             });
@@ -6048,7 +6048,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           <div className="rounded-xl border border-[#d4af37]/35 bg-[#fffaf0]/70 p-3">
             <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>{const next=!v;if(next)setSnapshotOpen(false);return next;})} className="flex w-full items-center gap-2.5 text-left">
               <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#d4af37]/15 text-[#92743b]"><RotateCw className="size-4"/></span>
-              <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Vídeo de giro de joya</span><span className="block text-[10px] text-[#77756f]">Captura en vivo · MP4</span></span>
+              <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Vídeo de giro de joya</span><span className="block text-[10px] text-[#77756f]">Render por fotogramas · MP4</span></span>
               <ChevronDown className={"size-4 transition-transform "+(videoOpen?"rotate-180":"")}/>
             </button>
             {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
