@@ -254,6 +254,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       shader.uniforms.aurumIJEWELGammaFactor={value:Number(ijewel.gammaFactor??1)};
       shader.uniforms.aurumIJEWELTransmissionParameter={value:Number(ijewel.transmissionParameter??0)};
       shader.uniforms.aurumIJEWELBoostFactors={value:new THREE.Vector3(Number(ijewel.boostFactors?.x??1),Number(ijewel.boostFactors?.y??1),Number(ijewel.boostFactors?.z??1))};
+      material.userData={...(material.userData??{}),aurumIJEWELUniforms:{boostFactors:shader.uniforms.aurumIJEWELBoostFactors}};
       // Experimental virtual-facet reflection samples; disabled by metadata for A/B.
       shader.uniforms.aurumIJEWELVirtualFacets={value:ijewel.virtualFacetReflections===true?1:0};
     }
