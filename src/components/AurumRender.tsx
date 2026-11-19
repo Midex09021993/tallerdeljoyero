@@ -380,7 +380,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   categoriaProyectoRef.current = categoriaProyecto;
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
-  const gemTransitionRef = useRef<any>(null);\n  const diamondDispersionFrameRef = useRef<number|null>(null);
+  const gemTransitionRef = useRef<any>(null);
+  const diamondDispersionFrameRef = useRef<number|null>(null);
   const diamondMicroPipelineRef = useRef<any>(null);
   const diamondBvhRuntimeRef = useRef<any>(null);
   const diamondBvhEnabledRef = useRef(true);
