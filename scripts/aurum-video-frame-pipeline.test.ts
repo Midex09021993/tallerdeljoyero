@@ -170,6 +170,20 @@ test("AURUM video frame plan clamps unsafe duration and frame-rate inputs", asyn
 });
 
 
+test("AURUM WebCodecs bitrate is a positive integer and matches the 1080p30 target", async () => {
+  const { calculateAurumVideoBitrate } = await import("../src/lib/aurum/video-exporter");
+  const bitrate = calculateAurumVideoBitrate(1920, 1080, 30);
+  expect(bitrate).toBe(13_000_000);
+  expect(Number.isSafeInteger(bitrate)).toBe(true);
+  expect(bitrate).toBeGreaterThan(0);
+});
+
+test("AURUM WebCodecs bitrate rejects invalid dimensions and frame rates", async () => {
+  const { calculateAurumVideoBitrate } = await import("../src/lib/aurum/video-exporter");
+  expect(() => calculateAurumVideoBitrate(0, 1080, 30)).toThrow(/tasa de bits válida/);
+  expect(() => calculateAurumVideoBitrate(1920, 1080, 0)).toThrow(/tasa de bits válida/);
+});
+
 test("AURUM MP4 encoder accepts standard 4K landscape and portrait frames", async () => {
   const { assertAurumVideoFrameBudget } = await import("../src/lib/aurum/video-exporter");
   expect(() => assertAurumVideoFrameBudget(3840, 2160)).not.toThrow();
