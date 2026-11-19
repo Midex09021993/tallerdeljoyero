@@ -441,7 +441,7 @@ export function fitAurumCameraToAspect(
     );
   }
 
-  const safeMargin = Number.isFinite(margin) ? THREE.MathUtils.clamp(margin, 1, 2) : 1.18;
+  const safeMargin = Number.isFinite(margin) ? THREE.MathUtils.clamp(margin, 1, 2.5) : 1.18;
   const distance = Math.max(requiredDistance * safeMargin, 0.01);
   controls.target.copy(target);
   camera.position.copy(target).addScaledVector(direction, distance);
