@@ -710,12 +710,16 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         EXRLoader,
         url: getAurumGemHdriUrl("ijewelGem"),
         ...(sharedEnvironmentMap ? { environmentMap: sharedEnvironmentMap, ownsEnvironmentMap: false } : {}),
-        // Keep the public BVH diamond optics aligned with Aurum Render's
-        // production EXR orientation (90 degrees around world Y).
-        environmentRotationRadians: Math.PI / 2,
+        // The standard gem envMap uses the shared +90° presentation offset,
+        // but the calibrated central white-diamond BVH has its own optical frame:
+        // Aurum Render keeps its base EXR rotation at 0° and applies per-mesh
+        // yaw compensation relative to the center stone inside the BVH runtime.
+        environmentRotationRadians: 0,
         camera,
-        quality: "interactive",
+        getViewportHeight: () => renderer.domElement.height,
+        quality: "high",
         targetFamilies: [selectedFamily],
+        diamondCenterOnly: false,
         onError: (cause) => console.warn("[PUBLIC VIEWER] BVH AURUM para " + selectedFamily + ": se conserva el material AURUM como respaldo.", cause),
       });
       if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) {
