@@ -365,7 +365,30 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             : (object.material?.clone ? object.material.clone() : object.material);
         });
         model.updateMatrixWorld(true);
-        const inferredGemCount = inferGemMeshes(model);
+        // A ring can contain explicitly named melee diamonds while its center stone
+        // has no Rhino/GLB gem metadata. Infer the dominant central stone even in
+        // that mixed case; otherwise the side stones get BVH and the center stays
+        // on the plain physical fallback (the opaque-white failure seen in catalog).
+        const inferredGemCount = inferGemMeshes(model, {
+          allowCentralInferenceAlongsideExplicitGems: true,
+        });
+        const gemClassificationAudit = {
+          modelName,
+          sourceFormat: supportedExtension,
+          meshCount: 0,
+          gemMeshCount: 0,
+          inferredCentralGemCount: inferredGemCount,
+          inferredMeshes: [] as string[],
+        };
+        model.traverse((object: any) => {
+          if (!object.isMesh || !object.geometry) return;
+          gemClassificationAudit.meshCount += 1;
+          const isInferred = Boolean(object.userData?.aurumPublicInferredGem);
+          const family = isInferred ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
+          if (family === "gema") gemClassificationAudit.gemMeshCount += 1;
+          if (isInferred) gemClassificationAudit.inferredMeshes.push(String(object.name || object.uuid));
+        });
+        console.info("[PUBLIC VIEWER][GEM CLASSIFICATION]", gemClassificationAudit);
         // Building and logging a full per-mesh audit on every public load adds
         // allocations and console work for large jewelry models. Keep it opt-in
         // alongside the existing ?aurumPerf=1 diagnostics.
@@ -745,12 +768,22 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         return;
       }
       runtime.refresh(model);
-      if (!runtime.diagnostics().enabled) {
-        console.warn("[PUBLIC VIEWER] BVH AURUM sin mallas compatibles para " + selectedFamily + "; se mantiene el material AURUM.");
+      const bvhDiagnostics = runtime.diagnostics();
+      const hasSelectedDiamond = selectedFamily !== "diamante" || bvhDiagnostics.diamondMeshes > 0;
+      if (!bvhDiagnostics.enabled || !hasSelectedDiamond) {
+        console.warn("[PUBLIC VIEWER][BVH AUDIT] El runtime no activó la familia óptica solicitada; se conserva el material físico AURUM.", {
+          selectedFamily,
+          ...bvhDiagnostics,
+        });
         runtime.dispose();
         setGemOpticsLoading(false);
         return;
       }
+      console.info("[PUBLIC VIEWER][BVH READY]", {
+        selectedFamily,
+        selectedGemId: gemId,
+        ...bvhDiagnostics,
+      });
       diamondBvhRuntimeRef.current = runtime;
       // Force one camera-uniform refresh for the newly attached BVH runtime.
       bvhCameraStateRef.current = null;
