@@ -668,7 +668,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentRotationCorrection: meshEnvironmentAlignment.correctionQuaternion,
           get tier() { return currentDiamondTier; },
           setSourceDispersion: (nextDispersion: number) => {
-            if (family !== "diamante" || isProtectedCenter()) return;
+            if (family !== "diamante") return;
             const next = Math.max(0, Math.min(0.1, Number(nextDispersion) || 0));
             if (next === baseDiamondDispersion) return;
             baseDiamondDispersion = next;
