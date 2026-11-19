@@ -66,7 +66,6 @@ import { AurumCameraCalibrationPanel } from "./AurumCameraCalibrationPanel";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { AurumLoadingExperience } from "./AurumLoadingExperience";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
-import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
 import { runAurumMediaExportCleanup } from "../lib/aurum/media-export-session";
 import { captureAurumPathTracedScene } from "../lib/aurum/path-traced-capture";
 
