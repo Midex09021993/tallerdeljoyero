@@ -6,7 +6,7 @@ import { applyAurumIJEWELReferenceFromMaterial } from "../aurum-material-engine"
 import { createAurumGemAdapter } from "./core/gem-adapter";
 import { createAurumMetalAdapter } from "./core/metal-adapter";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
-import { applyAurumDynamicScintillation, setAurumDiamondSourceDispersion } from "./scintillation";
+import { applyAurumDynamicScintillation } from "./scintillation";
 import { activateAurumDiamondMaterial } from "./aurum-diamond-material";
 import { applyAurumInternalLightResponse } from "./internal-light-response";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
@@ -699,7 +699,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ...part.userData,
       aurumGemApplicationToken:applicationToken,
       aurumActiveGemId:activeGemId,
-      aurumActiveGemFamily:activeGemFamily,
+      aurumActiveGemFamily:activeGemFamily,\n      ...(activeGemFamily==="diamante" ? { aurumDiamondSourceDispersion:Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0) } : {}),
       aurumFacetNormalsApplied:true,
       aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",
       aurumOpticalThickness:thickness,
