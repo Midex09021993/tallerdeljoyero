@@ -596,6 +596,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
           gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09,
+          geometryFactor: Number(diamondSourceParameters?.geometryFactor ?? 0.5),
+          squashFactor: Number(diamondSourceParameters?.squashFactor ?? 0.98),
+          diamondOrientedEnvMap: Number(diamondSourceParameters?.diamondOrientedEnvMap ?? 0),
           // Every diamond starts with the same EXR orientation. Later global
           // environment rotation is applied uniformly through updateEnvironment().
           // Per-mesh family offsets must not rotate melee stones away from the center.
