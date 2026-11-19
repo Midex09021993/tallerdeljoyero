@@ -269,8 +269,10 @@ test("diamond live optical tuning matches the approved diamond-only calibration"
   expect(source).toContain("ijSpectralLuma*0.88");
   expect(source).toContain("ijHighlightPeak-0.86");
   const bvh = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
-  expect(bvh).toContain('isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : 0.90');
-  expect(bvh).toContain('gamma: isMicro ? 0.96 : isSmall ? 0.94 : 0.90');
+  expect(bvh).toContain('const calibrateSecondaryDiamond = options.calibrateSecondaryDiamonds === true');
+  expect(bvh).toContain('dispersion: family === "diamante"');
+  expect(bvh).toContain('calibrateSecondaryDiamond ? 0.006 : 0.010');
+  expect(bvh).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
 });
 
 test("runtime DPR remains unchanged to avoid changing shared metal rendering resolution", () => {
@@ -708,6 +710,7 @@ test("Aurum Render production BVH includes ruby and all diamond sizes", () => {
 
   expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"]');
   expect(render).toContain("diamondCenterOnly: false");
+  expect(render).toContain("calibrateSecondaryDiamonds: true");
   expect(runtime).toContain('const isRuby = family === "rubí" || family === "rubi"');
   expect(runtime).toContain("if (family === \"diamante\" && options.diamondCenterOnly)");
   expect(runtime).toContain("resolveAurumRubyBvhProfile(materials[0])");
@@ -771,7 +774,7 @@ test("diamond BVH quality is authoritative and independent of screen-space tier"
 });
 
 
-test("all neutral white diamond sizes use the center optical profile and expose per-mesh BVH diagnostics", () => {
+test("editor secondary diamonds use separate calibrated profiles while the protected center remains unchanged", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const tierStart = runtime.indexOf("setTier: (nextTier) => {");
   const qualityStart = runtime.indexOf("setQuality: (quality) => {", tierStart);
@@ -785,9 +788,10 @@ test("all neutral white diamond sizes use the center optical profile and expose 
   expect(profile).toContain('environmentIntensity: family === "diamante"');
   expect(profile).toContain('? (!isBlueDiamond && !isPinkDiamond ? 1.30');
   expect(profile).toContain('dispersion: family === "diamante"');
-  expect(profile).toContain('? 0.010');
-  expect(profile).toContain('family === "diamante" ? 2.6');
+  expect(profile).toContain('calibrateSecondaryDiamond ? 0.006 : 0.010');
+  expect(profile).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
   expect(profile).toContain('reflectivity: family === "diamante" ? 0.46');
+  expect(profile).toContain('calibrateSecondaryDiamonds === true');
   expect(profile).toContain('gamma: family === "diamante" && isPinkDiamond ? 0.90 : 1.09');
   expect(tierBlock).not.toContain("packageApi.setDiamondOptions(");
   expect(tierBlock).toContain("currentDiamondTier = nextTier");
@@ -871,7 +875,7 @@ test("public viewer applies the calibrated center white-diamond BVH optical fram
   expect(viewer).toContain("getViewportHeight: () => rendererRef.current?.domElement.height ?? hostRef.current?.clientHeight ?? 1");
   expect(viewer).toContain("diamondCenterOnly: false");
   expect(runtime).toContain('quality: family === "diamante" ? "high"');
-  expect(runtime).toContain('ior: family === "diamante" ? 2.6');
+  expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
   expect(runtime).toContain("dispersion: family === \"diamante\"");
   expect(runtime).toContain("environmentIntensity: family === \"diamante\"");
   expect(runtime).toContain('opticalProfile: !isBlueDiamond && !isPinkDiamond ? "white-shared-center-profile"');
