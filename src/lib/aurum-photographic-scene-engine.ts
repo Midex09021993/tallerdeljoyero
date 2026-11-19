@@ -78,9 +78,9 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
 
-/** One coordinated studio preset. Gem illumination always uses the supplied
+/** Legacy paired preset retained only for existing saved configurations. Gem illumination uses the supplied
  * optical-lab EXR; only the metal environment varies independently. */
-export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string;metalKey?:string;metalRotation?:number;metalIntensity?:number}>={
+export const AURUM_LEGACY_HDR_PAIR_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string;metalKey?:string;metalRotation?:number;metalIntensity?:number}>={
   predeterminado:{
     id:"predeterminado",
     name:"Ambiente Premium",
