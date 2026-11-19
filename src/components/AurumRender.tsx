@@ -6214,7 +6214,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
               <label className="block text-[10px] text-[#66645e]">Resolución de vídeo
                 <select value={videoResolution} disabled={videoBusy} onChange={e=>setVideoResolution(e.target.value as "native"|"1080"|"1440"|"4k")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
-                  <option value="native">Resolución del visor · sin reescalado</option>
+                  <option value="native">Automática · tamaño actual del visor</option>
                   <option value="1080">Full HD · 1080p</option>
                   <option value="1440">QHD · 1440p</option>
                   <option value="4k">Ultra HD · 4K</option>
