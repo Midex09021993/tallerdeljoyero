@@ -1623,7 +1623,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const previewToFrameScale = previewFrameHeight > 0
             ? viewportHeight / previewFrameHeight
             : 1;
-          const framingMargin = THREE.MathUtils.clamp(1.18 * previewToFrameScale, 1.18, 2);
+          const framingMargin = THREE.MathUtils.clamp(1.3 * previewToFrameScale, 1.3, 2.35);
           fitAurumCameraToAspect(camara, controles, modelo, targetAspect, framingMargin);
           camara.updateMatrixWorld(true);
           controles.update();
