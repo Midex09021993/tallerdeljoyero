@@ -1,11 +1,23 @@
 $ErrorActionPreference = "Stop"
 
-# Program Files requiere elevación. Relanza el instalador con UAC antes de realizar cambios.
+# Rhino 8 es de 64 bits: si el script se abrió desde PowerShell x86,
+# relanzarlo primero en el host nativo antes de detectar Program Files o .NET.
+if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) {
+    $nativePowerShell = Join-Path $env:WINDIR "Sysnative\WindowsPowerShell\v1.0\powershell.exe"
+    if (-not (Test-Path $nativePowerShell)) {
+        throw "No se encontró Windows PowerShell de 64 bits."
+    }
+    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    Start-Process -FilePath $nativePowerShell -ArgumentList $arguments
+    exit
+}
+
+# Program Files requiere elevación. Relanza el instalador con UAC desde PowerShell x64.
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal($identity)
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-    Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Verb RunAs
+    Start-Process -FilePath (Join-Path $PSHOME "powershell.exe") -ArgumentList $arguments -Verb RunAs
     exit
 }
 $ProgressPreference = "SilentlyContinue"
@@ -14,11 +26,11 @@ $repoRoot = "https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/mai
 $sourceRoot = Join-Path $env:TEMP "AurumConect-Rhino8-Source"
 $projectDir = Join-Path $sourceRoot "rhino8-aurum-conect"
 $sharedDir = Join-Path $sourceRoot "rhino7-aurum-prototype"
-$installDir = Join-Path $env:ProgramFiles "Rhino 8\Plug-ins"
+$installDir = Join-Path $env:ProgramW6432 "Rhino 8\Plug-ins"
 
 function Find-Rhino8System {
     $candidates = @(
-        (Join-Path $env:ProgramFiles "Rhino 8\System"),
+        (Join-Path $env:ProgramW6432 "Rhino 8\System"),
         "C:\Program Files\Rhino 8\System",
         "C:\Program Files\Rhinoceros 8\System"
     ) | Select-Object -Unique
@@ -35,7 +47,8 @@ function Find-Rhino8System {
 try {
     Write-Host ""
     Write-Host "AURUM LAB | AURUM CONECT - Rhino 8" -ForegroundColor Yellow
-    Write-Host "Preparando el complemento nativo para .NET 8..." -ForegroundColor Gray
+    Write-Host "Preparando el complemento nativo para .NET 8 (Windows x64)..." -ForegroundColor Gray
+    if (-not [Environment]::Is64BitProcess) { throw "El instalador debe ejecutarse en PowerShell de 64 bits." }
 
     $rhinoSystem = Find-Rhino8System
     if (-not $rhinoSystem) {
@@ -49,6 +62,8 @@ try {
     }
     $dotnet = Get-Command "dotnet" -ErrorAction SilentlyContinue
     if (-not $dotnet) { throw "No se encontró .NET SDK 8. Instala el SDK y vuelve a ejecutar este instalador." }
+    $dotnetInfo = & dotnet --info 2>&1 | Out-String
+    if ($dotnetInfo -notmatch "Architecture:\s+x64") { throw "Se requiere .NET SDK/host x64. Comprueba la instalación de .NET en Windows de 64 bits." }
 
     $sdkList = & dotnet --list-sdks 2>&1
     $hasNet8 = $false
