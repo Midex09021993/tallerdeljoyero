@@ -17,11 +17,12 @@ export type AurumDiamondMicroOpticalProfile = {
 
 /** Per-stone live optics. Brilliant stones (including the protected center) retain the calibrated baseline. */
 export function getAurumDiamondMicroOpticalProfile(tier: Exclude<AurumDiamondMicroTier, "mixed">): AurumDiamondMicroOpticalProfile {
-  // Secondary melee tiers receive restrained spectral scaling over their own
-  // calibrated material baseline. The protected center always returns 1:1 values.
-  if (tier === "micro") return { scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.50, virtualFacetWeight: 0.06, fireScale: 0.55, environmentIntensityScale: 0.90, reflectivityScale: 0.84, gammaScale: 1.04 };
-  if (tier === "small") return { scintillationScale: 0.58, facetContrastScale: 0.92, dispersionScale: 0.65, virtualFacetWeight: 0.06, fireScale: 0.70, environmentIntensityScale: 0.94, reflectivityScale: 0.90, gammaScale: 1.02 };
-  if (tier === "medium") return { scintillationScale: 0.78, facetContrastScale: 0.96, dispersionScale: 0.80, virtualFacetWeight: 0.06, fireScale: 0.85, environmentIntensityScale: 0.98, reflectivityScale: 0.95, gammaScale: 1.01 };
+  // Secondary melee keeps the same neutral-white identity as the center.
+  // Size tiers stabilize fine sparkle/contrast without suppressing the source
+  // dispersion or darkening the stones into a grey appearance.
+  if (tier === "micro") return { scintillationScale: 0.78, facetContrastScale: 0.96, dispersionScale: 0.88, virtualFacetWeight: 0.06, fireScale: 0.88, environmentIntensityScale: 0.98, reflectivityScale: 0.96, gammaScale: 1.01 };
+  if (tier === "small") return { scintillationScale: 0.86, facetContrastScale: 0.98, dispersionScale: 0.92, virtualFacetWeight: 0.06, fireScale: 0.92, environmentIntensityScale: 0.99, reflectivityScale: 0.98, gammaScale: 1.005 };
+  if (tier === "medium") return { scintillationScale: 0.94, facetContrastScale: 0.99, dispersionScale: 0.96, virtualFacetWeight: 0.06, fireScale: 0.97, environmentIntensityScale: 1, reflectivityScale: 0.99, gammaScale: 1 };
   return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1, environmentIntensityScale: 1, reflectivityScale: 1, gammaScale: 1 };
 }
 
