@@ -24,7 +24,7 @@ import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../li
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { setAurumInclusionsVisible, setAurumEmeraldInclusionsVisible } from "../lib/aurum/gems";
-import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
+import { setAurumGemShaderQuality, setAurumDiamondSourceDispersion } from "../lib/aurum/scintillation";
 import { createAurumDiamondMicroPipeline } from "../lib/aurum/diamond-micro-pipeline";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
@@ -380,7 +380,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   categoriaProyectoRef.current = categoriaProyecto;
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
-  const gemTransitionRef = useRef<any>(null);
+  const gemTransitionRef = useRef<any>(null);\n  const diamondDispersionFrameRef = useRef<number|null>(null);
   const diamondMicroPipelineRef = useRef<any>(null);
   const diamondBvhRuntimeRef = useRef<any>(null);
   const diamondBvhEnabledRef = useRef(true);
@@ -2013,6 +2013,46 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               mesh.userData=next;
             });
           },
+          (targets:any[],from:number,to:number)=>{
+            dispersionOnlySwitch=true;
+            if(diamondDispersionFrameRef.current!==null && typeof window!=="undefined"){
+              window.cancelAnimationFrame(diamondDispersionFrameRef.current);
+              diamondDispersionFrameRef.current=null;
+            }
+            const started=typeof performance!=="undefined"?performance.now():Date.now();
+            const duration=260;
+            const update=(now:number)=>{
+              const t=Math.max(0,Math.min(1,(now-started)/duration));
+              const eased=t*t*(3-2*t);
+              const value=from+(to-from)*eased;
+              targets.forEach((mesh:any)=>{
+                const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+                materials.forEach((material:any)=>setAurumDiamondSourceDispersion(material,value));
+              });
+              diamondBvhRuntime?.setDiamondDispersion?.(targets,value);
+              invalidateRenderRef.current?.();
+              if(t<1 && typeof window!=="undefined"){
+                diamondDispersionFrameRef.current=window.requestAnimationFrame(update);
+              }else{
+                diamondDispersionFrameRef.current=null;
+                targets.forEach((mesh:any)=>{
+                  const data={...(mesh.userData??{})};
+                  delete data.aurumDiamondDispersionOnlyUpdate;
+                  mesh.userData=data;
+                });
+                invalidateRenderRef.current?.();
+              }
+            };
+            if(typeof window!=="undefined"){
+              diamondDispersionFrameRef.current=window.requestAnimationFrame(update);
+            }else{
+              targets.forEach((mesh:any)=>{
+                const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+                materials.forEach((material:any)=>setAurumDiamondSourceDispersion(material,to));
+              });
+              diamondBvhRuntime?.setDiamondDispersion?.(targets,to);
+            }
+          },
         );
         if(!applied){
           console.error("[AURUM][GEM APPLICATION FAILED]",{
@@ -2055,7 +2095,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if(renderImmediately) viewerLoopRef.current?.renderNow?.();
         else invalidateRenderRef.current?.();
 
-        if(renderImmediately && resolvedTargets.length){
+        if(renderImmediately && resolvedTargets.length && !dispersionOnlySwitch){
           // Keep the selected meshes and application token stable across the
           // transition. BVH may replace the physical material, so it must wait
           // until this appearance blend has completed.
