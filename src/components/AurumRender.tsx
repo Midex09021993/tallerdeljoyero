@@ -199,6 +199,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [videoMode, setVideoMode] = useState<"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog">("automatic");
     const [videoFps, setVideoFps] = useState("30");
   const [videoDuration, setVideoDuration] = useState("5");
+  const [videoResolution, setVideoResolution] = useState<"native"|"1080"|"1440"|"4k">("native");
   const [videoProgress, setVideoProgress] = useState(0);
   const videoAbortRef = useRef<AbortController | null>(null);
 
@@ -3412,7 +3413,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
-        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;mode?:"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
+        exportVideo:async(options:{width?:number;height?:number;resolution?:"native"|"1080"|"1440"|"4k";fps?:number;duration?:number;mode?:"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
@@ -3426,15 +3427,46 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const automatic=options.mode!=="manual";
           const loop:any=viewerLoopRef.current;
           const previousFastPath=liveFastPathRef.current;
+          const originalRendererSize=renderer.getSize(new THREE.Vector2());
+          const originalRendererPixelRatio=renderer.getPixelRatio();
+          const originalComposerPixelRatio=composer?.getPixelRatio?.()??originalRendererPixelRatio;
+          const originalCameraAspect=camara.aspect;
+          const originalFxaaResolution=fxaaPass?.material?.uniforms?.resolution?.value?.clone?.()??null;
+          const originalBufferWidth=sourceCanvas.width;
+          const originalBufferHeight=sourceCanvas.height;
+          let captureWidth=originalBufferWidth;
+          let captureHeight=originalBufferHeight;
+          let highResolutionCapture=false;
           try{
             const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
             if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
             controles.autoRotate=false;
-            // Do not pause, resize, replace, or post-process the live WebGL canvas.
-            // The browser records this exact canvas bitmap through captureStream().
+            if(options.resolution && options.resolution!=="native"){
+              const longEdge=options.resolution==="1080"?1920:options.resolution==="1440"?2560:3840;
+              const aspect=originalBufferWidth/Math.max(1,originalBufferHeight);
+              if(aspect>=1){
+                captureWidth=longEdge;
+                captureHeight=Math.max(2,Math.round(longEdge/aspect/2)*2);
+              }else{
+                captureHeight=longEdge;
+                captureWidth=Math.max(2,Math.round(longEdge*aspect/2)*2);
+              }
+              highResolutionCapture=true;
+              // Keep the existing WebGL canvas and CSS layout. Only increase its
+              // drawing buffer; the same live scene and overlays render at target pixels.
+              renderer.setPixelRatio(1);
+              renderer.setSize(captureWidth,captureHeight,false);
+              composer?.setPixelRatio?.(1);
+              composer?.setSize?.(captureWidth,captureHeight);
+              gemMaskPass?.setSize?.(captureWidth,captureHeight);
+              diamondSupersamplePass?.setSize?.(captureWidth,captureHeight);
+              fxaaPass?.material?.uniforms?.resolution?.value?.set?.(1/captureWidth,1/captureHeight);
+              camara.aspect=captureWidth/captureHeight;
+              camara.updateProjectionMatrix?.();
+            }
             loop?.setContinuousRendering?.(true);
+            loop?.renderNow?.();
             await recordVideo(sourceCanvas,{
-              // width/height intentionally omitted: exported pixels equal sourceCanvas.width/height.
               fps:options.fps,duration:options.duration,
               signal:options.signal,onProgress:options.onProgress,
               onFrame:(elapsed:number,total:number)=>{
@@ -3478,6 +3510,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             });
           }finally{
             const restoreFailures = runAurumMediaExportCleanup([
+              () => {
+                if(highResolutionCapture){
+                  renderer.setPixelRatio(originalRendererPixelRatio);
+                  renderer.setSize(originalRendererSize.x,originalRendererSize.y,false);
+                  composer?.setPixelRatio?.(originalComposerPixelRatio);
+                  composer?.setSize?.(originalRendererSize.x,originalRendererSize.y);
+                  gemMaskPass?.setSize?.(originalBufferWidth,originalBufferHeight);
+                  diamondSupersamplePass?.setSize?.(originalBufferWidth,originalBufferHeight);
+                  if(originalFxaaResolution) fxaaPass?.material?.uniforms?.resolution?.value?.copy?.(originalFxaaResolution);
+                  camara.aspect=originalCameraAspect;
+                  camara.updateProjectionMatrix?.();
+                }
+              },
               () => { liveFastPathRef.current=previousFastPath; },
               () => { controles.autoRotate=previousAutoRotate; },
               () => { controles.autoRotateSpeed=previousAutoRotateSpeed; },
@@ -6018,7 +6063,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <option value="catalog">Presentación automática de catálogo</option>
                 </select>
               </label>
-              <div className="rounded-lg border border-[#d4af37]/25 bg-[#d4af37]/[.06] p-2.5 text-[10px] leading-relaxed text-[#6f5b2c]">Captura fiel del visor: el vídeo conserva exactamente la resolución y proporción actuales del canvas. No se cambia la cámara, no se escala ni se recorta la imagen.</div>
+              <label className="block text-[10px] text-[#66645e]">Resolución de vídeo
+                <select value={videoResolution} disabled={videoBusy} onChange={e=>setVideoResolution(e.target.value as "native"|"1080"|"1440"|"4k")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
+                  <option value="native">Resolución del visor · sin reescalado</option>
+                  <option value="1080">Full HD · 1080p</option>
+                  <option value="1440">QHD · 1440p</option>
+                  <option value="4k">Ultra HD · 4K</option>
+                </select>
+              </label>
+              <div className="rounded-lg border border-[#d4af37]/25 bg-[#d4af37]/[.06] p-2.5 text-[10px] leading-relaxed text-[#6f5b2c]">{videoResolution==="native"?"Captura directa: conserva los píxeles y la proporción actuales del canvas.":videoResolution==="1080"?"Renderiza el visor a 1920 píxeles en su lado más largo, sin estirar ni recortar.":videoResolution==="1440"?"Renderiza el visor a 2560 píxeles en su lado más largo, sin estirar ni recortar.":"Renderiza el visor a 3840 píxeles en su lado más largo, sin estirar ni recortar. Requiere más memoria y potencia GPU."} La cámara y la composición mantienen su proporción.</div>
               <div className="grid grid-cols-2 gap-2">
                 <label className="text-[10px] text-[#66645e]">Fotogramas por segundo
                   <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option><option value="120">120 FPS · experimental</option></select>
@@ -6058,7 +6111,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setVideoCountdown(null);
                   }
                   if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                  await apiRef.current?.exportVideo({fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  await apiRef.current?.exportVideo({resolution:videoResolution,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
