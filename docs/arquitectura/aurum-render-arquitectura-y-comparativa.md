@@ -366,3 +366,27 @@ La calibración queda documentada como configuración del **editor Aurum Render*
 **Interpretación:** la dispersión efectiva de MICRO / SMALL / MEDIUM es el resultado de multiplicar la base secundaria 0.006 por la escala del tier. Los demás valores son multiplicadores de perfil sobre sus valores base. Son valores configurados en código, no mediciones ópticas ni garantía de equivalencia visual.
 
 **Validación pendiente:** comparar una misma joya y cámara con los cuatro tamaños, revisar brillo blanco, fuego cromático, estabilidad al orbitar/zoom y coste de render en hardware real. No declarar la calibración visualmente certificada hasta completar esa prueba.
+
+
+### Diamante blanco 2 — parámetros fuente `.dmat` — 2026-11-19
+
+Se renombró la etiqueta visible del segundo perfil de diamante de **Diamante VS** a **Diamante blanco 2**. Se conserva el identificador interno `diamante_vs` para no romper referencias existentes.
+
+Los parámetros del archivo `1_gem_diamond_white_2.dmat` (DiamondMaterial v4.6) se guardan en `GEMAS[].diamondMaterialParameters` como datos de referencia, sin alterar por ahora la conversión óptica productiva:
+
+| Parámetro fuente | Valor |
+|---|---:|
+| Color | `#FFFFFF` |
+| envMapIntensity | 1.30 |
+| envMapIndex / envMapRotationOffset | 0 / 0 |
+| dispersion | 0 |
+| squashFactor / geometryFactor | 0.98 / 0.50 |
+| gammaFactor / absorptionFactor | 1.00 / 1.00 |
+| reflectivity | 0.50 |
+| refractiveIndex | 2.60 |
+| rayBounces | 5 |
+| diamondOrientedEnvMap | 0 |
+| boostFactors RGB | 1.00 / 1.00 / 1.00 |
+| transmission | 0 |
+
+La etiqueta visible cambia y los valores fuente quedan almacenados; no se ha modificado el shader, el BVH ni el comportamiento óptico activo para hacer que cada parámetro `.dmat` gobierne el render. Esa integración requiere una fase independiente y pruebas visuales.
