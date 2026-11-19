@@ -333,6 +333,57 @@ export function applyAurumCameraView(
 
   controls.update();
 }
+/**
+ * Restaura una referencia de cámara sin imponer la proporción de pantalla
+ * con la que fue capturada. El encuadre pertenece a la calibración; el aspect
+ * pertenece al viewport vivo y puede cambiar al redimensionar el visor.
+ */
+export function applyAurumCameraSnapshot(
+  camera: THREE.PerspectiveCamera,
+  controls: { target: THREE.Vector3; update: () => void },
+  model: THREE.Object3D | null,
+  snapshot: any,
+  viewportWidth = 0,
+  viewportHeight = 0,
+) {
+  if (!snapshot || !Array.isArray(snapshot.position) || !Array.isArray(snapshot.quaternion) || !Array.isArray(snapshot.target)) return false;
+
+  if (model && Array.isArray(snapshot.normalizedPosition) && Array.isArray(snapshot.normalizedTarget)) {
+    model.updateWorldMatrix(true, true);
+    const currentBounds = getAurumVisibleProductBounds(model);
+    if (!currentBounds.isEmpty()) {
+      const currentSphere = currentBounds.getBoundingSphere(new THREE.Sphere());
+      const scale = Math.max(currentSphere.radius, 1e-6);
+      camera.position.fromArray(snapshot.normalizedPosition).multiplyScalar(scale).add(currentSphere.center);
+      controls.target.fromArray(snapshot.normalizedTarget).multiplyScalar(scale).add(currentSphere.center);
+    } else {
+      camera.position.fromArray(snapshot.position);
+      controls.target.fromArray(snapshot.target);
+    }
+  } else {
+    // Backward compatibility for calibration snapshots captured before normalization.
+    camera.position.fromArray(snapshot.position);
+    controls.target.fromArray(snapshot.target);
+  }
+
+  camera.quaternion.fromArray(snapshot.quaternion);
+  if (Array.isArray(snapshot.up)) camera.up.fromArray(snapshot.up);
+  if (Number.isFinite(snapshot.fov)) camera.fov = snapshot.fov;
+  // Never restore snapshot.aspect: it belongs to the old capture viewport.
+  const measuredAspect = viewportWidth >= 2 && viewportHeight >= 2
+    ? viewportWidth / viewportHeight
+    : camera.aspect;
+  if (Number.isFinite(measuredAspect) && measuredAspect > 0) camera.aspect = measuredAspect;
+  if (Number.isFinite(snapshot.zoom) && snapshot.zoom > 0) camera.zoom = snapshot.zoom;
+  if (Number.isFinite(snapshot.near) && snapshot.near > 0) camera.near = snapshot.near;
+  if (Number.isFinite(snapshot.far) && snapshot.far > camera.near) camera.far = snapshot.far;
+
+  camera.updateProjectionMatrix();
+  camera.updateMatrixWorld(true);
+  controls.update();
+  return true;
+}
+
 /** Ajusta la cámara a una proporción de salida sin deformar el modelo.
  * Conserva la dirección actual de observación y centra el volumen real.
  */
