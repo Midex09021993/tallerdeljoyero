@@ -35,7 +35,7 @@ export function assertAurumVideoFrameBudget(width: number, height: number): void
   const pixels = Math.floor(width) * Math.floor(height);
   if (pixels > MAX_WEB_CODECS_MP4_PIXELS) {
     throw new Error(
-      `La resolución solicitada (${width} × ${height}) supera el límite de ${MAX_WEB_CODECS_MP4_PIXELS.toLocaleString("es-PE")} píxeles por fotograma del codificador MP4 H.264. Usa 4K horizontal/vertical o reduce la resolución.`,
+      `La resolución solicitada (${width} × ${height}) supera el límite de ${MAX_WEB_CODECS_MP4_PIXELS.toLocaleString("en-US")} píxeles por fotograma del codificador MP4 H.264. Usa 4K horizontal/vertical o reduce la resolución.`,
     );
   }
 }
