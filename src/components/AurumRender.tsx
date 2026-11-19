@@ -1594,10 +1594,30 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           invalidateRenderRef.current?.();
         },
         fitAspect: (aspect?: number) => {
-          if (!modelo) return;
-          fitAurumCameraToAspect(camara, controles, modelo, Number(aspect) || camara.aspect, 1.18);
+          if (!modelo) return false;
+          // Keep the camera projection synchronized with the actual visible
+          // canvas, including clean/no-frame mode and resizable export panels.
+          // The requested aspect is used only to calculate framing; it must
+          // never replace the live viewport projection aspect.
+          const canvasRect = renderer.domElement.getBoundingClientRect();
+          const viewportWidth = canvasRect.width || renderer.domElement.clientWidth || renderer.domElement.width;
+          const viewportHeight = canvasRect.height || renderer.domElement.clientHeight || renderer.domElement.height;
+          const viewportAspect = viewportWidth > 0 && viewportHeight > 0
+            ? viewportWidth / viewportHeight
+            : camara.aspect;
+          if (Number.isFinite(viewportAspect) && viewportAspect > 0 && Math.abs(camara.aspect - viewportAspect) > 1e-4) {
+            camara.aspect = viewportAspect;
+            camara.updateProjectionMatrix();
+          }
+          const targetAspect = Number.isFinite(aspect) && Number(aspect) > 0 ? Number(aspect) : viewportAspect;
+          fitAurumCameraToAspect(camara, controles, modelo, targetAspect, 1.18);
+          camara.updateMatrixWorld(true);
+          controles.update();
           diamondBvhRuntime?.update();
+          resetTemporalAccumulationRef.current?.();
+          viewerLoopRef.current?.invalidate?.();
           invalidateRenderRef.current?.();
+          return true;
         },
         captureCameraState: () => ({
           position: camara.position.clone(),
