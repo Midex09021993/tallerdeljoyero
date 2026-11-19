@@ -133,8 +133,8 @@ test("provides conservative optical tiers while preserving the brilliant baselin
   const micro = getAurumDiamondMicroOpticalProfile("micro");
   const small = getAurumDiamondMicroOpticalProfile("small");
   const brilliant = getAurumDiamondMicroOpticalProfile("brilliant");
-  expect(micro).toEqual({ scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.78, virtualFacetWeight: 0.06, fireScale: 0.65 });
-  expect(small).toEqual({ scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 0.90, virtualFacetWeight: 0.06, fireScale: 0.82 });
+  expect(micro).toEqual({ scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.78, virtualFacetWeight: 0.06, fireScale: 0.65, environmentIntensityScale: 0.92, reflectivityScale: 0.82, gammaScale: 1.04 });
+  expect(small).toEqual({ scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 0.90, virtualFacetWeight: 0.06, fireScale: 0.82, environmentIntensityScale: 0.97, reflectivityScale: 0.92, gammaScale: 1.02 });
   expect(micro.scintillationScale).toBeLessThan(small.scintillationScale);
   expect(micro.dispersionScale).toBe(0.78);
   expect(small.dispersionScale).toBe(0.90);
@@ -142,7 +142,10 @@ test("provides conservative optical tiers while preserving the brilliant baselin
   expect(small.virtualFacetWeight).toBe(brilliant.virtualFacetWeight);
   expect(micro.fireScale).toBe(0.65);
   expect(small.fireScale).toBe(0.82);
-  expect(brilliant).toEqual({ scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 });
+  expect(micro.environmentIntensityScale).toBeLessThan(small.environmentIntensityScale);
+  expect(micro.reflectivityScale).toBeLessThan(small.reflectivityScale);
+  expect(micro.gammaScale).toBeGreaterThan(small.gammaScale);
+  expect(brilliant).toEqual({ scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1, environmentIntensityScale: 1, reflectivityScale: 1, gammaScale: 1 });
 });
 
 test("applies per-mesh optical profiles to diamonds sharing one material and restores callbacks", () => {
