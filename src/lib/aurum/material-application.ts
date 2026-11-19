@@ -528,6 +528,33 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ?? currentMaterials[0]?.dispersion
       ?? targetDispersion);
     if(currentMaterials.length){
+      const selectedDiamondColor=Number(gemConfig?.color??0xffffff);
+      const selectedDiamondParameters=gemConfig?.diamondMaterialParameters??{};
+      const selectedBoost=selectedDiamondParameters.boostFactors??{x:1,y:1,z:1};
+      currentMaterials.forEach((material:any)=>{
+        if(!material) return;
+        material.color?.setHex(selectedDiamondColor);
+        material.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??material.envMapIntensity??1));
+        material.dispersion=targetDispersion;
+        material.attenuationColor?.setHex(Number(gemConfig?.attenuationColor??selectedDiamondColor));
+        material.attenuationDistance=Math.max(.1,Number(gemConfig?.attenuationDistance??material.attenuationDistance??100));
+        const prior=material.userData??{};
+        const priorIje=prior.aurumIJEWELParameters??{};
+        material.userData={
+          ...prior,
+          aurumIJEWELParameters:{
+            ...priorIje,
+            color:selectedDiamondColor,
+            dispersion:targetDispersion,
+            boostFactors:selectedBoost,
+          },
+          aurumDiamondCatalogProfile:String(gemConfig?.id??""),
+          aurumDiamondCatalogColor:selectedDiamondColor,
+        };
+        const boostUniform=material.userData?.aurumIJEWELUniforms?.boostFactors;
+        boostUniform?.value?.set?.(Number(selectedBoost.x??1),Number(selectedBoost.y??1),Number(selectedBoost.z??1));
+        material.needsUpdate=true;
+      });
       const currentRootData=modelRoot.userData??{};
       const currentAssignments=currentRootData.aurumGemLayerAssignments??{};
       modelRoot.userData={
