@@ -42,6 +42,10 @@ export type AurumDiamondBvhSetupOptions = {
   rgbBoost?: [number, number, number];
   /** Match per-material gamma stored in the iJewel diamond material. */
   gamma?: number;
+  /** Source DiamondMaterial shape controls forwarded to compatible BVH adapters. */
+  geometryFactor?: number;
+  squashFactor?: number;
+  diamondOrientedEnvMap?: number;
 };
 
 export type AurumDiamondBvhSetup = {
@@ -112,6 +116,9 @@ export function prepareAurumDiamondBvhExperiment(
     transmission: Math.max(0, Math.min(1, options.transmission ?? 0)),
     ...(options.rgbBoost ? { rgbBoost: options.rgbBoost } : {}),
     gamma: Math.max(0.1, Math.min(3, options.gamma ?? 1.09)),
+    geometryFactor: Number(options.geometryFactor ?? 0.5),
+    squashFactor: Number(options.squashFactor ?? 0.98),
+    diamondOrientedEnvMap: Number(options.diamondOrientedEnvMap ?? 0),
   });
 
   if (!(material instanceof THREE.Material)) {
