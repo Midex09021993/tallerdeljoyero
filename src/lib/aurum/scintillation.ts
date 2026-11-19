@@ -227,7 +227,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       fireScale:shader.uniforms.aurumDiamondMicroFireScale,
     }};
     shader.uniforms.aurumGemEnvironmentIntensity={value:Math.max(.55,Math.min(2.35,Number(material.envMapIntensity??1)))};
-    material.userData={...(material.userData??{}),aurumGemEnvironmentUniforms:shader.uniforms.aurumGemEnvironmentIntensity};
+    shader.uniforms.aurumDiamondCatalogTint={value:material.color?.clone?.()??new THREE.Color(0xffffff)};
+    material.userData={...(material.userData??{}),aurumGemEnvironmentUniforms:shader.uniforms.aurumGemEnvironmentIntensity,aurumDiamondCatalogTintUniform:shader.uniforms.aurumDiamondCatalogTint};
     const gemLightState=material.userData?.aurumGemLightState??{};
     shader.uniforms.aurumGemLightPosition={value:new THREE.Vector3(...(gemLightState.position??[0,0,0]))};
     shader.uniforms.aurumGemLightIntensity={value:gemLightState.enabled?Math.max(0,Number(gemLightState.intensity??0)):0};
@@ -320,6 +321,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumDiamondMicroVirtualFacetWeight;
       uniform float aurumDiamondMicroFireScale;
       uniform float aurumGemEnvironmentIntensity;
+      uniform vec3 aurumDiamondCatalogTint;
       uniform vec3 aurumColorChangeFluorescent;
       uniform vec3 aurumColorChangeIncandescent;
       uniform float aurumColorChangeStrength;
@@ -750,6 +752,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 gl_FragColor.rgb+=vec3(1.0,0.88,0.78)*0.60*aurumGemSunResponse;
         ` : ``}
 
+                ${isDiamond ? 'gl_FragColor.rgb *= aurumDiamondCatalogTint;' : ''}
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
                 #include <fog_fragment>
