@@ -5123,8 +5123,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       }
       setAurumConectStatus("Descargando el documento 3DM desde Rhino…");
       const blob = await response.blob();
-      if (!blob.size || blob.size > 100 * 1024 * 1024) {
-        throw new Error("El archivo recibido está vacío o supera el límite de 100 MB.");
+      if (!blob.size || blob.size > 500 * 1024 * 1024) {
+        throw new Error("El archivo recibido está vacío o supera el límite de 500 MiB de AURUM CONECT.");
       }
       const file = new File([blob], "AURUM-CONECT.3dm", {
         type: "application/octet-stream",
