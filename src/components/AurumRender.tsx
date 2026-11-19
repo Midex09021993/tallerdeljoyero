@@ -3546,27 +3546,32 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // Use the same five aspect presets as still-image export. Resolution
               // defines the longest edge; the selected ratio defines the full frame.
               const aspectId=options.aspect??null;
-              // Without an explicit preset, preserve the live viewer's exact
-              // canvas ratio and framing instead of silently forcing 16:9.
-              const aspect=aspectId?getAurumAspectRatio(aspectId):originalBufferWidth/originalBufferHeight;
-              const nativeDimensions=aspectId?getAurumAspectDimensions(aspectId,"video"):{width:originalBufferWidth,height:originalBufferHeight};
+              // Without an explicit preset, export the full display aspect rather
+              // than the editor canvas aspect (which is narrowed by the side panel).
+              // The camera projection is updated to this ratio below; pixels are
+              // rendered into a matching buffer, never stretched or letterboxed.
+              const screenWidth=typeof window!=="undefined"?Number(window.screen?.width):0;
+              const screenHeight=typeof window!=="undefined"?Number(window.screen?.height):0;
+              const screenAspect=screenWidth>0&&screenHeight>0
+                ? screenWidth/screenHeight
+                : originalBufferWidth/originalBufferHeight;
+              const aspect=aspectId?getAurumAspectRatio(aspectId):screenAspect;
+              const originalLongEdge=Math.max(originalBufferWidth,originalBufferHeight);
+              const nativeDimensions=aspectId
+                ? getAurumAspectDimensions(aspectId,"video")
+                : {width:aspect>=1?originalLongEdge:originalLongEdge*aspect,height:aspect>=1?originalLongEdge/aspect:originalLongEdge};
               const requestedLongEdge=options.resolution==="1080"?1920:options.resolution==="1440"?2560:options.resolution==="4k"?3840:Math.max(2,originalBufferWidth,originalBufferHeight);
               const longEdge=Math.min(requestedLongEdge,3840);
               const baseWidth=aspect>=1?longEdge:longEdge*aspect;
               const baseHeight=aspect>=1?longEdge/aspect:longEdge;
               captureWidth=Math.max(2,Math.round(baseWidth/2)*2);
               captureHeight=Math.max(2,Math.round(baseHeight/2)*2);
-              // Native mode preserves the viewer's native buffer when no preset
-              // is selected; preset mode keeps the chosen ratio at native budget.
+              // Native mode preserves the current pixel budget while using the
+              // selected output aspect (or the full display aspect by default).
               if(options.resolution==="native"){
-                if(!aspectId){
-                  captureWidth=originalBufferWidth;
-                  captureHeight=originalBufferHeight;
-                }else{
-                  const nativeLongEdge=Math.min(3840,Math.max(nativeDimensions.width,nativeDimensions.height,originalBufferWidth,originalBufferHeight));
-                  captureWidth=Math.max(2,Math.round((aspect>=1?nativeLongEdge:nativeLongEdge*aspect)/2)*2);
-                  captureHeight=Math.max(2,Math.round((aspect>=1?nativeLongEdge/aspect:nativeLongEdge)/2)*2);
-                }
+                const nativeLongEdge=Math.min(3840,Math.max(nativeDimensions.width,nativeDimensions.height,originalBufferWidth,originalBufferHeight));
+                captureWidth=Math.max(2,Math.round((aspect>=1?nativeLongEdge:nativeLongEdge*aspect)/2)*2);
+                captureHeight=Math.max(2,Math.round((aspect>=1?nativeLongEdge/aspect:nativeLongEdge)/2)*2);
               }
               // Freeze viewport-driven resizing before changing the drawing buffer.
               // Otherwise a window focus/restore event can replace the requested
