@@ -48,6 +48,16 @@ export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS
 export const AURUM_GEM_HDRI_ASSET_URL = "/env_gem_002_30251392af.exr";
 export const AURUM_GEM_HDRI_APPROVED_URL = "/env_gem_001_b9c4533e70.exr";
 export const AURUM_GEM_HDRI_APPROVED_2_URL = "/env_gem_004_13d65af3ba.exr";
+export const AURUM_GEM_HDRI_LIBRARY_URLS = {
+  gem001: "/env_gem_001_b9c4533e70.exr",
+  gem002: "/env_gem_002_30251392af.exr",
+  gem004: "/env_gem_004_13d65af3ba.exr",
+  gem005: "/env_gem_005_314acddf6c.exr",
+  gem006: "/env_gem_006_c9c284167f.exr",
+  gem007A: "/env_gem_007_a_edf3febd3c.exr",
+  gem007B: "/env_gem_007_b_ee3338abf6.exr",
+  gem007C: "/env_gem_007_c_c264662992.exr",
+} as const;
 export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   // One library source of truth: changing the central EXR updates every
   // legacy tier key (central, medium, small and micro) together.
