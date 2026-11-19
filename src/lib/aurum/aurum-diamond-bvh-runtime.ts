@@ -685,7 +685,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             mesh: mesh.name || mesh.uuid,
             gemId: activeGemId,
             tier: currentDiamondTier,
-            opticalProfile: !isBlueDiamond && !isPinkDiamond ? "white-shared-center-profile" : isBlueDiamond ? "blue-calibrated" : "pink-calibrated",
+            opticalProfile: !isBlueDiamond && !isPinkDiamond
+              ? calibrateSecondaryDiamond ? "white-secondary-size-calibrated" : "white-shared-center-profile"
+              : isBlueDiamond ? "blue-calibrated" : "pink-calibrated",
             ior: prepared.diagnostics.ior,
             transmission: !isBlueDiamond && !isPinkDiamond ? 0 : 0.05,
             dispersion: currentDiamondDispersion,
