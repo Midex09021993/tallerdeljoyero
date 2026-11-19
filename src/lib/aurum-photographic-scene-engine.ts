@@ -64,6 +64,7 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   gemDiamondWhite5:AURUM_GEM_HDRI_ASSET_URL,
   gemDiamondWhite6:AURUM_GEM_HDRI_ASSET_URL,
   gemDiamondWhite7:AURUM_GEM_HDRI_ASSET_URL,
+  ...AURUM_GEM_HDRI_LIBRARY_URLS,
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
 
