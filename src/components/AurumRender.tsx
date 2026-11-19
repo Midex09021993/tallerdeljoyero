@@ -248,9 +248,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   }, []);
   const videoExportLockRef = useRef(false);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
-  // Default still export: full-screen landscape capture (Full HD).
-  const [snapshotWidth, setSnapshotWidth] = useState("1920");
-  const [snapshotHeight, setSnapshotHeight] = useState("1080");
+  // Default still export: full-screen landscape capture (4K UHD).
+  const [snapshotWidth, setSnapshotWidth] = useState("3840");
+  const [snapshotHeight, setSnapshotHeight] = useState("2160");
   const [snapshotFormat, setSnapshotFormat] = useState<"png"|"jpeg"|"webp">("png");
   const [snapshotTransparent, setSnapshotTransparent] = useState(false);
   const [snapshotDof, setSnapshotDof] = useState(false);
@@ -262,9 +262,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [snapshotAspect, setSnapshotAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
   const syncSnapshotNativeDimensions = () => {
     // The editor canvas is narrowed by the export sidebar; when no aspect
-    // preset is active, use a clean full-screen 16:9 Full HD output instead.
-    setSnapshotWidth("1920");
-    setSnapshotHeight("1080");
+    // preset is active, use a clean full-screen 16:9 4K UHD output instead.
+    setSnapshotWidth("3840");
+    setSnapshotHeight("2160");
   };
   const handleSnapshotAspect = (ratio: "16:9"|"1:1"|"4:5"|"9:16"|"3:2") => {
     if (snapshotAspect === ratio) {
