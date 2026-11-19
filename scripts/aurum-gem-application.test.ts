@@ -893,6 +893,8 @@ test("public viewer decodes the shared gem EXR as FloatType before BVH consumes 
 test("public viewer infers an unnamed center diamond even when side diamonds have explicit metadata", () => {
   const viewer = readFileSync("src/components/PublicCatalogViewer.tsx", "utf8");
   expect(viewer).toContain("allowCentralInferenceAlongsideExplicitGems: true");
+  expect(viewer).toContain("const hasExplicitMetalSlot = materials.some");
+  expect(viewer).not.toContain("if (materials.length !== 1) return;\n    object.updateWorldMatrix(true, false);");
   expect(viewer).toContain("const inferredGemCount = inferGemMeshes(model,");
   expect(viewer).toContain("[PUBLIC VIEWER][GEM CLASSIFICATION]");
   expect(viewer).toContain("const hasSelectedDiamond = selectedFamily !== \"diamante\" || bvhDiagnostics.diamondMeshes > 0");
