@@ -2,7 +2,7 @@ import { createAurumVideoFramePipeline } from "../video-frame-pipeline";
 import { recordAurumCanvasVideo } from "../video-exporter";
 import type { IAurumMediaExportContract, IAurumVideoFramePipelineContract } from "./module-contracts";
 
-/** Stable facade over the existing frame pipeline and MediaRecorder exporter. */
+/** Stable facade over the existing frame pipeline and canvas-record MP4 encoder. */
 export function createAurumMediaExportContract(): IAurumMediaExportContract {
   return Object.freeze({
     createFramePipeline(options: unknown): IAurumVideoFramePipelineContract {
