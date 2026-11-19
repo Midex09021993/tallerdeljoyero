@@ -8,10 +8,12 @@ test("classifies projected diamond sizes into stable screen-space tiers", () => 
   expect(classifyAurumDiamondScreenSize(12)).toBe("micro");
   expect(classifyAurumDiamondScreenSize(20)).toBe("small");
   expect(classifyAurumDiamondScreenSize(36)).toBe("small");
+  expect(classifyAurumDiamondScreenSize(50, 0, true)).toBe("medium");
   expect(classifyAurumDiamondScreenSize(80)).toBe("brilliant");
   // A melee stone can exceed 36px at close zoom and still be small relative
   // to a clearly dominant center diamond.
   expect(classifyAurumDiamondScreenSize(56, 229)).toBe("small");
+  expect(classifyAurumDiamondScreenSize(100, 229, true)).toBe("medium");
   expect(classifyAurumDiamondScreenSize(56, 0)).toBe("brilliant");
   expect(classifyAurumDiamondScreenSize(Number.NaN)).toBe("micro");
 });
@@ -24,6 +26,8 @@ test("uses hysteresis around tier boundaries without delaying large zoom changes
   expect(stabilizeAurumDiamondScreenTier(38, "brilliant")).toBe("small");
   expect(stabilizeAurumDiamondScreenTier(33, "brilliant")).toBe("brilliant");
   expect(stabilizeAurumDiamondScreenTier(45, "small")).toBe("brilliant");
+  expect(stabilizeAurumDiamondScreenTier(50, "small", 0, true)).toBe("medium");
+  expect(stabilizeAurumDiamondScreenTier(30, "medium", 0, true)).toBe("small");
   expect(stabilizeAurumDiamondScreenTier(5)).toBe("micro");
 });
 
@@ -132,17 +136,22 @@ test("flags mixed stone sizes sharing one material without changing its optical 
 test("provides conservative optical tiers while preserving the brilliant baseline", () => {
   const micro = getAurumDiamondMicroOpticalProfile("micro");
   const small = getAurumDiamondMicroOpticalProfile("small");
+  const medium = getAurumDiamondMicroOpticalProfile("medium");
   const brilliant = getAurumDiamondMicroOpticalProfile("brilliant");
-  expect(micro).toEqual({ scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.78, virtualFacetWeight: 0.06, fireScale: 0.65, environmentIntensityScale: 0.92, reflectivityScale: 0.82, gammaScale: 1.04 });
-  expect(small).toEqual({ scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 0.90, virtualFacetWeight: 0.06, fireScale: 0.82, environmentIntensityScale: 0.97, reflectivityScale: 0.92, gammaScale: 1.02 });
+  expect(micro).toEqual({ scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.50, virtualFacetWeight: 0.06, fireScale: 0.55, environmentIntensityScale: 0.90, reflectivityScale: 0.84, gammaScale: 1.04 });
+  expect(small).toEqual({ scintillationScale: 0.58, facetContrastScale: 0.92, dispersionScale: 0.65, virtualFacetWeight: 0.06, fireScale: 0.70, environmentIntensityScale: 0.94, reflectivityScale: 0.90, gammaScale: 1.02 });
+  expect(medium).toEqual({ scintillationScale: 0.78, facetContrastScale: 0.96, dispersionScale: 0.80, virtualFacetWeight: 0.06, fireScale: 0.85, environmentIntensityScale: 0.98, reflectivityScale: 0.95, gammaScale: 1.01 });
   expect(micro.scintillationScale).toBeLessThan(small.scintillationScale);
-  expect(micro.dispersionScale).toBe(0.78);
-  expect(small.dispersionScale).toBe(0.90);
+  expect(micro.dispersionScale).toBe(0.50);
+  expect(small.dispersionScale).toBe(0.65);
+  expect(medium.dispersionScale).toBe(0.80);
   expect(micro.virtualFacetWeight).toBe(brilliant.virtualFacetWeight);
   expect(small.virtualFacetWeight).toBe(brilliant.virtualFacetWeight);
-  expect(micro.fireScale).toBe(0.65);
-  expect(small.fireScale).toBe(0.82);
+  expect(micro.fireScale).toBe(0.55);
+  expect(small.fireScale).toBe(0.70);
+  expect(medium.fireScale).toBe(0.85);
   expect(micro.environmentIntensityScale).toBeLessThan(small.environmentIntensityScale);
+  expect(small.environmentIntensityScale).toBeLessThan(medium.environmentIntensityScale);
   expect(micro.reflectivityScale).toBeLessThan(small.reflectivityScale);
   expect(micro.gammaScale).toBeGreaterThan(small.gammaScale);
   expect(brilliant).toEqual({ scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1, environmentIntensityScale: 1, reflectivityScale: 1, gammaScale: 1 });
