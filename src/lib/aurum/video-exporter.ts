@@ -82,7 +82,7 @@ function splitCssArguments(value: string): string[] {
   return parts.filter(Boolean);
 }
 
-function parseAurumBackgroundLayers(backgroundImage: string): AurumBackgroundLayer[] {
+export function parseAurumBackgroundLayers(backgroundImage: string): AurumBackgroundLayer[] {
   if (!backgroundImage || backgroundImage === "none") return [];
   const layers: AurumBackgroundLayer[] = [];
   const parts = splitCssArguments(backgroundImage);
