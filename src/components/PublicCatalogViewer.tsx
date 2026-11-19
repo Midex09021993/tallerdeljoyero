@@ -267,10 +267,28 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           texture.mapping = THREE.EquirectangularReflectionMapping;
           done(texture);
         };
-        const loadHdr = (url: string, done: (texture: THREE.Texture) => void, onError?: () => void) => {
+        const loadHdr = (url: string, done: (texture: THREE.Texture) => void, onError?: () => void, useFloatExr = false) => {
           const failed = () => onError?.();
           if (/\.exr(?:$|[?#])/i.test(url)) {
-            new EXRLoader().load(url, (texture) => acceptHdr(texture, done), undefined, failed);
+            const loader = new EXRLoader();
+            // The public BVH diamond runtime requires the gem EXR as FloatType.
+            // Pass the same correctly decoded texture to both the physical gem
+            // materials and BVH; the EXRLoader default HalfFloatType washes the
+            // central diamond to an opaque white appearance in the BVH shader.
+            if (useFloatExr && typeof (loader as any).setDataType === "function") {
+              (loader as any).setDataType(THREE.FloatType);
+            }
+            loader.load(url, (texture) => {
+              if (useFloatExr) {
+                texture.colorSpace = THREE.LinearSRGBColorSpace;
+                texture.generateMipmaps = false;
+                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+                texture.unpackAlignment = 1;
+                texture.needsUpdate = true;
+              }
+              acceptHdr(texture, done);
+            }, undefined, failed);
           } else {
             new RGBELoader().load(url, (texture) => acceptHdr(texture, done), undefined, failed);
           }
@@ -290,7 +308,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           resolveGemEnvironmentReady?.(texture);
           applyProfiles();
           renderRef.current?.();
-        }, () => resolveGemEnvironmentReady?.(null));
+        }, () => resolveGemEnvironmentReady?.(null), true);
 
         fetchStartedAt = performance.now();
         const response = await fetch(modelUrl);
