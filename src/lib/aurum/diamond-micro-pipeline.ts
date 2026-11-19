@@ -257,9 +257,21 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
     const sortedDiameters = projected.map(item => item.diameter).sort((a, b) => b - a);
     const largest = sortedDiameters[0] ?? 0;
     const secondLargest = sortedDiameters[1] ?? 0;
-    const hasDistinctCenter = largest > 12 && largest > Math.max(secondLargest, 0.01) * 1.35;
-    const centerMesh = projected.find(item => item.diameter === largest)?.mesh;
-    const relativeCenterDiameter = hasDistinctCenter ? largest : 0;
+    let sharedReferenceDiameter = 0;
+    scene?.traverse?.((object: any) => {
+      if (!object?.isMesh || !object.userData?.aurumGemOrientationReference) return;
+      sharedReferenceDiameter = Math.max(
+        sharedReferenceDiameter,
+        getAurumDiamondProjectedDiameterPx(object, camera, viewportHeight),
+      );
+    });
+    const referenceDiameter = sharedReferenceDiameter > 0 ? sharedReferenceDiameter : largest;
+    const hasDistinctCenter = referenceDiameter > 12
+      && referenceDiameter > Math.max(secondLargest, 0.01) * 1.35;
+    const centerMesh = sharedReferenceDiameter > 0
+      ? undefined
+      : projected.find(item => item.diameter === largest)?.mesh;
+    const relativeCenterDiameter = hasDistinctCenter ? referenceDiameter : 0;
 
     for (const { mesh, diameter } of projected) {
       const explicitlyProtected = Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
