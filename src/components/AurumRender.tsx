@@ -2029,6 +2029,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               targets.forEach((mesh:any)=>{
                 const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
                 materials.forEach((material:any)=>setAurumDiamondSourceDispersion(material,value));
+                mesh.userData={...(mesh.userData??{}),aurumDiamondSourceDispersion:value};
               });
               diamondBvhRuntime?.setDiamondDispersion?.(targets,value);
               invalidateRenderRef.current?.();
@@ -4934,6 +4935,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       cleanup = () => {
         if (cleanupDone) return;
         cleanupDone = true;
+        if(diamondDispersionFrameRef.current!==null){ window.cancelAnimationFrame(diamondDispersionFrameRef.current); diamondDispersionFrameRef.current=null; }
         aplicarVistaRef.current = null;
         // Stop RAF, ResizeObserver and host listeners before releasing anything
         // they can still access. This is intentionally the first teardown step.
