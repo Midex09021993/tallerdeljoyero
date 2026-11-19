@@ -202,6 +202,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [videoResolution, setVideoResolution] = useState<"native"|"1080"|"1440"|"4k">("native");
   const [videoAspect, setVideoAspect] = useState<AurumAspectRatioId | null>(null);
   const videoAspectCameraSnapshotRef = useRef<any>(null);
+  const videoAspectFitFrameRef = useRef<number | null>(null);
   const snapshotAspectCameraSnapshotRef = useRef<any>(null);
   const [videoProgress, setVideoProgress] = useState(0);
   const videoAbortRef = useRef<AbortController | null>(null);
@@ -6205,7 +6206,31 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="mb-1.5 text-[10px] font-medium text-[#66645e]">Proporción del vídeo</div>
                 <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                   {(["16:9","1:1","4:5","9:16","3:2"] as AurumAspectRatioId[]).map((ratio)=>(
-                    <button key={ratio} type="button" disabled={videoBusy} onClick={()=>{if(videoAspect===ratio){setVideoAspect(null);const original=videoAspectCameraSnapshotRef.current;videoAspectCameraSnapshotRef.current=null;if(original){apiRef.current?.restoreCameraState?.(original);}}else{if(!videoAspectCameraSnapshotRef.current){videoAspectCameraSnapshotRef.current=apiRef.current?.captureCameraState?.()??null;}setVideoAspect(ratio);requestAnimationFrame(()=>apiRef.current?.fitAspect(getAurumAspectRatio(ratio)));}}} aria-pressed={videoAspect===ratio} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(videoAspect===ratio?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}>
+                    <button key={ratio} type="button" disabled={videoBusy} onClick={()=>{
+                      if(videoAspectFitFrameRef.current!==null){
+                        cancelAnimationFrame(videoAspectFitFrameRef.current);
+                        videoAspectFitFrameRef.current=null;
+                      }
+                      if(videoAspect===ratio){
+                        setVideoAspect(null);
+                        const original=videoAspectCameraSnapshotRef.current;
+                        videoAspectCameraSnapshotRef.current=null;
+                        if(original){
+                          apiRef.current?.restoreCameraState?.(original);
+                        }else{
+                          apiRef.current?.fitAspect();
+                        }
+                      }else{
+                        if(!videoAspectCameraSnapshotRef.current){
+                          videoAspectCameraSnapshotRef.current=apiRef.current?.captureCameraState?.()??null;
+                        }
+                        setVideoAspect(ratio);
+                        videoAspectFitFrameRef.current=requestAnimationFrame(()=>{
+                          videoAspectFitFrameRef.current=null;
+                          apiRef.current?.fitAspect(getAurumAspectRatio(ratio));
+                        });
+                      }
+                    }} aria-pressed={videoAspect===ratio} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(videoAspect===ratio?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}>
                       <span className="block font-semibold">{ratio}</span>
                       <span className="mt-0.5 block opacity-75">{ratio==="16:9"?"Horizontal":ratio==="1:1"?"Cuadrado":ratio==="4:5"?"Catálogo vertical":ratio==="9:16"?"Historias / móvil":"Fotografía clásica"}</span>
                     </button>
