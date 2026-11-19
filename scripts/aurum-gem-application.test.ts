@@ -927,5 +927,10 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   expect(runtime).toContain('const diamondSourceParameters = calibrateSecondaryDiamond');
   expect(runtime).toContain('diamondSourceParameters.environmentRotationOffset');
   expect(runtime).toContain('diamondSourceParameters.rayBounces');
+  expect(runtime).toContain("geometryFactor: Number(diamondSourceParameters?.geometryFactor ?? 0.5)");
+  expect(runtime).toContain("squashFactor: Number(diamondSourceParameters?.squashFactor ?? 0.98)");
+  const bvhAdapter = readFileSync("src/lib/aurum/aurum-diamond-bvh-experimental.ts", "utf8");
+  expect(bvhAdapter).toContain("geometryFactor: Number(options.geometryFactor ?? 0.5)");
+  expect(bvhAdapter).toContain("squashFactor: Number(options.squashFactor ?? 0.98)");
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
 });
