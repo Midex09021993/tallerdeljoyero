@@ -9,15 +9,19 @@ export type AurumDiamondMicroOpticalProfile = {
   dispersionScale: number;
   virtualFacetWeight: number;
   fireScale: number;
+  /** BVH controls supported by realistic-diamond-shader. */
+  environmentIntensityScale: number;
+  reflectivityScale: number;
+  gammaScale: number;
 };
 
 /** Per-stone live optics. Brilliant stones (including the protected center) retain the calibrated baseline. */
 export function getAurumDiamondMicroOpticalProfile(tier: Exclude<AurumDiamondMicroTier, "mixed">): AurumDiamondMicroOpticalProfile {
   // Secondary melee tiers receive restrained spectral scaling over their own
   // calibrated material baseline. The protected center always returns 1:1 values.
-  if (tier === "micro") return { scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.78, virtualFacetWeight: 0.06, fireScale: 0.65 };
-  if (tier === "small") return { scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 0.90, virtualFacetWeight: 0.06, fireScale: 0.82 };
-  return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 };
+  if (tier === "micro") return { scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.78, virtualFacetWeight: 0.06, fireScale: 0.65, environmentIntensityScale: 0.92, reflectivityScale: 0.82, gammaScale: 1.04 };
+  if (tier === "small") return { scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 0.90, virtualFacetWeight: 0.06, fireScale: 0.82, environmentIntensityScale: 0.97, reflectivityScale: 0.92, gammaScale: 1.02 };
+  return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1, environmentIntensityScale: 1, reflectivityScale: 1, gammaScale: 1 };
 }
 
 export type AurumDiamondMicroProfile = {
