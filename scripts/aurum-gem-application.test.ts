@@ -909,3 +909,23 @@ test("public viewer infers an unnamed center diamond even when side diamonds hav
   expect(viewer).toContain("protectedCenterDiamonds");
   expect(viewer).toContain("[PUBLIC VIEWER][BVH AUDIT]");
 });
+
+test("catalog DiamondMaterial source parameters reach secondary shader and BVH while center calibration stays isolated", () => {
+  const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const activation = readFileSync("src/lib/aurum/aurum-diamond-material.ts", "utf8");
+  const scintillation = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+
+  expect(catalog).toContain('diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0.01');
+  expect(catalog).toContain('diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0,');
+  expect(application).toContain('...(g.diamondMaterialParameters ? { diamondMaterialParameters:g.diamondMaterialParameters } : {})');
+  expect(activation).toContain('const source = preset?.diamondMaterialParameters ?? {};');
+  expect(activation).toContain('refractiveIndex: Number(source.refractiveIndex');
+  expect(activation).toContain('squashFactor: Number(source.squashFactor');
+  expect(scintillation).toContain('get("aurumDiamondTest") ?? "source"');
+  expect(runtime).toContain('const diamondSourceParameters = calibrateSecondaryDiamond');
+  expect(runtime).toContain('diamondSourceParameters.environmentRotationOffset');
+  expect(runtime).toContain('diamondSourceParameters.rayBounces');
+  expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
+});
