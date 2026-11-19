@@ -1,12 +1,11 @@
+import { Recorder } from "canvas-record";
+
 export type AurumVideoOptions = {
-  /** Output dimensions are intentionally ignored: capture keeps the source canvas bitmap. */
-  width?: number | undefined;
-  height?: number | undefined;
   fps?: number | undefined;
   duration?: number | undefined;
   signal?: AbortSignal | undefined;
   onProgress?: ((elapsedSeconds: number, durationSeconds: number) => void) | undefined;
-  /** Called before each requested capture frame; the live viewer remains the renderer. */
+  /** Called before each frame is encoded; the existing AURUM viewer remains the renderer. */
   onFrame?: (elapsedSeconds: number, durationSeconds: number) => void;
 };
 
@@ -14,6 +13,8 @@ export interface AurumVideoFramePlan {
   readonly index: number;
   readonly timestampSeconds: number;
 }
+
+const MAX_WEB_CODECS_MP4_PIXELS = 9_437_184;
 
 /** Fixed-step callback plan; independent of requestAnimationFrame cadence. */
 export function createAurumVideoFramePlan(durationSeconds: number, fps: number): readonly AurumVideoFramePlan[] {
@@ -26,165 +27,128 @@ export function createAurumVideoFramePlan(durationSeconds: number, fps: number):
   })));
 }
 
-const VIDEO_MIME_CANDIDATES = [
-  "video/mp4;codecs=avc1.42E01E",
-  "video/mp4",
-  "video/webm;codecs=vp9",
-  "video/webm;codecs=vp8",
-  "video/webm",
-];
+/** H.264/WebCodecs MP4 frame limit documented by canvas-record. */
+export function assertAurumVideoFrameBudget(width: number, height: number): void {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 2 || height < 2) {
+    throw new Error("El canvas de AURUM no tiene dimensiones válidas para exportar vídeo.");
+  }
+  const pixels = Math.floor(width) * Math.floor(height);
+  if (pixels > MAX_WEB_CODECS_MP4_PIXELS) {
+    throw new Error(
+      `La resolución solicitada (${width} × ${height}) supera el límite de ${MAX_WEB_CODECS_MP4_PIXELS.toLocaleString("es-PE")} píxeles por fotograma del codificador MP4 H.264. Usa 4K horizontal/vertical o reduce la resolución.`,
+    );
+  }
+}
 
-function waitUntil(deadline: number): Promise<void> {
-  const remaining = deadline - performance.now();
-  return remaining > 0 ? new Promise((resolve) => window.setTimeout(resolve, remaining)) : Promise.resolve();
+function downloadAurumVideo(output: ArrayBuffer | Uint8Array | Blob[] | undefined): void {
+  if (!output) throw new Error("El codificador terminó sin devolver un archivo de vídeo.");
+  const parts: BlobPart[] = Array.isArray(output)
+    ? output
+    : output instanceof Uint8Array
+      ? [output.slice().buffer as ArrayBuffer]
+      : [output as ArrayBuffer];
+  const blob = new Blob(parts, { type: "video/mp4" });
+  if (blob.size < 1024) {
+    throw new Error("El codificador devolvió un MP4 vacío o incompleto.");
+  }
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "aurum-render-video-" + new Date().toISOString().replace(/[:.]/g, "-") + ".mp4";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 /**
- * Records the original WebGL canvas directly. No intermediary 2D canvas,
- * drawImage, resampling, letterboxing, or output-size conversion is performed.
- * The encoded bitmap therefore has exactly source.width × source.height pixels.
+ * Encodes the existing WebGL drawing buffer frame-by-frame with canvas-record.
+ * AURUM remains responsible for rendering; canvas-record handles MP4 encoding
+ * and muxing via WebCodecs, with its bundled H.264/WASM fallback.
  */
 export async function recordAurumCanvasVideo(
   source: HTMLCanvasElement,
   options: AurumVideoOptions = {},
 ): Promise<void> {
-  if (typeof MediaRecorder === "undefined") {
-    throw new Error("Este navegador no dispone de MediaRecorder para exportar vídeo.");
+  if (typeof VideoFrame === "undefined" && typeof VideoEncoder === "undefined") {
+    // canvas-record can fall back to its bundled H.264/WASM encoder; this is
+    // only a diagnostic, not a hard failure.
+    console.info("[AURUM][VIDEO] WebCodecs unavailable; canvas-record will use its H.264/WASM fallback when supported.");
   }
-  if (typeof source.captureStream !== "function") {
-    throw new Error("Este navegador no permite capturar el canvas WebGL.");
+  if (typeof source.getContext !== "function" || source.width < 2 || source.height < 2) {
+    throw new Error("El canvas WebGL de AURUM no tiene una resolución válida.");
   }
-  if (source.width < 2 || source.height < 2) {
-    throw new Error("El canvas WebGL no tiene una resolución válida.");
-  }
-  const mimeType = VIDEO_MIME_CANDIDATES.find((type) => MediaRecorder.isTypeSupported(type));
-  if (!mimeType) {
-    throw new Error("Este navegador no ofrece un formato de vídeo compatible. Actualiza el navegador o prueba con Chrome o Edge.");
+  assertAurumVideoFrameBudget(source.width, source.height);
+
+  const context = (source.getContext("webgl2") ?? source.getContext("webgl")) as
+    | WebGLRenderingContext
+    | WebGL2RenderingContext
+    | null;
+  if (!context) {
+    throw new Error("No se pudo recuperar el contexto WebGL original de AURUM para codificar el vídeo.");
   }
 
   const fps = Math.max(15, Math.min(120, Math.round(options.fps ?? 30)));
   const duration = Math.max(1, Math.min(20, Number(options.duration ?? 5)));
   const framePlan = createAurumVideoFramePlan(duration, fps);
-  const effectiveDuration = framePlan.length / fps;
+  const recorder = new Recorder(context, {
+    name: "aurum-render",
+    duration: framePlan.length / fps,
+    frameRate: fps,
+    extension: "mp4",
+    target: "in-browser",
+    download: false,
+    encoderOptions: {
+      latencyMode: "quality",
+      bitrateMode: "variable",
+    },
+  }) as unknown as {
+    start(options?: { initOnly?: boolean }): Promise<void>;
+    step(): Promise<void>;
+    stop(): Promise<ArrayBuffer | Uint8Array | Blob[] | undefined>;
+    dispose(): Promise<void>;
+  };
 
-  // Prefer explicit frame requests on the original canvas. Fallback captureStream
-  // still records that same canvas directly at the browser's requested cadence.
-  let stream = source.captureStream(0);
-  let videoTrack = stream.getVideoTracks()[0] as (MediaStreamTrack & { requestFrame?: () => void }) | undefined;
-  const manualFrameCapture = typeof videoTrack?.requestFrame === "function";
-  if (!manualFrameCapture) {
-    stream.getTracks().forEach((track) => track.stop());
-    stream = source.captureStream(fps);
-    videoTrack = stream.getVideoTracks()[0] as (MediaStreamTrack & { requestFrame?: () => void }) | undefined;
-  }
-
-  let recorder: MediaRecorder;
+  let started = false;
+  let stopped = false;
   try {
-    recorder = new MediaRecorder(stream, {
-      mimeType,
-      videoBitsPerSecond: Math.max(8_000_000, Math.min(100_000_000, source.width * source.height * fps * 0.18)),
-    });
-  } catch {
-    stream.getTracks().forEach((track) => track.stop());
-    throw new Error("El navegador detecta MP4, pero no pudo iniciar el codificador.");
-  }
+    if (options.signal?.aborted) throw new DOMException("Exportación cancelada.", "AbortError");
+    await recorder.start({ initOnly: true });
+    started = true;
 
-  const chunks: BlobPart[] = [];
-  let raf = 0;
-  let settled = false;
-  let abortHandler: (() => void) | undefined;
-
-  await new Promise<void>((resolve, reject) => {
-    const cleanup = () => {
-      if (raf) cancelAnimationFrame(raf);
-      if (abortHandler) options.signal?.removeEventListener("abort", abortHandler);
-      stream.getTracks().forEach((track) => track.stop());
-    };
-    const fail = (error: Error) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      reject(error);
-    };
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      const blob = new Blob(chunks, { type: recorder.mimeType || mimeType });
-      if (blob.size < 1024) {
-        reject(new Error("La grabación terminó sin datos de vídeo suficientes."));
-        return;
-      }
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      const extension = (recorder.mimeType || mimeType).toLowerCase().includes("mp4") ? "mp4" : "webm";
-      link.download = "aurum-render-video-" + new Date().toISOString().replace(/[:.]/g, "-") + "." + extension;
-      link.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      resolve();
-    };
-    const stopWithError = (error: Error) => {
-      if (recorder.state !== "inactive") {
-        try { recorder.stop(); } catch { /* Keep the original error. */ }
-      }
-      fail(error);
-    };
-
-    recorder.ondataavailable = (event) => {
-      if (event.data.size) chunks.push(event.data);
-    };
-    recorder.onerror = () => fail(new Error("Falló la codificación del vídeo."));
-    recorder.onstop = finish;
-    abortHandler = () => stopWithError(new DOMException("Exportación cancelada.", "AbortError"));
-    options.signal?.addEventListener("abort", abortHandler, { once: true });
-    if (options.signal?.aborted) {
-      fail(new DOMException("Exportación cancelada.", "AbortError"));
-      return;
+    for (const frame of framePlan) {
+      if (options.signal?.aborted) throw new DOMException("Exportación cancelada.", "AbortError");
+      options.onFrame?.(frame.timestampSeconds, framePlan.length / fps);
+      // onFrame renders synchronously through AURUM's real live render path.
+      // Recorder.step() immediately snapshots that canvas into a VideoFrame.
+      await recorder.step();
+      options.onProgress?.((frame.index + 1) / fps, framePlan.length / fps);
+      // Yield to the UI between expensive encode operations so progress/cancel
+      // controls remain responsive during high-resolution exports.
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
     }
 
+    const output = await recorder.stop();
+    stopped = true;
+    downloadAurumVideo(output);
+    options.onProgress?.(framePlan.length / fps, framePlan.length / fps);
+  } catch (error) {
+    if (started && !stopped) {
+      try {
+        await recorder.stop();
+      } catch (stopError) {
+        console.error("[AURUM][VIDEO] Failed to finalize partial MP4 after export error.", stopError);
+      }
+    }
+    if (error instanceof Error) throw error;
+    throw new Error("La exportación MP4 falló por un error desconocido.");
+  } finally {
     try {
-      recorder.start(250);
-      const startedAt = performance.now();
-      if (manualFrameCapture && videoTrack?.requestFrame) {
-        void (async () => {
-          for (const frame of framePlan) {
-            if (settled || options.signal?.aborted) return;
-            const elapsed = frame.timestampSeconds;
-            options.onFrame?.(elapsed, effectiveDuration);
-            videoTrack?.requestFrame?.();
-            options.onProgress?.(elapsed, effectiveDuration);
-            await waitUntil(startedAt + ((frame.index + 1) * 1000) / fps);
-          }
-          if (!settled) {
-            options.onProgress?.(effectiveDuration, effectiveDuration);
-            await waitUntil(startedAt + effectiveDuration * 1000 + 100);
-            if (!settled && recorder.state !== "inactive") recorder.stop();
-          }
-        })().catch((error) => stopWithError(error instanceof Error ? error : new Error(String(error))));
-        return;
-      }
-
-      // Browser fallback: update animation on RAF; the browser captures the
-      // original WebGL canvas stream directly. No pixel-copy operation occurs.
-      const drawRealtimeFrame = (now: number) => {
-        if (settled) return;
-        if (options.signal?.aborted) {
-          stopWithError(new DOMException("Exportación cancelada.", "AbortError"));
-          return;
-        }
-        const elapsed = Math.max(0, (now - startedAt) / 1000);
-        options.onFrame?.(Math.min(elapsed, duration), duration);
-        options.onProgress?.(Math.min(elapsed, duration), duration);
-        if (elapsed >= duration) {
-          if (recorder.state !== "inactive") recorder.stop();
-          return;
-        }
-        raf = requestAnimationFrame(drawRealtimeFrame);
-      };
-      raf = requestAnimationFrame(drawRealtimeFrame);
-    } catch {
-      fail(new Error("No se pudo iniciar la grabación de vídeo."));
+      await recorder.dispose();
+    } catch (disposeError) {
+      console.warn("[AURUM][VIDEO] Recorder cleanup reported an error.", disposeError);
     }
-  });
+  }
 }
