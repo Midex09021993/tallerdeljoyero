@@ -68,6 +68,43 @@ function escapeXmlAttribute(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/\"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/**
+ * Inline CSS background images before drawing the SVG snapshot. A remote URL
+ * left inside SVG foreignObject taints the rasterized canvas and makes
+ * VideoFrame construction fail. Fetch in CORS mode so the browser enforces
+ * the source's permission instead of silently creating a tainted frame.
+ */
+async function inlineAurumCssBackgroundImages(backgroundImage: string): Promise<string> {
+  const matches = Array.from(backgroundImage.matchAll(/url\\((?:\\s*["']([^"']+)["']\\s*|\\s*([^\\s)]+)\\s*)\\)/gi));
+  let result = backgroundImage;
+  for (const match of matches) {
+    const source = (match[1] ?? match[2] ?? "").trim();
+    if (!source || /^(?:data:|blob:)/i.test(source)) continue;
+    let response: Response;
+    try {
+      response = await fetch(new URL(source, document.baseURI).href, {
+        mode: "cors",
+        credentials: "omit",
+        cache: "force-cache",
+      });
+    } catch (error) {
+      throw new Error("No se pudo obtener el fondo fotográfico con permisos CORS. Usa una imagen del mismo dominio o habilita Access-Control-Allow-Origin en su servidor.", { cause: error });
+    }
+    if (!response.ok || response.type === "opaque") {
+      throw new Error("El fondo fotográfico no permite captura segura (CORS). El servidor debe permitir el origen de AURUM LAB.");
+    }
+    const blob = await response.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("No se pudo codificar el fondo fotográfico."));
+      reader.onerror = () => reject(reader.error ?? new Error("No se pudo leer el fondo fotográfico."));
+      reader.readAsDataURL(blob);
+    });
+    result = result.replace(match[0], 'url("' + dataUrl + '")');
+  }
+  return result;
+}
+
 /** Build a rasterizable SVG snapshot of the viewer's CSS background, including gradients and images. */
 export function createAurumCssBackgroundSvg(element: HTMLElement, width: number, height: number): string {
   const style = window.getComputedStyle(element);
@@ -100,7 +137,12 @@ export function createAurumCssBackgroundSvg(element: HTMLElement, width: number,
 async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefined, width: number, height: number): Promise<HTMLImageElement | null> {
   if (!element) return null;
   const svg = createAurumCssBackgroundSvg(element, width, height);
-  const blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  const backgroundImage = window.getComputedStyle(element).backgroundImage;
+  const safeBackgroundImage = await inlineAurumCssBackgroundImages(backgroundImage);
+  const safeSvg = backgroundImage === safeBackgroundImage
+    ? svg
+    : svg.replace(escapeXmlAttribute(backgroundImage), escapeXmlAttribute(safeBackgroundImage));
+  const blobUrl = URL.createObjectURL(new Blob([safeSvg], { type: "image/svg+xml;charset=utf-8" }));
   try {
     const image = new Image();
     image.decoding = "async";
