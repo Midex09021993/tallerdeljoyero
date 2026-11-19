@@ -3519,6 +3519,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalFxaaResolution=fxaaPass?.material?.uniforms?.resolution?.value?.clone?.()??null;
           const originalBufferWidth=sourceCanvas.width;
           const originalBufferHeight=sourceCanvas.height;
+          // During portrait/landscape export the WebGL drawing buffer changes
+          // aspect ratio while the canvas keeps the viewer's wide CSS box.
+          // Without object-fit: contain, the browser stretches the portrait
+          // bitmap across that wide box, making the jewellery look deformed
+          // during recording even though the encoded pixels have the right ratio.
+          const originalCanvasObjectFit=sourceCanvas.style.objectFit;
+          const originalCanvasObjectPosition=sourceCanvas.style.objectPosition;
           let captureWidth=originalBufferWidth;
           let captureHeight=originalBufferHeight;
           let highResolutionCapture=false;
@@ -3563,6 +3570,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // drawing buffer; the same live scene and overlays render at target pixels.
               renderer.setPixelRatio(1);
               renderer.setSize(captureWidth,captureHeight,false);
+              // Keep the on-screen preview proportional while its intrinsic
+              // WebGL buffer is portrait/landscape and the viewer container is not.
+              sourceCanvas.style.objectFit="contain";
+              sourceCanvas.style.objectPosition="center";
               composer?.setPixelRatio?.(1);
               composer?.setSize?.(captureWidth,captureHeight);
               gemMaskPass?.setSize?.(captureWidth,captureHeight);
@@ -3644,6 +3655,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const restoreFailures = runAurumMediaExportCleanup([
               () => {
                 if(highResolutionCapture){
+                  sourceCanvas.style.objectFit=originalCanvasObjectFit;
+                  sourceCanvas.style.objectPosition=originalCanvasObjectPosition;
                   renderer.setPixelRatio(originalRendererPixelRatio);
                   renderer.setSize(originalRendererSize.x,originalRendererSize.y,false);
                   composer?.setPixelRatio?.(originalComposerPixelRatio);
