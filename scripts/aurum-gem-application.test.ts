@@ -1017,3 +1017,18 @@ test("switching between white diamond catalog profiles updates only live dispers
   expect(runtime).toContain("setSourceDispersion: (nextDispersion: number)");
   expect(runtime).toContain("setDiamondDispersion(targets, dispersion)");
 });
+
+
+test("diamond fast profile synchronization updates the retained BVH fallback and colored-diamond radiance", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const component = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(runtime).toContain("setDiamondProfile: (targets: readonly THREE.Mesh[], profile: any) => void;");
+  expect(runtime).toContain("setProfile: (profile: any) => void;");
+  expect(runtime).toContain("originalMaterial: retainedPhysicalMaterial");
+  expect(runtime).toContain("aurumDiamondCatalogProfile: profileId");
+  expect(runtime).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
+  expect(runtime).toContain("transmission: Number(currentMaterial?.transmission ?? 0)");
+  expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);");
+  expect(component).toContain("diamondBvhRuntime?.setDiamondProfile?.(targets,profile);");
+});
