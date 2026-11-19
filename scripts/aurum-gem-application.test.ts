@@ -860,3 +860,19 @@ test("each diamond EXR orientation is compensated from its geometry-derived tabl
   expect(runtime).toContain('"[AURUM][DIAMOND][CENTER_RELATIVE_EXR_ALIGNMENT]"');
   expect(editor).toContain("environmentRotationRadians: gemEnvironmentRotation");
 });
+
+
+test("public viewer applies the calibrated center white-diamond BVH optical frame", () => {
+  const viewer = readFileSync("src/components/PublicCatalogViewer.tsx", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+
+  expect(viewer).toContain("environmentRotationRadians: 0");
+  expect(viewer).toContain('quality: "high"');
+  expect(viewer).toContain("getViewportHeight: () => renderer.domElement.height");
+  expect(viewer).toContain("diamondCenterOnly: false");
+  expect(runtime).toContain('quality: family === "diamante" ? "high"');
+  expect(runtime).toContain('ior: family === "diamante" ? 2.6');
+  expect(runtime).toContain("dispersion: family === \"diamante\"");
+  expect(runtime).toContain("environmentIntensity: family === \"diamante\"");
+  expect(runtime).toContain('opticalProfile: !isBlueDiamond && !isPinkDiamond ? "white-shared-center-profile"');
+});
