@@ -244,7 +244,9 @@ test("BVH infers only a clearly dominant center diamond when Rhino center metada
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   expect(runtime).toContain("projectedDiamondSizes");
   expect(runtime).toContain("largestProjectedDiamond.diameterPx >= secondLargestProjectedDiamond.diameterPx * 1.5");
-  expect(runtime).toContain("const inferredCenter = mesh === inferredCenterMesh;");
+  expect(runtime).toContain('const inferredCenter = family === "diamante" && mesh === inferredCenterMesh;');
+  expect(runtime).toContain('options.calibrateSecondaryDiamonds !== true');
+  expect(runtime).toContain('mesh.userData?.aurumDiamondCenterDetection === "projected-size"');
   expect(runtime).toContain('"centro-inferido-por-tamano"');
   expect(runtime).toContain('aurumDiamondCenterDetection: "projected-size"');
   expect(runtime).toContain("if (!centerProtected) return;");
@@ -253,7 +255,7 @@ test("BVH reports why each selected diamond is accepted or rejected as center ta
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const component = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(runtime).toContain("centerTargetDiagnostics");
-  expect(runtime).toContain('reason: centerProtected ? "centro-protegido" : "sin-marca-de-centro"');
+  expect(runtime).toContain('reason: explicitlyProtected ? "centro-protegido-explicito" : inferredCenter ? "centro-inferido-por-tamano" : "sin-marca-de-centro"');
   expect(runtime).toContain("if (!centerProtected) return;");
   expect(component).toContain('console.info("[AURUM][GEM BVH][TARGET REFRESH]"');
   expect(component).toContain("centerTargetDiagnostics:targetBvhDiagnostics.centerTargetDiagnostics");
@@ -881,7 +883,7 @@ test("public viewer applies the calibrated center white-diamond BVH optical fram
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
   expect(runtime).toContain("dispersion: family === \"diamante\"");
   expect(runtime).toContain("environmentIntensity: family === \"diamante\"");
-  expect(runtime).toContain('opticalProfile: !isBlueDiamond && !isPinkDiamond ? "white-shared-center-profile"');
+  expect(runtime).toContain('calibrateSecondaryDiamond ? "catalog-dmat-secondary-profile"');
 });
 
 
