@@ -464,6 +464,19 @@ export async function createAurumDiamondBvhRuntime(options: {
       const calibrateSecondaryDiamond = options.calibrateSecondaryDiamonds === true
         && family === "diamante"
         && mesh.userData.aurumDiamondMicroCenterProtected !== true;
+      // Preserve the source dispersion of the two imported white .dmat profiles.
+      // The protected center deliberately keeps its approved 0.010 baseline;
+      // secondary white 1 uses 0.010 and secondary white 2 uses 0.000.
+      // Other secondary diamond profiles retain their existing 0.006 baseline.
+      const baseDiamondDispersion = family !== "diamante"
+        ? undefined
+        : !calibrateSecondaryDiamond
+          ? 0.010
+          : activeGemId === "diamante_natural"
+            ? 0.010
+            : activeGemId === "diamante_vs"
+              ? 0
+              : 0.006;
       // Optional center-only mode limits eligibility, but center identification
       // above remains active in all-size production mode.
       if (family === "diamante" && options.diamondCenterOnly) {
@@ -556,7 +569,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25)
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           dispersion: family === "diamante"
-            ? (calibrateSecondaryDiamond ? 0.006 : 0.010)
+            ? baseDiamondDispersion
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (calibrateSecondaryDiamond ? 2.417 : 2.6) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           absorption: useEmeraldBvhOptics
@@ -577,7 +590,6 @@ export async function createAurumDiamondBvhRuntime(options: {
             : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
           ...(family === "diamante" ? { environmentRotationEuler: meshEnvironmentAlignment.rotationEuler } : {}),
         });
-        const baseDiamondDispersion = family === "diamante" ? (calibrateSecondaryDiamond ? 0.006 : 0.010) : prepared.diagnostics.dispersion;
         const baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
         const baseDiamondReflectivity = family === "diamante" ? 0.46 : (prepared.material as any).reflectivity ?? 0.46;
         const baseDiamondGamma = family === "diamante" ? (isPinkDiamond ? 0.90 : 1.09) : 1.09;
