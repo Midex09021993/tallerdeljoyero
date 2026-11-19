@@ -738,7 +738,7 @@ test("Aurum Render enables medium small and micro secondary diamond BVH calibrat
   expect(render).toContain("includeMediumTier: true");
   expect(runtime).toContain('const calibrateSecondaryDiamond = options.calibrateSecondaryDiamonds === true');
   expect(runtime).toContain('publishedTier === "medium"');
-  expect(runtime).toContain('setTier: (nextTier) => {');
+  expect(runtime).toContain('setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {');
   const centerIdentity = runtime.indexOf("Center identity is optical metadata, not an eligibility restriction.");
   const centerOnlyGate = runtime.indexOf('if (family === "diamante" && options.diamondCenterOnly)');
   expect(centerIdentity).toBeGreaterThan(-1);
@@ -777,23 +777,21 @@ test("diamond BVH quality is authoritative and independent of screen-space tier"
 
 test("editor secondary diamonds use separate calibrated profiles while the protected center remains unchanged", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
-  const tierStart = runtime.indexOf("setTier: (nextTier) => {");
+  const tierStart = runtime.indexOf("setTier: (nextTier:");
   const qualityStart = runtime.indexOf("setQuality: (quality) => {", tierStart);
   const tierBlock = runtime.slice(tierStart, qualityStart);
-  const profileStart = runtime.indexOf("const prepared = prepareAurumDiamondBvhExperiment");
-  const profileEnd = runtime.indexOf("let currentDiamondTier", profileStart);
-  const profile = runtime.slice(profileStart, profileEnd);
 
-  expect(profile).toContain('transmission: family === "diamante"');
-  expect(profile).toContain('? (!isBlueDiamond && !isPinkDiamond ? 0 : 0.05)');
-  expect(profile).toContain('environmentIntensity: family === "diamante"');
-  expect(profile).toContain('? (!isBlueDiamond && !isPinkDiamond ? 1.30');
-  expect(profile).toContain('dispersion: family === "diamante"');
-  expect(profile).toContain('calibrateSecondaryDiamond ? 0.006 : 0.010');
-  expect(profile).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
-  expect(profile).toContain('reflectivity: family === "diamante" ? 0.46');
-  expect(profile).toContain('calibrateSecondaryDiamonds === true');
-  expect(profile).toContain('gamma: family === "diamante" && isPinkDiamond ? 0.90 : 1.09');
+  expect(runtime).toContain('transmission: family === "diamante"');
+  expect(runtime).toContain('? (!isBlueDiamond && !isPinkDiamond ? 0 : 0.05)');
+  expect(runtime).toContain('environmentIntensity: family === "diamante"');
+  expect(runtime).toContain('? (!isBlueDiamond && !isPinkDiamond ? 1.30');
+  expect(runtime).toContain('dispersion: family === "diamante"');
+  expect(runtime).toContain('calibrateSecondaryDiamond ? 0.006 : 0.010');
+  expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
+  expect(runtime).toContain('reflectivity: family === "diamante" ? 0.46');
+  expect(runtime).toContain('calibrateSecondaryDiamonds === true');
+  expect(runtime).toContain('gamma: family === "diamante" && isPinkDiamond ? 0.90 : 1.09');
+  expect(runtime).toContain('"white-secondary-size-calibrated"');
   expect(tierBlock).toContain("packageApi.setDiamondOptions(prepared.material");
   expect(tierBlock).toContain("currentDiamondTier = effectiveTier");
   expect(runtime).toContain("diamondOpticalDiagnostics");
