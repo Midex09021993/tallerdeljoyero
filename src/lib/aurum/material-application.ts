@@ -525,20 +525,22 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   // This prevents a layer-level Ruby/Emerald selection from replacing the
   // calibrated center diamond when CAD layers contain mixed gemstone meshes.
   if(protectedFocalTargets.length && requestedFamily!=="diamante"){
-    console.warn("[AURUM][GEM ASSIGNMENT] Protected focal diamond was excluded from non-diamond reassignment.",{
+    // Exclude only the protected focal diamond; do not abort the whole layer
+    // assignment or disturb the remaining secondary stones and their BVH.
+    const protectedSet=new Set(protectedFocalTargets);
+    for(let index=targets.length-1;index>=0;index--){
+      if(protectedSet.has(targets[index])) targets.splice(index,1);
+    }
+    console.info("[AURUM][GEM ASSIGNMENT] Protected focal diamond excluded; remaining layer targets continue.",{
       requestedFamily,
-      meshes:protectedFocalTargets.map((part:any)=>part.name||part.uuid),
+      protectedMeshes:protectedFocalTargets.map((part:any)=>part.name||part.uuid),
+      remainingTargets:targets.length,
     });
-    return false;
+    if(!targets.length) return false;
   }
   const isDiamondToDiamond = requestedFamily==="diamante"
     && targets.length>0
     && targets.every((part:any)=>String(part.userData?.aurumActiveGemFamily??"").toLowerCase()==="diamante");
-  if(isDiamondToDiamond && protectedFocalTargets.length){
-    // The protected focal diamond is intentionally excluded from secondary
-    // catalog-profile switching.
-    return true;
-  }
   if(isDiamondToDiamond){
     const targetDispersion=Math.max(0,Math.min(.1,Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0)));
     const currentMaterials=targets.flatMap((part:any)=>Array.isArray(part.material)?part.material:[part.material]).filter(Boolean);
