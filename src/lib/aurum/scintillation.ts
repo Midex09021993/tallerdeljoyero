@@ -245,6 +245,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(effectiveIewel.ior??2.417)))};
       shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(effectiveIewel.rayBounces??5))))};
       shader.uniforms.aurumIJEWELDispersionScale={value:ijewelDispersionScale};
+      if(material.userData?.aurumDiamondMicroUniforms){ material.userData.aurumDiamondMicroUniforms.iJewelDispersionScale=shader.uniforms.aurumIJEWELDispersionScale; }
       shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
       shader.uniforms.aurumIJEWELGeometryFactor={value:Number(ijewel.geometryFactor??.5)};
       shader.uniforms.aurumIJEWELSQUASHFactor={value:Number(ijewel.squashFactor??.98)};
