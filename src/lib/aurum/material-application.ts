@@ -47,6 +47,7 @@ const presetFromCatalog=(g:any):any=>({
   inclusionDensity:Math.max(0,Math.min(1,Number(g.inclusionStrength??0))),
   inclusionType:inclusionTypeFromCatalog(g.inclusionStyle),
   ...(g.diamondMaterialParameters ? { diamondMaterialParameters:g.diamondMaterialParameters } : {}),
+  ...(g.gemMaterialParameters ? { gemMaterialParameters:g.gemMaterialParameters } : {}),
 });
 
 const opticalProfileFromCatalog=(g:any)=>{
@@ -683,6 +684,22 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     aurumGemAdapter.applyOpticalProfile(next,opticalProfile);
     applyAurumFamilyOpticalResponse(next,opticalProfile);
     applyAurumInternalLightResponse(next,opticalProfile,partThickness);
+    if(preset.familia==="Rubí" && gemConfig?.gemMaterialParameters){
+      const source=gemConfig.gemMaterialParameters;
+      // Apply the imported ruby .dmat values to this ruby profile only.
+      // Family-wide HDR orientation remains governed by the shared gem reference.
+      next.color?.setHex(Number(gemConfig.color??preset.color));
+      next.transmission=Math.max(0,Math.min(1,Number(source.transmission??gemConfig.transmission??0)));
+      next.ior=Math.max(1,Math.min(2.8,Number(source.refractiveIndex??gemConfig.ior??1.77)));
+      next.dispersion=Math.max(0,Math.min(.02,Number(source.dispersion??gemConfig.dispersion??0)));
+      next.envMapIntensity=Math.max(0,Number(gemConfig.envMapIntensity??1));
+      next.reflectivity=Math.max(0,Math.min(1,Number(source.reflectivity??next.reflectivity??.5)));
+      next.userData={
+        ...(next.userData??{}),
+        aurumGemSourceParameters:{...source},
+        aurumGemSourceProfileId:String(gemConfig.id??""),
+      };
+    }
     attachAurumGemPhysicalModel(next,physicalModel);
     if(preset.familia==="Diamante")aurumGemAdapter.applyDiamondOptics(next);
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
