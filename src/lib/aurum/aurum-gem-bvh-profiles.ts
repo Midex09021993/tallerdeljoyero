@@ -85,7 +85,6 @@ export function resolveAurumRubyBvhProfile(
   const physical = material as THREE.MeshPhysicalMaterial;
   const data = material.userData ?? {};
   const optical = data.aurumOpticalProfile ?? {};
-  const source = data.aurumGemSourceParameters ?? {};
   const readFinite = (value: unknown, fallback: number): number => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
@@ -93,13 +92,16 @@ export function resolveAurumRubyBvhProfile(
   const nativeColor = physical.color?.isColor ? physical.color.getHex() : undefined;
   const profileColor = Number(optical.color);
   return {
-    ior: THREE.MathUtils.clamp(readFinite(source.refractiveIndex, readFinite(physical.ior, readFinite(optical.ior, 1.762))), 1, 2.8),
-    dispersion: THREE.MathUtils.clamp(readFinite(source.dispersion, readFinite(physical.dispersion, readFinite(optical.dispersion, 0.001))), 0, 0.02),
-    absorption: Math.max(0, readFinite(source.absorptionFactor, 1.05)),
+    ior: THREE.MathUtils.clamp(readFinite(physical.ior, readFinite(optical.ior, 1.762)), 1, 2.8),
+    dispersion: THREE.MathUtils.clamp(readFinite(physical.dispersion, readFinite(optical.dispersion, 0.001)), 0, 0.02),
+    // A modestly lower absorption and a slightly wider HDR range recover
+    // readable red facet energy without enabling BVH transmission (kept at 0
+    // to avoid introducing unvalidated refraction/intersection artifacts).
+    absorption: 1.05,
     environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 1.0), 0.8, 1.55),
     color: nativeColor ?? (Number.isFinite(profileColor) && profileColor >= 0 ? profileColor : 0x9b001b),
-    reflectivity: THREE.MathUtils.clamp(readFinite(source.reflectivity, readFinite(physical.reflectivity, 0.38)), 0.08, 0.5),
-    transmission: THREE.MathUtils.clamp(readFinite(source.transmission, 0), 0, 1),
+    reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.38), 0.08, 0.5),
+    transmission: 0,
   };
 }
 

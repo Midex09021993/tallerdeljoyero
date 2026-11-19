@@ -34,7 +34,7 @@ export type CategoriaParte = "metal" | "gema" | "otro";
 export type GemaId =
   | "diamante_natural" | "diamante_vs" | "diamante_inclusiones" | "diamante_azul" | "diamante_rosa" | "diamante_rosa_2"
   | "zafiro_azul" | "zafiro_intenso" | "zafiro_inclusiones"
-  | "rubi_natural" | "rubi_1" | "rubi_sangre_pichon" | "rubi_inclusiones"
+  | "rubi_natural" | "rubi_sangre_pichon" | "rubi_inclusiones"
   | "esmeralda_1" | "esmeralda_2" | "esmeralda_3" | "esmeralda_inclusiones"
   | "moissanita_blanca" | "moissanita_brillante"
   | "citrino_natural" | "citrino_intenso"
@@ -64,10 +64,8 @@ export type GemaConfig = {
   origen?:GemaOrigen; perfilInterno?:GemaPerfilInterno; notaGemologica?:string;
   fenomenoOptico?: "chatoyancy" | "asterism" | "adularescence" | "aventurescence" | "labradorescence" | "play-of-color" | "schiller" | "peristerescence" | "iridescence" | "orient" | "opalescence" | "overtone";
   phenomenonScaleNm?: number;
-  /** Source parameters imported from an Aurum DiamondMaterial .dmat file for diamond profiles. */
+  /** Source parameters imported from an Aurum DiamondMaterial .dmat file; stored without changing the active renderer mapping. */
   diamondMaterialParameters?: { transmission?: number; envMapIndex: number; envMapRotationOffset: number; dispersion: number; squashFactor: number; geometryFactor: number; gammaFactor: number; absorptionFactor: number; reflectivity: number; refractiveIndex: number; rayBounces: number; diamondOrientedEnvMap: number; boostFactors: { x: number; y: number; z: number }; };
-  /** Source parameters imported from a .dmat file for non-diamond gemstone profiles. */
-  gemMaterialParameters?: { transmission?: number; envMapIndex: number; envMapRotationOffset: number; dispersion: number; squashFactor: number; geometryFactor: number; gammaFactor: number; absorptionFactor: number; reflectivity: number; refractiveIndex: number; rayBounces: number; diamondOrientedEnvMap: number; boostFactors: { x: number; y: number; z: number }; };
 };
 export type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number; anisotropy?: number; anisotropyRotation?: number };
 export type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
@@ -84,7 +82,6 @@ export const GEMAS: GemaConfig[] = [
   { id:"zafiro_azul", familia:"Zafiro", nombre:"Zafiro Azul Natural", color:0x174a9e, transmission:.9, ior:1.77, roughness:.025, envMapIntensity:4.1, attenuationColor:0x123d91, attenuationDistance:2.4, dispersion:.12, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.08 },
   { id:"zafiro_intenso", familia:"Zafiro", nombre:"Zafiro Azul Intenso", color:0x0d2f78, transmission:.86, ior:1.77, roughness:.03, envMapIntensity:4.3, attenuationColor:0x08265f, attenuationDistance:1.55, dispersion:.1, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.05 },
   { id:"zafiro_inclusiones", familia:"Zafiro", nombre:"Zafiro · Inclusiones", color:0x194a96, transmission:.88, ior:1.77, roughness:.035, envMapIntensity:3.9, attenuationColor:0x123a82, attenuationDistance:2, dispersion:.1, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.24 },
-  { id:"rubi_1", familia:"Rubí", nombre:"Rubí 1", color:0xe14276, transmission:0, ior:1.77, roughness:.028, envMapIntensity:1, attenuationColor:0xe14276, attenuationDistance:1.6, dispersion:0, iridescence:0, inclusionStyle:"ninguna", inclusionStrength:0, gemMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0, squashFactor:0.98, geometryFactor:0.5, gammaFactor:1, absorptionFactor:1.6, reflectivity:0.5, refractiveIndex:1.77, rayBounces:5, diamondOrientedEnvMap:0, boostFactors:{x:1.3,y:0.16,z:0.9} }, notaGemologica:"Perfil importado de 1_gem_ruby_1_0229c0f56f.dmat (DiamondMaterial v4.6); parámetros fuente conservados para el material y BVH del rubí." },
   { id:"rubi_natural", familia:"Rubí", nombre:"Rubí Natural", color:0x9e1020, transmission:.88, ior:1.77, roughness:.028, envMapIntensity:4.1, attenuationColor:0x65070f, attenuationDistance:2.2, dispersion:.11, iridescence:.012, inclusionStyle:"silk", inclusionStrength:.1 },
   { id:"rubi_sangre_pichon", familia:"Rubí", nombre:"Rubí · Sangre de Pichón", color:0x8f0b18, transmission:.9, ior:1.77, roughness:.022, envMapIntensity:4.5, attenuationColor:0x57040b, attenuationDistance:2.7, dispersion:.12, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.06 },
   { id:"rubi_inclusiones", familia:"Rubí", nombre:"Rubí · Inclusiones", color:0x86101b, transmission:.86, ior:1.77, roughness:.038, envMapIntensity:3.8, attenuationColor:0x4f050c, attenuationDistance:1.8, dispersion:.1, iridescence:.012, inclusionStyle:"silk", inclusionStrength:.26 },

@@ -1017,24 +1017,3 @@ test("switching between white diamond catalog profiles updates only live dispers
   expect(runtime).toContain("setSourceDispersion: (nextDispersion: number)");
   expect(runtime).toContain("setDiamondDispersion(targets, dispersion)");
 });
-
-test("Ruby 1 imports its source DMAT profile into physical material and BVH optics", () => {
-  const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
-  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
-  const rubyProfiles = readFileSync("src/lib/aurum/aurum-gem-bvh-profiles.ts", "utf8");
-  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
-
-  expect(catalog).toContain('id:"rubi_1", familia:"Rubí", nombre:"Rubí 1", color:0xe14276');
-  expect(catalog).toContain('dispersion:0, squashFactor:0.98, geometryFactor:0.5, gammaFactor:1, absorptionFactor:1.6, reflectivity:0.5, refractiveIndex:1.77, rayBounces:5');
-  expect(catalog).toContain('boostFactors:{x:1.3,y:0.16,z:0.9}');
-  expect(application).toContain('gemMaterialParameters:g.gemMaterialParameters');
-  expect(application).toContain('aurumGemSourceParameters:{...source}');
-  expect(application).toContain('next.ior=Math.max(1,Math.min(2.8,Number(source.refractiveIndex??gemConfig.ior??1.77)))');
-  expect(rubyProfiles).toContain('readFinite(source.absorptionFactor, 1.05)');
-  expect(rubyProfiles).toContain('readFinite(source.reflectivity, readFinite(physical.reflectivity, 0.38))');
-  expect(runtime).toContain('currentMaterial?.userData?.aurumGemSourceParameters');
-  expect(runtime).toContain('rubySourceParameters?.boostFactors');
-  expect(runtime).toContain('rubySourceParameters?.gammaFactor');
-  expect(runtime).toContain('rubySourceParameters?.geometryFactor');
-  expect(runtime).toContain('rubySourceParameters?.squashFactor');
-});

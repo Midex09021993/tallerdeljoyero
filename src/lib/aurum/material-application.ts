@@ -47,7 +47,6 @@ const presetFromCatalog=(g:any):any=>({
   inclusionDensity:Math.max(0,Math.min(1,Number(g.inclusionStrength??0))),
   inclusionType:inclusionTypeFromCatalog(g.inclusionStyle),
   ...(g.diamondMaterialParameters ? { diamondMaterialParameters:g.diamondMaterialParameters } : {}),
-  ...(g.gemMaterialParameters ? { gemMaterialParameters:g.gemMaterialParameters } : {}),
 });
 
 const opticalProfileFromCatalog=(g:any)=>{
@@ -514,33 +513,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
 
   // Expose the exact mesh set resolved for this assignment before materials
   // are replaced, so the transition snapshots only this gemstone/layer.
-  const requestedFamily=String(gemConfig?.familia??"").trim().toLowerCase();
-  const protectedFocalTargets=targets.filter((part:any)=>Boolean(
-    part.userData?.aurumDiamondMicroCenterProtected
-    || part.userData?.aurumDiamondCenter
-    || part.userData?.aurumDiamondIsCenter
-    || /center|central|main|principal/i.test(String(part.userData?.aurumDiamondRole??""))
-  ));
-  // The focal brilliant is protected from accidental cross-family reassignment.
-  // This prevents a layer-level Ruby/Emerald selection from replacing the
-  // calibrated center diamond when CAD layers contain mixed gemstone meshes.
-  if(protectedFocalTargets.length && requestedFamily!=="diamante"){
-    // Exclude only the protected focal diamond; do not abort the whole layer
-    // assignment or disturb the remaining secondary stones and their BVH.
-    const protectedSet=new Set(protectedFocalTargets);
-    for(let index=targets.length-1;index>=0;index--){
-      if(protectedSet.has(targets[index])) targets.splice(index,1);
-    }
-    console.info("[AURUM][GEM ASSIGNMENT] Protected focal diamond excluded; remaining layer targets continue.",{
-      requestedFamily,
-      protectedMeshes:protectedFocalTargets.map((part:any)=>part.name||part.uuid),
-      remainingTargets:targets.length,
-    });
-    if(!targets.length) return false;
-  }
-  const isDiamondToDiamond = requestedFamily==="diamante"
+  const isDiamondToDiamond = String(gemConfig?.familia??"").toLowerCase()==="diamante"
     && targets.length>0
     && targets.every((part:any)=>String(part.userData?.aurumActiveGemFamily??"").toLowerCase()==="diamante");
+  // Catalog profile switching applies to every selected diamond, including
+  // the focal/large stone. Its brilliant tier remains 1:1; melee tiers keep
+  // their dedicated micro/small/medium optical multipliers.
   if(isDiamondToDiamond){
     const targetDispersion=Math.max(0,Math.min(.1,Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0)));
     const currentMaterials=targets.flatMap((part:any)=>Array.isArray(part.material)?part.material:[part.material]).filter(Boolean);
@@ -705,49 +683,9 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     aurumGemAdapter.applyOpticalProfile(next,opticalProfile);
     applyAurumFamilyOpticalResponse(next,opticalProfile);
     applyAurumInternalLightResponse(next,opticalProfile,partThickness);
-    if(preset.familia==="Rubí" && gemConfig?.gemMaterialParameters){
-      const source=gemConfig.gemMaterialParameters;
-      // Apply the imported ruby .dmat values to this ruby profile only.
-      // Family-wide HDR orientation remains governed by the shared gem reference.
-      next.color?.setHex(Number(gemConfig.color??preset.color));
-      next.transmission=Math.max(0,Math.min(1,Number(source.transmission??gemConfig.transmission??0)));
-      next.ior=Math.max(1,Math.min(2.8,Number(source.refractiveIndex??gemConfig.ior??1.77)));
-      next.dispersion=Math.max(0,Math.min(.02,Number(source.dispersion??gemConfig.dispersion??0)));
-      next.envMapIntensity=Math.max(0,Number(gemConfig.envMapIntensity??1));
-      next.reflectivity=Math.max(0,Math.min(1,Number(source.reflectivity??next.reflectivity??.5)));
-      next.userData={
-        ...(next.userData??{}),
-        aurumGemSourceParameters:{...source},
-        aurumGemSourceProfileId:String(gemConfig.id??""),
-      };
-    }
     attachAurumGemPhysicalModel(next,physicalModel);
     if(preset.familia==="Diamante")aurumGemAdapter.applyDiamondOptics(next);
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
-    // The shared iJewel reference may supply a neutral/white calibration tint.
-    // Restore Ruby 1's catalog-authored physical values after that reference so
-    // the reference metadata cannot wash the ruby body color back to white.
-    if(preset.familia==="Rubí" && gemConfig?.gemMaterialParameters){
-      const source=gemConfig.gemMaterialParameters;
-      const rubyColor=Number(gemConfig?.color??preset.color);
-      next.color?.setHex(rubyColor);
-      next.transmission=Math.max(0,Math.min(1,Number(source.transmission??gemConfig.transmission??0)));
-      next.ior=Math.max(1,Math.min(2.8,Number(source.refractiveIndex??gemConfig.ior??1.77)));
-      next.dispersion=Math.max(0,Math.min(.02,Number(source.dispersion??gemConfig.dispersion??0)));
-      next.roughness=Math.max(0,Math.min(1,Number(gemConfig?.roughness??preset.roughness)));
-      next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??preset.envMapIntensity??1));
-      next.attenuationColor?.setHex(Number(gemConfig?.attenuationColor??rubyColor));
-      next.attenuationDistance=Math.max(.1,Number(gemConfig?.attenuationDistance??preset.attenuationDistance??1.6));
-      next.reflectivity=Math.max(0,Math.min(1,Number(source.reflectivity??next.reflectivity??.5)));
-      next.userData={
-        ...(next.userData??{}),
-        aurumGemSourceParameters:{...source},
-        aurumGemSourceProfileId:String(gemConfig.id??""),
-        aurumRubyCatalogColor:rubyColor,
-        aurumRubyReferenceAppearancePreserved:true,
-      };
-      next.needsUpdate=true;
-    }
     // Apply the emerald reference calibration last: a matching source .dmat
     // can otherwise overwrite the selected catalog hue and environment level.
     // Keep the diamond path and its ordering unchanged.
@@ -786,7 +724,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       next.color?.setHex(diamondColor);
       const sourceDiamondParameters=gemConfig?.diamondMaterialParameters??preset.diamondMaterialParameters;
       if(sourceDiamondParameters){
-        const currentDiamondParameters=next.userData?.["aurumIJEWELParameters"]??{};
+        const currentDiamondParameters=next.userData?.aurumIJEWELParameters??{};
         next.userData={
           ...(next.userData??{}),
           aurumIJEWELParameters:{
