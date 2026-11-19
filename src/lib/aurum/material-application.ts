@@ -535,7 +535,9 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         if(!material) return;
         material.color?.setHex(selectedDiamondColor);
         const catalogTintUniform=material.userData?.aurumDiamondCatalogTintUniform;
-        catalogTintUniform?.value?.copy?.(material.color);
+        if(catalogTintUniform?.value){
+          catalogTintUniform.value.setHex(selectedDiamondColor);
+        }
         material.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??material.envMapIntensity??1));
         material.dispersion=targetDispersion;
         material.attenuationColor?.setHex(Number(gemConfig?.attenuationColor??selectedDiamondColor));
