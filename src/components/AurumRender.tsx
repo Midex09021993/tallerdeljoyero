@@ -3441,16 +3441,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
             if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
             controles.autoRotate=false;
-            if(options.resolution && options.resolution!=="native"){
-              const longEdge=options.resolution==="1080"?1920:options.resolution==="1440"?2560:3840;
-              const aspect=originalBufferWidth/Math.max(1,originalBufferHeight);
-              if(aspect>=1){
-                captureWidth=longEdge;
-                captureHeight=Math.max(2,Math.round(longEdge/aspect/2)*2);
-              }else{
-                captureHeight=longEdge;
-                captureWidth=Math.max(2,Math.round(longEdge*aspect/2)*2);
-              }
+            {
+              // AURUM video masters use a stable 16:9 landscape frame. The background
+              // is rasterized to these exact dimensions, so it fills the whole MP4.
+              const requestedLongEdge=options.resolution==="1080"?1920:options.resolution==="1440"?2560:options.resolution==="4k"?3840:Math.max(2,originalBufferWidth);
+              const longEdge=Math.min(requestedLongEdge,3840);
+              captureWidth=Math.max(2,Math.floor(longEdge/2)*2);
+              captureHeight=Math.max(2,Math.round((captureWidth*9/16)/2)*2);
               highResolutionCapture=true;
               // Keep the existing WebGL canvas and CSS layout. Only increase its
               // drawing buffer; the same live scene and overlays render at target pixels.
@@ -3472,7 +3469,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // The WebGL canvas is transparent; the selected backdrop belongs
               // to the viewer container and must be composited into every MP4 frame.
               backgroundElement:visorRef.current,
-              onFrame:(elapsed:number,total:number)=>{
+              onFrame:async(elapsed:number,total:number)=>{
                 if(automatic && controlsTarget && controles.target){
                   const progress=Math.max(0,Math.min(1,elapsed/total));
                   const smooth=progress*progress*(3-2*progress);
@@ -3506,8 +3503,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   camara.lookAt(controles.target);
                   controles.update?.();
                 }
-                // Render synchronously through AURUM's actual live path before
-                // canvas-record snapshots the original WebGL canvas into a VideoFrame.
+                // Freeze the temporal-motion profile for this sample. Each output
+                // frame gets a full settled accumulation before it is encoded.
+                setTemporalMotion?.(false);
+                setDiamondSupersamplingSettled?.(true);
+                controles.update?.();
+                loop?.converge?.(32);
+                // Deliberately trade export time for image quality: wait for 32
+                // real display frames so diamond TAA and the photographic pipeline
+                // can accumulate before canvas-record snapshots this sample.
+                for(let sample=0;sample<32;sample++){
+                  await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+                }
                 loop?.renderNow?.();
               },
             });
