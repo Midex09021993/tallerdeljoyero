@@ -346,3 +346,23 @@ Esta guía complementa el mapa visual de Herramientas. La ruta indicada es el pr
 6. Comparar una escena de referencia y medir la interacción antes de aceptar el cambio.
 
 **Regla:** no editar `AurumRender.tsx` por defecto. Es el host de integración y aún concentra responsabilidades; primero determinar si el comportamiento pertenece a un adaptador o motor especializado.
+
+
+## Calibración secundaria de diamantes por tamaño — 2026-11-19
+
+La calibración queda documentada como configuración del **editor Aurum Render**. El clasificador de tamaño habilita cuatro tiers y el runtime BVH consume el mismo tier estabilizado por malla.
+
+| Tier | Escala de dispersión | Dispersión efectiva configurada | Scintillation | Contraste de facetas | Intensidad de entorno | Reflectividad | Gamma |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| MICRO | 0.50 | 0.0030 | 0.42 | 0.88 | 0.90× base | 0.84× base | 1.04× base |
+| SMALL | 0.65 | 0.0039 | 0.58 | 0.92 | 0.94× base | 0.90× base | 1.02× base |
+| MEDIUM | 0.80 | 0.0048 | 0.78 | 0.96 | 0.98× base | 0.95× base | 1.01× base |
+| BRILLIANT / grande | 1.00 | 0.0100 (perfil protegido) | 1.00 | 1.00 | 1.00× base | 1.00× base | 1.00× base |
+
+**Separación del diamante central:** la calibración secundaria usa una base de dispersión 0.006 e IOR 2.417. El diamante central protegido conserva la configuración anterior: dispersión 0.010 e IOR 2.600. No se aplica el ajuste secundario al centro protegido.
+
+**Alcance:** el flag `includeMediumTier` y `calibrateSecondaryDiamonds` se habilitan en el editor; el visor público conserva su calibración previa. No se modifican shaders, geometría, normales, HDRI ni materiales metálicos.
+
+**Interpretación:** la dispersión efectiva de MICRO / SMALL / MEDIUM es el resultado de multiplicar la base secundaria 0.006 por la escala del tier. Los demás valores son multiplicadores de perfil sobre sus valores base. Son valores configurados en código, no mediciones ópticas ni garantía de equivalencia visual.
+
+**Validación pendiente:** comparar una misma joya y cámara con los cuatro tamaños, revisar brillo blanco, fuego cromático, estabilidad al orbitar/zoom y coste de render en hardware real. No declarar la calibración visualmente certificada hasta completar esa prueba.
