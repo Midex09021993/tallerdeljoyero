@@ -261,7 +261,7 @@ export async function recordAurumCanvasVideo(
   const recordingContext = compositeContext;
   // Test the exact composite (backdrop + live WebGL canvas) before passing its
   // canvas to VideoFrame. Checking only the WebGL source misses taint introduced
-  // by a CSS/SVG background snapshot.
+  // by a CSS background snapshot.
   try {
     if (backgroundSnapshot) recordingContext.drawImage(backgroundSnapshot, 0, 0, compositeCanvas.width, compositeCanvas.height);
     else recordingContext.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
