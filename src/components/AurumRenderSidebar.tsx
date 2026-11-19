@@ -42,7 +42,7 @@ const toolbarItems = [
  * Barra lateral visual de Aurum Render.
  * Escena agrupa los controles del suelo y las sombras de contacto.
  */
-export function AurumRenderSidebar({ activeToolId, onMetalHdrClick, onGemHdrClick, onBackgroundClick, onSceneClick, onMaterialsClick, onGemsClick, onCadTreeClick, onPositionsClick, onDiamondControlClick, onRhinoExportClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void; onMaterialsClick: () => void; onGemsClick: () => void; onCadTreeClick: () => void; onPositionsClick: () => void; onDiamondControlClick: () => void; onRhinoExportClick: () => void;  }) {
+export function AurumRenderSidebar({ activeToolId, onMetalHdrClick, onGemHdrClick, onBackgroundClick, onSceneClick, onMaterialsClick, onGemsClick, onCadTreeClick, onPositionsClick, onDiamondControlClick, onRhinoExportClick }: { activeToolId: string; onMetalHdrClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void; onMaterialsClick: () => void; onGemsClick: () => void; onCadTreeClick: () => void; onPositionsClick: () => void; onDiamondControlClick: () => void; onRhinoExportClick: () => void;  }) {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
@@ -84,7 +84,7 @@ export function AurumRenderSidebar({ activeToolId, onMetalHdrClick, onGemHdrClic
         const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
         if (isMetalHdr || isGemHdr || isBackground || isScene || isMaterials || isGems || isCadTree || isPositions || isDiamondControl || isRhinoExport) {
           const title = isMetalHdr ? "HDR Metales" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : isScene ? "Escenas" : isMaterials ? "Materiales" : isGems ? "Gemas" : isCadTree ? "Árbol CAD · Capas y objetos" : isPositions ? "AURUM POSITIONS · Gestor de posiciones" : isDiamondControl ? "Control óptico del diamante" : "Exportar para Rhinoceros";
-          const onClick = isAmbientes ? onAmbientesClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : isScene ? onSceneClick : isMaterials ? onMaterialsClick : isGems ? onGemsClick : isCadTree ? onCadTreeClick : isPositions ? onPositionsClick : isDiamondControl ? onDiamondControlClick : onRhinoExportClick;
+          const onClick = isMetalHdr ? onMetalHdrClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : isScene ? onSceneClick : isMaterials ? onMaterialsClick : isGems ? onGemsClick : isCadTree ? onCadTreeClick : isPositions ? onPositionsClick : isDiamondControl ? onDiamondControlClick : onRhinoExportClick;
           return (
             <button key={item.id} type="button" title={title} aria-label={title} aria-pressed={active} onClick={onClick} className={className}>
               {contents}
