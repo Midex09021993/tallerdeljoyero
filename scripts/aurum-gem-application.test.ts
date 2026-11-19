@@ -954,6 +954,22 @@ test("white diamond profile switching updates every selected size while preservi
   expect(runtime).toContain('if (tier === "medium") return');
 });
 
+test("blue diamond catalog color survives fast switch and reaches BVH shader uniform", () => {
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const component = readFileSync("src/components/AurumRender.tsx", "utf8");
+
+  expect(application).toContain("aurumDiamondCatalogColor:selectedDiamondColor");
+  expect(application).toContain("aurumDiamondCatalogColor:Number(gemConfig?.color??0xffffff)");
+  expect(runtime).toContain("mesh.userData?.aurumDiamondCatalogColor");
+  expect(runtime).toContain("color: isEmerald");
+  expect(runtime).toContain("? selectedCatalogDiamondColor");
+  expect(runtime).toContain("uniforms?.color");
+  expect(runtime).toContain("setDiamondColor(targets, color)");
+  expect(component).toContain("diamondBvhRuntime?.setDiamondColor?.(targets,Number(g?.color??0xffffff))");
+  expect(component).toContain("(!dispersionOnlySwitch || isDiamondSelection)");
+});
+
 test("switching between white diamond catalog profiles updates only live dispersion in place", () => {
   const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const component = readFileSync("src/components/AurumRender.tsx", "utf8");
@@ -966,7 +982,15 @@ test("switching between white diamond catalog profiles updates only live dispers
   expect(application).toContain("protected focal diamond is intentionally excluded");
   expect(component).toContain("const duration=260");
   expect(component).toContain("diamondBvhRuntime?.setDiamondDispersion?.(targets,value)");
-  expect(component).toContain("!dispersionOnlySwitch");
+  expect(component).toContain("diamondBvhRuntime?.setDiamondColor?.(targets,Number(g?.color??0xffffff))");
+  expect(component).toContain("(!dispersionOnlySwitch || isDiamondSelection)");
+  expect(runtime).toContain("setDiamondColor: (targets: readonly THREE.Mesh[], color: number) => void");
+  expect(runtime).toContain("setDiamondColor(targets, color)");
+  expect(runtime).toContain("setAurumBvhShaderColor(prepared.material, Number(nextColor))");
+  expect(runtime).toContain("mesh.userData?.aurumDiamondCatalogColor");
+  expect(runtime).toContain("? selectedCatalogDiamondColor");
+  expect(application).toContain("aurumDiamondCatalogColor:selectedDiamondColor");
+  expect(application).toContain("aurumDiamondCatalogColor:Number(gemConfig?.color??0xffffff)");
   expect(scintillation).toContain("uniforms.dispersion.value=dispersion*familyScale");
   expect(scintillation).toContain("uniforms.iJewelDispersionScale.value=dispersion/0.01");
   expect(runtime).toContain("setSourceDispersion: (nextDispersion: number)");
