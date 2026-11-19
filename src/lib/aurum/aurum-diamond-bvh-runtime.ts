@@ -544,6 +544,9 @@ export async function createAurumDiamondBvhRuntime(options: {
         const meshEnvironmentAlignment = family === "diamante"
           ? getMeshEnvironmentRotation(mesh)
           : { offsetRadians: 0, rotationRadians: requestedEnvironmentRotationRadians, worldYawRadians: 0 };
+        const sourceEnvironmentOffset = family === "diamante" && diamondSourceParameters
+          ? Number(diamondSourceParameters.environmentRotationOffset ?? 0)
+          : 0;
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
           // The approved A/B reference uses zero direct transmission; internal
@@ -597,9 +600,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           // environment rotation is applied uniformly through updateEnvironment().
           // Per-mesh family offsets must not rotate melee stones away from the center.
           environmentRotationRadians: family === "diamante"
-            ? meshEnvironmentAlignment.rotationRadians
+            ? meshEnvironmentAlignment.rotationRadians + sourceEnvironmentOffset
             : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
-          ...(family === "diamante" ? { environmentRotationEuler: meshEnvironmentAlignment.rotationEuler } : {}),
+          ...(family === "diamante" ? { environmentRotationEuler: getAurumDiamondEnvironmentRotationEuler(meshEnvironmentAlignment.rotationRadians + sourceEnvironmentOffset, meshEnvironmentAlignment.correctionQuaternion) } : {}),
         });
         const baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
         const baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
