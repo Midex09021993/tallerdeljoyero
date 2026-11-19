@@ -538,7 +538,6 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
             aurumGemFamily:"Diamante",
             aurumIJEWELParameters:{
               ...(material.userData?.aurumIJEWELParameters??{}),
-              ...(gemConfig?.diamondMaterialParameters??{}),
               dispersion:fromDispersion,
             },
             aurumDiamondPresetId:String(gemConfig?.id??""),
