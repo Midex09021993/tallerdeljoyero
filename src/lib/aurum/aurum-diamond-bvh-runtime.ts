@@ -260,26 +260,35 @@ export async function createAurumDiamondBvhRuntime(options: {
 
     const diamondRadiusByMesh = new Map<THREE.Mesh, number>();
     const diamondMeshes: THREE.Mesh[] = [];
+    const referenceGemMeshes: THREE.Mesh[] = [];
     let largestDiamondRadius = 0;
-    if (targetContainsDiamond) {
-      model.traverse((object) => {
-        const candidate = object as THREE.Mesh;
-        if (!candidate.isMesh || !candidate.geometry) return;
-        const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
-        if (candidateMaterials.length !== 1) return;
-        const candidateFamily = getGemFamily(candidateMaterials[0])
-          || String(candidate.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase();
-        if (candidateFamily !== "diamante") return;
-        if (!candidate.geometry.boundingSphere) candidate.geometry.computeBoundingSphere();
-        const localRadius = candidate.geometry.boundingSphere?.radius ?? 0;
-        const worldScale = candidate.getWorldScale(new THREE_NS.Vector3());
-        const radius = localRadius * Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z));
-        if (!Number.isFinite(radius) || radius <= 0) return;
-        diamondRadiusByMesh.set(candidate, radius);
-        diamondMeshes.push(candidate);
-        largestDiamondRadius = Math.max(largestDiamondRadius, radius);
-      });
-    }
+    // The orientation anchor is a CAD stone identity, not a material family.
+    // Scan gem meshes on every reconciliation so the same center remains the
+    // reference when its catalog assignment changes from diamond to ruby, etc.
+    model.traverse((object) => {
+      const candidate = object as THREE.Mesh;
+      if (!candidate.isMesh || !candidate.geometry) return;
+      const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
+      if (candidateMaterials.length !== 1) return;
+      const material = candidateMaterials[0];
+      const candidateFamily = getGemFamily(material)
+        || String(candidate.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase();
+      if (!candidateFamily) return;
+      const isGemMaterial = Boolean(material?.userData?.aurumOpticalProfile
+        || material?.userData?.aurumGemFamily
+        || candidate.userData?.aurumActiveGemId
+        || candidate.userData?.aurumActiveGemFamily);
+      if (isGemMaterial) referenceGemMeshes.push(candidate);
+      if (candidateFamily !== "diamante") return;
+      if (!candidate.geometry.boundingSphere) candidate.geometry.computeBoundingSphere();
+      const localRadius = candidate.geometry.boundingSphere?.radius ?? 0;
+      const worldScale = candidate.getWorldScale(new THREE_NS.Vector3());
+      const radius = localRadius * Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z));
+      if (!Number.isFinite(radius) || radius <= 0) return;
+      diamondRadiusByMesh.set(candidate, radius);
+      diamondMeshes.push(candidate);
+      largestDiamondRadius = Math.max(largestDiamondRadius, radius);
+    });
     const viewportHeight = Number(options.getViewportHeight?.() ?? 0);
     const screenTiers = viewportHeight > 1
       ? classifyAurumDiamondMeshTiers(diamondMeshes, options.camera, viewportHeight, options.calibrateSecondaryDiamonds === true)
@@ -299,7 +308,27 @@ export async function createAurumDiamondBvhRuntime(options: {
       ? largestProjectedDiamond.mesh
       : null;
     const explicitCenterMesh = diamondMeshes.find((mesh) => isAurumDiamondBvhCenterTarget(mesh));
-    const centerReferenceMesh = explicitCenterMesh ?? inferredCenterMesh;
+    const projectedReferenceGemSizes = referenceGemMeshes.map((mesh) => ({
+      mesh,
+      diameterPx: getAurumDiamondProjectedDiameterPx(mesh, options.camera, viewportHeight),
+    })).filter((entry) => Number.isFinite(entry.diameterPx) && entry.diameterPx > 0)
+      .sort((a, b) => b.diameterPx - a.diameterPx);
+    const largestReferenceGem = projectedReferenceGemSizes[0];
+    const secondLargestReferenceGem = projectedReferenceGemSizes[1];
+    const inferredGemReference = largestReferenceGem
+      && (!secondLargestReferenceGem || largestReferenceGem.diameterPx >= secondLargestReferenceGem.diameterPx * 1.5)
+      ? largestReferenceGem.mesh
+      : null;
+    const explicitGemReference = referenceGemMeshes.find((mesh) =>
+      Boolean(mesh.userData?.aurumGemOrientationReference
+        || mesh.userData?.aurumDiamondCenter
+        || mesh.userData?.aurumDiamondIsCenter)
+      || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? mesh.userData?.aurumGemRole ?? "")),
+    );
+    const centerReferenceMesh = explicitGemReference ?? inferredGemReference ?? explicitCenterMesh ?? inferredCenterMesh;
+    if (centerReferenceMesh && !centerReferenceMesh.userData?.aurumGemOrientationReference) {
+      centerReferenceMesh.userData = { ...(centerReferenceMesh.userData ?? {}), aurumGemOrientationReference: true };
+    }
     // Derive each stone's optical frame from its table normal and in-plane axis.
     // The thin bounding-box axis is an estimate; the correction aligns the full 3D frame.
     const getDiamondOpticalFrame = (mesh: THREE.Mesh) => {
