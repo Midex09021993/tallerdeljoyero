@@ -19,9 +19,6 @@
     <Rhino8SystemDir Condition="'$(Rhino8SystemDir)' == ''">C:\Program Files\Rhino 8\System</Rhino8SystemDir>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AurumConectAssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="RhinoCommon">
       <HintPath>$(Rhino8SystemDir)\RhinoCommon.dll</HintPath>
       <Private>false</Private>
