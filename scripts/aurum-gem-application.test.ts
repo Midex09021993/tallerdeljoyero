@@ -271,7 +271,7 @@ test("diamond live optical tuning matches the approved diamond-only calibration"
   const bvh = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   expect(bvh).toContain('const calibrateSecondaryDiamond = options.calibrateSecondaryDiamonds === true');
   expect(bvh).toContain('dispersion: family === "diamante"');
-  expect(bvh).toContain('calibrateSecondaryDiamond ? 0.006 : 0.010');
+  expect(bvh).toContain('activeGemId === "diamante_vs"');
   expect(bvh).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
 });
 
@@ -786,7 +786,7 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   expect(runtime).toContain('environmentIntensity: family === "diamante"');
   expect(runtime).toContain('? (!isBlueDiamond && !isPinkDiamond ? 1.30');
   expect(runtime).toContain('dispersion: family === "diamante"');
-  expect(runtime).toContain('calibrateSecondaryDiamond ? 0.006 : 0.010');
+  expect(runtime).toContain('activeGemId === "diamante_vs"');
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
   expect(runtime).toContain('reflectivity: family === "diamante" ? 0.46');
   expect(runtime).toContain('calibrateSecondaryDiamonds === true');
