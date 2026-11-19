@@ -218,7 +218,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       baseScintillationStrength:strength,
       facetContrast:shader.uniforms.aurumScintillationContrast,
       baseFacetContrast:contrastStrength,
-      dispersion:shader.uniforms.aurumRuntimeDispersion,
+      dispersion:shader.uniforms.aurumRuntimeDispersion,\n      iJewelDispersionScale:shader.uniforms.aurumIJEWELDispersionScale,
       baseDispersion:(diamondTestProfile?.dispersion??baseDispersion)*familyDispersionScale,
       virtualFacetWeight:shader.uniforms.aurumDiamondMicroVirtualFacetWeight,
       baseVirtualFacetWeight:virtualFacetWeight,
@@ -785,6 +785,25 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
   };
   material.needsUpdate=true;
   return material;
+};
+
+/** Update only the dispersion uniforms on an already-compiled diamond material. No shader rebuild or material replacement. */
+export const setAurumDiamondSourceDispersion=(material:any,sourceDispersion:number)=>{
+  if(!material || String(material.userData?.aurumGemFamily??"").trim().toLowerCase()!=="diamante") return false;
+  const dispersion=Math.max(0,Math.min(0.1,Number(sourceDispersion)||0));
+  const parameters={...(material.userData?.aurumIJEWELParameters??{}),dispersion};
+  material.userData={...(material.userData??{}),aurumIJEWELParameters:parameters};
+  const uniforms=material.userData?.aurumDiamondMicroUniforms;
+  const familyScale=0.88;
+  if(uniforms?.dispersion){
+    uniforms.dispersion.value=dispersion*familyScale;
+    uniforms.baseDispersion=dispersion*familyScale;
+  }
+  if(uniforms?.iJewelDispersionScale){
+    uniforms.iJewelDispersionScale.value=dispersion/0.01;
+  }
+  material.userData.aurumDiamondSourceDispersion=dispersion;
+  return true;
 };
 
 export type AurumGemShaderQuality = "live"|"beauty";
