@@ -91,7 +91,15 @@ export const inferGemMeshes = (
     // candidates and win when they are already the central stone.
     if (allowMixedInference && explicitlyIdentified.size > 0 && classifyMesh(object) === "metal") return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
-    if (materials.length !== 1) return;
+    if (materials.length === 0) return;
+    // A faceted center stone can be exported as one mesh with several face
+    // materials. It is still a valid geometric candidate when none of those
+    // slots is explicitly metallic; the later catalog pass assigns the same
+    // gemstone profile to every slot before the BVH runtime is created.
+    const hasExplicitMetalSlot = materials.some((material: any) =>
+      /(metal|oro|gold|plata|silver|platino|platinum|steel|acero)/i.test(String(material?.name ?? "")),
+    );
+    if (hasExplicitMetalSlot) return;
     object.updateWorldMatrix(true, false);
     const bounds = new THREE.Box3().setFromObject(object);
     const size = bounds.getSize(new THREE.Vector3());
