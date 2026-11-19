@@ -3427,192 +3427,68 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const previousAutoRotate=Boolean(controles.autoRotate);
           const previousAutoRotateSpeed=Number(controles.autoRotateSpeed ?? 0.65);
           const automatic=options.mode!=="manual";
-          const duration=Math.max(1,Math.min(20,Number(options.duration)||5));
           const loop:any=viewerLoopRef.current;
-          const originalBufferWidth=sourceCanvas.width;
-          const originalBufferHeight=sourceCanvas.height;
-          const originalPixelRatio=renderer.getPixelRatio?.()||1;
-          const originalCssWidth=originalBufferWidth/originalPixelRatio;
-          const originalCssHeight=originalBufferHeight/originalPixelRatio;
-          const originalCanvasStyleWidth=sourceCanvas.style.width;
-          const originalCanvasStyleHeight=sourceCanvas.style.height;
-          const originalCanvasStyleObjectFit=sourceCanvas.style.objectFit;
-          const originalCanvasStylePosition=sourceCanvas.style.position;
-          const originalCanvasStyleLeft=sourceCanvas.style.left;
-          const originalCanvasStyleTop=sourceCanvas.style.top;
-          const originalCanvasStyleTransform=sourceCanvas.style.transform;
-          const originalAspect=camara.aspect;
-          const originalTransmissionScale=Number((renderer as any).transmissionResolutionScale??1);
-          const videoWidth=Math.max(320,Math.min(3840,Math.round(Number(options.width)||1280)));
-          const videoHeight=Math.max(320,Math.min(3840,Math.round(Number(options.height)||720)));
-          // Render video frames at their requested pixel dimensions, with a small
-          // temporal-AA budget per frame. Avoid 32-sample still-image accumulation
-          // here: it would make real-time recording drop frames on typical GPUs.
-          // Preserve the live viewer's aspect ratio and camera framing. The video
-          // exporter letterboxes this canvas into the requested output dimensions;
-          // resizing the camera to 16:9 was squeezing the jewelry in the live render.
-          // Render each video frame using the exact output dimensions and camera aspect.
-          // setSize(..., false) changes the WebGL drawing buffer without changing the
-          // canvas CSS box; the encoder reads the intrinsic bitmap, not its screen display.
-          // This avoids letterboxing the landscape viewer into portrait video, which made
-          // the jewelry appear smaller than in an image with the same 9:16 ratio.
-          const outputAspect=videoWidth/videoHeight;
-          const renderWidth=videoWidth;
-          const renderHeight=videoHeight;
-          const renderAspect=outputAspect;
           const previousFastPath=liveFastPathRef.current;
-          const originalSurfaceEdgeAaStrength=Number(surfaceEdgeAaPass?.material?.uniforms?.strength?.value ?? 0.035);
-          let videoFramePipeline: ReturnType<typeof createAurumVideoFramePipeline> | null = null;
           try{
             const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
             if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
             controles.autoRotate=false;
-            loop?.pause?.();
-            // Keep the live viewport's visual composition enabled during capture.
-            // The frame pipeline selects the same live beauty passes used by PNG
-            // capture, instead of bypassing EffectComposer with renderer.render().
-            liveFastPathRef.current=false;
-            aplicarPerfilLive();
-            // Video must use the same subtle edge cleanup as the settled viewer.
-            // TAA remains disabled; this only includes the existing Surface Edge AA pass.
-            // Video export follows the same diamond-only scope: do not filter metal edges.
-            if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
-            // Match the WebGL backing buffer and camera projection to the final MP4.
-            // The CSS viewport remains unchanged while recording.
-            renderer.setPixelRatio(1);
-            renderer.setSize(renderWidth,renderHeight,false);
-            // Match the visible canvas box to the recording bitmap aspect as well.
-            // Otherwise a portrait backing buffer is displayed inside the old landscape
-            // CSS box and the live preview itself makes the jewelry look stretched.
-            const canvasParent=sourceCanvas.parentElement;
-            if(canvasParent){
-              const maxCssWidth=Math.max(1,canvasParent.clientWidth);
-              const maxCssHeight=Math.max(1,canvasParent.clientHeight);
-              let previewWidth=maxCssWidth;
-              let previewHeight=previewWidth/renderAspect;
-              if(previewHeight>maxCssHeight){
-                previewHeight=maxCssHeight;
-                previewWidth=previewHeight*renderAspect;
-              }
-              sourceCanvas.style.width=`${previewWidth}px`;
-              sourceCanvas.style.height=`${previewHeight}px`;
-              sourceCanvas.style.objectFit="contain";
-              // The canvas is normally anchored to the left of the wide viewer.
-              // Center its temporary portrait viewport under the centered guide.
-              sourceCanvas.style.position="absolute";
-              sourceCanvas.style.left="50%";
-              sourceCanvas.style.top="50%";
-              sourceCanvas.style.transform="translate(-50%, -50%)";
-            }
-            camara.aspect=renderAspect;
-            camara.updateProjectionMatrix?.();
-            const createVideoFramePipeline = productionPluginHost.services.get("aurum.media.video-frame.create");
-            if (typeof createVideoFramePipeline !== "function") throw new Error("AURUM Video Frame Pipeline service is not registered.");
-            videoFramePipeline=createVideoFramePipeline({
-              composer,
-              renderer,
-              scene:escena,
-              camera:camara,
-              diamondBvhRuntime,
-              livePasses:getAurumVideoLivePasses({
-                renderPass,gemMaskPass,fxaaPass,surfaceEdgeAaPass,
-                gemFxaaEnabled:getAurumPostControls().gemMaskEnabled && getAurumPostControls().gemFxaaEnabled,
-                surfaceEdgeAaEnabled:false,outputPass,
-              }),
-              width:renderWidth,
-              height:renderHeight,
-              restoreWidth:originalCssWidth,
-              restoreHeight:originalCssHeight,
-            });
-            // Keep the same camera distance and target the user composed in the viewer.
-            // Fitting the entire model here pulls the camera back (especially for long
-            // chains) and makes the jewelry tiny in the video compared with the PNG.
-            // Only change the projection aspect; never rescale or refit the model for MP4.
-            cameraPosition.copy(camara.position);
-            if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
-            // Camera and source bitmap share the exact output ratio. Each captured
-            // frame now passes through the live beauty chain before the encoder copies it.
+            // Do not pause, resize, replace, or post-process the live WebGL canvas.
+            // The browser records this exact canvas bitmap through captureStream().
             loop?.setContinuousRendering?.(true);
             await recordVideo(sourceCanvas,{
-              width:options.width,height:options.height,fps:options.fps,duration:duration,
+              // width/height intentionally omitted: exported pixels equal sourceCanvas.width/height.
+              fps:options.fps,duration:options.duration,
               signal:options.signal,onProgress:options.onProgress,
-              onFrame:(elapsed,total)=>{
-                if(automatic && controlsTarget){
+              onFrame:(elapsed:number,total:number)=>{
+                if(automatic && controlsTarget && controles.target){
                   const progress=Math.max(0,Math.min(1,elapsed/total));
                   const smooth=progress*progress*(3-2*progress);
                   const dx=cameraPosition.x-controlsTarget.x;
                   const dz=cameraPosition.z-controlsTarget.z;
                   const radius=Math.hypot(dx,dz);
-                  let angle= Math.PI*2*progress;
+                  let angle=Math.PI*2*progress;
                   let zoomFactor=1;
                   let targetY=controlsTarget.y;
                   if(options.mode==="orbit180-return"){
                     angle=Math.PI*(1-Math.cos(Math.PI*2*progress))/2;
                   }else if(options.mode==="slow360"){
-                    // Ease into and out of the full orbit for a calmer product presentation.
                     angle=Math.PI*2*smooth;
                   }else if(options.mode==="cinematic-zoom"){
-                    // Gentle push-in to the gemstone, then return to the original distance.
                     zoomFactor=1-0.28*Math.sin(Math.PI*progress);
                     angle=0;
                   }else if(options.mode==="vertical-sweep"){
-                    // Move the framing vertically and return, preserving the camera orientation.
                     targetY=controlsTarget.y+Math.sin(Math.PI*progress)*radius*0.22;
                     angle=0;
                   }else if(options.mode==="catalog"){
-                    // Product sequence: partial orbit plus a restrained push-in, ending at the start.
                     angle=(Math.PI/3)*Math.sin(Math.PI*progress);
                     zoomFactor=1-0.18*Math.sin(Math.PI*progress);
-                  }else{
-                    angle=Math.PI*2*progress;
                   }
                   const cos=Math.cos(angle),sin=Math.sin(angle);
                   camara.position.set(
-                    controlsTarget.x+dx*cos*zoomFactor,
+                    controlsTarget.x+dx*cos*zoomFactor+dz*sin*zoomFactor,
                     cameraPosition.y+(targetY-controlsTarget.y),
-                    controlsTarget.z-dx*sin*zoomFactor+dz*zoomFactor,
+                    controlsTarget.z-dx*sin*zoomFactor+dz*cos*zoomFactor,
                   );
-                  // Keep the horizontal orbit mathematically anchored around the original target.
-                  if(options.mode==="automatic"||options.mode==="orbit180-return"||options.mode==="slow360"||options.mode==="catalog"){
-                    camara.position.x=controlsTarget.x+dx*cos*zoomFactor+dz*sin*zoomFactor;
-                    camara.position.z=controlsTarget.z-dx*sin*zoomFactor+dz*cos*zoomFactor;
-                  }
                   controles.target.set(controlsTarget.x,targetY,controlsTarget.z);
                   camara.lookAt(controles.target);
                   controles.update?.();
                 }
-                // Render through the active live viewport composition before capture.
-                videoFramePipeline?.renderFrame();
-              }            });
+                // Ask the existing viewer loop to draw the next live frame.
+                loop?.invalidate?.();
+              },
+            });
           }finally{
             const restoreFailures = runAurumMediaExportCleanup([
-              () => loop?.setContinuousRendering?.(false),
               () => { liveFastPathRef.current=previousFastPath; },
-              () => renderer.setPixelRatio(originalPixelRatio),
-              () => { (renderer as any).transmissionResolutionScale=originalTransmissionScale; },
-              () => renderer.setSize(originalCssWidth,originalCssHeight,false),
-              () => { sourceCanvas.style.width=originalCanvasStyleWidth; },
-              () => { sourceCanvas.style.height=originalCanvasStyleHeight; },
-              () => { sourceCanvas.style.objectFit=originalCanvasStyleObjectFit; },
-              () => { sourceCanvas.style.position=originalCanvasStylePosition; },
-              () => { sourceCanvas.style.left=originalCanvasStyleLeft; },
-              () => { sourceCanvas.style.top=originalCanvasStyleTop; },
-              () => { sourceCanvas.style.transform=originalCanvasStyleTransform; },
-              () => { camara.aspect=originalAspect; camara.updateProjectionMatrix?.(); },
-              () => { if(composer && applyPostQuality) applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId}); },
-              () => videoFramePipeline?.restore(),
-              () => { const strength=surfaceEdgeAaPass?.material?.uniforms?.strength; if(strength)strength.value=originalSurfaceEdgeAaStrength; },
               () => { controles.autoRotate=previousAutoRotate; },
               () => { controles.autoRotateSpeed=previousAutoRotateSpeed; },
               () => camara.position.copy(originalCameraPosition),
               () => camara.quaternion.copy(originalCameraQuaternion),
               () => { if(originalControlsTarget && controles.target) controles.target.copy(originalControlsTarget); },
               () => controles.update?.(),
-              () => diamondBvhRuntime?.update(),
-              () => aplicarPerfilLive(),
-              () => resetTemporalAccumulationRef.current?.(),
-              () => loop?.resize?.(),
               () => loop?.invalidate?.(),
+              () => loop?.setContinuousRendering?.(false),
               () => loop?.resume?.(),
               () => loop?.converge?.(4),
             ]);
