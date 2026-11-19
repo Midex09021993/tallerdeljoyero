@@ -75,7 +75,7 @@ function escapeXmlAttribute(value: string): string {
  * the source's permission instead of silently creating a tainted frame.
  */
 async function inlineAurumCssBackgroundImages(backgroundImage: string): Promise<string> {
-  const matches = Array.from(backgroundImage.matchAll(/url\\((?:\\s*["']([^"']+)["']\\s*|\\s*([^\\s)]+)\\s*)\\)/gi));
+  const matches = Array.from(backgroundImage.matchAll(/url\((?:\s*["']([^"']+)["']\s*|\s*([^\s)]+)\s*)\)/gi));
   let result = backgroundImage;
   for (const match of matches) {
     const source = (match[1] ?? match[2] ?? "").trim();
@@ -217,6 +217,15 @@ export async function recordAurumCanvasVideo(
   if (!compositeContext) throw new Error("No se pudo crear la superficie de composición del fondo para el vídeo.");
   const backgroundSnapshot = await loadAurumBackgroundSnapshot(options.backgroundElement, source.width, source.height);
   const recordingContext = compositeContext;
+  // Fail early with a useful diagnosis if an imported image/texture has already
+  // tainted the live WebGL canvas. This avoids a late, opaque VideoFrame error.
+  try {
+    recordingContext.drawImage(source, 0, 0, compositeCanvas.width, compositeCanvas.height);
+    recordingContext.getImageData(0, 0, 1, 1);
+    recordingContext.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+  } catch (error) {
+    throw new Error("El canvas WebGL de AURUM contiene una textura o imagen sin permisos CORS. Revisa los recursos externos del modelo/HDRI y habilita Access-Control-Allow-Origin antes de grabar.", { cause: error });
+  }
 
   const fps = Math.max(15, Math.min(120, Math.round(options.fps ?? 30)));
   const duration = Math.max(1, Math.min(20, Number(options.duration ?? 5)));
