@@ -259,6 +259,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [liveDofStrength, setLiveDofStrength] = useState<"soft"|"medium"|"strong">("soft");
   const [snapshotGuide, setSnapshotGuide] = useState<"none"|"thirds"|"complete">("none");
   const [snapshotAspect, setSnapshotAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
+  const syncSnapshotNativeDimensions = () => {
+    const liveCanvas = visorRef.current?.querySelector("canvas");
+    setSnapshotWidth(String(Math.max(320, Math.round(liveCanvas?.width || 3840))));
+    setSnapshotHeight(String(Math.max(320, Math.round(liveCanvas?.height || 2160))));
+  };
   const handleSnapshotAspect = (ratio: "16:9"|"1:1"|"4:5"|"9:16"|"3:2") => {
     if (snapshotAspect === ratio) {
       setSnapshotAspect(null);
@@ -267,11 +272,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       if (original) apiRef.current?.restoreCameraState?.(original);
       // No preset means the real viewer canvas: restore its native pixel
       // dimensions as well as its camera framing, not the previous preset size.
-      const liveCanvas = visorRef.current?.querySelector("canvas");
-      const nativeWidth = Math.max(320, Math.round(liveCanvas?.width || 3840));
-      const nativeHeight = Math.max(320, Math.round(liveCanvas?.height || 2160));
-      setSnapshotWidth(String(nativeWidth));
-      setSnapshotHeight(String(nativeHeight));
+      syncSnapshotNativeDimensions();
       return;
     }
     if (!snapshotAspectCameraSnapshotRef.current) {
@@ -6174,7 +6175,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
           {EXPORT_LEGADO_VISIBLE&&(<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-2.5 rounded-xl border border-[#7168f4]/20 bg-[#7168f4]/85 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#7168f4]/95 disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-[#292824]/85">Geometría y materiales exportables</span></span></button>)}
 
-          <button type="button" onClick={()=>setSnapshotOpen(v=>{const next=!v;if(next){setVideoOpen(false);}else{setSnapshotAspect(null);const original=snapshotAspectCameraSnapshotRef.current;snapshotAspectCameraSnapshotRef.current=null;if(original)apiRef.current?.restoreCameraState?.(original);}return next;})} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Fotografía del producto</span><span className="block text-[10px] text-[#77756f]">Captura profesional · Resolución y formato</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
+          <button type="button" onClick={()=>setSnapshotOpen(v=>{const next=!v;if(next){setVideoOpen(false);if(snapshotAspect===null)syncSnapshotNativeDimensions();}else{setSnapshotAspect(null);const original=snapshotAspectCameraSnapshotRef.current;snapshotAspectCameraSnapshotRef.current=null;if(original)apiRef.current?.restoreCameraState?.(original);syncSnapshotNativeDimensions();}return next;})} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Fotografía del producto</span><span className="block text-[10px] text-[#77756f]">Captura profesional · Resolución y formato</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
 
           {snapshotOpen&&<div className="rounded-xl border border-black/10 bg-black/[.025] p-3">
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">Salida de imagen</div>
