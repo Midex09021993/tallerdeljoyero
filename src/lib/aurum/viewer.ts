@@ -329,6 +329,10 @@ export function startAurumViewerLoop(
   let interactionEnding = false;
   let idleFramesRemaining = 0;
   let continuousRendering = false;
+  // Video export temporarily owns the WebGL drawing-buffer dimensions and
+  // camera aspect. Host focus/resize events must not overwrite that capture
+  // projection midway through an encoded frame.
+  let captureResizeLocked = false;
   // A transient GPU/compositor exception must not permanently wedge the
   // demand-driven loop. Retry a small, bounded number of times with backoff;
   // a later host wake or explicit user invalidation can always start fresh.
@@ -387,6 +391,7 @@ export function startAurumViewerLoop(
   };
 
   const resize = () => {
+    if (captureResizeLocked) return;
     resizeAurumViewer(viewer);
     requestRender();
   };
@@ -452,7 +457,10 @@ export function startAurumViewerLoop(
     try {
       viewer.renderer?.setRenderTarget?.(null);
       viewer.renderer?.resetState?.();
-      resizeAurumViewer(viewer, true);
+      // During MP4 capture the requested output aspect is authoritative.
+      // A focus/visibility wake must recover GL state without replacing the
+      // capture buffer size or camera projection with the editor viewport.
+      if (!captureResizeLocked) resizeAurumViewer(viewer, true);
       viewer.renderer?.resetState?.();
       clearFrameRetry(true);
       const wasPaused = paused;
@@ -697,5 +705,9 @@ export function startAurumViewerLoop(
       observer.disconnect();
     },
     resize,
+    setCaptureResizeLock: (active: boolean) => {
+      captureResizeLocked = Boolean(active);
+      if (!captureResizeLocked) resize();
+    },
   };
 }
