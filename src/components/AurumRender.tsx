@@ -2024,6 +2024,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           },
           (targets:any[],from:number,to:number)=>{
             dispersionOnlySwitch=true;
+            // A diamond-to-diamond switch also changes the BVH shader's catalog
+            // color. Dispersion animation must not be the only live update.
+            diamondBvhRuntime?.setDiamondColor?.(targets,Number(g?.color??0xffffff));
             if(diamondDispersionFrameRef.current!==null && typeof window!=="undefined"){
               window.cancelAnimationFrame(diamondDispersionFrameRef.current);
               diamondDispersionFrameRef.current=null;
@@ -2105,10 +2108,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if(renderImmediately) viewerLoopRef.current?.renderNow?.();
         else invalidateRenderRef.current?.();
 
-        if(renderImmediately && resolvedTargets.length && !dispersionOnlySwitch){
+        if(renderImmediately && resolvedTargets.length && (!dispersionOnlySwitch || isDiamondSelection)){
           // Keep the selected meshes and application token stable across the
-          // transition. BVH may replace the physical material, so it must wait
-          // until this appearance blend has completed.
+          // transition. Diamond profile switches must reconcile BVH as well:
+          // their fast path updates color/dispersion without an appearance blend.
           const applicationSnapshot=resolvedTargets.map((mesh:any)=>({
             mesh,
             token:Number(mesh.userData?.aurumGemApplicationToken??0),
