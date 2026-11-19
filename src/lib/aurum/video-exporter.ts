@@ -7,6 +7,8 @@ export type AurumVideoOptions = {
   onProgress?: ((elapsedSeconds: number, durationSeconds: number) => void) | undefined;
   /** Called before each frame is encoded; the existing AURUM viewer remains the renderer. */
   onFrame?: (elapsedSeconds: number, durationSeconds: number) => void;
+  /** DOM element whose CSS backdrop sits behind AURUM's transparent WebGL canvas. */
+  backgroundElement?: HTMLElement | null;
 };
 
 export interface AurumVideoFramePlan {
@@ -62,6 +64,53 @@ export function assertAurumVideoFrameBudget(width: number, height: number): void
   }
 }
 
+function escapeXmlAttribute(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/\"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Build a rasterizable SVG snapshot of the viewer's CSS background, including gradients and images. */
+export function createAurumCssBackgroundSvg(element: HTMLElement, width: number, height: number): string {
+  const style = window.getComputedStyle(element);
+  let backgroundColor = style.backgroundColor;
+  let backgroundImage = style.backgroundImage;
+  let backgroundSize = style.backgroundSize;
+  let backgroundPosition = style.backgroundPosition;
+  let backgroundRepeat = style.backgroundRepeat;
+  if ((!backgroundColor || backgroundColor === "rgba(0, 0, 0, 0)") && element.parentElement) {
+    const parentStyle = window.getComputedStyle(element.parentElement);
+    backgroundColor = parentStyle.backgroundColor || "#090b0e";
+    if (backgroundImage === "none") {
+      backgroundImage = parentStyle.backgroundImage;
+      backgroundSize = parentStyle.backgroundSize;
+      backgroundPosition = parentStyle.backgroundPosition;
+      backgroundRepeat = parentStyle.backgroundRepeat;
+    }
+  }
+  const css = [
+    "width:" + width + "px", "height:" + height + "px",
+    "background-color:" + (backgroundColor || "#090b0e"),
+    "background-image:" + (backgroundImage || "none"),
+    "background-size:" + (backgroundSize || "auto"),
+    "background-position:" + (backgroundPosition || "center"),
+    "background-repeat:" + (backgroundRepeat || "no-repeat"),
+  ].join(";");
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeXmlAttribute(css) + '"></div></foreignObject></svg>';
+}
+
+async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefined, width: number, height: number): Promise<HTMLImageElement | null> {
+  if (!element) return null;
+  const svg = createAurumCssBackgroundSvg(element, width, height);
+  const blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  try {
+    const image = new Image();
+    image.decoding = "async";
+    image.src = blobUrl;
+    await image.decode();
+    return image;
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
 function downloadAurumVideo(output: ArrayBuffer | Uint8Array | Blob[] | undefined): void {
   if (!output) throw new Error("El codificador terminó sin devolver un archivo de vídeo.");
   const parts: BlobPart[] = Array.isArray(output)
@@ -108,18 +157,26 @@ export async function recordAurumCanvasVideo(
   }
   assertAurumVideoFrameBudget(source.width, source.height);
 
-  const context = (source.getContext("webgl2") ?? source.getContext("webgl")) as
+  // Composite the CSS backdrop and transparent WebGL canvas into one 2D surface.
+  const webglContext = (source.getContext("webgl2") ?? source.getContext("webgl")) as
     | WebGLRenderingContext
     | WebGL2RenderingContext
     | null;
-  if (!context) {
+  if (!webglContext) {
     throw new Error("No se pudo recuperar el contexto WebGL original de AURUM para codificar el vídeo.");
   }
+  const compositeCanvas = document.createElement("canvas");
+  compositeCanvas.width = source.width;
+  compositeCanvas.height = source.height;
+  const compositeContext = compositeCanvas.getContext("2d", { alpha: false });
+  if (!compositeContext) throw new Error("No se pudo crear la superficie de composición del fondo para el vídeo.");
+  const backgroundSnapshot = await loadAurumBackgroundSnapshot(options.backgroundElement, source.width, source.height);
+  const recordingContext = compositeContext;
 
   const fps = Math.max(15, Math.min(120, Math.round(options.fps ?? 30)));
   const duration = Math.max(1, Math.min(20, Number(options.duration ?? 5)));
   const framePlan = createAurumVideoFramePlan(duration, fps);
-  const recorder = new Recorder(context, {
+  const recorder = new Recorder(recordingContext, {
     name: "aurum-render",
     duration: framePlan.length / fps,
     frameRate: fps,
@@ -150,8 +207,10 @@ export async function recordAurumCanvasVideo(
     for (const frame of framePlan) {
       if (options.signal?.aborted) throw new DOMException("Exportación cancelada.", "AbortError");
       options.onFrame?.(frame.timestampSeconds, framePlan.length / fps);
-      // onFrame renders synchronously through AURUM's real live render path.
-      // Recorder.step() immediately snapshots that canvas into a VideoFrame.
+      // Background first, then the transparent live WebGL canvas.
+      if (backgroundSnapshot) recordingContext.drawImage(backgroundSnapshot, 0, 0, compositeCanvas.width, compositeCanvas.height);
+      else recordingContext.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+      recordingContext.drawImage(source, 0, 0, compositeCanvas.width, compositeCanvas.height);
       await recorder.step();
       options.onProgress?.((frame.index + 1) / fps, framePlan.length / fps);
       // Yield to the UI between expensive encode operations so progress/cancel
