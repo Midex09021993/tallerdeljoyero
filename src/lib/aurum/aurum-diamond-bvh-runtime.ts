@@ -19,8 +19,8 @@ type RecordEntry = {
   environmentRotationOffsetRadians: number;
   environmentRotationCorrection: [number, number, number, number] | null;
   setQuality: (quality: "interactive" | "high" | "final") => void;
-  readonly tier: "micro" | "small" | "brilliant";
-  setTier: (tier: "micro" | "small" | "brilliant") => void;
+  readonly tier: "micro" | "small" | "medium" | "brilliant";
+  setTier: (tier: "micro" | "small" | "medium" | "brilliant") => void;
   dispose: () => void;
 };
 
@@ -260,7 +260,7 @@ export async function createAurumDiamondBvhRuntime(options: {
     const viewportHeight = Number(options.getViewportHeight?.() ?? 0);
     const screenTiers = viewportHeight > 1
       ? classifyAurumDiamondMeshTiers(diamondMeshes, options.camera, viewportHeight, options.calibrateSecondaryDiamonds === true)
-      : new Map<THREE.Mesh, "micro" | "small" | "brilliant">();
+      : new Map<THREE.Mesh, "micro" | "small" | "medium" | "brilliant">();
     // Infer the protected center only when one diamond is clearly larger
     // than the next candidate. This recovers Rhino/GLB models that carry no
     // explicit center marker while keeping secondary melee on physical optics.
@@ -591,7 +591,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         let currentDiamondEnvironmentIntensity = baseDiamondEnvironmentIntensity;
         let currentDiamondReflectivity = baseDiamondReflectivity;
         let currentDiamondGamma = baseDiamondGamma;
-        const applyDiamondTierOptics = (requestedTier: "micro" | "small" | "brilliant") => {
+        const applyDiamondTierOptics = (requestedTier: "micro" | "small" | "medium" | "brilliant") => {
           if (family !== "diamante" || !packageApi.setDiamondOptions) return;
           // Apply the complete tier to the BVH material, not only its dispersion.
           // The protected center always receives exact 1:1 calibrated values.
