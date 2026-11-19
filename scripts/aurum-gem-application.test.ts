@@ -934,3 +934,23 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   expect(bvhAdapter).toContain("squashFactor: Number(options.squashFactor ?? 0.98)");
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
 });
+
+
+test("switching between white diamond catalog profiles updates only live dispersion in place", () => {
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const component = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const scintillation = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+
+  expect(application).toContain("const isDiamondToDiamond =");
+  expect(application).toContain("aurumDiamondSourceDispersion:fromDispersion");
+  expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion)");
+  expect(application).toContain("protected focal diamond is intentionally excluded");
+  expect(component).toContain("const duration=260");
+  expect(component).toContain("diamondBvhRuntime?.setDiamondDispersion?.(targets,value)");
+  expect(component).toContain("!dispersionOnlySwitch");
+  expect(scintillation).toContain("uniforms.dispersion.value=dispersion*familyScale");
+  expect(scintillation).toContain("uniforms.iJewelDispersionScale.value=dispersion/0.01");
+  expect(runtime).toContain("setSourceDispersion: (nextDispersion: number)");
+  expect(runtime).toContain("setDiamondDispersion(targets, dispersion)");
+});
