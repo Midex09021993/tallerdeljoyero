@@ -32,6 +32,12 @@ try {
     if (-not $rhinoSystem) {
         throw "No se encontraron RhinoCommon.dll, Eto.dll y Rhino.UI.dll. Instala Rhino 8 o verifica su carpeta System."
     }
+    $rhinoExe = Join-Path $rhinoSystem "Rhino.exe"
+    if (-not (Test-Path $rhinoExe)) { throw "No se encontró Rhino.exe en la carpeta System de Rhino 8." }
+    $rhinoVersion = [version](Get-Item $rhinoExe).VersionInfo.FileVersion
+    if ($rhinoVersion.Major -ne 8 -or $rhinoVersion.Minor -lt 20) {
+        throw "AURUM CONECT 8 requiere Rhino 8.20 o posterior para usar el runtime .NET 8 predeterminado. Versión detectada: $rhinoVersion"
+    }
     $dotnet = Get-Command "dotnet" -ErrorAction SilentlyContinue
     if (-not $dotnet) { throw "No se encontró .NET SDK 8. Instala el SDK y vuelve a ejecutar este instalador." }
 
@@ -44,7 +50,7 @@ try {
     New-Item -ItemType Directory -Path $sharedDir -Force | Out-Null
     New-Item -ItemType Directory -Path $installDir -Force | Out-Null
 
-    $projectFiles = @("AurumConect.Rhino8.csproj", "AurumConectPlugin.cs")
+    $projectFiles = @("AurumConect.Rhino8.csproj", "AurumConectPlugin.cs", "AurumConectPanel.cs")
     foreach ($file in $projectFiles) {
         Invoke-WebRequest -Uri "$repoRoot/rhino8-aurum-conect/$file" -OutFile (Join-Path $projectDir $file) -UseBasicParsing
     }
@@ -73,7 +79,7 @@ try {
     $guide = @"
 AURUM CONECT 8 | Rhinoceros 8
 
-Complemento nativo compilado para Rhino 8 / .NET 8.
+Complemento nativo compilado para Rhino 8.20+ / .NET 8.
 Archivo: $(Join-Path $installDir "AurumConect8.rhp")
 
 INSTALACIÓN:

@@ -34,7 +34,6 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../rhino7-aurum-prototype/AurumConectPanel.cs" Link="Shared/AurumConectPanel.cs" />
     <Compile Include="../rhino7-aurum-prototype/AurumConectCommands.cs" Link="Shared/AurumConectCommands.cs" />
     <Compile Include="../rhino7-aurum-prototype/AurumConectLocalServer.cs" Link="Shared/AurumConectLocalServer.cs" />
     <Compile Include="../rhino7-aurum-prototype/AurumConectRenderWindow.cs" Link="Shared/AurumConectRenderWindow.cs" />
