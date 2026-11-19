@@ -13,7 +13,7 @@
     <Description>Conector nativo entre Rhinoceros 8 y AURUM RENDER.</Description>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <Rhino8SystemDir Condition="'$(Rhino8SystemDir)' == ''">C:\Program Files\Rhino 8\System</Rhino8SystemDir>
@@ -31,6 +31,9 @@
       <HintPath>$(Rhino8SystemDir)\Rhino.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.GuidAttribute">
+      <_Parameter1>A8E1C7B4-6F32-4D91-9A52-8C3F1B7D6240</_Parameter1>
+    </AssemblyAttribute>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
   </ItemGroup>
   <ItemGroup>

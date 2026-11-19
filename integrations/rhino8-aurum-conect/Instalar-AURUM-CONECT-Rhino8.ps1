@@ -74,7 +74,7 @@ try {
     New-Item -ItemType Directory -Path $sharedDir -Force | Out-Null
     if (-not (Test-Path $installDir)) { throw "No se encontró la carpeta oficial de complementos de Rhino 8: $installDir" }
 
-    $projectFiles = @("AurumConect.Rhino8.csproj", "AurumConectPlugin.cs", "AurumConectPanel.cs", "AurumConectAssemblyInfo.cs")
+    $projectFiles = @("AurumConect.Rhino8.csproj", "AurumConectPlugin.cs", "AurumConectPanel.cs")
     foreach ($file in $projectFiles) {
         Invoke-WebRequest -Uri "$repoRoot/rhino8-aurum-conect/$file" -OutFile (Join-Path $projectDir $file) -UseBasicParsing
     }
