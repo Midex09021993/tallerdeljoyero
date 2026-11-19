@@ -18,11 +18,8 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <Rhino8SystemDir Condition="'$(Rhino8SystemDir)' == ''">C:\Program Files\Rhino 8\System</Rhino8SystemDir>
   </PropertyGroup>
-  <!-- Rhino identifica el complemento mediante el GUID del ensamblado, no solo el GUID de la clase PlugIn. -->
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.InteropServices.GuidAttribute">
-      <_Parameter1>A8E1C7B4-6F32-4D91-9A52-8C3F1B7D6240</_Parameter1>
-    </AssemblyAttribute>
+    <Compile Include="AurumConectAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="RhinoCommon">
