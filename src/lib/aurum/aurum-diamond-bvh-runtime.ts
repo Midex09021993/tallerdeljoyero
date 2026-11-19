@@ -538,9 +538,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           // Small white melee stones need a gentle neutral energy lift so their
           // compact facets read bright instead of graphite-grey; keep colored
           // diamonds and the center stone on their existing calibrated values.
-          // White diamonds (center, SMALL and MICRO) deliberately share one
-          // optical profile. Screen tier is allowed to affect sampling stability,
-          // not radiance, dispersion, gamma or the underlying material response.
+          // White diamonds share the same base BVH material calibration.
+          // The Micro Pipeline applies a restrained dispersion multiplier only
+          // to secondary MICRO/SMALL stones; the protected center remains 1:1.
+          // Gamma, IOR, environment and the underlying material response stay fixed.
           rgbBoost: family === "diamante"
             ? (!isBlueDiamond && !isPinkDiamond ? undefined : isBlueDiamond ? [2, 2, 2] : [1.3, 1, 1])
             : undefined,
