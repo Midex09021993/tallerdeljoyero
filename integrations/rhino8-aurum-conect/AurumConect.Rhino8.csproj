@@ -34,7 +34,7 @@
     <AssemblyAttribute Include="System.Runtime.InteropServices.GuidAttribute">
       <_Parameter1>A8E1C7B4-6F32-4D91-9A52-8C3F1B7D6240</_Parameter1>
     </AssemblyAttribute>
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1938.49" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../rhino7-aurum-prototype/AurumConectCommands.cs" Link="Shared/AurumConectCommands.cs" />
