@@ -1993,6 +1993,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const target=objetivo||parteActiva;
         const isDiamondSelection=String(g?.familia??"").toLocaleLowerCase()==="diamante";
         let resolvedTargets:any[]=[];
+        let dispersionOnlySwitch=false;
         const applied=applyAurumGemToTarget(
           target,
           g,
