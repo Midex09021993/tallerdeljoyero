@@ -184,6 +184,19 @@ test("AURUM WebCodecs bitrate rejects invalid dimensions and frame rates", async
   expect(() => calculateAurumVideoBitrate(1920, 1080, 0)).toThrow(/tasa de bits válida/);
 });
 
+test("AURUM background parser keeps CSS gradients intact without SVG foreignObject", async () => {
+  const { parseAurumBackgroundLayers } = await import("../src/lib/aurum/video-exporter");
+  const layers = parseAurumBackgroundLayers("linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)");
+  expect(layers).toEqual([{ kind: "gradient", value: "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)" }]);
+});
+
+test("AURUM background parser recognizes local and embedded SVG image layers", async () => {
+  const { parseAurumBackgroundLayers } = await import("../src/lib/aurum/video-exporter");
+  const layers = parseAurumBackgroundLayers('url("/backgrounds/aurum-estudio-fotografico.svg")');
+  expect(layers).toEqual([{ kind: "image", value: "/backgrounds/aurum-estudio-fotografico.svg" }]);
+  expect(parseAurumBackgroundLayers("none")).toEqual([]);
+});
+
 test("AURUM MP4 encoder accepts standard 4K landscape and portrait frames", async () => {
   const { assertAurumVideoFrameBudget } = await import("../src/lib/aurum/video-exporter");
   expect(() => assertAurumVideoFrameBudget(3840, 2160)).not.toThrow();
