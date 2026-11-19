@@ -29,6 +29,7 @@ export function activateAurumDiamondMaterial<T = any>(material: T, preset?: Reco
   const target = material as any;
   const existing = target.userData ?? {};
   const supplied = existing.aurumIJEWELParameters ?? {};
+  const source = preset?.diamondMaterialParameters ?? {};
   const variant = String(preset?.["id"] ?? preset?.["variante"] ?? "diamante");
   const hasInclusions = Boolean(preset?.["inclusions"] ?? preset?.["inclusionDensity"]);
   target.userData = {
@@ -36,10 +37,19 @@ export function activateAurumDiamondMaterial<T = any>(material: T, preset?: Reco
     aurumIJEWELParameters: {
       ...AURUM_DIAMOND_MATERIAL_DEFAULTS,
       ...supplied,
-      // Enforce the physical diamond sodium-D refractive index; do not retain legacy 2.6 calibration metadata.
-      refractiveIndex: 2.417,
-      reflectivity: Number(supplied.reflectivity ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.reflectivity),
-      rayBounces: Math.max(1, Math.min(8, Math.floor(Number(supplied.rayBounces ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.rayBounces)))),
+      // Preserve imported DiamondMaterial values as source metadata. The physical
+      // MeshPhysicalMaterial IOR remains independently controlled by the catalog.
+      refractiveIndex: Number(source.refractiveIndex ?? supplied.refractiveIndex ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.refractiveIndex),
+      dispersion: Number(source.dispersion ?? supplied.dispersion ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.dispersion),
+      reflectivity: Number(source.reflectivity ?? supplied.reflectivity ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.reflectivity),
+      gammaFactor: Number(source.gammaFactor ?? supplied.gammaFactor ?? 1),
+      geometryFactor: Number(source.geometryFactor ?? supplied.geometryFactor ?? 0.5),
+      squashFactor: Number(source.squashFactor ?? supplied.squashFactor ?? 0.98),
+      absorptionFactor: Number(source.absorptionFactor ?? supplied.absorptionFactor ?? 1),
+      boostFactors: source.boostFactors ?? supplied.boostFactors ?? { x:1, y:1, z:1 },
+      diamondOrientedEnvMap: Number(source.diamondOrientedEnvMap ?? supplied.diamondOrientedEnvMap ?? 0),
+      environmentRotationOffset: Number(source.envMapRotationOffset ?? supplied.environmentRotationOffset ?? 0),
+      rayBounces: Math.max(1, Math.min(8, Math.floor(Number(source.rayBounces ?? supplied.rayBounces ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.rayBounces)))),
     },
     aurumIJEWELActive: true,
     aurumDiamondMaterial: {
