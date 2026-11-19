@@ -1,6 +1,6 @@
 // @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import * as THREE from "three";
-import { classifyAurumDiamondMeshTiers, getAurumDiamondProjectedDiameterPx } from "./diamond-micro-pipeline";
+import { classifyAurumDiamondMeshTiers, getAurumDiamondProjectedDiameterPx, getAurumDiamondMicroOpticalProfile } from "./diamond-micro-pipeline";
 import { resolveAurumCatalogGemBvhColor, resolveAurumEmeraldBvhProfile, resolveAurumRubyBvhProfile, resolveAurumSapphireBvhProfile } from "./aurum-gem-bvh-profiles";
 import {
   prepareAurumDiamondBvhExperiment,
@@ -569,8 +569,25 @@ export async function createAurumDiamondBvhRuntime(options: {
             : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
           ...(family === "diamante" ? { environmentRotationEuler: meshEnvironmentAlignment.rotationEuler } : {}),
         });
+        const baseDiamondDispersion = family === "diamante" ? 0.010 : prepared.diagnostics.dispersion;
+        const isProtectedCenter = () => Boolean(
+          mesh.userData?.aurumDiamondMicroCenterProtected
+          || isAurumDiamondBvhCenterTarget(mesh)
+        );
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
         let currentRayBounces = prepared.diagnostics.rayBounces;
+        let currentDiamondDispersion = baseDiamondDispersion;
+        const applyDiamondTierOptics = (requestedTier: "micro" | "small" | "brilliant") => {
+          if (family !== "diamante" || !packageApi.setDiamondOptions) return;
+          // The BVH package exposes dispersion as its chromatic-fire strength.
+          // Keep the protected center at its exact original 0.010 baseline.
+          const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;
+          const profile = getAurumDiamondMicroOpticalProfile(effectiveTier);
+          const dispersion = baseDiamondDispersion * profile.dispersionScale;
+          packageApi.setDiamondOptions(prepared.material, { dispersion });
+          currentDiamondDispersion = dispersion;
+          currentDiamondTier = effectiveTier;
+        };
         entries.set(mesh, {
           originalMaterial: mesh.material,
           experimentalMaterial: prepared.material,
@@ -583,10 +600,17 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentRotationCorrection: meshEnvironmentAlignment.correctionQuaternion,
           get tier() { return currentDiamondTier; },
           setTier: (nextTier) => {
-            if (family !== "diamante" || nextTier === currentDiamondTier) return;
-            // Tier transitions update classification diagnostics only. They do
-            // not rewrite the shared neutral-white diamond optical material.
-            currentDiamondTier = nextTier;
+            if (family !== "diamante") return;
+            const effectiveTier = isProtectedCenter() ? "brilliant" : nextTier;
+            if (effectiveTier === currentDiamondTier) return;
+            applyDiamondTierOptics(effectiveTier);
+            console.info("[AURUM][DIAMOND][BVH_MICRO_PROFILE]", {
+              mesh: mesh.name || mesh.uuid,
+              tier: currentDiamondTier,
+              centerProtected: isProtectedCenter(),
+              dispersion: currentDiamondDispersion,
+              baseDispersion: baseDiamondDispersion,
+            });
           },
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
@@ -621,6 +645,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           },
           dispose: prepared.dispose,
         });
+        // Apply the initial screen-size optical tier immediately. This is also
+        // used after Micro Pipeline is re-enabled, while protected centers remain 1:1.
+        applyDiamondTierOptics(screenTier);
         // Apply the catalog-specific quality immediately when the BVH material is
         // created. Without this call, setQuality only runs during later quality
         // transitions, leaving emeralds at the shader package's generic default.
@@ -633,7 +660,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             opticalProfile: !isBlueDiamond && !isPinkDiamond ? "white-shared-center-profile" : isBlueDiamond ? "blue-calibrated" : "pink-calibrated",
             ior: family === "diamante" ? 2.6 : prepared.diagnostics.ior,
             transmission: !isBlueDiamond && !isPinkDiamond ? 0 : 0.05,
-            dispersion: 0.010,
+            dispersion: currentDiamondDispersion,
             gamma: isPinkDiamond ? 0.90 : 1.09,
             reflectivity: 0.46,
             environmentIntensity: isPinkDiamond ? 1.25 : 1.30,
