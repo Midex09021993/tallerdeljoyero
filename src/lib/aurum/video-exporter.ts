@@ -27,6 +27,28 @@ export function createAurumVideoFramePlan(durationSeconds: number, fps: number):
   })));
 }
 
+/**
+ * canvas-record 5.5.1 passes bitrateMode into estimateBitRate's numeric
+ * motionRank slot, producing NaN. Supply a validated explicit bitrate; the
+ * library spreads encoderOptions after its faulty estimate, so this wins.
+ */
+export function calculateAurumVideoBitrate(width: number, height: number, fps: number): number {
+  const safeWidth = Math.floor(width);
+  const safeHeight = Math.floor(height);
+  const safeFps = Math.round(fps);
+  if (![safeWidth, safeHeight, safeFps].every(Number.isFinite) || safeWidth < 2 || safeHeight < 2 || safeFps < 1) {
+    throw new Error("No se pudo calcular una tasa de bits válida para el vídeo AURUM.");
+  }
+  const estimated = safeWidth * safeHeight * safeFps * 4 * 0.07 * 0.75;
+  const bitrate = estimated >= 1_000_000
+    ? Math.round(estimated / 1_000_000) * 1_000_000
+    : Math.round(estimated / 1_000) * 1_000;
+  if (!Number.isSafeInteger(bitrate) || bitrate <= 0) {
+    throw new Error("La tasa de bits calculada para el vídeo AURUM está fuera de rango.");
+  }
+  return bitrate;
+}
+
 /** H.264/WebCodecs MP4 frame limit documented by canvas-record. */
 export function assertAurumVideoFrameBudget(width: number, height: number): void {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width < 2 || height < 2) {
@@ -107,6 +129,9 @@ export async function recordAurumCanvasVideo(
     encoderOptions: {
       latencyMode: "quality",
       bitrateMode: "variable",
+      // Explicit unsigned-long-long integer avoids canvas-record 5.5.1's
+      // estimateBitRate argument-order bug (NaN passed to VideoEncoder).
+      bitrate: calculateAurumVideoBitrate(source.width, source.height, fps),
     },
   }) as unknown as {
     start(options?: { initOnly?: boolean }): Promise<void>;
