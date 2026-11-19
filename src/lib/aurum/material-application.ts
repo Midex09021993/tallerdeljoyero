@@ -46,6 +46,7 @@ const presetFromCatalog=(g:any):any=>({
   inclusions:Boolean(g.inclusionStrength>0 && g.inclusionStyle!=="ninguna"),
   inclusionDensity:Math.max(0,Math.min(1,Number(g.inclusionStrength??0))),
   inclusionType:inclusionTypeFromCatalog(g.inclusionStyle),
+  ...(g.diamondMaterialParameters ? { diamondMaterialParameters:g.diamondMaterialParameters } : {}),
 });
 
 const opticalProfileFromCatalog=(g:any)=>{
