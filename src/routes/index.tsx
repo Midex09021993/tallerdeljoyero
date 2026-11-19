@@ -665,10 +665,10 @@ function InicioPublico() {
       <section ref={demo3DSectionRef} id="aurum-render" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 760px" }} className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
           <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> ESTUDIO 3D PROFESIONAL PARA JOYEROS</p>
-            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">Mira cómo quedarán tus joyas en 3D.</h2>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Prueba acabados en oro, plata y platino. Añade gemas y cambia la luz para mostrar cada detalle.</p>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Comparte tus modelos para que tus clientes puedan verlos en el <strong>visor público 3D</strong>.</p>
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> DISEÑO CAD Y VISUALIZACIÓN PROFESIONAL</p>
+            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">Del diseño CAD a una presentación extraordinaria.</h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Convierte tus modelos de joyería en imágenes 3D de alta calidad. Explora metales, gemas e iluminación profesional con <strong>AURUM RENDER</strong>.</p>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Conecta tu flujo de diseño con nuestros complementos <strong>AURUM CONNECT para Rhino 7 y Rhino 8</strong> y lleva tus piezas directamente al estudio de visualización.</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Descubrir AURUM RENDER <ArrowRight className="size-4" /></Link>
               <Link to="/aurum-render-public" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]">Probar el visor público 3D</Link>
@@ -730,16 +730,27 @@ function InicioPublico() {
                 }
               `}</style>
               <div className="aurum-rhino-connection relative mt-3 overflow-visible rounded-xl border border-[#d4aa19]/30 bg-[#d4aa19]/[.06] p-3 pl-12 sm:p-3.5 sm:pl-14">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-white sm:text-xs">¿Diseñas con Rhino 7?</p>
-                      <p className="mt-0.5 text-[10px] leading-4 text-slate-300">Conecta Rhino con AURUM RENDER mediante nuestro plugin.</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-white/10 bg-white/[.04] p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[11px] font-bold text-white sm:text-xs">AURUM CONNECT · Rhino 7</p>
+                      <span className="rounded-full border border-[#d4aa19]/35 px-2 py-0.5 text-[9px] font-semibold text-[#f3d66e]">.RHP</span>
                     </div>
+                    <p className="text-[10px] leading-4 text-slate-300">Conecta tu entorno Rhino 7 con AURUM RENDER.</p>
+                    <Link to="/auth" className="group/rhino inline-flex min-h-8 items-center justify-center gap-2 rounded-lg bg-[#f8c928] px-3 py-2 text-[10px] font-extrabold text-[#17232d] transition-colors hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                      Conocer complemento <ArrowRight className="size-3.5 transition-transform group-hover/rhino:translate-x-0.5" />
+                    </Link>
                   </div>
-                  <Link to="/auth" className="group/rhino inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#d4aa19]/45 bg-[#f8c928] px-3.5 py-2 text-[10px] font-extrabold text-[#17232d] transition-colors hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-[11px]">
-                    Conocer el plugin <ArrowRight className="size-3.5 transition-transform group-hover/rhino:translate-x-0.5" />
-                  </Link>
+                  <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-[#d4aa19]/35 bg-[#d4aa19]/[.08] p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[11px] font-bold text-white sm:text-xs">AURUM CONNECT 8 · Rhino 8</p>
+                      <span className="rounded-full border border-[#d4aa19]/35 px-2 py-0.5 text-[9px] font-semibold text-[#f3d66e]">.RHP</span>
+                    </div>
+                    <p className="text-[10px] leading-4 text-slate-300">Complemento nativo independiente para Rhino 8.</p>
+                    <Link to="/auth" className="group/rhino inline-flex min-h-8 items-center justify-center gap-2 rounded-lg border border-[#d4aa19]/45 bg-[#f8c928] px-3 py-2 text-[10px] font-extrabold text-[#17232d] transition-colors hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                      Conocer complemento <ArrowRight className="size-3.5 transition-transform group-hover/rhino:translate-x-0.5" />
+                    </Link>
+                  </div>
                 </div>
                 <div className="pointer-events-none absolute inset-x-3 bottom-0 h-px overflow-hidden bg-white/10" aria-hidden="true">
                   <span className="aurum-rhino-connection-pulse absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-[#f8d85b] to-transparent" />
