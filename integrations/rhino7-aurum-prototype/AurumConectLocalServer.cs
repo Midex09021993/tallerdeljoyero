@@ -16,7 +16,7 @@ namespace AurumConect
     internal sealed class AurumConectLocalServer : IDisposable
     {
         private const string AllowedOrigin = "https://www.tallerdeljoyero.com";
-        private const long MaxFileBytes = 100L * 1024L * 1024L;
+        private const long MaxFileBytes = 500L * 1024L * 1024L;
         private readonly TcpListener _listener;
         private readonly string _filePath;
         private readonly string _token;
@@ -31,7 +31,7 @@ namespace AurumConect
             if (!info.Exists || !String.Equals(info.Extension, ".3dm", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Solo se puede transferir un archivo .3dm existente.");
             if (info.Length <= 0 || info.Length > MaxFileBytes)
-                throw new InvalidOperationException("El archivo supera el límite seguro de 100 MB o está vacío.");
+                throw new InvalidOperationException("El archivo supera el límite seguro de 500 MiB o está vacío.");
 
             byte[] random = new byte[32];
             using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(random);
@@ -167,20 +167,27 @@ namespace AurumConect
 
             try
             {
-                byte[] file = File.ReadAllBytes(_filePath);
-                string header = "HTTP/1.1 200 OK\r\n" +
-                    "Access-Control-Allow-Origin: " + AllowedOrigin + "\r\n" +
-                    "Vary: Origin\r\n" +
-                    "Content-Type: application/octet-stream\r\n" +
-                    "Content-Disposition: attachment; filename=\"aurum-conect.3dm\"\r\n" +
-                    "Content-Length: " + file.Length + "\r\n" +
-                    "Cache-Control: no-store, no-cache, must-revalidate\r\n" +
-                    "Pragma: no-cache\r\n" +
-                    "X-Content-Type-Options: nosniff\r\n" +
-                    "Connection: close\r\n\r\n";
+                var info = new FileInfo(_filePath);
+                string header = "HTTP/1.1 200 OK\\r\\n" +
+                    "Access-Control-Allow-Origin: " + AllowedOrigin + "\\r\\n" +
+                    "Vary: Origin\\r\\n" +
+                    "Content-Type: application/octet-stream\\r\\n" +
+                    "Content-Disposition: attachment; filename=\\"aurum-conect.3dm\\"\\r\\n" +
+                    "Content-Length: " + info.Length + "\\r\\n" +
+                    "Cache-Control: no-store, no-cache, must-revalidate\\r\\n" +
+                    "Pragma: no-cache\\r\\n" +
+                    "X-Content-Type-Options: nosniff\\r\\n" +
+                    "Connection: close\\r\\n\\r\\n";
                 byte[] headerBytesArray = Encoding.ASCII.GetBytes(header);
                 stream.Write(headerBytesArray, 0, headerBytesArray.Length);
-                stream.Write(file, 0, file.Length);
+                // Stream bounded chunks to avoid allocating a 500 MiB byte array.
+                using (var source = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    byte[] buffer = new byte[64 * 1024];
+                    int read;
+                    while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+                        stream.Write(buffer, 0, read);
+                }
                 stream.Flush();
             }
             catch (Exception)
