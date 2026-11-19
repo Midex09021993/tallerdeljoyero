@@ -516,7 +516,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const isDiamondToDiamond = String(gemConfig?.familia??"").toLowerCase()==="diamante"
     && targets.length>0
     && targets.every((part:any)=>String(part.userData?.aurumActiveGemFamily??"").toLowerCase()==="diamante");
-  if(isDiamondToDiamond && targets.some((part:any)=>Boolean(part.userData?.aurumDiamondMicroCenterProtected || part.userData?.aurumDiamondCenter || part.userData?.aurumDiamondIsCenter || /center|central|main|principal/i.test(String(part.userData?.aurumDiamondRole??""))))){
+  if(isDiamondToDiamond && targets.some((part:any)=>Boolean(
+    (part.userData?.aurumDiamondMicroCenterProtected && part.userData?.aurumDiamondCenterDetection !== "projected-size")
+    || part.userData?.aurumDiamondCenter
+    || part.userData?.aurumDiamondIsCenter
+    || /center|central|main|principal/i.test(String(part.userData?.aurumDiamondRole??""))
+  ))){
     // The protected focal diamond is intentionally excluded from secondary
     // catalog-profile switching.
     return true;
