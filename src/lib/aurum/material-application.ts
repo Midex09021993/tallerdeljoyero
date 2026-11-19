@@ -540,6 +540,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         }
         material.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??material.envMapIntensity??1));
         material.dispersion=targetDispersion;
+        material.ior=Math.max(1,Number(gemConfig?.diamondMaterialParameters?.refractiveIndex??gemConfig?.ior??material.ior??2.6));
+        material.transmission=Math.max(0,Math.min(1,Number(gemConfig?.diamondMaterialParameters?.transmission??gemConfig?.transmission??material.transmission??0)));
         material.attenuationColor?.setHex(Number(gemConfig?.attenuationColor??selectedDiamondColor));
         material.attenuationDistance=Math.max(.1,Number(gemConfig?.attenuationDistance??material.attenuationDistance??100));
         const prior=material.userData??{};
@@ -548,6 +550,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
           ...prior,
           aurumIJEWELParameters:{
             ...priorIje,
+            ...selectedDiamondParameters,
             color:selectedDiamondColor,
             dispersion:targetDispersion,
             boostFactors:selectedBoost,
