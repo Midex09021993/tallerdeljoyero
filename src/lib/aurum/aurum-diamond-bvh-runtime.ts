@@ -20,7 +20,8 @@ type RecordEntry = {
   environmentRotationCorrection: [number, number, number, number] | null;
   setQuality: (quality: "interactive" | "high" | "final") => void;
   readonly tier: "micro" | "small" | "medium" | "brilliant";
-  setTier: (tier: "micro" | "small" | "medium" | "brilliant") => void;\n  setSourceDispersion: (dispersion: number) => void;
+  setTier: (tier: "micro" | "small" | "medium" | "brilliant") => void;
+  setSourceDispersion: (dispersion: number) => void;
   dispose: () => void;
 };
 
@@ -60,7 +61,9 @@ export type AurumDiamondBvhRuntime = {
   /** O(1) membership check for already-resolved gem targets; avoids full-model diagnostics in the selection hot path. */
   hasActiveMeshes: (targets: readonly THREE.Mesh[]) => boolean;
   update: () => void;
-  updateEnvironment: (rotationRadians: number, intensityScale: number) => void;\n  /** Update only the source dispersion of existing secondary diamond BVH materials. */\n  setDiamondDispersion: (targets: readonly THREE.Mesh[], dispersion: number) => void;
+  updateEnvironment: (rotationRadians: number, intensityScale: number) => void;
+  /** Update only the source dispersion of existing secondary diamond BVH materials. */
+  setDiamondDispersion: (targets: readonly THREE.Mesh[], dispersion: number) => void;
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   /** Enable/disable one gemstone family without disturbing other BVH entries. */
@@ -653,7 +656,14 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentRotationOffsetRadians: meshEnvironmentAlignment.offsetRadians,
           environmentRotationCorrection: meshEnvironmentAlignment.correctionQuaternion,
           get tier() { return currentDiamondTier; },
-          setSourceDispersion: (nextDispersion: number) => {\n            if (family !== "diamante" || isProtectedCenter()) return;\n            const next = Math.max(0, Math.min(0.1, Number(nextDispersion) || 0));\n            if (next === baseDiamondDispersion) return;\n            baseDiamondDispersion = next;\n            applyDiamondTierOptics(currentDiamondTier);\n          },\n          setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
+          setSourceDispersion: (nextDispersion: number) => {
+            if (family !== "diamante" || isProtectedCenter()) return;
+            const next = Math.max(0, Math.min(0.1, Number(nextDispersion) || 0));
+            if (next === baseDiamondDispersion) return;
+            baseDiamondDispersion = next;
+            applyDiamondTierOptics(currentDiamondTier);
+          },
+          setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
             if (family !== "diamante") return;
             const effectiveTier = isProtectedCenter() ? "brilliant" : nextTier;
             if (effectiveTier === currentDiamondTier) return;
@@ -819,7 +829,14 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (!targets?.length) return;
       refresh(model, targets);
     },
-    setDiamondDispersion(targets, dispersion) {\n      if (disposed || !targets?.length) return;\n      const selected = new Set(targets);\n      for (const [mesh, entry] of entries) {\n        if (selected.has(mesh) && entry.family === "diamante") entry.setSourceDispersion(dispersion);\n      }\n    },\n    hasActiveMeshes(targets) {
+    setDiamondDispersion(targets, dispersion) {
+      if (disposed || !targets?.length) return;
+      const selected = new Set(targets);
+      for (const [mesh, entry] of entries) {
+        if (selected.has(mesh) && entry.family === "diamante") entry.setSourceDispersion(dispersion);
+      }
+    },
+    hasActiveMeshes(targets) {
       if (disposed || entries.size === 0 || !targets?.length) return false;
       return targets.some((mesh) => entries.has(mesh));
     },
