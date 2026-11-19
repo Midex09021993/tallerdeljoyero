@@ -9,7 +9,7 @@ import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
-import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl, AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS, AURUM_AMBIENT_PRESETS, AURUM_GEM_ENVIRONMENT_PRESETS } from "../lib/aurum-photographic-scene-engine";
+import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl, AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS, AURUM_LEGACY_HDR_PAIR_PRESETS, AURUM_GEM_ENVIRONMENT_PRESETS } from "../lib/aurum-photographic-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -1298,7 +1298,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const aplicarAmbienteCombinado = (key:string) => {
-        const preset = AURUM_AMBIENT_PRESETS[key];
+        const preset = AURUM_LEGACY_HDR_PAIR_PRESETS[key];
         if (!preset?.metalKey || !(preset.metalKey in AURUM_HDRI_URLS)) {
           console.warn("[AURUM][AMBIENT] Preset sin pareja HDR válida:", key);
           toast.error("Este ambiente no tiene una pareja HDR válida de metales y gemas.");
@@ -1331,7 +1331,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           console.error("[AURUM][AMBIENT][LOAD FAILED]", { id:key, kind, metalReady, gemReady });
           toast.error(`No se pudo completar ${preset.name}: falló el HDR de ${kind}. Se restaurará el último ambiente confirmado.`);
           const previousKey = ambienteIdRef.current;
-          if (previousKey && previousKey !== key && AURUM_AMBIENT_PRESETS[previousKey]) {
+          if (previousKey && previousKey !== key && AURUM_LEGACY_HDR_PAIR_PRESETS[previousKey]) {
             // A paired selection can finish one side before the other fails.
             // Reapply the last fully confirmed pair so the UI and renderer agree.
             aplicarAmbienteCombinado(previousKey);
@@ -1787,7 +1787,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           hint: "Compare this report with the [PATH] report after the viewer settles and with a capture using the same jewel, camera and lighting.",
         });
       }
-      const ambientInicial = AURUM_AMBIENT_PRESETS.predeterminado;
+      const ambientInicial = AURUM_LEGACY_HDR_PAIR_PRESETS.predeterminado;
       let initialMetalReady = false;
       let initialGemReady = false;
       const confirmarAmbienteInicial = () => {
@@ -5487,7 +5487,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     apiRef.current?.sombraContacto?.(config.sombraContactoVisible);
                   }
                   const ambienteGuardado = typeof config.ambienteId === "string"
-                    && Object.prototype.hasOwnProperty.call(AURUM_AMBIENT_PRESETS, config.ambienteId);
+                    && Object.prototype.hasOwnProperty.call(AURUM_LEGACY_HDR_PAIR_PRESETS, config.ambienteId);
                   if (ambienteGuardado) {
                     apiRef.current?.ambiente(config.ambienteId as string);
                   } else if (typeof config.ambienteId === "string" || config.ambienteId === null) {
