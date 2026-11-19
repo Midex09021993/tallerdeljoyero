@@ -134,6 +134,21 @@ export function createAurumCssBackgroundSvg(element: HTMLElement, width: number,
   return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeXmlAttribute(css) + '"></div></foreignObject></svg>';
 }
 
+/** Verify a decoded image is origin-clean before it ever reaches the recording canvas. */
+function assertAurumImageOriginClean(image: CanvasImageSource, width: number, height: number): void {
+  const probe = document.createElement("canvas");
+  probe.width = Math.max(2, Math.min(16, width));
+  probe.height = Math.max(2, Math.min(16, height));
+  const context = probe.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("No se pudo validar la seguridad del fondo del vídeo.");
+  try {
+    context.drawImage(image, 0, 0, probe.width, probe.height);
+    context.getImageData(0, 0, 1, 1);
+  } catch (error) {
+    throw new Error("El fondo del visor contiene una imagen externa que el navegador no autoriza a capturar. Habilita CORS en el servidor de esa imagen o utiliza un fondo local de AURUM.", { cause: error });
+  }
+}
+
 async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefined, width: number, height: number): Promise<HTMLImageElement | null> {
   if (!element) return null;
   const svg = createAurumCssBackgroundSvg(element, width, height);
@@ -151,6 +166,9 @@ async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefin
     image.decoding = "async";
     image.src = blobUrl;
     await image.decode();
+    // Validate the rasterized SVG itself: foreignObject/background-image can
+    // taint an image even when the CSS URL was fetched with CORS.
+    assertAurumImageOriginClean(image, width, height);
     return image;
   } finally {
     URL.revokeObjectURL(blobUrl);
@@ -217,14 +235,17 @@ export async function recordAurumCanvasVideo(
   if (!compositeContext) throw new Error("No se pudo crear la superficie de composición del fondo para el vídeo.");
   const backgroundSnapshot = await loadAurumBackgroundSnapshot(options.backgroundElement, source.width, source.height);
   const recordingContext = compositeContext;
-  // Fail early with a useful diagnosis if an imported image/texture has already
-  // tainted the live WebGL canvas. This avoids a late, opaque VideoFrame error.
+  // Test the exact composite (backdrop + live WebGL canvas) before passing its
+  // canvas to VideoFrame. Checking only the WebGL source misses taint introduced
+  // by a CSS/SVG background snapshot.
   try {
+    if (backgroundSnapshot) recordingContext.drawImage(backgroundSnapshot, 0, 0, compositeCanvas.width, compositeCanvas.height);
+    else recordingContext.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
     recordingContext.drawImage(source, 0, 0, compositeCanvas.width, compositeCanvas.height);
     recordingContext.getImageData(0, 0, 1, 1);
     recordingContext.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
   } catch (error) {
-    throw new Error("El canvas WebGL de AURUM contiene una textura o imagen sin permisos CORS. Revisa los recursos externos del modelo/HDRI y habilita Access-Control-Allow-Origin antes de grabar.", { cause: error });
+    throw new Error("La composición del vídeo (fondo o canvas WebGL) contiene una imagen sin permisos CORS. El fondo se valida por separado; revisa las texturas del modelo y los recursos externos del visor.", { cause: error });
   }
 
   const fps = Math.max(15, Math.min(120, Math.round(options.fps ?? 30)));
