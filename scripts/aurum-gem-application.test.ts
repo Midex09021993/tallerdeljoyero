@@ -954,6 +954,27 @@ test("white diamond profile switching updates every selected size while preservi
   expect(runtime).toContain('if (tier === "medium") return');
 });
 
+test("Diamante rosado 2 imports its .dmat profile and applies it to the protected center", () => {
+  const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+
+  expect(catalog).toContain('"diamante_rosa_2"');
+  expect(catalog).toContain('nombre:"Diamante rosado 2"');
+  expect(catalog).toContain("color:0xf1bcd5");
+  expect(catalog).toContain("envMapIntensity:1.03");
+  expect(catalog).toContain("dispersion:0.012");
+  expect(catalog).toContain("gammaFactor:1");
+  expect(catalog).toContain("reflectivity:0.5");
+  expect(catalog).toContain("refractiveIndex:2.6");
+  expect(catalog).toContain("rayBounces:5");
+  expect(catalog).toContain("boostFactors:{x:1.3,y:1,z:1}");
+  expect(application).toContain("...selectedDiamondParameters");
+  expect(application).toContain("material.ior=Math.max(1,Number(gemConfig?.diamondMaterialParameters?.refractiveIndex");
+  expect(runtime).toContain('(calibrateSecondaryDiamond || activeGemId === "diamante_rosa_2")');
+  expect(runtime).toContain('activeGemId === "diamante_rosa_2" ? 0xf1bcd5');
+});
+
 test("blue diamond catalog color survives fast switch and reaches BVH shader uniform", () => {
   const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
