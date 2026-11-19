@@ -200,6 +200,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     const [videoFps, setVideoFps] = useState("30");
   const [videoDuration, setVideoDuration] = useState("5");
   const [videoResolution, setVideoResolution] = useState<"native"|"1080"|"1440"|"4k">("native");
+  const [videoAspect, setVideoAspect] = useState<AurumAspectRatioId>("16:9");
   const [videoProgress, setVideoProgress] = useState(0);
   const videoAbortRef = useRef<AbortController | null>(null);
 
@@ -3413,7 +3414,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
-        exportVideo:async(options:{width?:number;height?:number;resolution?:"native"|"1080"|"1440"|"4k";fps?:number;duration?:number;mode?:"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
+        exportVideo:async(options:{width?:number;height?:number;aspect?:AurumAspectRatioId;resolution?:"native"|"1080"|"1440"|"4k";fps?:number;duration?:number;mode?:"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
@@ -3442,12 +3443,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
             controles.autoRotate=false;
             {
-              // AURUM video masters use a stable 16:9 landscape frame. The background
-              // is rasterized to these exact dimensions, so it fills the whole MP4.
-              const requestedLongEdge=options.resolution==="1080"?1920:options.resolution==="1440"?2560:options.resolution==="4k"?3840:Math.max(2,originalBufferWidth);
+              // Use the same five aspect presets as still-image export. Resolution
+              // defines the longest edge; the selected ratio defines the full frame.
+              const aspectId=options.aspect??"16:9";
+              const aspect=getAurumAspectRatio(aspectId);
+              const nativeDimensions=getAurumAspectDimensions(aspectId,"video");
+              const requestedLongEdge=options.resolution==="1080"?1920:options.resolution==="1440"?2560:options.resolution==="4k"?3840:Math.max(2,originalBufferWidth,originalBufferHeight);
               const longEdge=Math.min(requestedLongEdge,3840);
-              captureWidth=Math.max(2,Math.floor(longEdge/2)*2);
-              captureHeight=Math.max(2,Math.round((captureWidth*9/16)/2)*2);
+              const baseWidth=aspect>=1?longEdge:longEdge*aspect;
+              const baseHeight=aspect>=1?longEdge/aspect:longEdge;
+              captureWidth=Math.max(2,Math.round(baseWidth/2)*2);
+              captureHeight=Math.max(2,Math.round(baseHeight/2)*2);
+              // Native mode respects the viewer's available pixel budget while
+              // preserving the selected preset's exact aspect ratio.
+              if(options.resolution==="native"){
+                const nativeLongEdge=Math.min(3840,Math.max(nativeDimensions.width,nativeDimensions.height,originalBufferWidth,originalBufferHeight));
+                captureWidth=Math.max(2,Math.round((aspect>=1?nativeLongEdge:nativeLongEdge*aspect)/2)*2);
+                captureHeight=Math.max(2,Math.round((aspect>=1?nativeLongEdge/aspect:nativeLongEdge)/2)*2);
+              }
               highResolutionCapture=true;
               // Keep the existing WebGL canvas and CSS layout. Only increase its
               // drawing buffer; the same live scene and overlays render at target pixels.
@@ -6073,6 +6086,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <option value="catalog">Presentación automática de catálogo</option>
                 </select>
               </label>
+              <div>
+                <div className="mb-1.5 text-[10px] font-medium text-[#66645e]">Proporción del vídeo</div>
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                  {(["16:9","1:1","4:5","9:16","3:2"] as AurumAspectRatioId[]).map((ratio)=>(
+                    <button key={ratio} type="button" disabled={videoBusy} onClick={()=>setVideoAspect(ratio)} aria-pressed={videoAspect===ratio} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(videoAspect===ratio?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}>
+                      <span className="block font-semibold">{ratio}</span>
+                      <span className="mt-0.5 block opacity-75">{ratio==="16:9"?"Horizontal":ratio==="1:1"?"Cuadrado":ratio==="4:5"?"Catálogo vertical":ratio==="9:16"?"Historias / móvil":"Fotografía clásica"}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
               <label className="block text-[10px] text-[#66645e]">Resolución de vídeo
                 <select value={videoResolution} disabled={videoBusy} onChange={e=>setVideoResolution(e.target.value as "native"|"1080"|"1440"|"4k")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
                   <option value="native">Resolución del visor · sin reescalado</option>
@@ -6081,7 +6105,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <option value="4k">Ultra HD · 4K</option>
                 </select>
               </label>
-              <div className="rounded-lg border border-[#d4af37]/25 bg-[#d4af37]/[.06] p-2.5 text-[10px] leading-relaxed text-[#6f5b2c]">{videoResolution==="native"?"Captura directa: conserva los píxeles y la proporción actuales del canvas.":videoResolution==="1080"?"Renderiza el visor a 1920 píxeles en su lado más largo, sin estirar ni recortar.":videoResolution==="1440"?"Renderiza el visor a 2560 píxeles en su lado más largo, sin estirar ni recortar.":"Renderiza el visor a 3840 píxeles en su lado más largo, sin estirar ni recortar. Requiere más memoria y potencia GPU."} La cámara y la composición mantienen su proporción.</div>
+              <div className="rounded-lg border border-[#d4af37]/25 bg-[#d4af37]/[.06] p-2.5 text-[10px] leading-relaxed text-[#6f5b2c]">{videoResolution==="native"?"Usa el presupuesto de píxeles disponible y conserva el formato seleccionado.":videoResolution==="1080"?"Renderiza el lado más largo a 1920 píxeles.":videoResolution==="1440"?"Renderiza el lado más largo a 2560 píxeles.":"Renderiza el lado más largo a 3840 píxeles; requiere más memoria y potencia GPU."} Formato {videoAspect}:1. La cámara y el fondo ocupan todo el encuadre sin deformar la joya.</div>
               <div className="grid grid-cols-2 gap-2">
                 <label className="text-[10px] text-[#66645e]">Fotogramas por segundo
                   <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option><option value="120">120 FPS · experimental</option></select>
@@ -6121,7 +6145,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setVideoCountdown(null);
                   }
                   if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                  await apiRef.current?.exportVideo({resolution:videoResolution,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  await apiRef.current?.exportVideo({aspect:videoAspect,resolution:videoResolution,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
