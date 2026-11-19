@@ -802,7 +802,7 @@ export const setAurumDiamondSourceDispersion=(material:any,sourceDispersion:numb
   if(uniforms?.iJewelDispersionScale){
     uniforms.iJewelDispersionScale.value=dispersion/0.01;
   }
-  material.userData.aurumDiamondSourceDispersion=dispersion;
+  material.dispersion=dispersion;\n  material.userData.aurumDiamondSourceDispersion=dispersion;
   return true;
 };
 
