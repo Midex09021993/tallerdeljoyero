@@ -792,6 +792,9 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
   expect(runtime).toContain('reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46)');
   expect(runtime).toContain('calibrateSecondaryDiamonds === true');
+  expect(runtime).toContain('setSourceDispersion: (nextDispersion: number) => {');
+  expect(runtime).not.toContain('if (family !== "diamante" || isProtectedCenter()) return;');
+  expect(runtime).toContain('const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;');
   expect(runtime).toContain('gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09))');
   expect(runtime).toContain('"catalog-dmat-secondary-profile"');
   expect(runtime).toContain('const diamondSourceParameters = calibrateSecondaryDiamond');
@@ -937,6 +940,19 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
 });
 
+
+test("white diamond profile switching updates every selected size while preserving brilliant and melee tiers", () => {
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  expect(application).toContain("Catalog profile switching applies to every selected diamond");
+  expect(application).not.toContain("The protected focal diamond is intentionally excluded");
+  expect(runtime).toContain("if (family !== \"diamante\") return;");
+  expect(runtime).toContain('const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;');
+  expect(runtime).toContain("applyDiamondTierOptics(currentDiamondTier)");
+  expect(runtime).toContain('if (tier === "micro") return');
+  expect(runtime).toContain('if (tier === "small") return');
+  expect(runtime).toContain('if (tier === "medium") return');
+});
 
 test("switching between white diamond catalog profiles updates only live dispersion in place", () => {
   const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
