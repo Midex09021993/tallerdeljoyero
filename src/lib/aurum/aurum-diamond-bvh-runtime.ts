@@ -503,8 +503,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       // secondary white 1 uses 0.010 and secondary white 2 uses 0.000.
       // Other secondary diamond profiles retain their existing 0.006 baseline.
       // Secondary stones consume the exact catalog/.dmat parameters attached
-      // to their physical material. The protected center retains its approved calibration.
-      const diamondSourceParameters = calibrateSecondaryDiamond
+      // to their physical material. The protected center normally retains its
+      // approved calibration; Diamante rosado 2 is the explicit exception because
+      // its imported .dmat is the requested source calibration for every size.
+      const diamondSourceParameters = (calibrateSecondaryDiamond || activeGemId === "diamante_rosa_2")
         ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
         : null;
       let baseDiamondDispersion = family !== "diamante"
@@ -584,7 +586,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         const selectedCatalogDiamondColor = family === "diamante"
         ? Number(mesh.userData?.aurumDiamondCatalogColor
           ?? currentMaterial?.color?.getHex?.()
-          ?? (isBlueDiamond ? 0x80c3dc : isPinkDiamond ? 0xf9dfec : 0xffffff))
+          ?? (isBlueDiamond ? 0x80c3dc : activeGemId === "diamante_rosa_2" ? 0xf1bcd5 : isPinkDiamond ? 0xf9dfec : 0xffffff))
         : undefined;
       const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
