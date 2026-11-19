@@ -516,16 +516,9 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const isDiamondToDiamond = String(gemConfig?.familia??"").toLowerCase()==="diamante"
     && targets.length>0
     && targets.every((part:any)=>String(part.userData?.aurumActiveGemFamily??"").toLowerCase()==="diamante");
-  if(isDiamondToDiamond && targets.some((part:any)=>Boolean(
-    (part.userData?.aurumDiamondMicroCenterProtected && part.userData?.aurumDiamondCenterDetection !== "projected-size")
-    || part.userData?.aurumDiamondCenter
-    || part.userData?.aurumDiamondIsCenter
-    || /center|central|main|principal/i.test(String(part.userData?.aurumDiamondRole??""))
-  ))){
-    // The protected focal diamond is intentionally excluded from secondary
-    // catalog-profile switching.
-    return true;
-  }
+  // Catalog profile switching applies to every selected diamond, including
+  // the focal/large stone. Its brilliant tier remains 1:1; melee tiers keep
+  // their dedicated micro/small/medium optical multipliers.
   if(isDiamondToDiamond){
     const targetDispersion=Math.max(0,Math.min(.1,Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0)));
     const currentMaterials=targets.flatMap((part:any)=>Array.isArray(part.material)?part.material:[part.material]).filter(Boolean);
