@@ -876,3 +876,15 @@ test("public viewer applies the calibrated center white-diamond BVH optical fram
   expect(runtime).toContain("environmentIntensity: family === \"diamante\"");
   expect(runtime).toContain('opticalProfile: !isBlueDiamond && !isPinkDiamond ? "white-shared-center-profile"');
 });
+
+
+test("public viewer decodes the shared gem EXR as FloatType before BVH consumes it", () => {
+  const viewer = readFileSync("src/components/PublicCatalogViewer.tsx", "utf8");
+  expect(viewer).toContain("const loader = new EXRLoader()");
+  expect(viewer).toContain("loader.setDataType(THREE.FloatType)");
+  expect(viewer).toContain("texture.colorSpace = THREE.LinearSRGBColorSpace");
+  expect(viewer).toContain("texture.generateMipmaps = false");
+  expect(viewer).toContain("texture.minFilter = THREE.LinearFilter");
+  expect(viewer).toContain("}, () => resolveGemEnvironmentReady?.(null), true)");
+  expect(viewer).toContain("environmentRotationRadians: 0");
+});
