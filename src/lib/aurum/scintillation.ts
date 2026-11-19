@@ -218,7 +218,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       baseScintillationStrength:strength,
       facetContrast:shader.uniforms.aurumScintillationContrast,
       baseFacetContrast:contrastStrength,
-      dispersion:shader.uniforms.aurumRuntimeDispersion,\n      iJewelDispersionScale:shader.uniforms.aurumIJEWELDispersionScale,
+      dispersion:shader.uniforms.aurumRuntimeDispersion,
+      iJewelDispersionScale:shader.uniforms.aurumIJEWELDispersionScale,
       baseDispersion:(diamondTestProfile?.dispersion??baseDispersion)*familyDispersionScale,
       virtualFacetWeight:shader.uniforms.aurumDiamondMicroVirtualFacetWeight,
       baseVirtualFacetWeight:virtualFacetWeight,
@@ -802,7 +803,8 @@ export const setAurumDiamondSourceDispersion=(material:any,sourceDispersion:numb
   if(uniforms?.iJewelDispersionScale){
     uniforms.iJewelDispersionScale.value=dispersion/0.01;
   }
-  material.dispersion=dispersion;\n  material.userData.aurumDiamondSourceDispersion=dispersion;
+  material.dispersion=dispersion;
+  material.userData.aurumDiamondSourceDispersion=dispersion;
   return true;
 };
 
