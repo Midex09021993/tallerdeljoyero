@@ -1610,7 +1610,21 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             camara.updateProjectionMatrix();
           }
           const targetAspect = Number.isFinite(aspect) && Number(aspect) > 0 ? Number(aspect) : viewportAspect;
-          fitAurumCameraToAspect(camara, controles, modelo, targetAspect, 1.18);
+          // The composition frame is contained inside an 88% safe area of the
+          // live viewport. A landscape frame is often much shorter than the
+          // viewport itself; fitting only against its aspect leaves the jewel
+          // clipped vertically. Convert the frame's displayed height back to
+          // the camera's full-viewport FOV so the product fits inside the
+          // actual output rectangle, whether the overlay frame is visible or not.
+          const safeWidth = viewportWidth * 0.88;
+          const safeHeight = viewportHeight * 0.88;
+          const previewFrameWidth = Math.min(safeWidth, safeHeight * targetAspect);
+          const previewFrameHeight = previewFrameWidth / targetAspect;
+          const previewToFrameScale = previewFrameHeight > 0
+            ? viewportHeight / previewFrameHeight
+            : 1;
+          const framingMargin = THREE.MathUtils.clamp(1.18 * previewToFrameScale, 1.18, 2);
+          fitAurumCameraToAspect(camara, controles, modelo, targetAspect, framingMargin);
           camara.updateMatrixWorld(true);
           controles.update();
           diamondBvhRuntime?.update();
