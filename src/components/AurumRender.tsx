@@ -265,6 +265,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const original = snapshotAspectCameraSnapshotRef.current;
       snapshotAspectCameraSnapshotRef.current = null;
       if (original) apiRef.current?.restoreCameraState?.(original);
+      // No preset means the real viewer canvas: restore its native pixel
+      // dimensions as well as its camera framing, not the previous preset size.
+      const liveCanvas = visorRef.current?.querySelector("canvas");
+      const nativeWidth = Math.max(320, Math.round(liveCanvas?.width || 3840));
+      const nativeHeight = Math.max(320, Math.round(liveCanvas?.height || 2160));
+      setSnapshotWidth(String(nativeWidth));
+      setSnapshotHeight(String(nativeHeight));
       return;
     }
     if (!snapshotAspectCameraSnapshotRef.current) {
