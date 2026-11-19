@@ -191,17 +191,19 @@ test("catalog gem assignment shares canonical source-layer identity with materia
   expect(initial).toContain("if(!isAurumGemTarget(mesh))return;");
   expect(initial).toContain("getAurumGemLayerIdentity(mesh)");
 });
-test("selected gem paints before optional enrichment and thickness work", () => {
+test("selected gem paints before optional enrichment and diamond fast switches reapply the gem EXR", () => {
   const source = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const start = source.indexOf("export function applyAurumGemToTarget");
   const end = source.indexOf("export function clearAurumGemFromTarget", start);
   const apply = source.slice(start, end);
+  const fastPathStart = apply.indexOf("if(isDiamondToDiamond){");
+  const fastPathEnd = apply.indexOf("onTargetsResolved?.(targets.slice());", fastPathStart);
+  const fastPath = apply.slice(fastPathStart, apply.indexOf("return true;", fastPathEnd));
 
+  expect(fastPath).toContain("applyGemEnvironment(targets);");
   expect(apply.indexOf("applyGemEnvironment(targets);")).toBeGreaterThan(-1);
   expect(apply.indexOf("applyGemEnvironment(targets);")).toBeLessThan(
-    apply.indexOf("enrichmentJobs.forEach") === -1
-      ? apply.indexOf("runNextEnrichmentJob")
-      : apply.indexOf("enrichmentJobs.forEach"),
+    apply.indexOf("runNextEnrichmentJob"),
   );
   expect(apply).toContain("requestIdleCallback");
   expect(apply).toContain("buildAurumThicknessMap");
@@ -836,12 +838,10 @@ test("diamond environment compensation composes a complete 3D optical-frame quat
   expect(Math.abs(euler.x) + Math.abs(euler.z)).toBeGreaterThan(1);
 });
 
-test("Aurum gem HDRI uses the visually approved 90-degree production rotation with reversible A/B overrides", () => {
+test("Aurum gem HDRI keeps the approved 90-degree master orientation for every gemstone", () => {
   const source = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(source).toContain('get("aurumGemHdriTest")');
-  expect(source).toContain('if (value === "0") return 0;');
-  expect(source).toContain('if (value === "180") return Math.PI;');
-  expect(source).toContain("return Math.PI / 2;");
+  expect(source).toContain("const getGemHdriDiagnosticOffset = () => Math.PI / 2;");
+  expect(source).not.toContain('get("aurumGemHdriTest")');
   expect(source).toContain('mode: diagnosticOffset === Math.PI / 2 ? "C_ROTATED_90"');
   expect(source).toContain("baselineRotationRadians: baselineRotation");
   expect(source).toContain("metalEnvironmentUntouched: true");
