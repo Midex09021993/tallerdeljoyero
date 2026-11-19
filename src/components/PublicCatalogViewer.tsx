@@ -11,6 +11,7 @@ import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromCon
 import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 import { createAurumDiamondBvhRuntime } from "@/lib/aurum/aurum-diamond-bvh-runtime";
+import { getAurumGemEnvironmentProfile } from "@/lib/aurum/gem-environment";
 
 type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void };
 export const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
@@ -204,7 +205,13 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           } else if (family === "gema") {
             applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
             material.envMap = gemEnvironment ?? environment;
-            material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(), aurumGemEnvIntensity: gem.envMapIntensity };
+            // Match Aurum Render's production gem EXR orientation: global +90°
+            // plus the same small per-family correction used by its gem controller.
+            const gemEnvironmentProfile = getAurumGemEnvironmentProfile(gem.familia);
+            const gemEnvironmentRotation = Math.PI / 2 + gemEnvironmentProfile.rotationOffset;
+            if (material.envMapRotation?.set) material.envMapRotation.set(0, gemEnvironmentRotation, 0);
+            else if (material.envMapRotation) material.envMapRotation.y = gemEnvironmentRotation;
+            material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(), aurumGemEnvIntensity: gem.envMapIntensity, aurumGemEnvironmentRotation: gemEnvironmentRotation };
           }
           material.needsUpdate = true;
           return material;
@@ -703,6 +710,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         EXRLoader,
         url: getAurumGemHdriUrl("ijewelGem"),
         ...(sharedEnvironmentMap ? { environmentMap: sharedEnvironmentMap, ownsEnvironmentMap: false } : {}),
+        // Keep the public BVH diamond optics aligned with Aurum Render's
+        // production EXR orientation (90 degrees around world Y).
+        environmentRotationRadians: Math.PI / 2,
         camera,
         quality: "interactive",
         targetFamilies: [selectedFamily],
