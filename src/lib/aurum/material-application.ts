@@ -6,7 +6,7 @@ import { applyAurumIJEWELReferenceFromMaterial } from "../aurum-material-engine"
 import { createAurumGemAdapter } from "./core/gem-adapter";
 import { createAurumMetalAdapter } from "./core/metal-adapter";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
-import { applyAurumDynamicScintillation } from "./scintillation";
+import { applyAurumDynamicScintillation, setAurumDiamondSourceDispersion } from "./scintillation";
 import { activateAurumDiamondMaterial } from "./aurum-diamond-material";
 import { applyAurumInternalLightResponse } from "./internal-light-response";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
@@ -450,7 +450,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:(targets?:readonly any[])=>void,requestRender?:()=>void,applyAll=false,onTargetsResolved?:(targets:any[])=>void) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:(targets?:readonly any[])=>void,requestRender?:()=>void,applyAll=false,onTargetsResolved?:(targets:any[])=>void,onDiamondDispersionTransition?:(targets:any[],from:number,to:number)=>void) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   // GLB meshes without Rhino layer metadata are categorized as "otro".
@@ -513,6 +513,49 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
 
   // Expose the exact mesh set resolved for this assignment before materials
   // are replaced, so the transition snapshots only this gemstone/layer.
+  const isDiamondToDiamond = String(gemConfig?.familia??"").toLowerCase()==="diamante"
+    && targets.length>0
+    && targets.every((part:any)=>String(part.userData?.aurumActiveGemFamily??"").toLowerCase()==="diamante");
+  if(isDiamondToDiamond){
+    const targetDispersion=Math.max(0,Math.min(.1,Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0)));
+    const currentMaterials=targets.flatMap((part:any)=>Array.isArray(part.material)?part.material:[part.material]).filter(Boolean);
+    const fromDispersion=Number(currentMaterials[0]?.userData?.aurumIJEWELParameters?.dispersion
+      ?? currentMaterials[0]?.userData?.aurumDiamondSourceDispersion
+      ?? currentMaterials[0]?.dispersion
+      ?? targetDispersion);
+    if(currentMaterials.length){
+      targets.forEach((part:any)=>{
+        const materials=Array.isArray(part.material)?part.material:[part.material];
+        materials.forEach((material:any)=>{
+          if(!material) return;
+          material.userData={
+            ...(material.userData??{}),
+            aurumGemFamily:"Diamante",
+            aurumIJEWELParameters:{
+              ...(material.userData?.aurumIJEWELParameters??{}),
+              ...(gemConfig?.diamondMaterialParameters??{}),
+              dispersion:fromDispersion,
+            },
+            aurumDiamondPresetId:String(gemConfig?.id??""),
+            aurumDiamondSourceDispersion:fromDispersion,
+          };
+          material.dispersion=fromDispersion;
+        });
+        part.userData={
+          ...(part.userData??{}),
+          aurumGemApplicationToken:Number(part.userData?.aurumGemApplicationToken??0)+1,
+          aurumActiveGemId:String(gemConfig?.id??""),
+          aurumActiveGemFamily:"diamante",
+          aurumDiamondDispersionOnlyUpdate:true,
+        };
+      });
+      onTargetsResolved?.(targets.slice());
+      onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion);
+      applyGemEnvironment(targets);
+      requestRender?.();
+      return true;
+    }
+  }
   onTargetsResolved?.(targets.slice());
 
   const rootUserData=modelRoot.userData??{};
