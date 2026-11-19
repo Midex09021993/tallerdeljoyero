@@ -725,7 +725,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           gemId: activeGemId,
           activeGemFamily,
           originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
-          baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
+          get baseEnvironmentIntensity() { return baseDiamondEnvironmentIntensity; },
           environmentRotationOffsetRadians: meshEnvironmentAlignment.offsetRadians,
           environmentRotationCorrection: meshEnvironmentAlignment.correctionQuaternion,
           get tier() { return currentDiamondTier; },
