@@ -1198,16 +1198,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let gemEnvironmentRequestId = 0;
       let metalHdriOverride: string | null = null;
       let gemHdriOverride: string | null = null;
-      // Production calibration: 90 degrees was visually preferred in the
-      // controlled A/B/C comparison. URL overrides keep the test reversible:
-      // ?aurumGemHdriTest=0 (original), =90 or =180.
-      const getGemHdriDiagnosticOffset = () => {
-        if (typeof window === "undefined") return Math.PI / 2;
-        const value = new URLSearchParams(window.location.search).get("aurumGemHdriTest");
-        if (value === "0") return 0;
-        if (value === "180") return Math.PI;
-        return Math.PI / 2;
-      };
+      // Production master orientation for every gemstone EXR: +90 degrees.
+      // Keep this shared across all diamond sizes and catalog colors; metal HDRI
+      // is controlled independently and is intentionally not modified.
+      const getGemHdriDiagnosticOffset = () => Math.PI / 2;
       const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1, onLoaded?:()=>void, onError?:()=>void) => {
         gemEnvironmentUrl = AURUM_GEM_ENVIRONMENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
         const baselineRotation = Number.isFinite(rotation) ? rotation : .54;
