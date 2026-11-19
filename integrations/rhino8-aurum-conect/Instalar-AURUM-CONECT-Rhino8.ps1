@@ -89,14 +89,38 @@ try {
     }
 
     $project = Join-Path $projectDir "AurumConect.Rhino8.csproj"
+    # Eliminar artefactos anteriores: evita que DLL de WebView2 1.0.4314.35
+    # sobrevivan a un downgrade y se mezclen con las DLL 1.0.1938.49 del host Rhino.
+    $binDir = Join-Path $projectDir "bin"
+    $objDir = Join-Path $projectDir "obj"
+    if (Test-Path $binDir) { Remove-Item -LiteralPath $binDir -Recurse -Force }
+    if (Test-Path $objDir) { Remove-Item -LiteralPath $objDir -Recurse -Force }
+
     $buildOutput = & dotnet build $project -c Release "-p:Rhino8SystemDir=$rhinoSystem" --nologo 2>&1
     $buildOutput | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) { throw "La compilación falló. No se instaló ningún complemento." }
 
-    $builtPlugin = Join-Path $projectDir "bin\Release\net8.0-windows\AurumConect8.rhp"
+    $builtDir = Join-Path $projectDir "bin\Release\net8.0-windows"
+    $builtPlugin = Join-Path $builtDir "AurumConect8.rhp"
     if (-not (Test-Path $builtPlugin)) { throw "La compilación terminó sin generar AurumConect8.rhp." }
 
-    Get-ChildItem -LiteralPath (Split-Path $builtPlugin) -File | Where-Object {
+    $builtCore = Join-Path $builtDir "Microsoft.Web.WebView2.Core.dll"
+    if (-not (Test-Path $builtCore)) { throw "No se generó Microsoft.Web.WebView2.Core.dll junto al complemento." }
+    $webViewVersion = (Get-Item $builtCore).VersionInfo.FileVersion
+    Write-Host "WebView2 Core incluido en el paquete: $webViewVersion" -ForegroundColor Cyan
+    $rhinoCore = Join-Path $rhinoSystem "Microsoft.Web.WebView2.Core.dll"
+    if (Test-Path $rhinoCore) {
+        $rhinoWebViewVersion = (Get-Item $rhinoCore).VersionInfo.FileVersion
+        if ($webViewVersion -ne $rhinoWebViewVersion) {
+            throw "La DLL WebView2 compilada ($webViewVersion) no coincide con Rhino ($rhinoWebViewVersion). No se instalará un paquete mezclado."
+        }
+    }
+
+    # Quitar dependencias WebView2 antiguas de la carpeta del complemento antes de copiar el conjunto coherente.
+    Get-ChildItem -LiteralPath $installDir -File -Filter "Microsoft.Web.WebView2*.dll" -ErrorAction SilentlyContinue |
+        Remove-Item -Force
+
+    Get-ChildItem -LiteralPath $builtDir -File | Where-Object {
         $_.Extension -ne ".pdb" -and $_.Name -notin @("RhinoCommon.dll", "Eto.dll", "Rhino.UI.dll")
     } | Copy-Item -Destination $installDir -Force
 
