@@ -868,7 +868,7 @@ test("public viewer applies the calibrated center white-diamond BVH optical fram
 
   expect(viewer).toContain("environmentRotationRadians: Math.PI / 2");
   expect(viewer).toContain('quality: "high"');
-  expect(viewer).toContain("getViewportHeight: () => renderer.domElement.height");
+  expect(viewer).toContain("getViewportHeight: () => rendererRef.current?.domElement.height ?? hostRef.current?.clientHeight ?? 1");
   expect(viewer).toContain("diamondCenterOnly: false");
   expect(runtime).toContain('quality: family === "diamante" ? "high"');
   expect(runtime).toContain('ior: family === "diamante" ? 2.6');
