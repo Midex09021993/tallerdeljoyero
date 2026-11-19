@@ -710,9 +710,6 @@ export async function createAurumDiamondBvhRuntime(options: {
             environmentIntensity,
             reflectivity,
             gamma,
-            ...(family === "diamante" && diamondSourceParameters?.boostFactors ? {
-              rgbBoost: [Number(diamondSourceParameters.boostFactors.x ?? 1), Number(diamondSourceParameters.boostFactors.y ?? 1), Number(diamondSourceParameters.boostFactors.z ?? 1)],
-            } : {}),
           });
           currentDiamondDispersion = dispersion;
           currentDiamondEnvironmentIntensity = environmentIntensity;
