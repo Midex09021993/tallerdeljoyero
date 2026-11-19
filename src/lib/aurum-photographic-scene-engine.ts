@@ -83,19 +83,24 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
   },
 };
 
-// The gem selector intentionally exposes one calibrated HDRI only.
+// Independent gem EXR choices. Existing material profile IDs remain compatible.
 export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>={
-  // Keep legacy selector entries for saved projects, but every option resolves
-  // to the central library EXR. Tier-specific optical response lives in the
-  // diamond micro pipeline, never in a different environment asset.
-  gemUserHdr:{id:"gemUserHdr",name:"EXR central de biblioteca",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
-  gemDiamondWhite1:{id:"gemDiamondWhite1",name:"Diamante blanco 1 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
-  gemDiamondWhite2:{id:"gemDiamondWhite2",name:"Diamante blanco 2 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
-  gemDiamondWhite3:{id:"gemDiamondWhite3",name:"Diamante blanco 3 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
-  gemDiamondWhite4:{id:"gemDiamondWhite4",name:"Diamante blanco 4 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
-  gemDiamondWhite5:{id:"gemDiamondWhite5",name:"Diamante blanco 5 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
-  gemDiamondWhite6:{id:"gemDiamondWhite6",name:"Diamante blanco 6 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
-  gemDiamondWhite7:{id:"gemDiamondWhite7",name:"Diamante blanco 7 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemUserHdr:{id:"gemUserHdr",name:"02 · HDR central",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemLibrary001:{id:"gemLibrary001",name:"01 · HDR gemas",url:"/env_gem_001_b9c4533e70.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemLibrary004:{id:"gemLibrary004",name:"04 · HDR gemas",url:"/env_gem_004_13d65af3ba.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemLibrary005:{id:"gemLibrary005",name:"05 · HDR gemas",url:"/env_gem_005_314acddf6c.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemLibrary006:{id:"gemLibrary006",name:"06 · HDR gemas",url:"/env_gem_006_c9c284167f.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemLibrary007A:{id:"gemLibrary007A",name:"07A · HDR gemas",url:"/env_gem_007_a_edf3febd3c.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemLibrary007B:{id:"gemLibrary007B",name:"07B · HDR gemas",url:"/env_gem_007_b_ee3338abf6.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemLibrary007C:{id:"gemLibrary007C",name:"07C · HDR gemas",url:"/env_gem_007_c_c264662992.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  // Legacy saved IDs continue to resolve to the established central environment.
+  gemDiamondWhite1:{id:"gemDiamondWhite1",name:"Diamante blanco 1 · perfil guardado",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite2:{id:"gemDiamondWhite2",name:"Diamante blanco 2 · perfil guardado",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite3:{id:"gemDiamondWhite3",name:"Diamante blanco 3 · perfil guardado",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite4:{id:"gemDiamondWhite4",name:"Diamante blanco 4 · perfil guardado",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite5:{id:"gemDiamondWhite5",name:"Diamante blanco 5 · perfil guardado",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite6:{id:"gemDiamondWhite6",name:"Diamante blanco 6 · perfil guardado",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite7:{id:"gemDiamondWhite7",name:"Diamante blanco 7 · perfil guardado",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
 };
 
 
