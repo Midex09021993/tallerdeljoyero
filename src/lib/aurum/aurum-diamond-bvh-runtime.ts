@@ -571,6 +571,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           ...(family === "diamante" ? { environmentRotationEuler: meshEnvironmentAlignment.rotationEuler } : {}),
         });
         const baseDiamondDispersion = family === "diamante" ? 0.010 : prepared.diagnostics.dispersion;
+        const baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
+        const baseDiamondReflectivity = family === "diamante" ? 0.46 : (prepared.material as any).reflectivity ?? 0.46;
+        const baseDiamondGamma = family === "diamante" ? (isPinkDiamond ? 0.90 : 1.09) : 1.09;
         const isProtectedCenter = () => Boolean(
           mesh.userData?.aurumDiamondMicroCenterProtected
           || isAurumDiamondBvhCenterTarget(mesh)
@@ -578,15 +581,29 @@ export async function createAurumDiamondBvhRuntime(options: {
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
         let currentRayBounces = prepared.diagnostics.rayBounces;
         let currentDiamondDispersion = baseDiamondDispersion;
+        let currentDiamondEnvironmentIntensity = baseDiamondEnvironmentIntensity;
+        let currentDiamondReflectivity = baseDiamondReflectivity;
+        let currentDiamondGamma = baseDiamondGamma;
         const applyDiamondTierOptics = (requestedTier: "micro" | "small" | "brilliant") => {
           if (family !== "diamante" || !packageApi.setDiamondOptions) return;
-          // The BVH package exposes dispersion as its chromatic-fire strength.
-          // Keep the protected center at its exact original 0.010 baseline.
+          // Apply the complete tier to the BVH material, not only its dispersion.
+          // The protected center always receives exact 1:1 calibrated values.
           const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;
           const profile = getAurumDiamondMicroOpticalProfile(effectiveTier);
           const dispersion = baseDiamondDispersion * profile.dispersionScale;
-          packageApi.setDiamondOptions(prepared.material, { dispersion });
+          const environmentIntensity = baseDiamondEnvironmentIntensity * profile.environmentIntensityScale;
+          const reflectivity = baseDiamondReflectivity * profile.reflectivityScale;
+          const gamma = baseDiamondGamma * profile.gammaScale;
+          packageApi.setDiamondOptions(prepared.material, {
+            dispersion,
+            environmentIntensity,
+            reflectivity,
+            gamma,
+          });
           currentDiamondDispersion = dispersion;
+          currentDiamondEnvironmentIntensity = environmentIntensity;
+          currentDiamondReflectivity = reflectivity;
+          currentDiamondGamma = gamma;
           currentDiamondTier = effectiveTier;
         };
         entries.set(mesh, {
@@ -610,6 +627,9 @@ export async function createAurumDiamondBvhRuntime(options: {
               tier: currentDiamondTier,
               centerProtected: isProtectedCenter(),
               dispersion: currentDiamondDispersion,
+              environmentIntensity: currentDiamondEnvironmentIntensity,
+              reflectivity: currentDiamondReflectivity,
+              gamma: currentDiamondGamma,
               baseDispersion: baseDiamondDispersion,
             });
           },
@@ -806,8 +826,13 @@ export async function createAurumDiamondBvhRuntime(options: {
             )
           : { x: 0, y: THREE_NS.MathUtils.radToDeg(requestedRotation), z: 0 };
         packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, rotationEuler);
+        const tierProfile = entry.family === "diamante"
+          ? getAurumDiamondMicroOpticalProfile(entry.tier)
+          : null;
         packageApi.setDiamondOptions?.(entry.experimentalMaterial, {
-          environmentIntensity: Math.max(0, Math.min(2.5, entry.baseEnvironmentIntensity * safeScale)),
+          environmentIntensity: Math.max(0, Math.min(2.5,
+            entry.baseEnvironmentIntensity * safeScale * (tierProfile?.environmentIntensityScale ?? 1)
+          )),
         });
       }
     },
