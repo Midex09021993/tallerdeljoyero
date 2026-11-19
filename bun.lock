@@ -7783,7 +7783,8 @@
           "@ffmpeg/core": "^0.12.3",
           "@ffmpeg/core-mt": "^0.12.3"
         }
-      }
+      },
+      "sha512-ti5bsgMugNo/GYTVmYYhRC0bQbmayodOmLwS1pUM2N3h/2mGqCCrDJtNR42t9+qvV+CPX9pRUFQcTkoSpuy0OA=="
     ],
     "@ffmpeg/ffmpeg": [
       "@ffmpeg/ffmpeg@0.12.7",
