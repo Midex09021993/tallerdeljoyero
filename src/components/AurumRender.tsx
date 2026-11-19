@@ -1403,6 +1403,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // excluding those meshes from BVH. ?aurumBvhTest=off disables all.
             targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"],
             diamondCenterOnly: false,
+            // First-pass optical calibration is editor-only; the public viewer
+            // keeps its established center/secondary BVH values unchanged.
+            calibrateSecondaryDiamonds: true,
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
@@ -4614,7 +4617,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         perfMaxFrameMs=0;
       };
 
-      const diamondMicroPipeline = createAurumDiamondMicroPipeline(escena, camara, () => renderer.domElement.height);
+      const diamondMicroPipeline = createAurumDiamondMicroPipeline(escena, camara, () => renderer.domElement.height, { includeMediumTier: true });
       diamondMicroPipelineRef.current = diamondMicroPipeline;
       if (!diamondMicroEnabledRef.current) diamondMicroPipeline.setEnabled(false);
 
