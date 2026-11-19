@@ -3336,11 +3336,75 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         iluminacion:aplicarIluminacion,
         metalHdri:(key:string)=>{
           if (!(key in AURUM_HDRI_URLS)) return;
+          // Controlled isolation test: capture gem material/environment state
+          // before changing ONLY the metal HDR. This is diagnostic-only and
+          // deliberately does not touch gem materials, EXR, BVH or shaders.
+          const snapshotGemEnvironment = () => {
+            const meshes:any[] = [];
+            modelo?.traverse?.((object:any) => {
+              if (!object?.isMesh || !object.material) return;
+              const materials = Array.isArray(object.material) ? object.material : [object.material];
+              materials.forEach((material:any, index:number) => {
+                const family = String(
+                  object.userData?.aurumActiveGemFamily
+                  ?? material?.userData?.aurumGemFamily
+                  ?? material?.userData?.aurumOpticalProfile?.familia
+                  ?? "",
+                );
+                const isGem = Boolean(family || object.userData?.aurumActiveGemId
+                  || material?.userData?.aurumOpticalProfile
+                  || material?.userData?.aurumGemPhysicalModel);
+                if (!isGem) return;
+                meshes.push({
+                  mesh: String(object.name || object.uuid),
+                  materialIndex: index,
+                  family,
+                  gemId: String(object.userData?.aurumActiveGemId ?? material?.userData?.aurumActiveGemId ?? ""),
+                  envMapUuid: material?.envMap?.uuid ?? null,
+                  envMapRotation: material?.envMapRotation
+                    ? [Number(material.envMapRotation.x ?? 0), Number(material.envMapRotation.y ?? 0), Number(material.envMapRotation.z ?? 0)]
+                    : null,
+                  envMapIntensity: Number.isFinite(material?.envMapIntensity) ? material.envMapIntensity : null,
+                });
+              });
+            });
+            return {
+              gemUrl: gemEnvironmentUrl,
+              gemRotation: gemEnvironmentRotation,
+              gemIntensityScale: gemEnvironmentIntensityScale,
+              gemController: gemEnvironmentController.diagnostics?.() ?? null,
+              bvhUrl: diamondBvhRuntimeUrl,
+              bvh: diamondBvhRuntime?.diagnostics?.() ?? null,
+              meshes,
+            };
+          };
+          const beforeGemState = snapshotGemEnvironment();
           metalHdriOverride = key;
           ambienteIdRef.current = null;
           setAmbienteId(null);
           setMetalHdriId(key);
-          cargarHDRI(key);
+          console.info("[AURUM][HDR ISOLATION TEST][METAL CHANGE START]", {
+            selectedMetalKey: key,
+            metalUrl: AURUM_HDRI_URLS[key],
+            gemStateBefore: beforeGemState,
+          });
+          cargarHDRI(key, undefined, undefined, undefined, () => {
+            const afterGemState = snapshotGemEnvironment();
+            const unchanged = JSON.stringify(beforeGemState) === JSON.stringify(afterGemState);
+            console.info("[AURUM][HDR ISOLATION TEST][METAL CHANGE RESULT]", {
+              selectedMetalKey: key,
+              metalUrlActive: environmentController.currentUrl,
+              gemStateUnchanged: unchanged,
+              gemStateBefore: beforeGemState,
+              gemStateAfter: afterGemState,
+              note: unchanged
+                ? "Gem material assignments, EXR selection, rotations, intensities and BVH diagnostics remained unchanged."
+                : "Gem state changed during a metal HDR selection; compare before/after fields to locate coupling.",
+            });
+            if (!unchanged) {
+              console.warn("[AURUM][HDR ISOLATION TEST] Se detectó una variación en el estado óptico de gemas durante el cambio metálico.");
+            }
+          });
         },
         gemHdri:(key:string)=>{
           // Este control es estrictamente gem-only: nunca debe cargar ni
