@@ -394,28 +394,63 @@ export function fitAurumCameraToAspect(
   aspect: number,
   margin = 1.18,
 ) {
-  if (!Number.isFinite(aspect) || aspect <= 0) return;
+  if (!Number.isFinite(aspect) || aspect <= 0 || !model) return;
   const bounds = getAurumVisibleProductBounds(model);
   if (bounds.isEmpty()) return;
+
+  // Fit the actual visible world-space bounds against the REQUESTED output
+  // aspect, not the live canvas aspect. A bounding-sphere approximation can
+  // leave a portrait export excessively zoomed out and can hide the fact that
+  // the action was applied. Project all eight AABB corners onto the current
+  // camera's right/up axes and solve the minimum perspective distance.
   const target = bounds.getCenter(new THREE.Vector3());
-  const size = bounds.getSize(new THREE.Vector3());
-  const radius = Math.max(size.length() * 0.5, 0.01);
-  const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
-  const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-  const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
-  const distance = (radius / Math.sin(limitingHalfFov)) * Math.max(1, margin);
+  const corners = [
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+  ];
   const direction = camera.position.clone().sub(controls.target);
   if (direction.lengthSq() < 1e-8) direction.set(0, 0, 1);
   direction.normalize();
+
+  camera.updateMatrixWorld(true);
+  const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).normalize();
+  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion).normalize();
+  const halfVerticalFov = Math.atan(
+    Math.tan(THREE.MathUtils.degToRad(camera.fov) * 0.5) / Math.max(camera.zoom, 1e-6),
+  );
+  const halfHorizontalFov = Math.atan(Math.tan(halfVerticalFov) * aspect);
+  const tanVertical = Math.max(Math.tan(halfVerticalFov), 1e-6);
+  const tanHorizontal = Math.max(Math.tan(halfHorizontalFov), 1e-6);
+
+  let requiredDistance = 0;
+  for (const corner of corners) {
+    const relative = corner.clone().sub(target);
+    const depthOffset = relative.dot(direction);
+    const horizontal = Math.abs(relative.dot(right));
+    const vertical = Math.abs(relative.dot(up));
+    requiredDistance = Math.max(
+      requiredDistance,
+      depthOffset + horizontal / tanHorizontal,
+      depthOffset + vertical / tanVertical,
+    );
+  }
+
+  const safeMargin = Number.isFinite(margin) ? THREE.MathUtils.clamp(margin, 1, 2) : 1.18;
+  const distance = Math.max(requiredDistance * safeMargin, 0.01);
   controls.target.copy(target);
   camera.position.copy(target).addScaledVector(direction, distance);
-  // Do not change the live viewport's projection aspect when the user is only
-  // previewing a different output ratio. The renderer canvas may still be
-  // landscape; forcing a portrait camera aspect here visibly stretches the
-  // jewel in that landscape canvas. Exporters set their own aspect before
-  // calling this helper, so preserving camera.aspect also keeps export correct.
+  // Keep camera.aspect tied to the live canvas. The requested output aspect is
+  // used only for framing; changing projection aspect here would distort the
+  // live preview whenever the output is portrait or square.
   camera.lookAt(target);
   camera.updateProjectionMatrix();
+  camera.updateMatrixWorld(true);
   controls.update();
 }
 
