@@ -137,8 +137,11 @@ export function createAurumCssBackgroundSvg(element: HTMLElement, width: number,
 async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefined, width: number, height: number): Promise<HTMLImageElement | null> {
   if (!element) return null;
   const svg = createAurumCssBackgroundSvg(element, width, height);
-  const backgroundImage = window.getComputedStyle(element).backgroundImage;
-  const safeBackgroundImage = await inlineAurumCssBackgroundImages(backgroundImage);
+  let backgroundImage = window.getComputedStyle(element).backgroundImage;
+  if ((!backgroundImage || backgroundImage === "none") && element.parentElement) {
+    backgroundImage = window.getComputedStyle(element.parentElement).backgroundImage;
+  }
+  const safeBackgroundImage = await inlineAurumCssBackgroundImages(backgroundImage || "none");
   const safeSvg = backgroundImage === safeBackgroundImage
     ? svg
     : svg.replace(escapeXmlAttribute(backgroundImage), escapeXmlAttribute(safeBackgroundImage));
