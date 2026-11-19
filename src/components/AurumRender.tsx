@@ -3789,6 +3789,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const height=isPoster
             ? Math.max(1,Math.round(width*originalBufferHeight/originalBufferWidth))
             : requestedHeight;
+          if(!isPoster) {
+            const gl=renderer.getContext();
+            const maxTextureSize=Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)||0);
+            const maxRenderbufferSize=Number(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)||0);
+            if(width>maxTextureSize||height>maxTextureSize||width>maxRenderbufferSize||height>maxRenderbufferSize) {
+              throw new Error("La GPU de este equipo no admite esta resolución. Prueba 4K o utiliza una GPU con mayor capacidad.");
+            }
+          }
           if(!isPoster && width*height>36_000_000) {
             throw new Error("La imagen supera 36 megapíxeles. Reduce las dimensiones para proteger la memoria.");
           }
