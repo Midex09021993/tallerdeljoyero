@@ -197,9 +197,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [videoBusy, setVideoBusy] = useState(false);
   const [videoCountdown, setVideoCountdown] = useState<number | null>(null);
   const [videoMode, setVideoMode] = useState<"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog">("automatic");
-  const [videoWidth, setVideoWidth] = useState("1280");
-  const [videoAspect, setVideoAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
-  const [videoFps, setVideoFps] = useState("30");
+    const [videoFps, setVideoFps] = useState("30");
   const [videoDuration, setVideoDuration] = useState("5");
   const [videoProgress, setVideoProgress] = useState(0);
   const videoAbortRef = useRef<AbortController | null>(null);
@@ -6004,7 +6002,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {exportBusy&&<div className="mt-3 rounded-lg border border-[#7168f4]/20 bg-white p-3" role="status" aria-live="polite"><div className="mb-2 flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-[#292824]">Renderizando imagen de alta resolución</span><RotateCw className="size-4 animate-spin" /><span className="text-[#7168f4]">En proceso</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e8e6f8]"><div className="h-full w-1/3 rounded-full bg-[#7168f4]"/></div><p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">La captura está procesando las facetas del diamante. La interfaz puede quedar temporalmente ocupada.</p></div>}
           </div>}
           <div className="rounded-xl border border-[#d4af37]/35 bg-[#fffaf0]/70 p-3">
-            <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>{const next=!v;setVideoAspect(null);if(next)setSnapshotOpen(false);return next;})} className="flex w-full items-center gap-2.5 text-left">
+            <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>{const next=!v;if(next)setSnapshotOpen(false);return next;})} className="flex w-full items-center gap-2.5 text-left">
               <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#d4af37]/15 text-[#92743b]"><RotateCw className="size-4"/></span>
               <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Vídeo de giro de joya</span><span className="block text-[10px] text-[#77756f]">Captura en vivo · MP4</span></span>
               <ChevronDown className={"size-4 transition-transform "+(videoOpen?"rotate-180":"")}/>
@@ -6021,12 +6019,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <option value="catalog">Presentación automática de catálogo</option>
                 </select>
               </label>
-              <div><div className="mb-1 text-[10px] text-[#66645e]">Proporción del vídeo</div><div className="grid grid-cols-3 gap-1.5">{([["16:9","Horizontal"],["1:1","Cuadrado"],["4:5","Catálogo vertical"],["9:16","Historias / móvil"],["3:2","Clásica"]] as const).map(([ratio,label])=><button key={ratio} type="button" disabled={videoBusy} onClick={()=>setVideoAspect(current=>current===ratio?null:ratio)} aria-pressed={videoAspect===ratio} className={"rounded-lg border px-2 py-1.5 text-left text-[10px] "+(videoAspect===ratio?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}><span className="block font-semibold">{ratio}</span><span className="mt-0.5 block opacity-75">{label}</span></button>)}</div></div>
-              <label className="block text-[10px] text-[#66645e]">Resolución
-                <select value={videoWidth} disabled={videoBusy} onChange={e=>setVideoWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
-                  <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option><option value="2560">QHD · 2560 × 1440</option><option value="3840">4K UHD · 3840 × 2160</option>
-                </select>
-              </label>
+              <div className="rounded-lg border border-[#d4af37]/25 bg-[#d4af37]/[.06] p-2.5 text-[10px] leading-relaxed text-[#6f5b2c]">Captura fiel del visor: el vídeo conserva exactamente la resolución y proporción actuales del canvas. No se cambia la cámara, no se escala ni se recorta la imagen.</div>
               <div className="grid grid-cols-2 gap-2">
                 <label className="text-[10px] text-[#66645e]">Fotogramas por segundo
                   <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option><option value="120">120 FPS · experimental</option></select>
@@ -6066,19 +6059,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setVideoCountdown(null);
                   }
                   if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                  const selectedVideoBase=Math.max(320,Math.min(3840,Number(videoWidth)||1280));
-                  const selectedVideoId=videoAspect??"16:9";
-                  const selectedVideoProfile=AURUM_ASPECT_RATIOS[selectedVideoId];
-                  // Scale the canonical integer ratio, not a floating-point ratio.
-                  // This keeps all five formats exact (including 3:2) and dimensions even.
-                  const profileGcd=(a:number,b:number):number=>b===0?a:profileGcd(b,a%b);
-                  const ratioUnit=profileGcd(selectedVideoProfile.videoWidth,selectedVideoProfile.videoHeight);
-                  const ratioWidth=selectedVideoProfile.videoWidth/ratioUnit;
-                  const ratioHeight=selectedVideoProfile.videoHeight/ratioUnit;
-                  const ratioScale=Math.max(1,Math.floor(selectedVideoBase/Math.max(ratioWidth,ratioHeight)));
-                  const selectedVideoWidth=ratioWidth*ratioScale;
-                  const selectedVideoHeight=ratioHeight*ratioScale;
-                  await apiRef.current?.exportVideo({width:selectedVideoWidth,height:selectedVideoHeight,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  await apiRef.current?.exportVideo({fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
