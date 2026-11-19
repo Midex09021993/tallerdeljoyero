@@ -168,16 +168,16 @@ namespace AurumConect
             try
             {
                 var info = new FileInfo(_filePath);
-                string header = "HTTP/1.1 200 OK\\r\\n" +
-                    "Access-Control-Allow-Origin: " + AllowedOrigin + "\\r\\n" +
-                    "Vary: Origin\\r\\n" +
-                    "Content-Type: application/octet-stream\\r\\n" +
-                    "Content-Disposition: attachment; filename=\\"aurum-conect.3dm\\"\\r\\n" +
-                    "Content-Length: " + info.Length + "\\r\\n" +
-                    "Cache-Control: no-store, no-cache, must-revalidate\\r\\n" +
-                    "Pragma: no-cache\\r\\n" +
-                    "X-Content-Type-Options: nosniff\\r\\n" +
-                    "Connection: close\\r\\n\\r\\n";
+                string header = "HTTP/1.1 200 OK\r\n" +
+                    "Access-Control-Allow-Origin: " + AllowedOrigin + "\r\n" +
+                    "Vary: Origin\r\n" +
+                    "Content-Type: application/octet-stream\r\n" +
+                    "Content-Disposition: attachment; filename=\"aurum-conect.3dm\"\r\n" +
+                    "Content-Length: " + info.Length + "\r\n" +
+                    "Cache-Control: no-store, no-cache, must-revalidate\r\n" +
+                    "Pragma: no-cache\r\n" +
+                    "X-Content-Type-Options: nosniff\r\n" +
+                    "Connection: close\r\n\r\n";
                 byte[] headerBytesArray = Encoding.ASCII.GetBytes(header);
                 stream.Write(headerBytesArray, 0, headerBytesArray.Length);
                 // Stream bounded chunks to avoid allocating a 500 MiB byte array.
