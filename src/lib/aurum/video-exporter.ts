@@ -106,10 +106,10 @@ function parseAurumGradientStop(stop: string): { color: string; position: number
 function paintAurumCssGradient(context: CanvasRenderingContext2D, css: string, width: number, height: number): boolean {
   const match = css.match(/^(linear|radial)-gradient\((.*)\)$/i);
   if (!match) return false;
-  const args = splitCssArguments(match[2]);
+  const args = splitCssArguments(match[2] ?? "");
   if (args.length < 2) return false;
-  const isRadial = match[1].toLowerCase() === "radial";
-  let descriptor = args[0];
+  const isRadial = (match[1] ?? "").toLowerCase() === "radial";
+  let descriptor: string = args[0] ?? "";
   let stopsInput = args;
   if (/^(?:to\s|[-+]?\d)/i.test(descriptor) || /^(?:circle|ellipse|closest|farthest)/i.test(descriptor)) stopsInput = args.slice(1);
   else descriptor = "180deg";
@@ -275,7 +275,7 @@ export async function recordAurumCanvasVideo(
   const fps = Math.max(15, Math.min(120, Math.round(options.fps ?? 30)));
   const duration = Math.max(1, Math.min(20, Number(options.duration ?? 5)));
   const framePlan = createAurumVideoFramePlan(duration, fps);
-  const recorder = new Recorder(recordingContext, {
+  const recorder = new Recorder(recordingContext as unknown as WebGLRenderingContext, {
     name: "aurum-render",
     duration: framePlan.length / fps,
     frameRate: fps,

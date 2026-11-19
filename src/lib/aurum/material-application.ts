@@ -724,7 +724,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       next.color?.setHex(diamondColor);
       const sourceDiamondParameters=gemConfig?.diamondMaterialParameters??preset.diamondMaterialParameters;
       if(sourceDiamondParameters){
-        const currentDiamondParameters=next.userData?.aurumIJEWELParameters??{};
+        const currentDiamondParameters=next.userData?.["aurumIJEWELParameters"]??{};
         next.userData={
           ...(next.userData??{}),
           aurumIJEWELParameters:{
