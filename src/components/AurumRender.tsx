@@ -3606,16 +3606,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   camara.lookAt(controles.target);
                   controles.update?.();
                 }
-                // Freeze the temporal-motion profile for this sample. Each output
-                // frame gets a full settled accumulation before it is encoded.
+                // Preserve the requested output pixel dimensions. The expensive
+                // part was waiting 32 display frames for EVERY encoded frame,
+                // even when temporal diamond TAA was disabled. Only run the full
+                // 32-sample convergence when that specific quality option is active.
                 setTemporalMotion?.(false);
                 setDiamondSupersamplingSettled?.(true);
                 controles.update?.();
-                loop?.converge?.(32);
-                // Deliberately trade export time for image quality: wait for 32
-                // real display frames so diamond TAA and the photographic pipeline
-                // can accumulate before canvas-record snapshots this sample.
-                for(let sample=0;sample<32;sample++){
+                const diamondTaaActiveForExport = Boolean(
+                  getAurumPostControls().diamondTaaEnabled
+                  && idleTaaPass?.enabled
+                  && diamondTaaSavePass?.enabled
+                  && diamondTaaCompositePass?.enabled
+                );
+                const progressiveFrameBudget = Math.max(
+                  1,
+                  Math.min(4, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 2))),
+                );
+                const settleFrames = diamondTaaActiveForExport ? 32 : progressiveFrameBudget;
+                loop?.converge?.(settleFrames);
+                // Wait only for the active quality pipeline to settle. Resolution
+                // is unchanged; non-TAA exports no longer burn 32 RAFs per frame.
+                for(let sample=0;sample<settleFrames;sample++){
                   await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
                 }
                 loop?.renderNow?.();
