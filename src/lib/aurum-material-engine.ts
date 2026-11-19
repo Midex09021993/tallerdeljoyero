@@ -18,6 +18,7 @@ export type AurumGemPreset = {
   ior:number; roughness:number; envMapIntensity:number; attenuationColor:number;
   attenuationDistance:number; dispersion:number; iridescence:number; thicknessScale:number;
   inclusions:boolean; inclusionDensity:number; inclusionType?:AurumInclusionType;
+  diamondMaterialParameters?: { envMapIndex:number; envMapRotationOffset:number; dispersion:number; squashFactor:number; geometryFactor:number; gammaFactor:number; absorptionFactor:number; reflectivity:number; refractiveIndex:number; rayBounces:number; diamondOrientedEnvMap:number; boostFactors:{x:number;y:number;z:number} };
 };
 
 export type AurumInclusionType =
