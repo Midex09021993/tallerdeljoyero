@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <TargetExt>.rhp</TargetExt>
+    <AssemblyName>AurumConect8</AssemblyName>
+    <RootNamespace>AurumConect</RootNamespace>
+    <Version>1.0.0</Version>
+    <Company>Taller del Joyero</Company>
+    <Product>AURUM CONECT 8</Product>
+    <Description>Conector nativo entre Rhinoceros 8 y AURUM RENDER.</Description>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <Rhino8SystemDir Condition="'$(Rhino8SystemDir)' == ''">C:\Program Files\Rhino 8\System</Rhino8SystemDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>$(Rhino8SystemDir)\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Eto">
+      <HintPath>$(Rhino8SystemDir)\Eto.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Rhino.UI">
+      <HintPath>$(Rhino8SystemDir)\Rhino.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../rhino7-aurum-prototype/AurumConectPanel.cs" Link="Shared/AurumConectPanel.cs" />
+    <Compile Include="../rhino7-aurum-prototype/AurumConectCommands.cs" Link="Shared/AurumConectCommands.cs" />
+    <Compile Include="../rhino7-aurum-prototype/AurumConectLocalServer.cs" Link="Shared/AurumConectLocalServer.cs" />
+    <Compile Include="../rhino7-aurum-prototype/AurumConectRenderWindow.cs" Link="Shared/AurumConectRenderWindow.cs" />
+  </ItemGroup>
+</Project>
