@@ -779,9 +779,16 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         setGemOpticsLoading(false);
         return;
       }
+      const protectedCenterDiamonds: string[] = [];
+      model.traverse((object: any) => {
+        if (object.isMesh && object.userData?.aurumDiamondMicroCenterProtected) {
+          protectedCenterDiamonds.push(String(object.name || object.uuid));
+        }
+      });
       console.info("[PUBLIC VIEWER][BVH READY]", {
         selectedFamily,
         selectedGemId: gemId,
+        protectedCenterDiamonds,
         ...bvhDiagnostics,
       });
       diamondBvhRuntimeRef.current = runtime;
