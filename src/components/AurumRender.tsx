@@ -994,10 +994,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       (!grupoPredeterminado || mostrarTodasGemas || principales.has(g.id)) &&
       (!termino || (g.nombre + " " + g.id + " " + g.familia + " " + (g.origen ?? "")).toLocaleLowerCase("es").includes(termino))
     ).sort((a, b) => {
-      // Mantener el Diamante Azul al final de la familia, sin alterar el orden de otras gemas.
+      // Orden fijo de la familia Diamante: los dos perfiles blancos primero.
+      // El orden no depende del nombre visible ni de la prioridad de predeterminadas.
       if (a.familia === "Diamante" && b.familia === "Diamante") {
-        if (a.id === "diamante_azul") return 1;
-        if (b.id === "diamante_azul") return -1;
+        const ordenDiamante: Record<string, number> = {
+          diamante_natural: 0,
+          diamante_vs: 1,
+          diamante_inclusiones: 2,
+          diamante_rosa: 3,
+          diamante_azul: 4,
+        };
+        return (ordenDiamante[a.id] ?? 99) - (ordenDiamante[b.id] ?? 99);
       }
       return Number(principales.has(b.id)) - Number(principales.has(a.id)) || a.nombre.localeCompare(b.nombre, "es");
     });
