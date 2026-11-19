@@ -14,7 +14,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth, getAurumVisibleProductBounds } from "../lib/aurum/camera";
+import { applyAurumCameraSnapshot, applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth, getAurumVisibleProductBounds } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { getAurumPostControls, setAurumPostControls, subscribeAurumPostControls, type AurumPostControls } from "../lib/aurum/post-engine-controls";
@@ -2862,34 +2862,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           return true;
         },
         apply: (snapshot: any) => {
-          if (!snapshot || !Array.isArray(snapshot.position) || !Array.isArray(snapshot.quaternion) || !Array.isArray(snapshot.target)) return false;
-          if (modelo && Array.isArray(snapshot.normalizedPosition) && Array.isArray(snapshot.normalizedTarget)) {
-            modelo.updateWorldMatrix(true, true);
-            const currentBounds = getAurumVisibleProductBounds(modelo);
-            if (!currentBounds.isEmpty()) {
-              const currentSphere = currentBounds.getBoundingSphere(new THREE.Sphere());
-              const scale = Math.max(currentSphere.radius, 1e-6);
-              camara.position.fromArray(snapshot.normalizedPosition).multiplyScalar(scale).add(currentSphere.center);
-              controles.target.fromArray(snapshot.normalizedTarget).multiplyScalar(scale).add(currentSphere.center);
-            } else {
-              camara.position.fromArray(snapshot.position);
-              controles.target.fromArray(snapshot.target);
-            }
-          } else {
-            // Backward compatibility for calibration snapshots captured before normalization.
-            camara.position.fromArray(snapshot.position);
-            controles.target.fromArray(snapshot.target);
-          }
-          camara.quaternion.fromArray(snapshot.quaternion);
-          if (Array.isArray(snapshot.up)) camara.up.fromArray(snapshot.up);
-          if (Number.isFinite(snapshot.fov)) camara.fov = snapshot.fov;
-          if (Number.isFinite(snapshot.aspect) && snapshot.aspect > 0) camara.aspect = snapshot.aspect;
-          if (Number.isFinite(snapshot.zoom) && snapshot.zoom > 0) camara.zoom = snapshot.zoom;
-          if (Number.isFinite(snapshot.near) && snapshot.near > 0) camara.near = snapshot.near;
-          if (Number.isFinite(snapshot.far) && snapshot.far > camara.near) camara.far = snapshot.far;
-          camara.updateProjectionMatrix();
-          camara.updateMatrixWorld(true);
-          controles.update();
+          const canvas = renderer.domElement as HTMLCanvasElement;
+          const viewportRect = canvas.getBoundingClientRect?.();
+          const viewportWidth = Number(viewportRect?.width) || Number(canvas.clientWidth) || 0;
+          const viewportHeight = Number(viewportRect?.height) || Number(canvas.clientHeight) || 0;
+          const applied = applyAurumCameraSnapshot(
+            camara,
+            controles,
+            modelo,
+            snapshot,
+            viewportWidth,
+            viewportHeight,
+          );
+          if (!applied) return false;
           resetTemporalAccumulationRef.current?.();
           viewerLoopRef.current?.invalidate?.();
           invalidateRenderRef.current?.();
