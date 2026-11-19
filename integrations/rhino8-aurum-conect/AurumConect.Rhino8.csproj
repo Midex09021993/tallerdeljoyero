@@ -31,7 +31,7 @@
       <HintPath>$(Rhino8SystemDir)\Rhino.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../rhino7-aurum-prototype/AurumConectCommands.cs" Link="Shared/AurumConectCommands.cs" />
