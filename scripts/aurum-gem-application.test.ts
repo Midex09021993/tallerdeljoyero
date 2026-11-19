@@ -866,7 +866,7 @@ test("public viewer applies the calibrated center white-diamond BVH optical fram
   const viewer = readFileSync("src/components/PublicCatalogViewer.tsx", "utf8");
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
 
-  expect(viewer).toContain("environmentRotationRadians: 0");
+  expect(viewer).toContain("environmentRotationRadians: Math.PI / 2");
   expect(viewer).toContain('quality: "high"');
   expect(viewer).toContain("getViewportHeight: () => renderer.domElement.height");
   expect(viewer).toContain("diamondCenterOnly: false");
@@ -886,5 +886,5 @@ test("public viewer decodes the shared gem EXR as FloatType before BVH consumes 
   expect(viewer).toContain("texture.generateMipmaps = false");
   expect(viewer).toContain("texture.minFilter = THREE.LinearFilter");
   expect(viewer).toContain("}, () => resolveGemEnvironmentReady?.(null), true)");
-  expect(viewer).toContain("environmentRotationRadians: 0");
+  expect(viewer).toContain("environmentRotationRadians: Math.PI / 2");
 });
