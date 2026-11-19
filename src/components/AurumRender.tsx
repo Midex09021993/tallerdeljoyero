@@ -260,11 +260,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [liveDofStrength, setLiveDofStrength] = useState<"soft"|"medium"|"strong">("soft");
   const [snapshotGuide, setSnapshotGuide] = useState<"none"|"thirds"|"complete">("none");
   const [snapshotAspect, setSnapshotAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
+  const [snapshotResolution, setSnapshotResolution] = useState<"4k"|"8k">("4k");
   const syncSnapshotNativeDimensions = () => {
     // The editor canvas is narrowed by the export sidebar; when no aspect
     // preset is active, use a clean full-screen 16:9 4K UHD output instead.
-    setSnapshotWidth("3840");
-    setSnapshotHeight("2160");
+    const longEdge = snapshotResolution === "8k" ? 7680 : 3840;
+    setSnapshotWidth(String(longEdge));
+    setSnapshotHeight(String(Math.round(longEdge * 9 / 16)));
   };
   const handleSnapshotAspect = (ratio: "16:9"|"1:1"|"4:5"|"9:16"|"3:2") => {
     if (snapshotAspect === ratio) {
@@ -3776,20 +3778,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalClearAlpha=renderer.getClearAlpha();
           const width=isPoster
             ? Math.max(1,Math.min(640,Math.round(Number(options.width)||640)))
-            : Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
-          const requestedHeight=Math.max(320,Math.min(4096,Math.round(Number(options.height)||2160)));
+            : Math.max(320,Math.min(8192,Math.round(Number(options.width)||3840)));
+          const requestedHeight=Math.max(320,Math.min(8192,Math.round(Number(options.height)||2160)));
           const height=isPoster
             ? Math.max(1,Math.round(width*originalBufferHeight/originalBufferWidth))
             : requestedHeight;
-          if(!isPoster && width*height>12_000_000) {
-            throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
+          if(!isPoster && width*height>36_000_000) {
+            throw new Error("La imagen supera 36 megapíxeles. Reduce las dimensiones para proteger la memoria.");
           }
           // PNG capture gets a dedicated supersampling budget: render the
           // faceted diamond above output resolution, then downsample exactly once.
           // Keep the delivered file capped at 12 MP, but allow the temporary
           // WebGL buffer up to 16 MP so small facet edges receive more samples.
           // This affects only still PNG/JPEG/WebP capture, never live orbiting.
-          const renderScale=isPoster?1:Math.min(1.4,Math.sqrt(16_000_000/(width*height)));
+          const renderScale=isPoster?1:(width*height>12_000_000?1:Math.min(1.4,Math.sqrt(16_000_000/(width*height))));
           const renderWidth=Math.max(width,Math.floor(width*renderScale));
           const renderHeight=Math.max(height,Math.floor(height*renderScale));
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
@@ -6197,8 +6199,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             <div className="mt-2"><div className="mb-1 text-[10px] font-medium text-[#66645e]">Guías de composición</div><div className="grid grid-cols-3 gap-1.5"><button type="button" onClick={()=>setSnapshotGuide("none")} aria-pressed={snapshotGuide==="none"} className={"rounded-lg border px-2 py-1.5 text-[10px] "+(snapshotGuide==="none"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}>Sin guías</button><button type="button" onClick={()=>setSnapshotGuide("thirds")} aria-pressed={snapshotGuide==="thirds"} className={"rounded-lg border px-2 py-1.5 text-[10px] "+(snapshotGuide==="thirds"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}>Tercios</button><button type="button" onClick={()=>setSnapshotGuide("complete")} aria-pressed={snapshotGuide==="complete"} className={"rounded-lg border px-2 py-1.5 text-[10px] "+(snapshotGuide==="complete"?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}>Completa</button></div></div>
             <div className="mb-1.5 text-[10px] text-[#66645e]">También puedes ajustar las dimensiones manualmente.</div>
             <div className="grid grid-cols-2 gap-2">
-              <label className="text-[10px] text-[#66645e]">Ancho (px)<input type="number" min={320} max={4096} step={160} value={snapshotWidth} onChange={e=>setSnapshotWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
-              <label className="text-[10px] text-[#66645e]">Alto (px)<input type="number" min={320} max={4096} step={120} value={snapshotHeight} onChange={e=>setSnapshotHeight(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
+              <label className="text-[10px] text-[#66645e]">Ancho (px)<input type="number" min={320} max={8192} step={160} value={snapshotWidth} onChange={e=>setSnapshotWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
+              <label className="text-[10px] text-[#66645e]">Alto (px)<input type="number" min={320} max={8192} step={120} value={snapshotHeight} onChange={e=>setSnapshotHeight(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
             </div>
             <label className="mt-2 block text-[10px] text-[#66645e]">Formato
               <select value={snapshotFormat} onChange={e=>setSnapshotFormat(e.target.value as "png"|"jpeg"|"webp")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]">
