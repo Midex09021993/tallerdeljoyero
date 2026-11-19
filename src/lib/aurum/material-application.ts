@@ -681,10 +681,33 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       next.needsUpdate=true;
     }
     if(preset.familia==="Diamante"){
+      // The shared diamond reference optics are calibrated against a white
+      // brilliant and can overwrite the selected catalog hue. Re-apply the
+      // selected profile color after reference optics, without changing the
+      // protected diamond shader/BVH pipeline.
+      const diamondColor=Number(gemConfig?.color??preset.color??0xffffff);
+      next.color?.setHex(diamondColor);
+      const sourceDiamondParameters=gemConfig?.diamondMaterialParameters??preset.diamondMaterialParameters;
+      if(sourceDiamondParameters){
+        const currentDiamondParameters=next.userData?.aurumIJEWELParameters??{};
+        next.userData={
+          ...(next.userData??{}),
+          aurumIJEWELParameters:{
+            ...currentDiamondParameters,
+            color:diamondColor,
+            boostFactors:sourceDiamondParameters.boostFactors??currentDiamondParameters.boostFactors,
+            dispersion:Number(sourceDiamondParameters.dispersion??currentDiamondParameters.dispersion??preset.dispersion??0),
+          },
+          aurumDiamondCatalogProfile:String(gemConfig?.id??preset.id??""),
+          aurumDiamondCatalogColor:diamondColor,
+        };
+      }
       // Applying a gem to a MatrixGold layer must use the same dedicated
       // spectral shader as the initial diamond preview. Do this after the
       // source-reference metadata is attached so activation cannot be lost.
       activateAurumDiamondMaterial(next,preset);
+      next.color?.setHex(diamondColor);
+      next.needsUpdate=true;
     }
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     const geometry=partTarget?.geometry;
