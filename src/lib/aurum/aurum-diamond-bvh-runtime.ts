@@ -22,6 +22,7 @@ type RecordEntry = {
   readonly tier: "micro" | "small" | "medium" | "brilliant";
   setTier: (tier: "micro" | "small" | "medium" | "brilliant") => void;
   setSourceDispersion: (dispersion: number) => void;
+  setColor: (color: number) => void;
   dispose: () => void;
 };
 
@@ -62,8 +63,10 @@ export type AurumDiamondBvhRuntime = {
   hasActiveMeshes: (targets: readonly THREE.Mesh[]) => boolean;
   update: () => void;
   updateEnvironment: (rotationRadians: number, intensityScale: number) => void;
-  /** Update only the source dispersion of existing secondary diamond BVH materials. */
+  /** Update only the source dispersion of existing diamond BVH materials. */
   setDiamondDispersion: (targets: readonly THREE.Mesh[], dispersion: number) => void;
+  /** Update the catalog RGB on already-created BVH diamond shader uniforms. */
+  setDiamondColor: (targets: readonly THREE.Mesh[], color: number) => void;
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   /** Enable/disable one gemstone family without disturbing other BVH entries. */
@@ -77,6 +80,23 @@ export function isAurumDiamondBvhCenterTarget(mesh: THREE.Mesh): boolean {
   const data = mesh?.userData ?? {};
   return Boolean(data.aurumDiamondMicroCenterProtected || data.aurumDiamondCenter || data.aurumDiamondIsCenter)
     || /center|central|main|principal/i.test(String(data.aurumDiamondRole ?? ""));
+}
+
+function setAurumBvhShaderColor(material: THREE.Material, colorHex: number): void {
+  const shaderMaterial = material as THREE.ShaderMaterial;
+  const color = new THREE.Color(colorHex);
+  const uniform = shaderMaterial.uniforms?.color;
+  if (uniform && uniform.value != null) {
+    const value = uniform.value as any;
+    if (typeof value.setHex === "function") value.setHex(colorHex);
+    else if (typeof value.copy === "function") value.copy(color);
+    else if (typeof value.setRGB === "function") value.setRGB(color.r, color.g, color.b);
+    else if (typeof value.set === "function") value.set(color.r, color.g, color.b);
+    else uniform.value = color;
+    shaderMaterial.uniformsNeedUpdate = true;
+  }
+  const userData = material.userData ?? {};
+  material.userData = { ...userData, aurumDiamondCatalogColor: colorHex };
 }
 
 const getGemFamily = (material: any) =>
@@ -561,7 +581,12 @@ export async function createAurumDiamondBvhRuntime(options: {
         const sourceEnvironmentOffset = family === "diamante" && diamondSourceParameters
           ? Number(diamondSourceParameters.environmentRotationOffset ?? 0)
           : 0;
-        const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
+        const selectedCatalogDiamondColor = family === "diamante"
+        ? Number(mesh.userData?.aurumDiamondCatalogColor
+          ?? currentMaterial?.color?.getHex?.()
+          ?? (isBlueDiamond ? 0x80c3dc : isPinkDiamond ? 0xf9dfec : 0xffffff))
+        : undefined;
+      const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
           // The approved A/B reference uses zero direct transmission; internal
           // BVH refraction supplies the visible diamond response.
@@ -605,7 +630,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             : emeraldProfile?.absorption ?? rubyProfile?.absorption ?? sapphireProfile?.absorption ?? (isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isImperialTopaz ? 0.48 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.22 : 0.38) : isTanzanite ? 0.42 : isMoissanite ? 0.18 : isSpinel || isGarnet || isPeridot || isMorganite || isZircon || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.45 : 1),
           color: isEmerald
             ? (activeGemId === "esmeralda_1" ? 0x22dfa3 : activeGemId === "esmeralda_2" ? 0x4fd5b3 : activeGemId === "esmeralda_3" ? 0x19d597 : activeGemId === "esmeralda_inclusiones" ? 0x09e09d : emeraldProfile?.color ?? 0x05683d)
-            : rubyProfile?.color ?? sapphireProfile?.color ?? (family === "diamante" ? (isBlueDiamond ? 0xb5cbdd : isPinkDiamond ? 0xf9dfec : 0xffffff) : resolveAurumCatalogGemBvhColor(materials[0], isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff)),
+            : rubyProfile?.color ?? sapphireProfile?.color ?? (family === "diamante"
+              ? selectedCatalogDiamondColor
+              : resolveAurumCatalogGemBvhColor(materials[0], isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff)),
           reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
@@ -673,6 +700,10 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (next === baseDiamondDispersion) return;
             baseDiamondDispersion = next;
             applyDiamondTierOptics(currentDiamondTier);
+          },
+          setColor: (nextColor: number) => {
+            if (family !== "diamante" || !Number.isFinite(Number(nextColor))) return;
+            setAurumBvhShaderColor(prepared.material, Number(nextColor));
           },
           setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
             if (family !== "diamante") return;
@@ -845,6 +876,13 @@ export async function createAurumDiamondBvhRuntime(options: {
       const selected = new Set(targets);
       for (const [mesh, entry] of entries) {
         if (selected.has(mesh) && entry.family === "diamante") entry.setSourceDispersion(dispersion);
+      }
+    },
+    setDiamondColor(targets, color) {
+      if (disposed || !targets?.length || !Number.isFinite(Number(color))) return;
+      const selected = new Set(targets);
+      for (const [mesh, entry] of entries) {
+        if (selected.has(mesh) && entry.family === "diamante") entry.setColor(Number(color));
       }
     },
     hasActiveMeshes(targets) {
