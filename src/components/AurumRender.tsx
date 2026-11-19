@@ -5929,7 +5929,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div>
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR de gemas · comparar piedras</div>
                 <div className="grid grid-cols-1 gap-2.5">
-                  {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).filter((preset)=>preset.id==="gemUserHdr" || preset.id.startsWith("gemLibrary")).map((preset,index)=>{
+                  {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).filter((preset)=>preset.id==="gemUserHdr").map((preset,index)=>{
                     return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={gemHdriId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-left "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
                       <span className={"relative mb-1.5 block aspect-[16/5] overflow-hidden rounded-xl border transition "+(gemHdriId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-[#d8d1c2] group-hover:border-[#92743b]")}>
                         <span className="absolute inset-0" style={{background:"radial-gradient(ellipse at 50% 20%,#fffdf4 0%,#e9dfc5 22%,#9da3a6 48%,#4c5359 72%,#171b20 100%)"}}/>
