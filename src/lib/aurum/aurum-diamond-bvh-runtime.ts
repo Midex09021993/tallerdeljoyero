@@ -538,6 +538,9 @@ export async function createAurumDiamondBvhRuntime(options: {
       const diamondSourceParameters = (calibrateSecondaryDiamond || activeGemId === "diamante_rosa_2")
         ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
         : null;
+      const rubySourceParameters = isRuby
+        ? currentMaterial?.userData?.aurumGemSourceParameters ?? null
+        : null;
       let baseDiamondDispersion = family !== "diamante"
         ? undefined
         : diamondSourceParameters
@@ -646,7 +649,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? (diamondSourceParameters?.boostFactors
               ? [Number(diamondSourceParameters.boostFactors.x ?? 1), Number(diamondSourceParameters.boostFactors.y ?? 1), Number(diamondSourceParameters.boostFactors.z ?? 1)]
               : (!isBlueDiamond && !isPinkDiamond ? undefined : isBlueDiamond ? [2, 2, 2] : [1.3, 1, 1]))
-            : undefined,
+            : isRuby && rubySourceParameters?.boostFactors
+              ? [Number(rubySourceParameters.boostFactors.x ?? 1), Number(rubySourceParameters.boostFactors.y ?? 1), Number(rubySourceParameters.boostFactors.z ?? 1)]
+              : undefined,
           environmentIntensity: family === "diamante"
             ? (diamondSourceParameters ? Number(currentMaterial?.envMapIntensity ?? 1.30) : (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25))
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
@@ -667,9 +672,11 @@ export async function createAurumDiamondBvhRuntime(options: {
           reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09,
-          geometryFactor: Number(diamondSourceParameters?.geometryFactor ?? 0.5),
-          squashFactor: Number(diamondSourceParameters?.squashFactor ?? 0.98),
+          gamma: family === "diamante"
+            ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09))
+            : isRuby ? Number(rubySourceParameters?.gammaFactor ?? 1.09) : 1.09,
+          geometryFactor: Number((isRuby ? rubySourceParameters?.geometryFactor : undefined) ?? diamondSourceParameters?.geometryFactor ?? 0.5),
+          squashFactor: Number((isRuby ? rubySourceParameters?.squashFactor : undefined) ?? diamondSourceParameters?.squashFactor ?? 0.98),
           diamondOrientedEnvMap: Number(diamondSourceParameters?.diamondOrientedEnvMap ?? 0),
           // Every diamond starts with the same EXR orientation. Later global
           // environment rotation is applied uniformly through updateEnvironment().
