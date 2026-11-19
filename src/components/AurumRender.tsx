@@ -3469,6 +3469,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             await recordVideo(sourceCanvas,{
               fps:options.fps,duration:options.duration,
               signal:options.signal,onProgress:options.onProgress,
+              // The WebGL canvas is transparent; the selected backdrop belongs
+              // to the viewer container and must be composited into every MP4 frame.
+              backgroundElement:visorRef.current,
               onFrame:(elapsed:number,total:number)=>{
                 if(automatic && controlsTarget && controles.target){
                   const progress=Math.max(0,Math.min(1,elapsed/total));
