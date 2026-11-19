@@ -210,7 +210,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   material.onBeforeCompile=(shader:any)=>{
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
-    shader.uniforms.aurumRuntimeDispersion={value:(diamondTestProfile?.dispersion??baseDispersion)*familyDispersionScale};
+    const compileTimeSourceDispersion=Number(material.userData?.aurumIJEWELParameters?.dispersion??baseDispersion);
+    shader.uniforms.aurumRuntimeDispersion={value:(diamondTestProfile?.dispersion??compileTimeSourceDispersion)*familyDispersionScale};
     shader.uniforms.aurumDiamondMicroVirtualFacetWeight={value:virtualFacetWeight};
     shader.uniforms.aurumDiamondMicroFireScale={value:1};
     material.userData={...(material.userData??{}),aurumDiamondMicroUniforms:{
@@ -244,7 +245,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       // This does not change the physical PBR material or claim shader parity.
       shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(effectiveIewel.ior??2.417)))};
       shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(effectiveIewel.rayBounces??5))))};
-      shader.uniforms.aurumIJEWELDispersionScale={value:ijewelDispersionScale};
+      shader.uniforms.aurumIJEWELDispersionScale={value:Math.max(0,Math.min(4,Number(material.userData?.aurumIJEWELParameters?.dispersion??baseDispersion)/0.01))};
       if(material.userData?.aurumDiamondMicroUniforms){ material.userData.aurumDiamondMicroUniforms.iJewelDispersionScale=shader.uniforms.aurumIJEWELDispersionScale; }
       shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
       shader.uniforms.aurumIJEWELGeometryFactor={value:Number(ijewel.geometryFactor??.5)};
