@@ -418,7 +418,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
   }, []);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"modelstage"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
+  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escenas"|"modelstage"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
   const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
   const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
   const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
@@ -4584,7 +4584,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } else {
           // Clic fuera de la geometría de la joya: limpiar selección y abrir
           // Ambientes para cambiar la presentación sin buscar el primer icono.
-          setUxSection("ambientes");
+          setUxSection("hdrMetales");
           parteActiva = null;
           setParteSeleccionada(null);
           setParteSeleccionadaNombre(null);
@@ -5774,7 +5774,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       </div>}
       
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 overflow-hidden rounded-2xl border border-[#e7e2d9] bg-[#f9f8f5] p-3"}>
-        <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} onCadTreeClick={() => {setUxSection("cad-tree");refreshCadTree();}} onPositionsClick={() => setUxSection("positions")} onRhinoExportClick={() => {setExportOpen(false);setRhinoExportError(null);setRhinoExportReport(null);setUxSection("rhino-export");}} onDiamondControlClick={() => {setUxSection("diamond-control");window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"));}} />
+        <AurumRenderSidebar activeToolId={uxSection} onMetalHdrClick={() => setUxSection("hdrMetales")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} onCadTreeClick={() => {setUxSection("cad-tree");refreshCadTree();}} onPositionsClick={() => setUxSection("positions")} onRhinoExportClick={() => {setExportOpen(false);setRhinoExportError(null);setRhinoExportReport(null);setUxSection("rhino-export");}} onDiamondControlClick={() => {setUxSection("diamond-control");window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"));}} />
         <aside className={"relative z-20 flex h-full min-h-0 w-[min(22vw,336px)] min-w-[240px] shrink-0 flex-col overflow-hidden rounded-r-2xl border border-l-0 border-[#e7e2d9] bg-[#f9f8f5] text-[#292824] " + (embedded ? "" : "-ml-3")}>
           {uxSection==="diamond-control"&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#f9f8f5] px-3 py-3">
             <div className="mb-3">
@@ -5959,19 +5959,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
                   <p className="truncate text-[10px] text-[#55534d]">{gemaActiva.nombre}</p>
                 </div>
-              </div>}
-              {uxSection==="ambientes"&&<div className="space-y-3 pb-5">
-                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes HDR · {Object.keys(AURUM_AMBIENT_PRESETS).length}</div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
-                    <span className={"relative block aspect-[4/3] overflow-hidden rounded-xl border transition "+(ambienteId===preset.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}>
-                      <span className={"block h-full w-full "+preset.previewClass}/>
-                      {ambienteId===preset.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#92743b] text-[10px] font-bold text-white">✓</span>}
-                    </span>
-                    <span className="mt-2 block text-[10px] leading-tight">{preset.name}</span>
-                  </button>)}
-                </div>
-                <p className="mt-2 px-1 text-[10px] leading-relaxed text-[#77756f]">Ambientes combinados: HDR de metales y gemas independientes de la escena y de los materiales.</p>
               </div>}
               {uxSection==="hdrMetales"&&<div className="space-y-4 pb-5">
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">
@@ -6235,7 +6222,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </div>}
             {!embedded && libraryMenuOpen&&<div className="absolute right-[70px] top-1/2 z-40 w-[min(260px,calc(100%-6rem))] -translate-y-1/2 rounded-2xl border border-white/75 bg-[#fbfaf7]/75 p-2.5 text-[#292824] shadow-[0_12px_36px_rgba(35,32,24,.14)] backdrop-blur-2xl">
               <div className="px-2 pb-2 text-[9px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca de joyería</div>
-              {([{id:"materiales",label:"Materiales",detail:"Metales y acabados",count:MATERIALES.length},{id:"gemas",label:"Gemas",detail:"Piedras y variedades",count:GEMAS.length},{id:"ambientes",label:"Ambientes",detail:"HDR y presentación de metales",count:ESCENARIOS.length},{id:"hdrMetales",label:"HDR Metales",detail:"Reflejos para metales",count:Object.keys(AURUM_HDRI_URLS).length},{id:"hdrGemas",label:"HDR Gemas",detail:"Iluminación de piedras",count:Object.keys(AURUM_GEM_HDRI_URLS).length+Object.keys(AURUM_AMBIENT_PRESETS).length},{id:"lighting",label:"Estudio de iluminación Aurum",detail:"Control de luces del estudio",count:5}] as const).map(item=>{const activo=item.id==="lighting"?lightingOpen:uxSection===item.id;return <button key={item.id} type="button" onClick={()=>{setLibraryMenuOpen(false);if(item.id==="lighting"){setLightingOpen(true);setQualityOpen(false);}else{setLightingOpen(false);setUxSection(item.id);}}} className={"mb-1 flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors "+(activo?"border-[#d4af37]/40 bg-[#d4af37]/10":"border-transparent hover:border-white/80 hover:bg-white/65")}><span className={"grid size-8 shrink-0 place-items-center rounded-lg "+(activo?"bg-[#d4af37]/15 text-[#92743b]":"bg-black/[.035] text-[#77756f]")}>{item.id==="materiales"?"◈":item.id==="gemas"?"◇":item.id==="ambientes"?"◉":item.id==="hdrMetales"?"◉":item.id==="hdrGemas"?"✧":"✦"}</span><span className="min-w-0 flex-1"><span className="block text-[11px] font-medium">{item.label}</span><span className="block text-[9px] text-[#858178]">{item.detail}</span></span><span className="text-[9px] tabular-nums text-[#99968d]">{item.count}</span></button>})}
+              {([{id:"materiales",label:"Materiales",detail:"Metales y acabados",count:MATERIALES.length},{id:"gemas",label:"Gemas",detail:"Piedras y variedades",count:GEMAS.length},{id:"hdrMetales",label:"HDR Metales",detail:"Reflejos para oro, plata y otros metales",count:Object.keys(AURUM_HDRI_URLS).length},{id:"hdrGemas",label:"HDR Gemas",detail:"Iluminación de piedras",count:Object.keys(AURUM_GEM_HDRI_URLS).length+Object.keys(AURUM_AMBIENT_PRESETS).length},{id:"lighting",label:"Estudio de iluminación Aurum",detail:"Control de luces del estudio",count:5}] as const).map(item=>{const activo=item.id==="lighting"?lightingOpen:uxSection===item.id;return <button key={item.id} type="button" onClick={()=>{setLibraryMenuOpen(false);if(item.id==="lighting"){setLightingOpen(true);setQualityOpen(false);}else{setLightingOpen(false);setUxSection(item.id);}}} className={"mb-1 flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors "+(activo?"border-[#d4af37]/40 bg-[#d4af37]/10":"border-transparent hover:border-white/80 hover:bg-white/65")}><span className={"grid size-8 shrink-0 place-items-center rounded-lg "+(activo?"bg-[#d4af37]/15 text-[#92743b]":"bg-black/[.035] text-[#77756f]")}>{item.id==="materiales"?"◈":item.id==="gemas"?"◇":item.id==="ambientes"?"◉":item.id==="hdrMetales"?"◉":item.id==="hdrGemas"?"✧":"✦"}</span><span className="min-w-0 flex-1"><span className="block text-[11px] font-medium">{item.label}</span><span className="block text-[9px] text-[#858178]">{item.detail}</span></span><span className="text-[9px] tabular-nums text-[#99968d]">{item.count}</span></button>})}
             </div>}
 
             {!embedded && qualityOpen&&<div className="absolute right-[78px] top-1/2 z-40 w-48 -translate-y-1/2 rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-2 text-[#292824] shadow-xl backdrop-blur-2xl">
