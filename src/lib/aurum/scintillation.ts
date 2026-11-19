@@ -593,10 +593,6 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijFireColorPeak=max(max(ijFireColor.r,ijFireColor.g),ijFireColor.b);
         ijFireColor/=max(ijFireColorPeak,0.0001);
         ijInternal+=ijFireColor*ijFireMask*min(ijSpectralPeak,1.0);
-        // Apply the selected catalog hue only to the environment-ray contribution.
-        // The PBR contribution already contains material.color; tinting only this
-        // branch prevents HDR reflections from washing blue/pink profiles to white.
-        ijInternal*=aurumDiamondCatalogTint;
         // Live-view anti-milky calibration: let the dedicated internal gem-HDR
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
@@ -756,6 +752,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 gl_FragColor.rgb+=vec3(1.0,0.88,0.78)*0.60*aurumGemSunResponse;
         ` : ``}
 
+                ${isDiamond ? 'gl_FragColor.rgb *= mix(vec3(1.0), aurumDiamondCatalogTint, 0.78);' : ''}
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
                 #include <fog_fragment>
