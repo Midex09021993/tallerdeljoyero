@@ -3521,6 +3521,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           let captureWidth=originalBufferWidth;
           let captureHeight=originalBufferHeight;
           let highResolutionCapture=false;
+          let captureResizeLocked=false;
           try{
             const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
             if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
@@ -3551,6 +3552,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   captureHeight=Math.max(2,Math.round((aspect>=1?nativeLongEdge/aspect:nativeLongEdge)/2)*2);
                 }
               }
+              // Freeze viewport-driven resizing before changing the drawing buffer.
+              // Otherwise a window focus/restore event can replace the requested
+              // portrait/landscape camera aspect with the editor canvas aspect mid-video.
+              loop?.setCaptureResizeLock?.(true);
+              captureResizeLocked=true;
               highResolutionCapture=true;
               // Keep the existing WebGL canvas and CSS layout. Only increase its
               // drawing buffer; the same live scene and overlays render at target pixels.
@@ -3655,6 +3661,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               () => camara.quaternion.copy(originalCameraQuaternion),
               () => { if(originalControlsTarget && controles.target) controles.target.copy(originalControlsTarget); },
               () => controles.update?.(),
+              () => {
+                if(captureResizeLocked){
+                  captureResizeLocked=false;
+                  loop?.setCaptureResizeLock?.(false);
+                }
+              },
               () => loop?.invalidate?.(),
               () => loop?.setContinuousRendering?.(false),
               () => loop?.resume?.(),
