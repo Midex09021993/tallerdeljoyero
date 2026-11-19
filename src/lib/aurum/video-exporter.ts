@@ -72,7 +72,11 @@ export async function recordAurumCanvasVideo(
   source: HTMLCanvasElement,
   options: AurumVideoOptions = {},
 ): Promise<void> {
-  if (typeof VideoFrame === "undefined" && typeof VideoEncoder === "undefined") {
+  const browserVideoApis = globalThis as typeof globalThis & {
+    VideoFrame?: unknown;
+    VideoEncoder?: unknown;
+  };
+  if (typeof browserVideoApis.VideoFrame === "undefined" && typeof browserVideoApis.VideoEncoder === "undefined") {
     // canvas-record can fall back to its bundled H.264/WASM encoder; this is
     // only a diagnostic, not a hard failure.
     console.info("[AURUM][VIDEO] WebCodecs unavailable; canvas-record will use its H.264/WASM fallback when supported.");
