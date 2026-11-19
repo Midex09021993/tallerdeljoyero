@@ -1,14 +1,13 @@
 import * as THREE from "three";
 export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; rotationOffset:number; }> = {
-  // The gem environment is intentionally independent from the metal environment.
-  // Small family offsets improve the way the same HDR light field crosses
-  // different optical responses without changing IOR, color or dispersion.
-  Diamante: { intensity: 1.14, rotationOffset: 0.015 },
-  Moissanita: { intensity: 1.24, rotationOffset: 0.025 },
-  Esmeralda: { intensity: 1.12, rotationOffset: -0.035 },
-  Rubi: { intensity: 1.16, rotationOffset: -0.020 },
-  Zafiro: { intensity: 1.16, rotationOffset: 0.020 },
-  default: { intensity: 1.14, rotationOffset: 0.00 },
+  // Every gem family shares the same spatial EXR reference. Family response
+  // is expressed through intensity and its own optical profile, never yaw.
+  Diamante: { intensity: 1.14, rotationOffset: 0 },
+  Moissanita: { intensity: 1.24, rotationOffset: 0 },
+  Esmeralda: { intensity: 1.12, rotationOffset: 0 },
+  Rubi: { intensity: 1.16, rotationOffset: 0 },
+  Zafiro: { intensity: 1.16, rotationOffset: 0 },
+  default: { intensity: 1.14, rotationOffset: 0 },
 };
 
 export const getAurumGemEnvironmentProfile = (family:string) =>
@@ -87,19 +86,20 @@ export function createAurumGemEnvironment(
         if (gemEnvironmentUniform && "value" in gemEnvironmentUniform) {
           gemEnvironmentUniform.value = m.envMapIntensity;
         }
-        const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
         const worldEuler = new THREE.Euler();
         if (oriented && m.getWorldQuaternion) worldEuler.setFromQuaternion(m.getWorldQuaternion(new THREE.Quaternion()), "YXZ");
         const orientedCompensation = oriented ? -worldEuler.y : 0;
-        const effectiveRotation = rotation + (Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset) + orientedCompensation;
+        // The EXR yaw is a model-wide reference, independent of gem family or
+        // per-catalog material offsets. Preserve only world-orientation compensation.
+        const effectiveRotation = rotation + orientedCompensation;
         if (m.envMapRotation?.set) m.envMapRotation.set(0, effectiveRotation, 0);
         else if (m.envMapRotation) m.envMapRotation.y = effectiveRotation;
         m.userData = {
           ...(m.userData ?? {}),
           aurumGemEnvironmentRotation: effectiveRotation,
           aurumGemEnvironmentBaseRotation: rotation,
-          aurumGemEnvironmentRotationOffset: Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset,
+          aurumGemEnvironmentRotationOffset: 0,
           aurumGemEnvironmentOriented: oriented,
           aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
