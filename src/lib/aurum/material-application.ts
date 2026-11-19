@@ -600,6 +600,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
           aurumGemApplicationToken:Number(part.userData?.aurumGemApplicationToken??0)+1,
           aurumActiveGemId:String(gemConfig?.id??""),
           aurumActiveGemFamily:"diamante",
+          aurumDiamondCatalogColor:selectedDiamondColor,
           aurumDiamondSourceDispersion:fromDispersion,
           aurumDiamondDispersionOnlyUpdate:true,
         };
@@ -777,7 +778,10 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       aurumGemApplicationToken:applicationToken,
       aurumActiveGemId:activeGemId,
       aurumActiveGemFamily:activeGemFamily,
-      ...(activeGemFamily==="diamante" ? { aurumDiamondSourceDispersion:Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0) } : {}),
+      ...(activeGemFamily==="diamante" ? {
+        aurumDiamondCatalogColor:Number(gemConfig?.color??0xffffff),
+        aurumDiamondSourceDispersion:Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0),
+      } : {}),
       aurumFacetNormalsApplied:true,
       aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",
       aurumOpticalThickness:thickness,
