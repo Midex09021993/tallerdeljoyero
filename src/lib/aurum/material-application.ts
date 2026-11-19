@@ -530,6 +530,26 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ?? currentMaterials[0]?.dispersion
       ?? targetDispersion);
     if(currentMaterials.length){
+      const currentRootData=modelRoot.userData??{};
+      const currentAssignments=currentRootData.aurumGemLayerAssignments??{};
+      modelRoot.userData={
+        ...currentRootData,
+        aurumGemLayerAssignments:{
+          ...currentAssignments,
+          [assignmentKey]:{
+            ...(currentAssignments[assignmentKey]??{}),
+            layerKey:assignmentKey,
+            layerName:selectedLayer||null,
+            layerIndex:selectedLayerIndex,
+            layerId:selectedLayerId==null?null:String(selectedLayerId),
+            gemId:String(gemConfig?.id??""),
+            gemName:String(gemConfig?.nombre??gemConfig?.id??""),
+            updatedAt:Date.now(),
+            matchedMeshUuids:targets.map((part:any)=>part.uuid),
+            identityResolved:hasStableLayerIdentity,
+          },
+        },
+      };
       targets.forEach((part:any)=>{
         const materials=Array.isArray(part.material)?part.material:[part.material];
         materials.forEach((material:any)=>{
