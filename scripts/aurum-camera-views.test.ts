@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import * as THREE from "three";
-import { applyAurumCameraView } from "../src/lib/aurum/camera";
+import { applyAurumCameraSnapshot, applyAurumCameraView } from "../src/lib/aurum/camera";
 import { readFileSync } from "node:fs";
 
 function createFixture(aspect = 16 / 9) {
@@ -156,4 +156,49 @@ test("camera calibration panel stores four view references and exports measureme
   // Selecting a calibration slot must not apply its named camera preset.
   expect(viewer).toContain("if (cameraCalibrationOpen)");
   expect(viewer).toContain("Durante la calibración");
+});
+
+
+test("camera calibration restores framing but uses the current live viewport aspect", () => {
+  const { model, camera, controls } = createFixture(16 / 9);
+  const originalAspect = camera.aspect;
+  let updates = 0;
+  controls.update = () => { updates += 1; };
+  const snapshotCamera = new THREE.PerspectiveCamera(35, 0.62, 0.01, 500);
+  snapshotCamera.position.set(0, 0, 12);
+  snapshotCamera.lookAt(0, 0, 0);
+  const snapshot = {
+    position: [0, 0, 12],
+    quaternion: snapshotCamera.quaternion.toArray(),
+    target: [0, 0, 0],
+    up: [0, 1, 0],
+    fov: 35,
+    aspect: 0.62,
+    zoom: 1.25,
+    near: 0.01,
+    far: 500,
+  };
+
+  expect(applyAurumCameraSnapshot(camera, controls, model, snapshot, 1600, 900)).toBe(true);
+  expect(camera.aspect).toBeCloseTo(originalAspect, 8);
+  expect(camera.fov).toBe(35);
+  expect(camera.zoom).toBe(1.25);
+  expect(camera.position.distanceTo(new THREE.Vector3(0, 0, 12))).toBeLessThan(1e-8);
+  expect(updates).toBe(1);
+});
+
+test("camera calibration keeps the last valid aspect while the canvas is temporarily hidden", () => {
+  const { model, camera, controls } = createFixture(4 / 3);
+  const snapshotCamera = new THREE.PerspectiveCamera(38, 1.78, 0.001, 1000);
+  snapshotCamera.position.set(0, 0, 10);
+  snapshotCamera.lookAt(0, 0, 0);
+  const snapshot = {
+    position: [0, 0, 10],
+    quaternion: snapshotCamera.quaternion.toArray(),
+    target: [0, 0, 0],
+    aspect: 1.78,
+  };
+
+  expect(applyAurumCameraSnapshot(camera, controls, model, snapshot, 0, 0)).toBe(true);
+  expect(camera.aspect).toBeCloseTo(4 / 3, 8);
 });
