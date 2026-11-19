@@ -897,5 +897,6 @@ test("public viewer infers an unnamed center diamond even when side diamonds hav
   expect(viewer).toContain("[PUBLIC VIEWER][GEM CLASSIFICATION]");
   expect(viewer).toContain("const hasSelectedDiamond = selectedFamily !== \"diamante\" || bvhDiagnostics.diamondMeshes > 0");
   expect(viewer).toContain("[PUBLIC VIEWER][BVH READY]");
+  expect(viewer).toContain("protectedCenterDiamonds");
   expect(viewer).toContain("[PUBLIC VIEWER][BVH AUDIT]");
 });
