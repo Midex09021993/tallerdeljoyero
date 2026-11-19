@@ -168,3 +168,16 @@ test("AURUM video frame plan clamps unsafe duration and frame-rate inputs", asyn
   expect(createAurumVideoFramePlan(0, 1)).toHaveLength(75);
   expect(createAurumVideoFramePlan(100, 240)).toHaveLength(2400);
 });
+
+
+test("AURUM MP4 encoder accepts standard 4K landscape and portrait frames", async () => {
+  const { assertAurumVideoFrameBudget } = await import("../src/lib/aurum/video-exporter");
+  expect(() => assertAurumVideoFrameBudget(3840, 2160)).not.toThrow();
+  expect(() => assertAurumVideoFrameBudget(2160, 3840)).not.toThrow();
+});
+
+test("AURUM MP4 encoder rejects frame sizes above the documented H.264 WebCodecs budget", async () => {
+  const { assertAurumVideoFrameBudget } = await import("../src/lib/aurum/video-exporter");
+  expect(() => assertAurumVideoFrameBudget(3840, 3840)).toThrow(/9,437,184/);
+  expect(() => assertAurumVideoFrameBudget(0, 1080)).toThrow(/dimensiones válidas/);
+});
