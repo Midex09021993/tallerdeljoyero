@@ -64,116 +64,140 @@ export function assertAurumVideoFrameBudget(width: number, height: number): void
   }
 }
 
-function escapeXmlAttribute(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/\"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
+type AurumBackgroundLayer = { kind: "gradient"; value: string } | { kind: "image"; value: string };
 
-/**
- * Inline CSS background images before drawing the SVG snapshot. A remote URL
- * left inside SVG foreignObject taints the rasterized canvas and makes
- * VideoFrame construction fail. Fetch in CORS mode so the browser enforces
- * the source's permission instead of silently creating a tainted frame.
- */
-async function inlineAurumCssBackgroundImages(backgroundImage: string): Promise<string> {
-  const matches = Array.from(backgroundImage.matchAll(/url\((?:\s*["']([^"']+)["']\s*|\s*([^\s)]+)\s*)\)/gi));
-  let result = backgroundImage;
-  for (const match of matches) {
-    const source = (match[1] ?? match[2] ?? "").trim();
-    if (!source || /^(?:data:|blob:)/i.test(source)) continue;
-    let response: Response;
-    try {
-      response = await fetch(new URL(source, document.baseURI).href, {
-        mode: "cors",
-        credentials: "omit",
-        cache: "force-cache",
-      });
-    } catch (error) {
-      throw new Error("No se pudo obtener el fondo fotográfico con permisos CORS. Usa una imagen del mismo dominio o habilita Access-Control-Allow-Origin en su servidor.", { cause: error });
+function splitCssArguments(value: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i++) {
+    if (value[i] === "(") depth++;
+    else if (value[i] === ")") depth--;
+    else if (value[i] === "," && depth === 0) {
+      parts.push(value.slice(start, i).trim());
+      start = i + 1;
     }
-    if (!response.ok || response.type === "opaque") {
-      throw new Error("El fondo fotográfico no permite captura segura (CORS). El servidor debe permitir el origen de AURUM LAB.");
-    }
-    const blob = await response.blob();
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("No se pudo codificar el fondo fotográfico."));
-      reader.onerror = () => reject(reader.error ?? new Error("No se pudo leer el fondo fotográfico."));
-      reader.readAsDataURL(blob);
-    });
-    result = result.replace(match[0], 'url("' + dataUrl + '")');
   }
-  return result;
+  parts.push(value.slice(start).trim());
+  return parts.filter(Boolean);
 }
 
-/** Build a rasterizable SVG snapshot of the viewer's CSS background, including gradients and images. */
-export function createAurumCssBackgroundSvg(element: HTMLElement, width: number, height: number): string {
+function parseAurumBackgroundLayers(backgroundImage: string): AurumBackgroundLayer[] {
+  if (!backgroundImage || backgroundImage === "none") return [];
+  const layers: AurumBackgroundLayer[] = [];
+  const parts = splitCssArguments(backgroundImage);
+  for (const part of parts) {
+    if (/^(?:linear|radial)-gradient\\(/i.test(part)) {
+      layers.push({ kind: "gradient", value: part });
+      continue;
+    }
+    const urlMatch = part.match(/^url\\((?:\\s*["']([^"']+)["']\\s*|\\s*([^\\s)]+)\\s*)\\)$/i);
+    if (urlMatch) layers.push({ kind: "image", value: (urlMatch[1] ?? urlMatch[2] ?? "").trim() });
+  }
+  return layers;
+}
+
+function parseAurumGradientStop(stop: string): { color: string; position: number | null } | null {
+  const match = stop.match(/^(.*?)(?:\\s+(-?\\d+(?:\\.\\d+)?)(%))?$/);
+  if (!match?.[1]?.trim()) return null;
+  return { color: match[1].trim(), position: match[2] === undefined ? null : Number(match[2]) / 100 };
+}
+
+function paintAurumCssGradient(context: CanvasRenderingContext2D, css: string, width: number, height: number): boolean {
+  const match = css.match(/^(linear|radial)-gradient\\((.*)\\)$/i);
+  if (!match) return false;
+  const args = splitCssArguments(match[2]);
+  if (args.length < 2) return false;
+  const isRadial = match[1].toLowerCase() === "radial";
+  let descriptor = args[0];
+  let stopsInput = args;
+  if (/^(?:to\\s|[-+]?\\d)/i.test(descriptor) || /^(?:circle|ellipse|closest|farthest)/i.test(descriptor)) stopsInput = args.slice(1);
+  else descriptor = "180deg";
+  const stops = stopsInput.map(parseAurumGradientStop).filter((x): x is {color:string;position:number|null} => Boolean(x));
+  if (stops.length < 2) return false;
+  const angleMatch = descriptor.match(/(-?\\d+(?:\\.\\d+)?)deg/i);
+  const angle = angleMatch ? Number(angleMatch[1]) * Math.PI / 180 : Math.PI;
+  const dx = Math.sin(angle), dy = -Math.cos(angle);
+  const extent = Math.abs(width * dx) / 2 + Math.abs(height * dy) / 2;
+  const gradient = isRadial
+    ? context.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.hypot(width, height) / 2)
+    : context.createLinearGradient(width / 2 - dx * extent, height / 2 - dy * extent, width / 2 + dx * extent, height / 2 + dy * extent);
+  stops.forEach((stop, index) => {
+    const position = stop.position ?? index / Math.max(1, stops.length - 1);
+    gradient.addColorStop(Math.max(0, Math.min(1, position)), stop.color);
+  });
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+  return true;
+}
+
+async function fetchAurumBackgroundImage(source: string): Promise<ImageBitmap> {
+  let response: Response;
+  try {
+    response = await fetch(new URL(source, document.baseURI).href, { mode: "cors", credentials: "omit", cache: "force-cache" });
+  } catch (error) {
+    throw new Error("No se pudo cargar el fondo con permisos CORS. El recurso debe ser local o permitir el origen de AURUM LAB.", { cause: error });
+  }
+  if (!response.ok || response.type === "opaque") {
+    throw new Error("El fondo no permite captura segura. Aloja la imagen en AURUM o habilita CORS en su servidor.");
+  }
+  return createImageBitmap(await response.blob());
+}
+
+function drawAurumBackgroundImage(context: CanvasRenderingContext2D, image: CanvasImageSource, width: number, height: number, size: string): void {
+  if (size === "100% 100%") {
+    context.drawImage(image, 0, 0, width, height);
+    return;
+  }
+  const source = image as CanvasImageSource & { width?: number; height?: number; naturalWidth?: number; naturalHeight?: number };
+  const imageWidth = source.naturalWidth ?? source.width ?? width;
+  const imageHeight = source.naturalHeight ?? source.height ?? height;
+  const scale = Math.max(width / imageWidth, height / imageHeight);
+  const drawWidth = imageWidth * scale;
+  const drawHeight = imageHeight * scale;
+  context.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+}
+
+/** Rasterize AURUM's CSS background directly into a clean 2D canvas; no SVG foreignObject. */
+async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefined, width: number, height: number): Promise<HTMLCanvasElement | null> {
+  if (!element) return null;
   const style = window.getComputedStyle(element);
   let backgroundColor = style.backgroundColor;
   let backgroundImage = style.backgroundImage;
   let backgroundSize = style.backgroundSize;
-  let backgroundPosition = style.backgroundPosition;
-  let backgroundRepeat = style.backgroundRepeat;
   if ((!backgroundColor || backgroundColor === "rgba(0, 0, 0, 0)") && element.parentElement) {
     const parentStyle = window.getComputedStyle(element.parentElement);
     backgroundColor = parentStyle.backgroundColor || "#090b0e";
-    if (backgroundImage === "none") {
+    if (!backgroundImage || backgroundImage === "none") {
       backgroundImage = parentStyle.backgroundImage;
       backgroundSize = parentStyle.backgroundSize;
-      backgroundPosition = parentStyle.backgroundPosition;
-      backgroundRepeat = parentStyle.backgroundRepeat;
     }
   }
-  const css = [
-    "width:" + width + "px", "height:" + height + "px",
-    "background-color:" + (backgroundColor || "#090b0e"),
-    "background-image:" + (backgroundImage || "none"),
-    "background-size:" + (backgroundSize || "auto"),
-    "background-position:" + (backgroundPosition || "center"),
-    "background-repeat:" + (backgroundRepeat || "no-repeat"),
-  ].join(";");
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeXmlAttribute(css) + '"></div></foreignObject></svg>';
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { alpha: false });
+  if (!context) throw new Error("No se pudo crear el fondo 2D para el vídeo.");
+  context.fillStyle = backgroundColor && backgroundColor !== "rgba(0, 0, 0, 0)" ? backgroundColor : "#090b0e";
+  context.fillRect(0, 0, width, height);
+  const layers = parseAurumBackgroundLayers(backgroundImage || "none");
+  // CSS paints the first background layer on top; paint in reverse order.
+  for (const layer of [...layers].reverse()) {
+    if (layer.kind === "gradient") {
+      if (!paintAurumCssGradient(context, layer.value, width, height)) {
+        throw new Error("El degradado del fondo usa una sintaxis no compatible con la captura MP4.");
+      }
+    } else {
+      const bitmap = await fetchAurumBackgroundImage(layer.value);
+      try { drawAurumBackgroundImage(context, bitmap, width, height, backgroundSize || "cover"); }
+      finally { bitmap.close(); }
+    }
+  }
+  try { context.getImageData(0, 0, 1, 1); }
+  catch (error) { throw new Error("El fondo 2D no está autorizado para captura. Revisa CORS del recurso.", { cause: error }); }
+  return canvas;
 }
 
-/** Verify a decoded image is origin-clean before it ever reaches the recording canvas. */
-function assertAurumImageOriginClean(image: CanvasImageSource, width: number, height: number): void {
-  const probe = document.createElement("canvas");
-  probe.width = Math.max(2, Math.min(16, width));
-  probe.height = Math.max(2, Math.min(16, height));
-  const context = probe.getContext("2d", { willReadFrequently: true });
-  if (!context) throw new Error("No se pudo validar la seguridad del fondo del vídeo.");
-  try {
-    context.drawImage(image, 0, 0, probe.width, probe.height);
-    context.getImageData(0, 0, 1, 1);
-  } catch (error) {
-    throw new Error("El fondo del visor contiene una imagen externa que el navegador no autoriza a capturar. Habilita CORS en el servidor de esa imagen o utiliza un fondo local de AURUM.", { cause: error });
-  }
-}
-
-async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefined, width: number, height: number): Promise<HTMLImageElement | null> {
-  if (!element) return null;
-  const svg = createAurumCssBackgroundSvg(element, width, height);
-  let backgroundImage = window.getComputedStyle(element).backgroundImage;
-  if ((!backgroundImage || backgroundImage === "none") && element.parentElement) {
-    backgroundImage = window.getComputedStyle(element.parentElement).backgroundImage;
-  }
-  const safeBackgroundImage = await inlineAurumCssBackgroundImages(backgroundImage || "none");
-  const safeSvg = backgroundImage === safeBackgroundImage
-    ? svg
-    : svg.replace(escapeXmlAttribute(backgroundImage), escapeXmlAttribute(safeBackgroundImage));
-  const blobUrl = URL.createObjectURL(new Blob([safeSvg], { type: "image/svg+xml;charset=utf-8" }));
-  try {
-    const image = new Image();
-    image.decoding = "async";
-    image.src = blobUrl;
-    await image.decode();
-    // Validate the rasterized SVG itself: foreignObject/background-image can
-    // taint an image even when the CSS URL was fetched with CORS.
-    assertAurumImageOriginClean(image, width, height);
-    return image;
-  } finally {
-    URL.revokeObjectURL(blobUrl);
-  }
-}
 function downloadAurumVideo(output: ArrayBuffer | Uint8Array | Blob[] | undefined): void {
   if (!output) throw new Error("El codificador terminó sin devolver un archivo de vídeo.");
   const parts: BlobPart[] = Array.isArray(output)
