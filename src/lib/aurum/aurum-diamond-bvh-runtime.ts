@@ -446,27 +446,38 @@ export async function createAurumDiamondBvhRuntime(options: {
               ? diamondSizeRatio <= 0.42 ? "small" : options.calibrateSecondaryDiamonds === true && diamondSizeRatio <= 0.65 ? "medium" : "brilliant"
               : "brilliant"));
       const inferredCenter = family === "diamante" && mesh === inferredCenterMesh;
+      // A projected-size inference is useful as an optical-frame reference,
+      // but it must not turn the largest *secondary* stone into the protected
+      // center in the editor. In editor calibration mode only explicit CAD/user
+      // center markers protect the focal stone; this lets the "brilliant" tier
+      // receive White 1/White 2 source dispersion just like the smaller tiers.
+      if (options.calibrateSecondaryDiamonds === true
+        && mesh.userData?.aurumDiamondCenterDetection === "projected-size") {
+        const cleanedUserData = { ...(mesh.userData ?? {}) };
+        delete cleanedUserData.aurumDiamondMicroCenterProtected;
+        delete cleanedUserData.aurumDiamondCenterDetection;
+        mesh.userData = cleanedUserData;
+      }
       const explicitlyProtected = family === "diamante" && isAurumDiamondBvhCenterTarget(mesh);
-      // Center identity is optical metadata, not an eligibility restriction.
-      // Keep detecting the center even when BVH is enabled for every diamond size,
-      // so the center retains its approved white-diamond profile.
-      if (inferredCenter && !explicitlyProtected) {
+      if (inferredCenter && !explicitlyProtected && options.calibrateSecondaryDiamonds !== true) {
         mesh.userData = {
           ...(mesh.userData ?? {}),
           aurumDiamondMicroCenterProtected: true,
           aurumDiamondCenterDetection: "projected-size",
         };
       }
+      const inferredCenterProtected = inferredCenter && options.calibrateSecondaryDiamonds !== true;
       mesh.userData = {
         ...(mesh.userData ?? {}),
         aurumDiamondMicroTier: screenTier,
-        // Preserve explicit and inferred center identity for optical calibration.
-        aurumDiamondMicroCenterProtected: explicitlyProtected || inferredCenter
+        // Public viewer retains inferred-center protection. In the editor, only
+        // explicit center identity protects the central optical calibration.
+        aurumDiamondMicroCenterProtected: explicitlyProtected || inferredCenterProtected
           || Boolean(mesh.userData?.aurumDiamondMicroCenterProtected),
       };
       const calibrateSecondaryDiamond = options.calibrateSecondaryDiamonds === true
         && family === "diamante"
-        && mesh.userData.aurumDiamondMicroCenterProtected !== true;
+        && !explicitlyProtected;
       // Preserve the source dispersion of the two imported white .dmat profiles.
       // The protected center deliberately keeps its approved 0.010 baseline;
       // secondary white 1 uses 0.010 and secondary white 2 uses 0.000.
