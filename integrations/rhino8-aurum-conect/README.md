@@ -19,7 +19,7 @@ Límite de transferencia: 500 MiB. No utiliza Supabase ni almacenamiento públic
 
 ## Instalación
 
-Ejecutar `Instalar-AURUM-CONECT-Rhino8.ps1` en Windows con Rhino 8.20 o posterior, .NET SDK 8 y Microsoft Edge WebView2 Evergreen Runtime instalados. El instalador verifica la versión de Rhino antes de compilar. El instalador compila contra las DLL de la instalación detectada y copia el .rhp y sus dependencias privadas.
+Ejecutar `Instalar-AURUM-CONECT-Rhino8.ps1` en Windows con Rhino 8.20 o posterior, .NET SDK 8 y Microsoft Edge WebView2 Evergreen Runtime instalados. El instalador verifica la versión de Rhino antes de compilar. El instalador compila contra las DLL de la instalación detectada y copia el .rhp y sus dependencias privadas directamente en `C:\\Program Files\\Rhino 8\\Plug-ins`. El instalador solicita elevación UAC para escribir en Program Files.
 
 ## Validación pendiente
 

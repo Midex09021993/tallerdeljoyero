@@ -1,11 +1,20 @@
 $ErrorActionPreference = "Stop"
+
+# Program Files requiere elevación. Relanza el instalador con UAC antes de realizar cambios.
+$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = New-Object Security.Principal.WindowsPrincipal($identity)
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Verb RunAs
+    exit
+}
 $ProgressPreference = "SilentlyContinue"
 
 $repoRoot = "https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/main/integrations"
 $sourceRoot = Join-Path $env:TEMP "AurumConect-Rhino8-Source"
 $projectDir = Join-Path $sourceRoot "rhino8-aurum-conect"
 $sharedDir = Join-Path $sourceRoot "rhino7-aurum-prototype"
-$installDir = Join-Path $env:LOCALAPPDATA "AurumLab\AurumConect\Rhino8"
+$installDir = Join-Path $env:ProgramFiles "Rhino 8\Plug-ins"
 
 function Find-Rhino8System {
     $candidates = @(
@@ -48,7 +57,7 @@ try {
 
     New-Item -ItemType Directory -Path $projectDir -Force | Out-Null
     New-Item -ItemType Directory -Path $sharedDir -Force | Out-Null
-    New-Item -ItemType Directory -Path $installDir -Force | Out-Null
+    if (-not (Test-Path $installDir)) { throw "No se encontró la carpeta oficial de complementos de Rhino 8: $installDir" }
 
     $projectFiles = @("AurumConect.Rhino8.csproj", "AurumConectPlugin.cs", "AurumConectPanel.cs")
     foreach ($file in $projectFiles) {
@@ -102,7 +111,7 @@ Se requiere Microsoft Edge WebView2 Evergreen Runtime.
     Set-Content -LiteralPath (Join-Path $installDir "LEEME.txt") -Value $guide -Encoding UTF8
 
     Write-Host ""
-    Write-Host "Compilación correcta. Complemento preparado:" -ForegroundColor Green
+    Write-Host "Compilación correcta. Complemento instalado en la carpeta Plug-ins de Rhino 8:" -ForegroundColor Green
     Write-Host (Join-Path $installDir "AurumConect8.rhp") -ForegroundColor Cyan
     Start-Process explorer.exe -ArgumentList $installDir
     Read-Host "Presiona Enter para cerrar"
