@@ -2016,8 +2016,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               mesh.userData=next;
             });
           },
-          (targets:any[],from:number,to:number)=>{
+          (targets:any[],from:number,to:number,profile:any)=>{
             dispersionOnlySwitch=true;
+            // Keep the retained physical fallback and live BVH shader on the same catalog profile.
+            diamondBvhRuntime?.setDiamondProfile?.(targets,profile);
             // A diamond-to-diamond switch also changes the BVH shader's catalog
             // color. Dispersion animation must not be the only live update.
             diamondBvhRuntime?.setDiamondColor?.(targets,Number(g?.color??0xffffff));
