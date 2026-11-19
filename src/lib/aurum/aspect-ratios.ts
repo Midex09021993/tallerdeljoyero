@@ -40,11 +40,16 @@ export function getAurumAspectFrameStyle(
   // cqw/cqh are relative to the overlay's size-query container. Derive both
   // dimensions from the same limiting box so max-height cannot squash a wide
   // frame or max-width stretch a portrait frame. The result always keeps ratio.
+  // Use one shared long-side measurement for every orientation. This makes
+  // 16:9 and 9:16 exact rotations of the same frame (and likewise 4:5 / 5:4
+  // equivalents), instead of independently fitting width and height to the
+  // viewport and producing visibly different physical frame sizes.
+  const longSide = `min(${limit}cqw, ${limit}cqh)`;
+  const width = safeRatio >= 1
+    ? longSide
+    : `calc(${longSide} * ${safeRatio})`;
   return {
-    // Calculate the frame width from the tighter viewport constraint, then let
-    // aspect-ratio derive height. This avoids independent width/height rounding
-    // that can make the horizontal frame look subtly taller than 16:9.
-    width: `min(${limit}cqw, calc(${limit}cqh * ${safeRatio}))`,
+    width,
     height: "auto",
     maxWidth: "none",
     maxHeight: "none",
