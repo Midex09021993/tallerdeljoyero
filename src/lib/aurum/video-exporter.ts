@@ -87,35 +87,35 @@ export function parseAurumBackgroundLayers(backgroundImage: string): AurumBackgr
   const layers: AurumBackgroundLayer[] = [];
   const parts = splitCssArguments(backgroundImage);
   for (const part of parts) {
-    if (/^(?:linear|radial)-gradient\\(/i.test(part)) {
+    if (/^(?:linear|radial)-gradient\(/i.test(part)) {
       layers.push({ kind: "gradient", value: part });
       continue;
     }
-    const urlMatch = part.match(/^url\\((?:\\s*["']([^"']+)["']\\s*|\\s*([^\\s)]+)\\s*)\\)$/i);
+    const urlMatch = part.match(/^url\((?:\s*["']([^"']+)["']\s*|\s*([^\s)]+)\s*)\)$/i);
     if (urlMatch) layers.push({ kind: "image", value: (urlMatch[1] ?? urlMatch[2] ?? "").trim() });
   }
   return layers;
 }
 
 function parseAurumGradientStop(stop: string): { color: string; position: number | null } | null {
-  const match = stop.match(/^(.*?)(?:\\s+(-?\\d+(?:\\.\\d+)?)(%))?$/);
+  const match = stop.match(/^(.*?)(?:\s+(-?\d+(?:\.\d+)?)(%))?$/);
   if (!match?.[1]?.trim()) return null;
   return { color: match[1].trim(), position: match[2] === undefined ? null : Number(match[2]) / 100 };
 }
 
 function paintAurumCssGradient(context: CanvasRenderingContext2D, css: string, width: number, height: number): boolean {
-  const match = css.match(/^(linear|radial)-gradient\\((.*)\\)$/i);
+  const match = css.match(/^(linear|radial)-gradient\((.*)\)$/i);
   if (!match) return false;
   const args = splitCssArguments(match[2]);
   if (args.length < 2) return false;
   const isRadial = match[1].toLowerCase() === "radial";
   let descriptor = args[0];
   let stopsInput = args;
-  if (/^(?:to\\s|[-+]?\\d)/i.test(descriptor) || /^(?:circle|ellipse|closest|farthest)/i.test(descriptor)) stopsInput = args.slice(1);
+  if (/^(?:to\s|[-+]?\d)/i.test(descriptor) || /^(?:circle|ellipse|closest|farthest)/i.test(descriptor)) stopsInput = args.slice(1);
   else descriptor = "180deg";
   const stops = stopsInput.map(parseAurumGradientStop).filter((x): x is {color:string;position:number|null} => Boolean(x));
   if (stops.length < 2) return false;
-  const angleMatch = descriptor.match(/(-?\\d+(?:\\.\\d+)?)deg/i);
+  const angleMatch = descriptor.match(/(-?\d+(?:\.\d+)?)deg/i);
   const angle = angleMatch ? Number(angleMatch[1]) * Math.PI / 180 : Math.PI;
   const dx = Math.sin(angle), dy = -Math.cos(angle);
   const extent = Math.abs(width * dx) / 2 + Math.abs(height * dy) / 2;
