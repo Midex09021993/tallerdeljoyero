@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export type AurumDiamondMicroTier = "micro" | "small" | "brilliant" | "mixed";
+export type AurumDiamondMicroTier = "micro" | "small" | "medium" | "brilliant" | "mixed";
 
 
 export type AurumDiamondMicroOpticalProfile = {
@@ -19,8 +19,9 @@ export type AurumDiamondMicroOpticalProfile = {
 export function getAurumDiamondMicroOpticalProfile(tier: Exclude<AurumDiamondMicroTier, "mixed">): AurumDiamondMicroOpticalProfile {
   // Secondary melee tiers receive restrained spectral scaling over their own
   // calibrated material baseline. The protected center always returns 1:1 values.
-  if (tier === "micro") return { scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.78, virtualFacetWeight: 0.06, fireScale: 0.65, environmentIntensityScale: 0.92, reflectivityScale: 0.82, gammaScale: 1.04 };
-  if (tier === "small") return { scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 0.90, virtualFacetWeight: 0.06, fireScale: 0.82, environmentIntensityScale: 0.97, reflectivityScale: 0.92, gammaScale: 1.02 };
+  if (tier === "micro") return { scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.50, virtualFacetWeight: 0.06, fireScale: 0.55, environmentIntensityScale: 0.90, reflectivityScale: 0.84, gammaScale: 1.04 };
+  if (tier === "small") return { scintillationScale: 0.58, facetContrastScale: 0.92, dispersionScale: 0.65, virtualFacetWeight: 0.06, fireScale: 0.70, environmentIntensityScale: 0.94, reflectivityScale: 0.90, gammaScale: 1.02 };
+  if (tier === "medium") return { scintillationScale: 0.78, facetContrastScale: 0.96, dispersionScale: 0.80, virtualFacetWeight: 0.06, fireScale: 0.85, environmentIntensityScale: 0.98, reflectivityScale: 0.95, gammaScale: 1.01 };
   return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1, environmentIntensityScale: 1, reflectivityScale: 1, gammaScale: 1 };
 }
 
@@ -36,6 +37,7 @@ export type AurumDiamondMicroProfile = {
 export function classifyAurumDiamondScreenSize(
   diameterPx: number,
   referenceDiameterPx = 0,
+  includeMediumTier = false,
 ): Exclude<AurumDiamondMicroTier, "mixed"> {
   const px = Number.isFinite(diameterPx) ? Math.max(0, diameterPx) : 0;
   const reference = Number.isFinite(referenceDiameterPx) ? Math.max(0, referenceDiameterPx) : 0;
@@ -43,6 +45,7 @@ export function classifyAurumDiamondScreenSize(
   // Secondary melee can exceed the absolute 36px threshold at close camera
   // distances. Classify it relative to a clearly dominant center stone too.
   if (px <= 36 || (reference > px && px <= reference * 0.35)) return "small";
+  if (includeMediumTier && (px <= 72 || (reference > px && px <= reference * 0.65))) return "medium";
   return "brilliant";
 }
 
@@ -54,12 +57,32 @@ export function stabilizeAurumDiamondScreenTier(
   diameterPx: number,
   previousTier?: Exclude<AurumDiamondMicroTier, "mixed">,
   referenceDiameterPx = 0,
+  includeMediumTier = false,
 ): Exclude<AurumDiamondMicroTier, "mixed"> {
   const px = Number.isFinite(diameterPx) ? Math.max(0, diameterPx) : 0;
   const reference = Number.isFinite(referenceDiameterPx) ? Math.max(0, referenceDiameterPx) : 0;
   const relativeSmall = reference > px && px <= reference * 0.35;
   const relativeSmallExit = reference > px && px <= reference * 0.40;
-  if (!previousTier) return classifyAurumDiamondScreenSize(px, reference);
+  const relativeMedium = reference > px && px <= reference * 0.65;
+  const relativeMediumExit = reference > px && px <= reference * 0.70;
+  if (!previousTier) return classifyAurumDiamondScreenSize(px, reference, includeMediumTier);
+  if (includeMediumTier) {
+    if (previousTier === "micro") return px > 14 ? classifyAurumDiamondScreenSize(px, reference, true) : "micro";
+    if (previousTier === "small") {
+      if (px <= 10) return "micro";
+      if (px > 40 && !relativeSmallExit) return px > 80 && !relativeMediumExit ? "brilliant" : "medium";
+      return "small";
+    }
+    if (previousTier === "medium") {
+      if (px <= 32 || relativeSmall) return "small";
+      if (px > 80 && !relativeMediumExit) return "brilliant";
+      return "medium";
+    }
+    if (px <= 10) return "micro";
+    if (px <= 32 || relativeSmall) return "small";
+    if (px <= 64 || relativeMedium) return "medium";
+    return "brilliant";
+  }
   if (previousTier === "micro") {
     if (px > 40 && !relativeSmall) return "brilliant";
     return px > 14 ? "small" : "micro";
@@ -78,6 +101,7 @@ export function classifyAurumDiamondMeshTiers(
   meshes: readonly any[],
   camera: any,
   viewportHeight: number,
+  includeMediumTier = false,
 ): Map<any, Exclude<AurumDiamondMicroTier, "mixed">> {
   const projected = meshes.map(mesh => ({
     mesh,
@@ -93,7 +117,7 @@ export function classifyAurumDiamondMeshTiers(
     const explicitlyProtected = Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
       || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""));
     const protectedCenter = explicitlyProtected || (hasDistinctCenter && mesh === centerMesh);
-    tiers.set(mesh, protectedCenter ? "brilliant" : classifyAurumDiamondScreenSize(diameter, hasDistinctCenter ? largest : 0));
+    tiers.set(mesh, protectedCenter ? "brilliant" : classifyAurumDiamondScreenSize(diameter, hasDistinctCenter ? largest : 0, includeMediumTier));
   }
   return tiers;
 }
@@ -158,7 +182,7 @@ function median(values: number[]): number {
  * profile through material uniform references in each mesh's onBeforeRender.
  * Shared materials remain shared; no geometry, normals, BVH or metal state changes.
  */
-export function createAurumDiamondMicroPipeline(scene: any, camera: any, getViewportHeight: () => number) {
+export function createAurumDiamondMicroPipeline(scene: any, camera: any, getViewportHeight: () => number, options: { includeMediumTier?: boolean } = {}) {
   const meshes: any[] = [];
   const originalCallbacks = new Map<any, { original: (...args: any[]) => void; wrapped: (...args: any[]) => void }>();
 
@@ -241,7 +265,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
         || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""));
       const isProtectedCenter = explicitlyProtected || (hasDistinctCenter && mesh === centerMesh);
       const previousTier = mesh.userData?.aurumDiamondMicroTier as Exclude<AurumDiamondMicroTier, "mixed"> | undefined;
-      const tier = isProtectedCenter ? "brilliant" : stabilizeAurumDiamondScreenTier(diameter, previousTier, relativeCenterDiameter);
+      const tier = isProtectedCenter ? "brilliant" : stabilizeAurumDiamondScreenTier(diameter, previousTier, relativeCenterDiameter, options.includeMediumTier === true);
       mesh.userData = {
         ...(mesh.userData ?? {}),
         aurumDiamondMicroScreenDiameterPx: Number(diameter.toFixed(2)),
