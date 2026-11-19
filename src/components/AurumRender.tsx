@@ -6064,7 +6064,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
               }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
-              <p className="text-[10px] leading-relaxed text-[#77756f]">En modo manual, mueve la cámara mientras se graba; en automático, la joya gira sola 360°. 4K depende de la resolución real del visor. 120 FPS es experimental. El giro automático restaura la cámara al terminar; la grabación manual conserva el encuadre final.</p>
+              <p className="text-[10px] leading-relaxed text-[#77756f]">En modo manual, mueve la cámara mientras se graba; en automático, la joya gira sola. El archivo conserva los píxeles nativos del canvas y el encuadre del visor. La cámara se restaura al terminar.</p>
             </div>}
           </div>
           {EXPORT_LEGADO_VISIBLE&&(<button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .json</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>)}
