@@ -468,15 +468,22 @@ export async function createAurumDiamondBvhRuntime(options: {
       // The protected center deliberately keeps its approved 0.010 baseline;
       // secondary white 1 uses 0.010 and secondary white 2 uses 0.000.
       // Other secondary diamond profiles retain their existing 0.006 baseline.
+      // Secondary stones consume the exact catalog/.dmat parameters attached
+      // to their physical material. The protected center retains its approved calibration.
+      const diamondSourceParameters = calibrateSecondaryDiamond
+        ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
+        : null;
       const baseDiamondDispersion = family !== "diamante"
         ? undefined
-        : !calibrateSecondaryDiamond
-          ? 0.010
-          : activeGemId === "diamante_natural"
+        : diamondSourceParameters
+          ? Math.max(0, Number(diamondSourceParameters.dispersion ?? 0.006))
+          : !calibrateSecondaryDiamond
             ? 0.010
-            : activeGemId === "diamante_vs"
-              ? 0
-              : 0.006;
+            : activeGemId === "diamante_natural"
+              ? 0.010
+              : activeGemId === "diamante_vs"
+                ? 0
+                : 0.006;
       // Optional center-only mode limits eligibility, but center identification
       // above remains active in all-size production mode.
       if (family === "diamante" && options.diamondCenterOnly) {
@@ -563,25 +570,29 @@ export async function createAurumDiamondBvhRuntime(options: {
           // to secondary MICRO/SMALL stones; the protected center remains 1:1.
           // Gamma, IOR, environment and the underlying material response stay fixed.
           rgbBoost: family === "diamante"
-            ? (!isBlueDiamond && !isPinkDiamond ? undefined : isBlueDiamond ? [2, 2, 2] : [1.3, 1, 1])
+            ? (diamondSourceParameters?.boostFactors
+              ? [Number(diamondSourceParameters.boostFactors.x ?? 1), Number(diamondSourceParameters.boostFactors.y ?? 1), Number(diamondSourceParameters.boostFactors.z ?? 1)]
+              : (!isBlueDiamond && !isPinkDiamond ? undefined : isBlueDiamond ? [2, 2, 2] : [1.3, 1, 1]))
             : undefined,
           environmentIntensity: family === "diamante"
-            ? (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25)
+            ? (diamondSourceParameters ? Number(currentMaterial?.envMapIntensity ?? 1.30) : (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25))
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           dispersion: family === "diamante"
             ? baseDiamondDispersion
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
-          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (calibrateSecondaryDiamond ? 2.417 : 2.6) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
-          absorption: useEmeraldBvhOptics
-            ? (activeGemId === "esmeralda_2" ? 1.8 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 1.6 : 1.35)
+          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (diamondSourceParameters ? Number(diamondSourceParameters.refractiveIndex ?? 2.6) : (calibrateSecondaryDiamond ? 2.417 : 2.6)) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
+          absorption: family === "diamante" && diamondSourceParameters
+            ? Number(diamondSourceParameters.absorptionFactor ?? 1)
+            : useEmeraldBvhOptics
+              ? (activeGemId === "esmeralda_2" ? 1.8 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 1.6 : 1.35)
             : emeraldProfile?.absorption ?? rubyProfile?.absorption ?? sapphireProfile?.absorption ?? (isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isImperialTopaz ? 0.48 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.22 : 0.38) : isTanzanite ? 0.42 : isMoissanite ? 0.18 : isSpinel || isGarnet || isPeridot || isMorganite || isZircon || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.45 : 1),
           color: isEmerald
             ? (activeGemId === "esmeralda_1" ? 0x22dfa3 : activeGemId === "esmeralda_2" ? 0x4fd5b3 : activeGemId === "esmeralda_3" ? 0x19d597 : activeGemId === "esmeralda_inclusiones" ? 0x09e09d : emeraldProfile?.color ?? 0x05683d)
             : rubyProfile?.color ?? sapphireProfile?.color ?? (family === "diamante" ? (isBlueDiamond ? 0xb5cbdd : isPinkDiamond ? 0xf9dfec : 0xffffff) : resolveAurumCatalogGemBvhColor(materials[0], isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff)),
-          reflectivity: family === "diamante" ? 0.46 : isEmerald
+          reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" && isPinkDiamond ? 0.90 : 1.09,
+          gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09,
           // Every diamond starts with the same EXR orientation. Later global
           // environment rotation is applied uniformly through updateEnvironment().
           // Per-mesh family offsets must not rotate melee stones away from the center.
@@ -591,8 +602,8 @@ export async function createAurumDiamondBvhRuntime(options: {
           ...(family === "diamante" ? { environmentRotationEuler: meshEnvironmentAlignment.rotationEuler } : {}),
         });
         const baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
-        const baseDiamondReflectivity = family === "diamante" ? 0.46 : (prepared.material as any).reflectivity ?? 0.46;
-        const baseDiamondGamma = family === "diamante" ? (isPinkDiamond ? 0.90 : 1.09) : 1.09;
+        const baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
+        const baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09;
         const isProtectedCenter = () => Boolean(
           mesh.userData?.aurumDiamondMicroCenterProtected
           || isAurumDiamondBvhCenterTarget(mesh)
@@ -657,7 +668,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (family === "diamante") {
               // One source of truth: the requested BVH quality determines
               // internal ray bounces for every diamond, regardless of size or color.
-              const rayBounces = quality === "final" ? 5 : quality === "high" ? 4 : 3;
+              const rayBounces = diamondSourceParameters
+                ? Math.max(1, Math.min(8, Math.floor(Number(diamondSourceParameters.rayBounces ?? 5))))
+                : quality === "final" ? 5 : quality === "high" ? 4 : 3;
               packageApi.setDiamondOptions(prepared.material, { rayBounces });
               currentRayBounces = rayBounces;
               console.info("[AURUM][DIAMOND][BVH_QUALITY_UPDATED]", {
@@ -698,7 +711,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             gemId: activeGemId,
             tier: currentDiamondTier,
             opticalProfile: !isBlueDiamond && !isPinkDiamond
-              ? calibrateSecondaryDiamond ? "white-secondary-size-calibrated" : "white-shared-center-profile"
+              ? calibrateSecondaryDiamond ? (diamondSourceParameters ? "catalog-dmat-secondary-profile" : "white-secondary-size-calibrated") : "white-shared-center-profile"
               : isBlueDiamond ? "blue-calibrated" : "pink-calibrated",
             ior: prepared.diagnostics.ior,
             transmission: !isBlueDiamond && !isPinkDiamond ? 0 : 0.05,
