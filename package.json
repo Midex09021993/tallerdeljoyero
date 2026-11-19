@@ -79,7 +79,8 @@
     "vite-tsconfig-paths": "^6.0.2",
     "zod": "^3.24.2",
     "realistic-diamond-shader": "0.1.2",
-    "three-bvh-csg": "0.0.18"
+    "three-bvh-csg": "0.0.18",
+    "canvas-record": "5.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
