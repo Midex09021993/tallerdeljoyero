@@ -476,7 +476,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       const diamondSourceParameters = calibrateSecondaryDiamond
         ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
         : null;
-      const baseDiamondDispersion = family !== "diamante"
+      let baseDiamondDispersion = family !== "diamante"
         ? undefined
         : diamondSourceParameters
           ? Math.max(0, Number(diamondSourceParameters.dispersion ?? 0.006))
