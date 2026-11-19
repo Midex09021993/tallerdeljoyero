@@ -23,6 +23,7 @@ type RecordEntry = {
   setTier: (tier: "micro" | "small" | "medium" | "brilliant") => void;
   setSourceDispersion: (dispersion: number) => void;
   setColor: (color: number) => void;
+  setProfile: (profile: any) => void;
   dispose: () => void;
 };
 
@@ -67,6 +68,8 @@ export type AurumDiamondBvhRuntime = {
   setDiamondDispersion: (targets: readonly THREE.Mesh[], dispersion: number) => void;
   /** Update the catalog RGB on already-created BVH diamond shader uniforms. */
   setDiamondColor: (targets: readonly THREE.Mesh[], color: number) => void;
+  /** Atomically synchronize the BVH shader and its retained physical fallback to a catalog profile. */
+  setDiamondProfile: (targets: readonly THREE.Mesh[], profile: any) => void;
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   /** Enable/disable one gemstone family without disturbing other BVH entries. */
@@ -623,7 +626,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // BVH refraction supplies the visible diamond response.
           // Neutral white diamonds share the exact center-stone optical profile.
           transmission: family === "diamante"
-            ? (!isBlueDiamond && !isPinkDiamond ? 0 : 0.05)
+            ? Number(currentMaterial?.transmission ?? 0)
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
@@ -643,9 +646,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           // to secondary MICRO/SMALL stones; the protected center remains 1:1.
           // Gamma, IOR, environment and the underlying material response stay fixed.
           rgbBoost: family === "diamante"
-            ? (diamondSourceParameters?.boostFactors
+            ? (isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : diamondSourceParameters?.boostFactors
               ? [Number(diamondSourceParameters.boostFactors.x ?? 1), Number(diamondSourceParameters.boostFactors.y ?? 1), Number(diamondSourceParameters.boostFactors.z ?? 1)]
-              : (!isBlueDiamond && !isPinkDiamond ? undefined : isBlueDiamond ? [2, 2, 2] : [1.3, 1, 1]))
+              : undefined)
             : undefined,
           environmentIntensity: family === "diamante"
             ? (diamondSourceParameters ? Number(currentMaterial?.envMapIntensity ?? 1.30) : (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25))
@@ -679,9 +682,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
           ...(family === "diamante" ? { environmentRotationEuler: getAurumDiamondEnvironmentRotationEuler(meshEnvironmentAlignment.rotationRadians + sourceEnvironmentOffset, meshEnvironmentAlignment.correctionQuaternion) } : {}),
         });
-        const baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
-        const baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
-        const baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09;
+        let baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
+        let baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
+        let baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09;
         const isProtectedCenter = () => Boolean(
           mesh.userData?.aurumDiamondMicroCenterProtected
           || isAurumDiamondBvhCenterTarget(mesh)
@@ -707,6 +710,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             environmentIntensity,
             reflectivity,
             gamma,
+            ...(family === "diamante" && diamondSourceParameters?.boostFactors ? {
+              rgbBoost: [Number(diamondSourceParameters.boostFactors.x ?? 1), Number(diamondSourceParameters.boostFactors.y ?? 1), Number(diamondSourceParameters.boostFactors.z ?? 1)],
+            } : {}),
           });
           currentDiamondDispersion = dispersion;
           currentDiamondEnvironmentIntensity = environmentIntensity;
@@ -714,8 +720,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           currentDiamondGamma = gamma;
           currentDiamondTier = effectiveTier;
         };
+        const retainedPhysicalMaterial = mesh.material;
         entries.set(mesh, {
-          originalMaterial: mesh.material,
+          originalMaterial: retainedPhysicalMaterial,
           experimentalMaterial: prepared.material,
           family,
           gemId: activeGemId,
@@ -735,6 +742,68 @@ export async function createAurumDiamondBvhRuntime(options: {
           setColor: (nextColor: number) => {
             if (family !== "diamante" || !Number.isFinite(Number(nextColor))) return;
             setAurumBvhShaderColor(prepared.material, Number(nextColor));
+          },
+          setProfile: (nextProfile: any) => {
+            if (family !== "diamante" || !nextProfile) return;
+            const parameters = nextProfile.diamondMaterialParameters ?? {};
+            const nextColor = Number(nextProfile.color ?? 0xffffff);
+            const nextDispersion = Math.max(0, Math.min(0.1, Number(parameters.dispersion ?? nextProfile.dispersion ?? 0)));
+            const nextEnvironmentIntensity = Math.max(0, Number(nextProfile.envMapIntensity ?? 1.3));
+            const nextReflectivity = Number(parameters.reflectivity ?? 0.5);
+            const nextGamma = Number(parameters.gammaFactor ?? 1);
+            const profileId = String(nextProfile.id ?? "");
+            const boost = profileId === "diamante_azul" ? [2, 2, 2]
+              : profileId === "diamante_rosa" ? [1.3, 1, 1]
+              : parameters.boostFactors
+                ? [Number(parameters.boostFactors.x ?? 1), Number(parameters.boostFactors.y ?? 1), Number(parameters.boostFactors.z ?? 1)]
+                : undefined;
+            const transmission = Math.max(0, Math.min(1, Number(nextProfile.transmission ?? 0)));
+            const ior = Math.max(1, Number(parameters.refractiveIndex ?? nextProfile.ior ?? 2.6));
+            const absorption = Math.max(0, Number(parameters.absorptionFactor ?? 1));
+            baseDiamondDispersion = nextDispersion;
+            baseDiamondEnvironmentIntensity = nextEnvironmentIntensity;
+            baseDiamondReflectivity = nextReflectivity;
+            baseDiamondGamma = nextGamma;
+            const retainedMaterials = Array.isArray(retainedPhysicalMaterial) ? retainedPhysicalMaterial : [retainedPhysicalMaterial];
+            retainedMaterials.forEach((material: any) => {
+              if (!material) return;
+              material.color?.setHex(nextColor);
+              material.envMapIntensity = nextEnvironmentIntensity;
+              material.dispersion = nextDispersion;
+              material.transmission = transmission;
+              material.ior = ior;
+              material.attenuationColor?.setHex(Number(nextProfile.attenuationColor ?? nextColor));
+              material.attenuationDistance = Math.max(0.1, Number(nextProfile.attenuationDistance ?? 100));
+              material.userData = {
+                ...(material.userData ?? {}),
+                aurumGemFamily: "Diamante",
+                aurumDiamondCatalogProfile: profileId,
+                aurumDiamondCatalogColor: nextColor,
+                aurumIJEWELParameters: {
+                  ...(material.userData?.aurumIJEWELParameters ?? {}),
+                  ...parameters,
+                  color: nextColor,
+                  dispersion: nextDispersion,
+                  reflectivity: nextReflectivity,
+                  gammaFactor: nextGamma,
+                  absorptionFactor: absorption,
+                  ...(boost ? { boostFactors: { x: boost[0], y: boost[1], z: boost[2] } } : {}),
+                },
+              };
+              material.needsUpdate = true;
+            });
+            setAurumBvhShaderColor(prepared.material, nextColor);
+            packageApi.setDiamondOptions?.(prepared.material, {
+              dispersion: nextDispersion,
+              environmentIntensity: nextEnvironmentIntensity,
+              reflectivity: nextReflectivity,
+              gamma: nextGamma,
+              transmission,
+              ior,
+              absorption,
+              ...(boost ? { rgbBoost: boost } : {}),
+            });
+            applyDiamondTierOptics(currentDiamondTier);
           },
           setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
             if (family !== "diamante") return;
@@ -914,6 +983,13 @@ export async function createAurumDiamondBvhRuntime(options: {
       const selected = new Set(targets);
       for (const [mesh, entry] of entries) {
         if (selected.has(mesh) && entry.family === "diamante") entry.setColor(Number(color));
+      }
+    },
+    setDiamondProfile(targets, profile) {
+      if (disposed || !targets?.length || !profile) return;
+      const selected = new Set(targets);
+      for (const [mesh, entry] of entries) {
+        if (selected.has(mesh) && entry.family === "diamante") entry.setProfile(profile);
       }
     },
     hasActiveMeshes(targets) {
