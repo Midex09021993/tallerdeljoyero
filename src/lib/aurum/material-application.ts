@@ -524,7 +524,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   if(isDiamondToDiamond){
     const targetDispersion=Math.max(0,Math.min(.1,Number(gemConfig?.diamondMaterialParameters?.dispersion ?? gemConfig?.dispersion ?? 0)));
     const currentMaterials=targets.flatMap((part:any)=>Array.isArray(part.material)?part.material:[part.material]).filter(Boolean);
-    const fromDispersion=Number(currentMaterials[0]?.userData?.aurumIJEWELParameters?.dispersion
+    const fromDispersion=Number(targets[0]?.userData?.aurumDiamondSourceDispersion
+      ?? currentMaterials[0]?.userData?.aurumIJEWELParameters?.dispersion
       ?? currentMaterials[0]?.userData?.aurumDiamondSourceDispersion
       ?? currentMaterials[0]?.dispersion
       ?? targetDispersion);
@@ -550,12 +551,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
           aurumGemApplicationToken:Number(part.userData?.aurumGemApplicationToken??0)+1,
           aurumActiveGemId:String(gemConfig?.id??""),
           aurumActiveGemFamily:"diamante",
+          aurumDiamondSourceDispersion:fromDispersion,
           aurumDiamondDispersionOnlyUpdate:true,
         };
       });
       onTargetsResolved?.(targets.slice());
       onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion);
-      applyGemEnvironment(targets);
       requestRender?.();
       return true;
     }
