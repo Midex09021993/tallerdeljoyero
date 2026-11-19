@@ -3473,8 +3473,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   camara.lookAt(controles.target);
                   controles.update?.();
                 }
-                // Ask the existing viewer loop to draw the next live frame.
-                loop?.invalidate?.();
+                // Render synchronously through the viewer's actual live path before
+                // requestFrame samples the original WebGL drawing buffer.
+                loop?.renderNow?.();
               },
             });
           }finally{
