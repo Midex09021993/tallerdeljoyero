@@ -728,11 +728,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         EXRLoader,
         url: getAurumGemHdriUrl("ijewelGem"),
         ...(sharedEnvironmentMap ? { environmentMap: sharedEnvironmentMap, ownsEnvironmentMap: false } : {}),
-        // The standard gem envMap uses the shared +90° presentation offset,
-        // but the calibrated central white-diamond BVH has its own optical frame:
-        // Aurum Render keeps its base EXR rotation at 0° and applies per-mesh
-        // yaw compensation relative to the center stone inside the BVH runtime.
-        environmentRotationRadians: 0,
+        // Match Aurum Render's production gem EXR orientation: baseline 0°
+        // plus its visually approved +90° diagnostic offset. The BVH runtime
+        // then applies the same geometry-derived per-stone optical-frame correction.
+        environmentRotationRadians: Math.PI / 2,
         camera,
         getViewportHeight: () => renderer.domElement.height,
         quality: "high",
