@@ -450,7 +450,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:(targets?:readonly any[])=>void,requestRender?:()=>void,applyAll=false,onTargetsResolved?:(targets:any[])=>void,onDiamondDispersionTransition?:(targets:any[],from:number,to:number)=>void) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:(targets?:readonly any[])=>void,requestRender?:()=>void,applyAll=false,onTargetsResolved?:(targets:any[])=>void,onDiamondDispersionTransition?:(targets:any[],from:number,to:number,profile:any)=>void) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   // GLB meshes without Rhino layer metadata are categorized as "otro".
