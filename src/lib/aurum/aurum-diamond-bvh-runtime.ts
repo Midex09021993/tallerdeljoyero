@@ -950,9 +950,9 @@ export async function createAurumDiamondBvhRuntime(options: {
               transmission,
               ior,
               absorption,
-              absorptionFactor: absorption,
-              geometryFactor,
-              squashFactor,
+              // The package accepts absorption and facetSharpness. It has no
+              // squashFactor uniform; that control remains native-AURUM only.
+              facetSharpness: Math.max(0, Math.min(1, geometryFactor)),
               rgbBoost: boost,
             });
             entryGemId = profileId;
