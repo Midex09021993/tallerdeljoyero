@@ -559,7 +559,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         if (centerTargetDiagnostics.length < 60) {
           centerTargetDiagnostics.push({
             mesh: mesh.name || mesh.uuid,
-            gemId: activeGemId,
+            get gemId() { return entryGemId; },
             activeGemFamily,
             centerProtected,
             role: String(mesh.userData?.aurumDiamondRole ?? ""),
@@ -690,6 +690,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           || isAurumDiamondBvhCenterTarget(mesh)
         );
         let currentDiamondTier: "micro" | "small" | "medium" | "brilliant" = screenTier;
+        let entryGemId = activeGemId;
         let currentRayBounces = prepared.diagnostics.rayBounces;
         let currentDiamondDispersion = baseDiamondDispersion;
         let currentDiamondEnvironmentIntensity = baseDiamondEnvironmentIntensity;
@@ -749,14 +750,20 @@ export async function createAurumDiamondBvhRuntime(options: {
             const nextReflectivity = Number(parameters.reflectivity ?? 0.5);
             const nextGamma = Number(parameters.gammaFactor ?? 1);
             const profileId = String(nextProfile.id ?? "");
-            const boost = profileId === "diamante_azul" ? [2, 2, 2]
-              : profileId === "diamante_rosa" ? [1.3, 1, 1]
-              : parameters.boostFactors
-                ? [Number(parameters.boostFactors.x ?? 1), Number(parameters.boostFactors.y ?? 1), Number(parameters.boostFactors.z ?? 1)]
-                : undefined;
-            const transmission = Math.max(0, Math.min(1, Number(nextProfile.transmission ?? 0)));
+            // Always write a complete RGB boost. Omitting this option would leave
+            // the previous profile's shader uniform active (e.g. blue -> white).
+            // Catalog values are authoritative; missing values reset to neutral.
+            const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 };
+            const boost = [
+              Number.isFinite(Number(boostFactors.x)) ? Number(boostFactors.x) : 1,
+              Number.isFinite(Number(boostFactors.y)) ? Number(boostFactors.y) : 1,
+              Number.isFinite(Number(boostFactors.z)) ? Number(boostFactors.z) : 1,
+            ];
+            const transmission = Math.max(0, Math.min(1, Number(parameters.transmission ?? nextProfile.transmission ?? 0)));
             const ior = Math.max(1, Number(parameters.refractiveIndex ?? nextProfile.ior ?? 2.6));
             const absorption = Math.max(0, Number(parameters.absorptionFactor ?? 1));
+            const attenuationColor = Number(nextProfile.attenuationColor ?? nextColor);
+            const attenuationDistance = Math.max(0.1, Number(nextProfile.attenuationDistance ?? 100));
             baseDiamondDispersion = nextDispersion;
             baseDiamondEnvironmentIntensity = nextEnvironmentIntensity;
             baseDiamondReflectivity = nextReflectivity;
@@ -769,8 +776,8 @@ export async function createAurumDiamondBvhRuntime(options: {
               material.dispersion = nextDispersion;
               material.transmission = transmission;
               material.ior = ior;
-              material.attenuationColor?.setHex(Number(nextProfile.attenuationColor ?? nextColor));
-              material.attenuationDistance = Math.max(0.1, Number(nextProfile.attenuationDistance ?? 100));
+              material.attenuationColor?.setHex(attenuationColor);
+              material.attenuationDistance = attenuationDistance;
               material.userData = {
                 ...(material.userData ?? {}),
                 aurumGemFamily: "Diamante",
@@ -784,12 +791,15 @@ export async function createAurumDiamondBvhRuntime(options: {
                   reflectivity: nextReflectivity,
                   gammaFactor: nextGamma,
                   absorptionFactor: absorption,
-                  ...(boost ? { boostFactors: { x: boost[0], y: boost[1], z: boost[2] } } : {}),
+                  boostFactors: { x: boost[0], y: boost[1], z: boost[2] },
                 },
               };
               material.needsUpdate = true;
             });
             setAurumBvhShaderColor(prepared.material, nextColor);
+            // Replace the complete mutable shader state in one call. In
+            // particular rgbBoost must be written even when neutral, otherwise
+            // the previous colored profile can leak into the next white profile.
             packageApi.setDiamondOptions?.(prepared.material, {
               dispersion: nextDispersion,
               environmentIntensity: nextEnvironmentIntensity,
@@ -798,8 +808,9 @@ export async function createAurumDiamondBvhRuntime(options: {
               transmission,
               ior,
               absorption,
-              ...(boost ? { rgbBoost: boost } : {}),
+              rgbBoost: boost,
             });
+            entryGemId = profileId;
             applyDiamondTierOptics(currentDiamondTier);
           },
           setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
