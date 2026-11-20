@@ -1046,17 +1046,16 @@ test("diamond-to-diamond profile synchronization keeps the BVH cache identity cu
   expect(runtime).toContain("Diamond catalog identity is synchronized in-place by entry.setProfile()");
 });
 
-test("white diamond profiles preserve their catalog RGB boost through fast BVH synchronization", () => {
-  const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
+test("white diamond 1 and 2 use temporary RGB Boost 2x for the visual diagnosis", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
-  const whiteOne = catalog.slice(catalog.indexOf('id:"diamante_natural"'), catalog.indexOf('id:"diamante_vs"'));
-  const whiteTwo = catalog.slice(catalog.indexOf('id:"diamante_vs"'), catalog.indexOf('id:"diamante_inclusiones"'));
-  expect(whiteOne).toContain("boostFactors:{x:1,y:1,z:1}");
-  expect(whiteTwo).toContain("boostFactors:{x:1,y:1,z:1}");
-  expect(profileBlock).toContain("const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 }");
+  expect(runtime).toContain('activeGemId === "diamante_natural" || activeGemId === "diamante_vs"');
+  expect(runtime).toContain("isWhiteDiamondRgbBoostTest ? [2, 2, 2]");
+  expect(profileBlock).toContain('profileId === "diamante_natural" || profileId === "diamante_vs" ? [2, 2, 2]');
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).toContain("entryGemId = profileId");
+  // The override is deliberately scoped; other white diamond profiles retain their catalog values.
+  expect(profileBlock).not.toContain('profileId === "diamante_inclusiones" ? [2, 2, 2]');
 });
 
 test("diamond BVH logs effective RGB boost at initialization and after profile synchronization", () => {
