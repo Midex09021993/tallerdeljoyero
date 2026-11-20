@@ -253,7 +253,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       shader.uniforms.aurumIJEWELSQUASHFactor={value:Number(ijewel.squashFactor??.98)};
       shader.uniforms.aurumIJEWELAbsorptionFactor={value:Number(ijewel.absorptionFactor??1)};
       shader.uniforms.aurumIJEWELGammaFactor={value:Number(ijewel.gammaFactor??1)};
-      shader.uniforms.aurumIJEWELTransmissionParameter={value:Number(ijewel.transmissionParameter??0)};
+      shader.uniforms.aurumIJEWELTransmissionParameter={value:Math.max(0,Math.min(1,Number(ijewel.transmissionParameter??ijewel.transmission??0)))};
       shader.uniforms.aurumIJEWELBoostFactors={value:new THREE.Vector3(Number(ijewel.boostFactors?.x??1),Number(ijewel.boostFactors?.y??1),Number(ijewel.boostFactors?.z??1))};
       material.userData={...(material.userData??{}),aurumIJEWELUniforms:{boostFactors:shader.uniforms.aurumIJEWELBoostFactors}};
       // Experimental virtual-facet reflection samples; disabled by metadata for A/B.
@@ -598,6 +598,10 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // controlled share of the physical PBR/Fresnel surface for highlights.
         // This is still an environment-sampling approximation, not geometric tracing.
         float ijInternalWeight=clamp(ijReflect*0.82,0.57,0.67);
+        // Catalog transmission is a separate, bounded control. It increases
+        // the contribution of the internal transmitted-ray estimate without
+        // changing the established zero-transmission calibration.
+        ijInternalWeight=clamp(ijInternalWeight+aurumIJEWELTransmissionParameter*0.12,0.0,0.79);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
