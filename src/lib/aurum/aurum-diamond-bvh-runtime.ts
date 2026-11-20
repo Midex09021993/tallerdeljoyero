@@ -642,21 +642,17 @@ export async function createAurumDiamondBvhRuntime(options: {
           ?? currentMaterial?.color?.getHex?.()
           ?? (isBlueDiamond ? 0x80c3dc : activeGemId === "diamante_rosa_2" ? 0xf1bcd5 : isPinkDiamond ? 0xf9dfec : 0xffffff))
         : undefined;
-      // Temporary diagnostic override: compare both white catalog profiles
-      // at the same RGB energy as the known bright startup reference.
-      // Keep this scoped to Blanco 1/2; do not alter other diamond calibrations.
-      const isWhiteDiamondRgbBoostTest = activeGemId === "diamante_natural" || activeGemId === "diamante_vs";
+      // Catalog .dmat values are authoritative for neutral/white diamonds.
+      // Always write an explicit neutral boost when the source has no boost so
+      // the shader package default cannot leak energy from a previously selected profile.
       const initialRgbBoost = family === "diamante"
-        ? (isWhiteDiamondRgbBoostTest ? [2, 2, 2] as [number, number, number]
-          : isBlueDiamond ? [2, 2, 2] as [number, number, number]
+        ? (isBlueDiamond ? [2, 2, 2] as [number, number, number]
           : isPinkDiamond ? [1.3, 1, 1] as [number, number, number]
-          : diamondSourceParameters?.boostFactors
-            ? [
-                Number(diamondSourceParameters.boostFactors.x ?? 1),
-                Number(diamondSourceParameters.boostFactors.y ?? 1),
-                Number(diamondSourceParameters.boostFactors.z ?? 1),
-              ] as [number, number, number]
-            : undefined)
+          : [
+              Number(diamondSourceParameters?.boostFactors?.x ?? 1),
+              Number(diamondSourceParameters?.boostFactors?.y ?? 1),
+              Number(diamondSourceParameters?.boostFactors?.z ?? 1),
+            ] as [number, number, number])
         : undefined;
       const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
@@ -792,9 +788,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             // Catalog values are authoritative; missing values reset to neutral.
             const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 };
             // Preserve the already-calibrated live blue/pink shader response.
-            // All other profiles use their catalog boost, or neutral RGB when absent.
-            const boost = profileId === "diamante_natural" || profileId === "diamante_vs" ? [2, 2, 2]
-              : profileId === "diamante_azul" ? [2, 2, 2]
+            // White/neutral profiles restore their exact catalog boost (1,1,1
+            // for the supplied Blanco 1 .dmat), never the temporary 2x test.
+            const boost = profileId === "diamante_azul" ? [2, 2, 2]
               : profileId === "diamante_rosa" ? [1.3, 1, 1]
               : [
                   Number.isFinite(Number(boostFactors.x)) ? Number(boostFactors.x) : 1,
