@@ -1032,3 +1032,14 @@ test("diamond fast profile synchronization updates the retained BVH fallback and
   expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);");
   expect(component).toContain("diamondBvhRuntime?.setDiamondProfile?.(targets,profile);");
 });
+
+
+test("BVH diamond profile synchronization always resets RGB boost to catalog or neutral values", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
+  expect(profileBlock).toContain('const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 }');
+  expect(profileBlock).toContain("rgbBoost: boost");
+  expect(profileBlock).toContain("entryGemId = profileId");
+  expect(profileBlock).not.toContain('profileId === "diamante_azul" ? [2, 2, 2]');
+  expect(profileBlock).not.toContain("...(boost ? { rgbBoost: boost } : {})");
+});
