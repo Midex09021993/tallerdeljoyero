@@ -113,6 +113,10 @@ export type AurumDiamondOpticalProfileBaseline = {
   reflectivity: number;
   gamma: number;
   rgbBoost: [number, number, number];
+  geometryFactor: number;
+  squashFactor: number;
+  absorptionFactor: number;
+  transmission: number;
 };
 
 /** Resolve profile values without losing the exact startup calibration when returning to the original catalog profile. */
@@ -133,6 +137,10 @@ export function resolveAurumDiamondProfileOptics(
       reflectivity: baseline.reflectivity,
       gamma: baseline.gamma,
       rgbBoost: [...baseline.rgbBoost] as [number, number, number],
+      geometryFactor: baseline.geometryFactor,
+      squashFactor: baseline.squashFactor,
+      absorptionFactor: baseline.absorptionFactor,
+      transmission: baseline.transmission,
     };
   }
   const boostFactors = parameters.boostFactors ?? profile?.boostFactors;
@@ -141,6 +149,10 @@ export function resolveAurumDiamondProfileOptics(
     environmentIntensity: Math.max(0, Number(profile?.envMapIntensity ?? 1.3)),
     reflectivity: Number(parameters.reflectivity ?? 0.5),
     gamma: Number(parameters.gammaFactor ?? 1),
+    geometryFactor: Number(parameters.geometryFactor ?? 0.5),
+    squashFactor: Number(parameters.squashFactor ?? 0.98),
+    absorptionFactor: Math.max(0, Number(parameters.absorptionFactor ?? 1)),
+    transmission: Math.max(0, Math.min(1, Number(parameters.transmission ?? profile?.transmission ?? 0))),
     rgbBoost: boostFactors
       ? [Number(boostFactors.x ?? 1), Number(boostFactors.y ?? 1), Number(boostFactors.z ?? 1)]
       : [1, 1, 1],
@@ -765,8 +777,8 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
           gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09,
-          geometryFactor: Number(diamondSourceParameters?.geometryFactor ?? 0.5),
-          squashFactor: Number(diamondSourceParameters?.squashFactor ?? 0.98),
+          geometryFactor: initialDiamondGeometryFactor,
+          squashFactor: initialDiamondSquashFactor,
           diamondOrientedEnvMap: Number(diamondSourceParameters?.diamondOrientedEnvMap ?? 0),
           // Every diamond starts with the same EXR orientation. Later global
           // environment rotation is applied uniformly through updateEnvironment().
@@ -779,6 +791,11 @@ export async function createAurumDiamondBvhRuntime(options: {
         let baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
         let baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
         let baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09;
+        const initialDiamondParameters = currentMaterial?.userData?.aurumIJEWELParameters ?? {};
+        const initialDiamondTransmission = Math.max(0, Math.min(1, Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)));
+        const initialDiamondGeometryFactor = Number(initialDiamondParameters.geometryFactor ?? 0.5);
+        const initialDiamondSquashFactor = Number(initialDiamondParameters.squashFactor ?? 0.98);
+        const initialDiamondAbsorptionFactor = Math.max(0, Number(initialDiamondParameters.absorptionFactor ?? 1));
         const initialDiamondProfileBaseline: AurumDiamondOpticalProfileBaseline = {
           profileId: activeGemId,
           dispersion: baseDiamondDispersion,
@@ -786,6 +803,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           reflectivity: baseDiamondReflectivity,
           gamma: baseDiamondGamma,
           rgbBoost: initialRgbBoost ?? [1, 1, 1],
+          geometryFactor: initialDiamondGeometryFactor,
+          squashFactor: initialDiamondSquashFactor,
+          absorptionFactor: initialDiamondAbsorptionFactor,
+          transmission: initialDiamondTransmission,
         };
         const isProtectedCenter = () => Boolean(
           mesh.userData?.aurumDiamondMicroCenterProtected
@@ -861,9 +882,11 @@ export async function createAurumDiamondBvhRuntime(options: {
             const boost = profileId === "diamante_azul" ? [2, 2, 2]
               : profileId === "diamante_rosa" ? [1.3, 1, 1]
               : resolvedOptics.rgbBoost;
-            const transmission = Math.max(0, Math.min(1, Number(parameters.transmission ?? nextProfile.transmission ?? 0)));
+            const transmission = resolvedOptics.transmission;
+            const geometryFactor = resolvedOptics.geometryFactor;
+            const squashFactor = resolvedOptics.squashFactor;
+            const absorption = resolvedOptics.absorptionFactor;
             const ior = Math.max(1, Number(parameters.refractiveIndex ?? nextProfile.ior ?? 2.6));
-            const absorption = Math.max(0, Number(parameters.absorptionFactor ?? 1));
             const attenuationColor = Number(nextProfile.attenuationColor ?? nextColor);
             const attenuationDistance = Math.max(0.1, Number(nextProfile.attenuationDistance ?? 100));
             baseDiamondDispersion = nextDispersion;
@@ -893,6 +916,9 @@ export async function createAurumDiamondBvhRuntime(options: {
                   reflectivity: nextReflectivity,
                   gammaFactor: nextGamma,
                   absorptionFactor: absorption,
+                  geometryFactor,
+                  squashFactor,
+                  transmission,
                   boostFactors: { x: boost[0], y: boost[1], z: boost[2] },
                 },
               };
@@ -910,6 +936,10 @@ export async function createAurumDiamondBvhRuntime(options: {
               transmission,
               ior,
               absorption,
+              absorptionFactor: absorption,
+              geometryFactor,
+              squashFactor,
+              transmission,
               rgbBoost: boost,
             });
             entryGemId = profileId;
@@ -928,6 +958,10 @@ export async function createAurumDiamondBvhRuntime(options: {
                 ior,
                 transmission,
                 absorption,
+                absorptionFactor: absorption,
+                geometryFactor,
+                squashFactor,
+                transmission,
                 rgbBoost: boost,
               },
               effectiveShader: {
