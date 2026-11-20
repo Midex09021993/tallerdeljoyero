@@ -85,6 +85,27 @@ export function isAurumDiamondBvhCenterTarget(mesh: THREE.Mesh): boolean {
     || /center|central|main|principal/i.test(String(data.aurumDiamondRole ?? ""));
 }
 
+function readAurumDiamondRgbBoost(material: THREE.Material): [number, number, number] | null {
+  const shaderMaterial = material as THREE.ShaderMaterial & { userData?: Record<string, any> };
+  const uniforms = shaderMaterial.uniforms ?? {};
+  const candidates = [
+    uniforms.boostFactors?.value,
+    uniforms.rgbBoost?.value,
+    shaderMaterial.userData?.aurumIJEWELUniforms?.boostFactors?.value,
+    shaderMaterial.userData?.aurumDiamondUniforms?.boostFactors?.value,
+  ];
+  const value = candidates.find((candidate) => candidate != null);
+  if (value == null) return null;
+  if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+    const values = Array.from(value as ArrayLike<number>);
+    return values.length >= 3 ? [Number(values[0]), Number(values[1]), Number(values[2])] : null;
+  }
+  if (typeof value === "object" && "x" in value && "y" in value && "z" in value) {
+    return [Number(value.x), Number(value.y), Number(value.z)];
+  }
+  return null;
+}
+
 function setAurumBvhShaderColor(material: THREE.Material, colorHex: number): void {
   const shaderMaterial = material as THREE.ShaderMaterial;
   const color = new THREE.Color(colorHex);
@@ -620,6 +641,17 @@ export async function createAurumDiamondBvhRuntime(options: {
           ?? currentMaterial?.color?.getHex?.()
           ?? (isBlueDiamond ? 0x80c3dc : activeGemId === "diamante_rosa_2" ? 0xf1bcd5 : isPinkDiamond ? 0xf9dfec : 0xffffff))
         : undefined;
+      const initialRgbBoost = family === "diamante"
+        ? (isBlueDiamond ? [2, 2, 2] as [number, number, number]
+          : isPinkDiamond ? [1.3, 1, 1] as [number, number, number]
+          : diamondSourceParameters?.boostFactors
+            ? [
+                Number(diamondSourceParameters.boostFactors.x ?? 1),
+                Number(diamondSourceParameters.boostFactors.y ?? 1),
+                Number(diamondSourceParameters.boostFactors.z ?? 1),
+              ] as [number, number, number]
+            : undefined)
+        : undefined;
       const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
           // The approved A/B reference uses zero direct transmission; internal
@@ -645,11 +677,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The Micro Pipeline applies a restrained dispersion multiplier only
           // to secondary MICRO/SMALL stones; the protected center remains 1:1.
           // Gamma, IOR, environment and the underlying material response stay fixed.
-          rgbBoost: family === "diamante"
-            ? (isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : diamondSourceParameters?.boostFactors
-              ? [Number(diamondSourceParameters.boostFactors.x ?? 1), Number(diamondSourceParameters.boostFactors.y ?? 1), Number(diamondSourceParameters.boostFactors.z ?? 1)]
-              : undefined)
-            : undefined,
+          rgbBoost: initialRgbBoost,
           environmentIntensity: family === "diamante"
             ? (diamondSourceParameters ? Number(currentMaterial?.envMapIntensity ?? 1.30) : (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25))
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
@@ -816,6 +844,14 @@ export async function createAurumDiamondBvhRuntime(options: {
             });
             entryGemId = profileId;
             applyDiamondTierOptics(currentDiamondTier);
+            console.info("[AURUM][DIAMOND][RGB_BOOST_PROFILE_SYNC]", {
+              mesh: mesh.name || mesh.uuid,
+              profileId,
+              tier: currentDiamondTier,
+              centerProtected: isProtectedCenter(),
+              requestedRgbBoost: boost,
+              effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
+            });
           },
           setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
             if (family !== "diamante") return;
@@ -876,6 +912,14 @@ export async function createAurumDiamondBvhRuntime(options: {
         // transitions, leaving emeralds at the shader package's generic default.
         entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
         if (family === "diamante") {
+          console.info("[AURUM][DIAMOND][RGB_BOOST_INITIAL]", {
+            mesh: mesh.name || mesh.uuid,
+            profileId: activeGemId,
+            tier: currentDiamondTier,
+            centerProtected: isProtectedCenter(),
+            requestedRgbBoost: initialRgbBoost ?? "package-default",
+            effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
+          });
           diamondOpticalDiagnostics.push({
             mesh: mesh.name || mesh.uuid,
             gemId: activeGemId,

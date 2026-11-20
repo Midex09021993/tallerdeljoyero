@@ -1034,6 +1034,16 @@ test("diamond fast profile synchronization updates the retained BVH fallback and
 });
 
 
+test("diamond BVH logs effective RGB boost at initialization and after profile synchronization", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  expect(runtime).toContain("function readAurumDiamondRgbBoost(material: THREE.Material)");
+  expect(runtime).toContain('"[AURUM][DIAMOND][RGB_BOOST_INITIAL]"');
+  expect(runtime).toContain('"[AURUM][DIAMOND][RGB_BOOST_PROFILE_SYNC]"');
+  expect(runtime).toContain("requestedRgbBoost: initialRgbBoost ?? \"package-default\"");
+  expect(runtime).toContain("effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material)");
+  expect(runtime).toContain("requestedRgbBoost: boost");
+});
+
 test("BVH diamond profile synchronization always resets RGB boost to catalog or neutral values", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
