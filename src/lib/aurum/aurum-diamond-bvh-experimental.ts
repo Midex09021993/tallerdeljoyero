@@ -178,10 +178,11 @@ export function prepareAurumDiamondBvhExperiment(
   });
 
   if (material instanceof THREE.ShaderMaterial) {
-    installAurumDiamondBvhOpticalControls(material, {
+    setAurumDiamondBvhOpticalParameters(material, {
       geometryFactor: options.geometryFactor ?? 0.5,
       squashFactor: options.squashFactor ?? 0.98,
       absorptionFactor: options.absorption ?? 1,
+      transmission: options.transmission ?? 0,
     });
   }
 
