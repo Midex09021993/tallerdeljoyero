@@ -1034,6 +1034,17 @@ test("diamond fast profile synchronization updates the retained BVH fallback and
 });
 
 
+test("diamond-to-diamond profile synchronization keeps the BVH cache identity current", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const entryBlock = runtime.slice(runtime.indexOf("entries.set(mesh, {"), runtime.indexOf("});", runtime.indexOf("entries.set(mesh, {")) + 3);
+  const processBlock = runtime.slice(runtime.indexOf("const processMesh ="), runtime.indexOf("const materials = Array.isArray(mesh.material)", runtime.indexOf("const processMesh =")));
+  expect(entryBlock).toContain("get gemId() { return entryGemId; }");
+  expect(entryBlock).toContain("entryGemId = profileId");
+  expect(processBlock).toContain("existing.gemId === activeGemId");
+  expect(processBlock).toContain("existing.activeGemFamily === activeGemFamily");
+  expect(runtime).toContain("Diamond catalog identity is synchronized in-place by entry.setProfile()");
+});
+
 test("diamond BVH logs effective RGB boost at initialization and after profile synchronization", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   expect(runtime).toContain("function readAurumDiamondRgbBoost(material: THREE.Material)");

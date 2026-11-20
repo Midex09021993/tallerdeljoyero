@@ -443,11 +443,10 @@ export async function createAurumDiamondBvhRuntime(options: {
         found.add(mesh);
         return;
       }
-      // A mesh may keep the experimental shader after its catalog identity changes.
-      // Never trust that cached shader across gem selections: restore the prior
-      // physical material and dispose the old BVH before classifying the new state.
-      // If the caller changed metadata without assigning a matching new material,
-      // the family/material consistency check below safely leaves BVH disabled.
+      // Rebuild only when the material instance or gemstone family changes.
+      // Diamond catalog identity is synchronized in-place by entry.setProfile(),
+      // so switching white/colored diamond profiles keeps the compatible BVH alive.
+      // A true family/material change still restores and disposes the old entry.
       if (existing) releaseEntry(mesh, true);
 
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -753,7 +752,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           originalMaterial: retainedPhysicalMaterial,
           experimentalMaterial: prepared.material,
           family,
-          gemId: activeGemId,
+          // Keep the cache identity synchronized with in-place profile changes.
+          // The same mesh + BVH shader remains valid across diamond-to-diamond
+          // catalog switches; a stale captured gemId would force release/rebuild.
+          get gemId() { return entryGemId; },
           activeGemFamily,
           originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
           get baseEnvironmentIntensity() { return baseDiamondEnvironmentIntensity; },
