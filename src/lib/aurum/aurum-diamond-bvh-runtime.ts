@@ -162,10 +162,22 @@ export function resolveAurumDiamondProfileOptics(
 function readAurumDiamondShaderAudit(material: THREE.Material): Record<string, unknown> {
   const shader = material as THREE.ShaderMaterial & { userData?: Record<string, any> };
   const uniforms = shader.uniforms ?? {};
+  const aliases: Record<string, string[]> = {
+    geometryFactor: ["aurumIJEWELGeometryFactor", "facetSharpness"],
+    squashFactor: ["aurumIJEWELSQUASHFactor"],
+    absorptionFactor: ["aurumIJEWELAbsorptionFactor", "absorption"],
+    transmission: ["aurumIJEWELTransmissionParameter", "transmission"],
+    absorption: ["absorption", "aurumIJEWELAbsorptionFactor"],
+    reflectivity: ["aurumIJEWELReflectivity", "reflectivity"],
+    gamma: ["aurumIJEWELGammaFactor", "gamma"],
+  };
   const read = (key: string) => {
-    const value = uniforms[key]?.value
-      ?? shader.userData?.aurumIJEWELUniforms?.[key]?.value
-      ?? shader.userData?.aurumDiamondUniforms?.[key]?.value;
+    const candidates = [key, ...(aliases[key] ?? [])];
+    const value = candidates.map((name) =>
+      uniforms[name]?.value
+      ?? shader.userData?.aurumIJEWELUniforms?.[name]?.value
+      ?? shader.userData?.aurumDiamondUniforms?.[name]?.value
+    ).find((candidate) => candidate !== undefined && candidate !== null);
     if (value == null) return null;
     if (typeof value === "number" || typeof value === "string" || typeof value === "boolean") return value;
     if (Array.isArray(value) || ArrayBuffer.isView(value)) return Array.from(value as ArrayLike<unknown>);
@@ -920,6 +932,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                   geometryFactor,
                   squashFactor,
                   transmission,
+                  transmissionParameter: transmission,
                   boostFactors: { x: boost[0], y: boost[1], z: boost[2] },
                 },
               };
@@ -974,6 +987,9 @@ export async function createAurumDiamondBvhRuntime(options: {
                 gamma: material?.userData?.aurumIJEWELParameters?.gammaFactor ?? null,
                 ior: material?.ior ?? null,
                 transmission: material?.transmission ?? null,
+                geometryFactor: material?.userData?.aurumIJEWELParameters?.geometryFactor ?? null,
+                squashFactor: material?.userData?.aurumIJEWELParameters?.squashFactor ?? null,
+                absorptionFactor: material?.userData?.aurumIJEWELParameters?.absorptionFactor ?? null,
                 rgbBoost: material?.userData?.aurumIJEWELParameters?.boostFactors ?? null,
               })),
             });
@@ -1034,6 +1050,10 @@ export async function createAurumDiamondBvhRuntime(options: {
                 reflectivity: baseDiamondReflectivity,
                 gamma: baseDiamondGamma,
                 ior: prepared.diagnostics.ior,
+                geometryFactor: initialDiamondGeometryFactor,
+                squashFactor: initialDiamondSquashFactor,
+                absorptionFactor: initialDiamondAbsorptionFactor,
+                transmission: initialDiamondTransmission,
                 rayBounces: prepared.diagnostics.rayBounces,
                 rgbBoost: initialRgbBoost ?? "package-default",
               },
