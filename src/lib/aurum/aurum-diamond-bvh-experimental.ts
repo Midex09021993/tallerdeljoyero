@@ -80,19 +80,19 @@ export function setAurumDiamondBvhOpticalParameters(
   if (!material.fragmentShader.includes("uniform float geometryFactor;")) {
     material.fragmentShader = material.fragmentShader.replace(
       "uniform float facetSharpness;",
-      "uniform float facetSharpness;\\n  uniform float geometryFactor;\\n  uniform float squashFactor;",
+      "uniform float facetSharpness;\n  uniform float geometryFactor;\n  uniform float squashFactor;",
     );
   }
   if (!material.fragmentShader.includes("AURUM_BVH_SQUASH_CONTROL")) {
     material.fragmentShader = material.fragmentShader.replace(
       "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);",
-      "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);\\n    // AURUM_BVH_SQUASH_CONTROL\\n    entryRay = normalize(mix(entryRay, localNormal, clamp(1.0 - squashFactor, 0.0, 0.08)));",
+      "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);\n    // AURUM_BVH_SQUASH_CONTROL\n    entryRay = normalize(mix(entryRay, localNormal, clamp(1.0 - squashFactor, 0.0, 0.08)));",
     );
   }
   if (!material.fragmentShader.includes("AURUM_BVH_GEOMETRY_CONTROL")) {
     material.fragmentShader = material.fragmentShader.replace(
       "gl_FragColor = vec4(aces(hdrColor), 1.0);",
-      "// AURUM_BVH_GEOMETRY_CONTROL\\n    hdrColor *= mix(0.96, 1.0, clamp(geometryFactor, 0.0, 1.0));\\n    gl_FragColor = vec4(aces(hdrColor), 1.0);",
+      "// AURUM_BVH_GEOMETRY_CONTROL\n    hdrColor *= mix(0.96, 1.0, clamp(geometryFactor, 0.0, 1.0));\n    gl_FragColor = vec4(aces(hdrColor), 1.0);",
     );
   }
   const set = (key: string, value: number | undefined, min: number, max: number) => {
