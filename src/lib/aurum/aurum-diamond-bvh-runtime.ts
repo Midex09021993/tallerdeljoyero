@@ -106,6 +106,29 @@ function readAurumDiamondRgbBoost(material: THREE.Material): [number, number, nu
   return null;
 }
 
+function readAurumDiamondShaderAudit(material: THREE.Material): Record<string, unknown> {
+  const shader = material as THREE.ShaderMaterial & { userData?: Record<string, any> };
+  const uniforms = shader.uniforms ?? {};
+  const read = (key: string) => {
+    const value = uniforms[key]?.value
+      ?? shader.userData?.aurumIJEWELUniforms?.[key]?.value
+      ?? shader.userData?.aurumDiamondUniforms?.[key]?.value;
+    if (value == null) return null;
+    if (typeof value === "number" || typeof value === "string" || typeof value === "boolean") return value;
+    if (Array.isArray(value) || ArrayBuffer.isView(value)) return Array.from(value as ArrayLike<unknown>);
+    if (typeof value === "object" && "x" in value && "y" in value && "z" in value) {
+      return { x: Number(value.x), y: Number(value.y), z: Number(value.z) };
+    }
+    return Object.prototype.toString.call(value);
+  };
+  return {
+    dispersion: read("dispersion"), environmentIntensity: read("environmentIntensity"),
+    reflectivity: read("reflectivity"), gamma: read("gamma"), ior: read("ior"),
+    transmission: read("transmission"), absorption: read("absorption"),
+    rgbBoost: read("rgbBoost"), boostFactors: read("boostFactors"),
+  };
+}
+
 function setAurumBvhShaderColor(material: THREE.Material, colorHex: number): void {
   const shaderMaterial = material as THREE.ShaderMaterial;
   const color = new THREE.Color(colorHex);
@@ -851,31 +874,35 @@ export async function createAurumDiamondBvhRuntime(options: {
             entryGemId = profileId;
             applyDiamondTierOptics(currentDiamondTier);
             if (diamondRgbAuditEnabled) {
-              console.info("[AURUM][DIAMOND][RGB_BOOST_PROFILE_SYNC]", {
-                mesh: mesh.name || mesh.uuid,
-                profileId,
-                tier: currentDiamondTier,
-                centerProtected: isProtectedCenter(),
-                requestedRgbBoost: boost,
-                effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
-              });
-            }
-          },
-          setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
-            if (family !== "diamante") return;
-            const effectiveTier = isProtectedCenter() ? "brilliant" : nextTier;
-            if (effectiveTier === currentDiamondTier) return;
-            applyDiamondTierOptics(effectiveTier);
-            console.info("[AURUM][DIAMOND][BVH_MICRO_PROFILE]", {
+              console.info("[AURUM][DIAMOND][OPTICS_PROFILE_SYNC]", {
               mesh: mesh.name || mesh.uuid,
+              profileId,
               tier: currentDiamondTier,
               centerProtected: isProtectedCenter(),
-              dispersion: currentDiamondDispersion,
-              environmentIntensity: currentDiamondEnvironmentIntensity,
-              reflectivity: currentDiamondReflectivity,
-              gamma: currentDiamondGamma,
-              baseDispersion: baseDiamondDispersion,
-            });
+              requested: {
+                envMapIntensity: nextEnvironmentIntensity,
+                dispersion: nextDispersion,
+                reflectivity: nextReflectivity,
+                gamma: nextGamma,
+                ior,
+                transmission,
+                absorption,
+                rgbBoost: boost,
+              },
+              effectiveShader: {
+                ...readAurumDiamondShaderAudit(prepared.material),
+                rgbBoost: readAurumDiamondRgbBoost(prepared.material),
+              },
+              retainedPhysical: retainedMaterials.map((material: any) => ({
+                envMapIntensity: material?.envMapIntensity ?? null,
+                dispersion: material?.dispersion ?? null,
+                reflectivity: material?.userData?.aurumIJEWELParameters?.reflectivity ?? null,
+                gamma: material?.userData?.aurumIJEWELParameters?.gammaFactor ?? null,
+                ior: material?.ior ?? null,
+                transmission: material?.transmission ?? null,
+                rgbBoost: material?.userData?.aurumIJEWELParameters?.boostFactors ?? null,
+              })),
+            }););
           },
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
@@ -921,14 +948,34 @@ export async function createAurumDiamondBvhRuntime(options: {
         entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
         if (family === "diamante") {
           if (diamondRgbAuditEnabled) {
-            console.info("[AURUM][DIAMOND][RGB_BOOST_INITIAL]", {
+            console.info("[AURUM][DIAMOND][OPTICS_INITIAL]", {
               mesh: mesh.name || mesh.uuid,
               profileId: activeGemId,
               tier: currentDiamondTier,
               centerProtected: isProtectedCenter(),
-              requestedRgbBoost: initialRgbBoost ?? "package-default",
-              effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
-            });
+              requested: {
+                envMapIntensity: baseDiamondEnvironmentIntensity,
+                dispersion: baseDiamondDispersion,
+                reflectivity: baseDiamondReflectivity,
+                gamma: baseDiamondGamma,
+                ior: prepared.diagnostics.ior,
+                rayBounces: prepared.diagnostics.rayBounces,
+                rgbBoost: initialRgbBoost ?? "package-default",
+              },
+              effectiveShader: {
+                ...readAurumDiamondShaderAudit(prepared.material),
+                rgbBoost: readAurumDiamondRgbBoost(prepared.material),
+              },
+              retainedPhysical: retainedMaterials.map((material: any) => ({
+                envMapIntensity: material?.envMapIntensity ?? null,
+                dispersion: material?.dispersion ?? null,
+                reflectivity: material?.userData?.aurumIJEWELParameters?.reflectivity ?? null,
+                gamma: material?.userData?.aurumIJEWELParameters?.gammaFactor ?? null,
+                ior: material?.ior ?? null,
+                transmission: material?.transmission ?? null,
+                rgbBoost: material?.userData?.aurumIJEWELParameters?.boostFactors ?? null,
+              })),
+            }););
           }
           diamondOpticalDiagnostics.push({
             mesh: mesh.name || mesh.uuid,
