@@ -640,11 +640,11 @@ export async function createAurumDiamondBvhRuntime(options: {
       const diamondSourceParameters = (calibrateSecondaryDiamond || activeGemId === "diamante_rosa_2")
         ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
         : null;
-        const initialDiamondParameters = currentMaterial?.userData?.aurumIJEWELParameters ?? {};
-        const initialDiamondTransmission = Math.max(0, Math.min(1, Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)));
-        const initialDiamondGeometryFactor = Number(initialDiamondParameters.geometryFactor ?? 0.5);
-        const initialDiamondSquashFactor = Number(initialDiamondParameters.squashFactor ?? 0.98);
-        const initialDiamondAbsorptionFactor = Math.max(0, Number(initialDiamondParameters.absorptionFactor ?? 1));
+      const initialDiamondParameters = currentMaterial?.userData?.aurumIJEWELParameters ?? {};
+      const initialDiamondTransmission = Math.max(0, Math.min(1, Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)));
+      const initialDiamondGeometryFactor = Number(initialDiamondParameters.geometryFactor ?? 0.5);
+      const initialDiamondSquashFactor = Number(initialDiamondParameters.squashFactor ?? 0.98);
+      const initialDiamondAbsorptionFactor = Math.max(0, Number(initialDiamondParameters.absorptionFactor ?? 1));
       let baseDiamondDispersion = family !== "diamante"
         ? undefined
         : diamondSourceParameters
@@ -742,7 +742,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // BVH refraction supplies the visible diamond response.
           // Neutral white diamonds share the exact center-stone optical profile.
           transmission: family === "diamante"
-            ? Number(currentMaterial?.transmission ?? 0)
+            ? initialDiamondTransmission
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
@@ -940,7 +940,6 @@ export async function createAurumDiamondBvhRuntime(options: {
               absorptionFactor: absorption,
               geometryFactor,
               squashFactor,
-              transmission,
               rgbBoost: boost,
             });
             entryGemId = profileId;
@@ -962,7 +961,6 @@ export async function createAurumDiamondBvhRuntime(options: {
                 absorptionFactor: absorption,
                 geometryFactor,
                 squashFactor,
-                transmission,
                 rgbBoost: boost,
               },
               effectiveShader: {
