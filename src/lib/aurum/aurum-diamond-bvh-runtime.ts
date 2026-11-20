@@ -951,9 +951,8 @@ export async function createAurumDiamondBvhRuntime(options: {
               transmission,
               ior,
               absorption,
-              // The package accepts absorption and facetSharpness. It has no
-              // squashFactor uniform; that control remains native-AURUM only.
-              facetSharpness: Math.max(0, Math.min(1, geometryFactor)),
+              // Keep geometric facet normals intact; Geometry Factor has its own BVH uniform.
+              facetSharpness: 1,
               rgbBoost: boost,
             });
             setAurumDiamondBvhOpticalParameters(prepared.material, {
