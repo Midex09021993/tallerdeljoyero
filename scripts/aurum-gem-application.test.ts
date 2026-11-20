@@ -1046,16 +1046,19 @@ test("diamond-to-diamond profile synchronization keeps the BVH cache identity cu
   expect(runtime).toContain("Diamond catalog identity is synchronized in-place by entry.setProfile()");
 });
 
-test("white diamond 1 and 2 use temporary RGB Boost 2x for the visual diagnosis", () => {
+test("white diamond 1 and 2 restore neutral catalog RGB boost on initialization and profile switches", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
-  expect(runtime).toContain('activeGemId === "diamante_natural" || activeGemId === "diamante_vs"');
-  expect(runtime).toContain("isWhiteDiamondRgbBoostTest ? [2, 2, 2]");
-  expect(profileBlock).toContain('profileId === "diamante_natural" || profileId === "diamante_vs" ? [2, 2, 2]');
+  expect(runtime).toContain("Catalog .dmat values are authoritative for neutral/white diamonds.");
+  expect(runtime).toContain("Number(diamondSourceParameters?.boostFactors?.x ?? 1)");
+  expect(runtime).toContain("Number(diamondSourceParameters?.boostFactors?.y ?? 1)");
+  expect(runtime).toContain("Number(diamondSourceParameters?.boostFactors?.z ?? 1)");
+  expect(runtime).not.toContain("isWhiteDiamondRgbBoostTest");
+  expect(profileBlock).not.toContain('profileId === "diamante_natural" || profileId === "diamante_vs" ? [2, 2, 2]');
+  expect(profileBlock).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
+  expect(profileBlock).toContain("const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 };");
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).toContain("entryGemId = profileId");
-  // The override is deliberately scoped; other white diamond profiles retain their catalog values.
-  expect(profileBlock).not.toContain('profileId === "diamante_inclusiones" ? [2, 2, 2]');
 });
 
 test("diamond BVH logs effective RGB boost at initialization and after profile synchronization", () => {
