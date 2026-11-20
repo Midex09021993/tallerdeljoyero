@@ -109,7 +109,7 @@ export function prepareAurumDiamondBvhExperiment(
     dispersion: Math.max(0, Math.min(0.02, options.dispersion ?? 0.006)),
     environmentIntensity: Math.max(0, Math.min(2.5, options.environmentIntensity ?? 1.14)),
     rayBounces,
-    facetSharpness: 1,
+    facetSharpness: Math.max(0, Math.min(1, Number(options.geometryFactor ?? 0.5)),
     reflectivity: Math.max(0, Math.min(1, options.reflectivity ?? 0.46)),
     color: options.color ?? 0xffffff,
     absorption: Math.max(0, options.absorption ?? 1),
