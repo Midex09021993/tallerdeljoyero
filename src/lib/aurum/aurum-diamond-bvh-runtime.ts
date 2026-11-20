@@ -123,16 +123,27 @@ export function resolveAurumDiamondProfileOptics(
   const parameters = profile?.diamondMaterialParameters ?? {};
   const profileId = String(profile?.id ?? "");
   const restoringInitialProfile = profileId !== "" && profileId === baseline.profileId;
+  if (restoringInitialProfile) {
+    // The first render is the optical reference. Catalog metadata can contain
+    // generic source values (for example gamma 1.0 / reflectivity 0.5) that
+    // differ from the calibrated material actually shown at startup.
+    return {
+      dispersion: baseline.dispersion,
+      environmentIntensity: baseline.environmentIntensity,
+      reflectivity: baseline.reflectivity,
+      gamma: baseline.gamma,
+      rgbBoost: [...baseline.rgbBoost] as [number, number, number],
+    };
+  }
   const boostFactors = parameters.boostFactors ?? profile?.boostFactors;
-  const fallbackBoost = restoringInitialProfile ? baseline.rgbBoost : [1, 1, 1];
   return {
-    dispersion: Math.max(0, Math.min(0.1, Number(parameters.dispersion ?? profile?.dispersion ?? (restoringInitialProfile ? baseline.dispersion : 0)))),
-    environmentIntensity: Math.max(0, Number(profile?.envMapIntensity ?? (restoringInitialProfile ? baseline.environmentIntensity : 1.3))),
-    reflectivity: Number(parameters.reflectivity ?? (restoringInitialProfile ? baseline.reflectivity : 0.5)),
-    gamma: Number(parameters.gammaFactor ?? (restoringInitialProfile ? baseline.gamma : 1)),
+    dispersion: Math.max(0, Math.min(0.1, Number(parameters.dispersion ?? profile?.dispersion ?? 0))),
+    environmentIntensity: Math.max(0, Number(profile?.envMapIntensity ?? 1.3)),
+    reflectivity: Number(parameters.reflectivity ?? 0.5),
+    gamma: Number(parameters.gammaFactor ?? 1),
     rgbBoost: boostFactors
-      ? [Number(boostFactors.x ?? fallbackBoost[0]), Number(boostFactors.y ?? fallbackBoost[1]), Number(boostFactors.z ?? fallbackBoost[2])]
-      : fallbackBoost,
+      ? [Number(boostFactors.x ?? 1), Number(boostFactors.y ?? 1), Number(boostFactors.z ?? 1)]
+      : [1, 1, 1],
   };
 }
 
