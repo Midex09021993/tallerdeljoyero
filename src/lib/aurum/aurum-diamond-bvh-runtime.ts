@@ -178,6 +178,7 @@ function readAurumDiamondShaderAudit(material: THREE.Material): Record<string, u
     dispersion: read("dispersion"), environmentIntensity: read("environmentIntensity"),
     reflectivity: read("reflectivity"), gamma: read("gamma"), ior: read("ior"),
     transmission: read("transmission"), absorption: read("absorption"),
+    geometryFactor: read("geometryFactor"), squashFactor: read("squashFactor"), absorptionFactor: read("absorptionFactor"),
     rgbBoost: read("rgbBoost"), boostFactors: read("boostFactors"),
   };
 }
