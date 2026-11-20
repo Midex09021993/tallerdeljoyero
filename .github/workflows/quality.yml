@@ -48,6 +48,8 @@ jobs:
         run: bun test scripts/aurum-gem-application.test.ts
       - name: AURUM diamond micro pipeline analyzer tests
         run: bun test scripts/aurum-diamond-micro-pipeline.test.ts
+      - name: AURUM diamond catalog profile restore regression tests
+        run: bun test scripts/aurum-diamond-profile-restore.test.ts
       - name: AURUM mesh preflight regression tests
         run: bun test scripts/aurum-mesh-preflight.test.ts
       - name: AURUM import and geometry pipeline tests
