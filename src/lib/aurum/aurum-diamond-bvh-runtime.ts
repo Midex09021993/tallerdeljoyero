@@ -158,6 +158,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   calibrateSecondaryDiamonds?: boolean;
   onError?: (error: unknown) => void;
 }): Promise<AurumDiamondBvhRuntime> {
+  const diamondRgbAuditEnabled = typeof window !== "undefined"
+    && new URLSearchParams(window.location.search).get("aurumDiamondRgbAudit") === "1";
   const THREE_NS = options.THREE;
   const packageApi = await import("realistic-diamond-shader") as unknown as AurumDiamondBvhApi;
   const ownsEnvironmentMap = options.environmentMap
@@ -844,14 +846,16 @@ export async function createAurumDiamondBvhRuntime(options: {
             });
             entryGemId = profileId;
             applyDiamondTierOptics(currentDiamondTier);
-            console.info("[AURUM][DIAMOND][RGB_BOOST_PROFILE_SYNC]", {
-              mesh: mesh.name || mesh.uuid,
-              profileId,
-              tier: currentDiamondTier,
-              centerProtected: isProtectedCenter(),
-              requestedRgbBoost: boost,
-              effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
-            });
+            if (diamondRgbAuditEnabled) {
+              console.info("[AURUM][DIAMOND][RGB_BOOST_PROFILE_SYNC]", {
+                mesh: mesh.name || mesh.uuid,
+                profileId,
+                tier: currentDiamondTier,
+                centerProtected: isProtectedCenter(),
+                requestedRgbBoost: boost,
+                effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
+              });
+            }
           },
           setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
             if (family !== "diamante") return;
@@ -912,14 +916,16 @@ export async function createAurumDiamondBvhRuntime(options: {
         // transitions, leaving emeralds at the shader package's generic default.
         entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
         if (family === "diamante") {
-          console.info("[AURUM][DIAMOND][RGB_BOOST_INITIAL]", {
-            mesh: mesh.name || mesh.uuid,
-            profileId: activeGemId,
-            tier: currentDiamondTier,
-            centerProtected: isProtectedCenter(),
-            requestedRgbBoost: initialRgbBoost ?? "package-default",
-            effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
-          });
+          if (diamondRgbAuditEnabled) {
+            console.info("[AURUM][DIAMOND][RGB_BOOST_INITIAL]", {
+              mesh: mesh.name || mesh.uuid,
+              profileId: activeGemId,
+              tier: currentDiamondTier,
+              centerProtected: isProtectedCenter(),
+              requestedRgbBoost: initialRgbBoost ?? "package-default",
+              effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material),
+            });
+          }
           diamondOpticalDiagnostics.push({
             mesh: mesh.name || mesh.uuid,
             gemId: activeGemId,
