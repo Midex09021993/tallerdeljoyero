@@ -1061,15 +1061,18 @@ test("white diamond 1 and 2 restore neutral catalog RGB boost on initialization 
   expect(profileBlock).toContain("entryGemId = profileId");
 });
 
-test("diamond BVH logs effective RGB boost at initialization and after profile synchronization", () => {
+test("diamond BVH logs complete effective optical state at initialization and after profile synchronization", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   expect(runtime).toContain("function readAurumDiamondRgbBoost(material: THREE.Material)");
+  expect(runtime).toContain("function readAurumDiamondShaderAudit(material: THREE.Material)");
   expect(runtime).toContain('get("aurumDiamondRgbAudit") === "1"');
-  expect(runtime).toContain('"[AURUM][DIAMOND][RGB_BOOST_INITIAL]"');
-  expect(runtime).toContain('"[AURUM][DIAMOND][RGB_BOOST_PROFILE_SYNC]"');
-  expect(runtime).toContain("requestedRgbBoost: initialRgbBoost ?? \"package-default\"");
-  expect(runtime).toContain("effectiveShaderRgbBoost: readAurumDiamondRgbBoost(prepared.material)");
-  expect(runtime).toContain("requestedRgbBoost: boost");
+  expect(runtime).toContain('"[AURUM][DIAMOND][OPTICS_INITIAL]"');
+  expect(runtime).toContain('"[AURUM][DIAMOND][OPTICS_PROFILE_SYNC]"');
+  expect(runtime).toContain("envMapIntensity: baseDiamondEnvironmentIntensity");
+  expect(runtime).toContain("envMapIntensity: nextEnvironmentIntensity");
+  expect(runtime).toContain("effectiveShader: {");
+  expect(runtime).toContain("retainedPhysical: retainedMaterials.map");
+  expect(runtime).toContain("rgbBoost: readAurumDiamondRgbBoost(prepared.material)");
 });
 
 test("BVH diamond profile synchronization always resets RGB boost to catalog or neutral values", () => {
