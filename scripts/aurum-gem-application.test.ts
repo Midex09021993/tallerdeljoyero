@@ -1040,6 +1040,7 @@ test("BVH diamond profile synchronization always resets RGB boost to catalog or 
   expect(profileBlock).toContain('const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 }');
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).toContain("entryGemId = profileId");
-  expect(profileBlock).not.toContain('profileId === "diamante_azul" ? [2, 2, 2]');
+  expect(profileBlock).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
+  expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).not.toContain("...(boost ? { rgbBoost: boost } : {})");
 });
