@@ -639,6 +639,11 @@ export async function createAurumDiamondBvhRuntime(options: {
       const diamondSourceParameters = (calibrateSecondaryDiamond || activeGemId === "diamante_rosa_2")
         ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
         : null;
+        const initialDiamondParameters = currentMaterial?.userData?.aurumIJEWELParameters ?? {};
+        const initialDiamondTransmission = Math.max(0, Math.min(1, Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)));
+        const initialDiamondGeometryFactor = Number(initialDiamondParameters.geometryFactor ?? 0.5);
+        const initialDiamondSquashFactor = Number(initialDiamondParameters.squashFactor ?? 0.98);
+        const initialDiamondAbsorptionFactor = Math.max(0, Number(initialDiamondParameters.absorptionFactor ?? 1));
       let baseDiamondDispersion = family !== "diamante"
         ? undefined
         : diamondSourceParameters
@@ -763,8 +768,8 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? baseDiamondDispersion
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (diamondSourceParameters ? Number(diamondSourceParameters.refractiveIndex ?? 2.6) : (calibrateSecondaryDiamond ? 2.417 : 2.6)) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
-          absorption: family === "diamante" && diamondSourceParameters
-            ? Number(diamondSourceParameters.absorptionFactor ?? 1)
+          absorption: family === "diamante"
+            ? initialDiamondAbsorptionFactor
             : useEmeraldBvhOptics
               ? (activeGemId === "esmeralda_2" ? 1.8 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 1.6 : 1.35)
             : emeraldProfile?.absorption ?? rubyProfile?.absorption ?? sapphireProfile?.absorption ?? (isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isImperialTopaz ? 0.48 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.22 : 0.38) : isTanzanite ? 0.42 : isMoissanite ? 0.18 : isSpinel || isGarnet || isPeridot || isMorganite || isZircon || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.45 : 1),
@@ -791,11 +796,6 @@ export async function createAurumDiamondBvhRuntime(options: {
         let baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
         let baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
         let baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09;
-        const initialDiamondParameters = currentMaterial?.userData?.aurumIJEWELParameters ?? {};
-        const initialDiamondTransmission = Math.max(0, Math.min(1, Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)));
-        const initialDiamondGeometryFactor = Number(initialDiamondParameters.geometryFactor ?? 0.5);
-        const initialDiamondSquashFactor = Number(initialDiamondParameters.squashFactor ?? 0.98);
-        const initialDiamondAbsorptionFactor = Math.max(0, Number(initialDiamondParameters.absorptionFactor ?? 1));
         const initialDiamondProfileBaseline: AurumDiamondOpticalProfileBaseline = {
           profileId: activeGemId,
           dispersion: baseDiamondDispersion,
