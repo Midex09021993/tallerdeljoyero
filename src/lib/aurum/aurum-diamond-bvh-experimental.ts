@@ -92,7 +92,7 @@ export function setAurumDiamondBvhOpticalParameters(
   if (!material.fragmentShader.includes("AURUM_BVH_ABSORPTION_CONTROL")) {
     material.fragmentShader = material.fragmentShader.replace(
       "if (absorption > 1.001) accumulated *= exp(-vec3(0.04) * (absorption - 1.0) * totalDistance);",
-      "// AURUM_BVH_ABSORPTION_CONTROL: neutral at 1.0; bounded attenuation above/below the calibrated baseline.\\n    accumulated *= exp(-vec3((absorption - 1.0) * 0.12));",
+      "// AURUM_BVH_ABSORPTION_CONTROL: neutral at 1.0; bounded attenuation above/below the calibrated baseline.\n    accumulated *= exp(-vec3((absorption - 1.0) * 0.12));",
     );
   }
   if (!material.fragmentShader.includes("AURUM_BVH_GEOMETRY_CONTROL")) {
