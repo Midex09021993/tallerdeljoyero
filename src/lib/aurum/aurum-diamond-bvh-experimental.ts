@@ -89,6 +89,12 @@ export function setAurumDiamondBvhOpticalParameters(
       "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);\n    // AURUM_BVH_SQUASH_CONTROL\n    entryRay = normalize(mix(entryRay, localNormal, clamp(1.0 - squashFactor, 0.0, 0.08)));",
     );
   }
+  if (!material.fragmentShader.includes("AURUM_BVH_ABSORPTION_CONTROL")) {
+    material.fragmentShader = material.fragmentShader.replace(
+      "if (absorption > 1.001) accumulated *= exp(-vec3(0.04) * (absorption - 1.0) * totalDistance);",
+      "// AURUM_BVH_ABSORPTION_CONTROL: neutral at 1.0; bounded attenuation above/below the calibrated baseline.\\n    accumulated *= exp(-vec3((absorption - 1.0) * 0.12));",
+    );
+  }
   if (!material.fragmentShader.includes("AURUM_BVH_GEOMETRY_CONTROL")) {
     material.fragmentShader = material.fragmentShader.replace(
       "gl_FragColor = vec4(aces(hdrColor), 1.0);",
