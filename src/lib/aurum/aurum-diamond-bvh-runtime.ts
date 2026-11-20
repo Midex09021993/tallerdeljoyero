@@ -903,6 +903,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 rgbBoost: material?.userData?.aurumIJEWELParameters?.boostFactors ?? null,
               })),
             });
+            }
           },
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
