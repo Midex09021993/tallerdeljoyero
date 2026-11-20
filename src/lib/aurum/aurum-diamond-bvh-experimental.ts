@@ -116,8 +116,10 @@ export function prepareAurumDiamondBvhExperiment(
     transmission: Math.max(0, Math.min(1, options.transmission ?? 0)),
     ...(options.rgbBoost ? { rgbBoost: options.rgbBoost } : {}),
     gamma: Math.max(0.1, Math.min(3, options.gamma ?? 1.09)),
-    geometryFactor: Number(options.geometryFactor ?? 0.5),
-    squashFactor: Number(options.squashFactor ?? 0.98),
+    // The upstream BVH package exposes facetSharpness, not geometryFactor.
+    // Map the catalog geometry control to that supported uniform. squashFactor
+    // belongs to the native AURUM shader and has no BVH-package equivalent.
+    facetSharpness: Math.max(0, Math.min(1, Number(options.geometryFactor ?? 0.5))),
     diamondOrientedEnvMap: Number(options.diamondOrientedEnvMap ?? 0),
   });
 
