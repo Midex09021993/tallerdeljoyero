@@ -1,9 +1,37 @@
 import { expect, test } from "bun:test";
 import { resolveAurumDiamondProfileOptics } from "../src/lib/aurum/aurum-diamond-bvh-runtime";
 
-test("restores the exact startup optics after Blanco 1 -> Blanco 2 -> Blanco 1", () => {
-  const blanco1Baseline = {
-    profileId: "diamante_blanco_1",
+const blanco1CatalogProfile = {
+  id: "diamante_natural",
+  nombre: "Diamante blanco 1",
+  envMapIntensity: 1.3,
+  dispersion: 0.01,
+  diamondMaterialParameters: {
+    dispersion: 0.01,
+    gammaFactor: 1,
+    reflectivity: 0.5,
+    boostFactors: { x: 1, y: 1, z: 1 },
+  },
+};
+
+const blanco2CatalogProfile = {
+  id: "diamante_vs",
+  nombre: "Diamante blanco 2",
+  envMapIntensity: 1.3,
+  dispersion: 0,
+  diamondMaterialParameters: {
+    dispersion: 0,
+    gammaFactor: 1,
+    reflectivity: 0.5,
+    boostFactors: { x: 1, y: 1, z: 1 },
+  },
+};
+
+test("restores the exact startup optics after real catalog Blanco 1 -> Blanco 2 -> Blanco 1 switching", () => {
+  // These are the values read from the live material at the first render,
+  // not the generic gamma/reflectivity metadata stored in the catalog.
+  const startupBaseline = {
+    profileId: "diamante_natural",
     dispersion: 0.01,
     environmentIntensity: 1.3,
     reflectivity: 0.46,
@@ -12,44 +40,33 @@ test("restores the exact startup optics after Blanco 1 -> Blanco 2 -> Blanco 1",
   };
 
   const initialBlanco1 = resolveAurumDiamondProfileOptics(
-    { id: "diamante_blanco_1" },
-    blanco1Baseline,
+    blanco1CatalogProfile,
+    startupBaseline,
   );
-
-  const blanco2 = resolveAurumDiamondProfileOptics(
-    {
-      id: "diamante_blanco_2",
-      envMapIntensity: 1.1,
-      diamondMaterialParameters: {
-        dispersion: 0.004,
-        reflectivity: 0.52,
-        gammaFactor: 0.96,
-        boostFactors: { x: 1.05, y: 1.05, z: 1.05 },
-      },
-    },
-    blanco1Baseline,
-  );
-
-  expect(blanco2).not.toEqual(initialBlanco1);
-
-  const restoredBlanco1 = resolveAurumDiamondProfileOptics(
-    { id: "diamante_blanco_1" },
-    blanco1Baseline,
-  );
-
-  expect(restoredBlanco1).toEqual(initialBlanco1);
-  expect(restoredBlanco1).toEqual({
+  expect(initialBlanco1).toEqual({
     dispersion: 0.01,
     environmentIntensity: 1.3,
     reflectivity: 0.46,
     gamma: 1.09,
     rgbBoost: [1, 1, 1],
   });
+
+  const blanco2 = resolveAurumDiamondProfileOptics(
+    blanco2CatalogProfile,
+    startupBaseline,
+  );
+  expect(blanco2).not.toEqual(initialBlanco1);
+
+  const restoredBlanco1 = resolveAurumDiamondProfileOptics(
+    blanco1CatalogProfile,
+    startupBaseline,
+  );
+  expect(restoredBlanco1).toEqual(initialBlanco1);
 });
 
-test("explicit Blanco 1 catalog values remain authoritative over the startup fallback", () => {
+test("non-initial diamond profiles continue to use their own catalog optical values", () => {
   const baseline = {
-    profileId: "diamante_blanco_1",
+    profileId: "diamante_natural",
     dispersion: 0.01,
     environmentIntensity: 1.3,
     reflectivity: 0.46,
@@ -58,19 +75,19 @@ test("explicit Blanco 1 catalog values remain authoritative over the startup fal
   };
 
   expect(resolveAurumDiamondProfileOptics({
-    id: "diamante_blanco_1",
-    envMapIntensity: 1.25,
+    id: "diamante_azul",
+    envMapIntensity: 1.03,
     diamondMaterialParameters: {
-      dispersion: 0.008,
-      reflectivity: 0.48,
-      gammaFactor: 1.04,
-      boostFactors: { x: 1.02, y: 1, z: 1 },
+      dispersion: 0.013,
+      reflectivity: 0.5,
+      gammaFactor: 1,
+      boostFactors: { x: 0.9, y: 1, z: 1 },
     },
   }, baseline)).toEqual({
-    dispersion: 0.008,
-    environmentIntensity: 1.25,
-    reflectivity: 0.48,
-    gamma: 1.04,
-    rgbBoost: [1.02, 1, 1],
+    dispersion: 0.013,
+    environmentIntensity: 1.03,
+    reflectivity: 0.5,
+    gamma: 1,
+    rgbBoost: [0.9, 1, 1],
   });
 });
