@@ -754,11 +754,15 @@ export async function createAurumDiamondBvhRuntime(options: {
             // the previous profile's shader uniform active (e.g. blue -> white).
             // Catalog values are authoritative; missing values reset to neutral.
             const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 };
-            const boost = [
-              Number.isFinite(Number(boostFactors.x)) ? Number(boostFactors.x) : 1,
-              Number.isFinite(Number(boostFactors.y)) ? Number(boostFactors.y) : 1,
-              Number.isFinite(Number(boostFactors.z)) ? Number(boostFactors.z) : 1,
-            ];
+            // Preserve the already-calibrated live blue/pink shader response.
+            // All other profiles use their catalog boost, or neutral RGB when absent.
+            const boost = profileId === "diamante_azul" ? [2, 2, 2]
+              : profileId === "diamante_rosa" ? [1.3, 1, 1]
+              : [
+                  Number.isFinite(Number(boostFactors.x)) ? Number(boostFactors.x) : 1,
+                  Number.isFinite(Number(boostFactors.y)) ? Number(boostFactors.y) : 1,
+                  Number.isFinite(Number(boostFactors.z)) ? Number(boostFactors.z) : 1,
+                ];
             const transmission = Math.max(0, Math.min(1, Number(parameters.transmission ?? nextProfile.transmission ?? 0)));
             const ior = Math.max(1, Number(parameters.refractiveIndex ?? nextProfile.ior ?? 2.6));
             const absorption = Math.max(0, Number(parameters.absorptionFactor ?? 1));
