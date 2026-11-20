@@ -902,7 +902,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 transmission: material?.transmission ?? null,
                 rgbBoost: material?.userData?.aurumIJEWELParameters?.boostFactors ?? null,
               })),
-            }););
+            });
           },
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
@@ -975,7 +975,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 transmission: material?.transmission ?? null,
                 rgbBoost: material?.userData?.aurumIJEWELParameters?.boostFactors ?? null,
               })),
-            }););
+            });
           }
           diamondOpticalDiagnostics.push({
             mesh: mesh.name || mesh.uuid,
