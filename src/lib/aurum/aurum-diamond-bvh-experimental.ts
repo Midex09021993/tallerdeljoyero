@@ -68,6 +68,53 @@ const QUALITY_BOUNCES = {
   final: 5,
 } as const;
 
+/** Add and synchronize catalog optical controls missing from the upstream BVH package. */
+export function setAurumDiamondBvhOpticalParameters(
+  material: THREE.Material,
+  values: { geometryFactor?: number; squashFactor?: number; absorptionFactor?: number; transmission?: number },
+): void {
+  if (!(material instanceof THREE.ShaderMaterial)) return;
+  const uniforms = material.uniforms;
+  if (!uniforms.geometryFactor) uniforms.geometryFactor = { value: 0.5 };
+  if (!uniforms.squashFactor) uniforms.squashFactor = { value: 0.98 };
+  if (!material.fragmentShader.includes("uniform float geometryFactor;")) {
+    material.fragmentShader = material.fragmentShader.replace(
+      "uniform float facetSharpness;",
+      "uniform float facetSharpness;\\n  uniform float geometryFactor;\\n  uniform float squashFactor;",
+    );
+  }
+  if (!material.fragmentShader.includes("AURUM_BVH_SQUASH_CONTROL")) {
+    material.fragmentShader = material.fragmentShader.replace(
+      "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);",
+      "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);\\n    // AURUM_BVH_SQUASH_CONTROL\\n    entryRay = normalize(mix(entryRay, localNormal, clamp(1.0 - squashFactor, 0.0, 0.08)));",
+    );
+  }
+  if (!material.fragmentShader.includes("AURUM_BVH_GEOMETRY_CONTROL")) {
+    material.fragmentShader = material.fragmentShader.replace(
+      "gl_FragColor = vec4(aces(hdrColor), 1.0);",
+      "// AURUM_BVH_GEOMETRY_CONTROL\\n    hdrColor *= mix(0.96, 1.0, clamp(geometryFactor, 0.0, 1.0));\\n    gl_FragColor = vec4(aces(hdrColor), 1.0);",
+    );
+  }
+  const set = (key: string, value: number | undefined, min: number, max: number) => {
+    if (value === undefined || !Number.isFinite(Number(value))) return;
+    uniforms[key].value = Math.max(min, Math.min(max, Number(value)));
+  };
+  set("geometryFactor", values.geometryFactor, 0, 1);
+  set("squashFactor", values.squashFactor, 0, 1);
+  set("absorption", values.absorptionFactor, 0, 20);
+  set("transmission", values.transmission, 0, 1);
+  material.userData = {
+    ...(material.userData ?? {}),
+    aurumDiamondBvhOpticalControls: {
+      geometryFactor: uniforms.geometryFactor,
+      squashFactor: uniforms.squashFactor,
+      absorptionFactor: uniforms.absorption,
+      transmission: uniforms.transmission,
+    },
+  };
+  material.needsUpdate = true;
+}
+
 /**
  * Prepare an experimental material for one diamond mesh.
  *
@@ -109,19 +156,23 @@ export function prepareAurumDiamondBvhExperiment(
     dispersion: Math.max(0, Math.min(0.02, options.dispersion ?? 0.006)),
     environmentIntensity: Math.max(0, Math.min(2.5, options.environmentIntensity ?? 1.14)),
     rayBounces,
-    facetSharpness: Math.max(0, Math.min(1, Number(options.geometryFactor ?? 0.5))),
+    facetSharpness: 1,
     reflectivity: Math.max(0, Math.min(1, options.reflectivity ?? 0.46)),
     color: options.color ?? 0xffffff,
     absorption: Math.max(0, options.absorption ?? 1),
     transmission: Math.max(0, Math.min(1, options.transmission ?? 0)),
     ...(options.rgbBoost ? { rgbBoost: options.rgbBoost } : {}),
     gamma: Math.max(0.1, Math.min(3, options.gamma ?? 1.09)),
-    // The upstream BVH package exposes facetSharpness, not geometryFactor.
-    // Map the catalog geometry control to that supported uniform. squashFactor
-    // belongs to the native AURUM shader and has no BVH-package equivalent.
-    facetSharpness: Math.max(0, Math.min(1, Number(options.geometryFactor ?? 0.5))),
     diamondOrientedEnvMap: Number(options.diamondOrientedEnvMap ?? 0),
   });
+
+  if (material instanceof THREE.ShaderMaterial) {
+    installAurumDiamondBvhOpticalControls(material, {
+      geometryFactor: options.geometryFactor ?? 0.5,
+      squashFactor: options.squashFactor ?? 0.98,
+      absorptionFactor: options.absorption ?? 1,
+    });
+  }
 
   if (!(material instanceof THREE.Material)) {
     throw new Error("[AURUM diamond BVH] El paquete no devolvió un material Three.js.");
