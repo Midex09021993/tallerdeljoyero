@@ -609,7 +609,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         };
       });
       onTargetsResolved?.(targets.slice());
-      onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);
+      onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion);
       // Diamond-to-diamond fast switches must reapply the shared gem EXR
       // orientation too; otherwise the reused material can retain stale yaw.
       // This touches only the selected gem meshes, never metal materials.
