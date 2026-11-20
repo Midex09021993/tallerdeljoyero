@@ -5,6 +5,7 @@ import { resolveAurumCatalogGemBvhColor, resolveAurumEmeraldBvhProfile, resolveA
 import {
   prepareAurumDiamondBvhExperiment,
   type AurumDiamondBvhApi,
+  setAurumDiamondBvhOpticalParameters,
 } from "./aurum-diamond-bvh-experimental";
 
 type RecordEntry = {
@@ -954,6 +955,12 @@ export async function createAurumDiamondBvhRuntime(options: {
               // squashFactor uniform; that control remains native-AURUM only.
               facetSharpness: Math.max(0, Math.min(1, geometryFactor)),
               rgbBoost: boost,
+            });
+            setAurumDiamondBvhOpticalParameters(prepared.material, {
+              geometryFactor,
+              squashFactor,
+              absorptionFactor: absorption,
+              transmission,
             });
             entryGemId = profileId;
             applyDiamondTierOptics(currentDiamondTier);
