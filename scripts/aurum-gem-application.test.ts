@@ -999,7 +999,7 @@ test("switching between white diamond catalog profiles updates only live dispers
 
   expect(application).toContain("const isDiamondToDiamond =");
   expect(application).toContain("aurumDiamondSourceDispersion:fromDispersion");
-  expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion)");
+  expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);");
   expect(application).toContain("protected focal diamond is intentionally excluded");
   expect(component).toContain("const duration=260");
   expect(component).toContain("diamondBvhRuntime?.setDiamondDispersion?.(targets,value)");
@@ -1039,10 +1039,24 @@ test("diamond-to-diamond profile synchronization keeps the BVH cache identity cu
   const entryBlock = runtime.slice(runtime.indexOf("entries.set(mesh, {"), runtime.indexOf("});", runtime.indexOf("entries.set(mesh, {")) + 3);
   const processBlock = runtime.slice(runtime.indexOf("const processMesh ="), runtime.indexOf("const materials = Array.isArray(mesh.material)", runtime.indexOf("const processMesh =")));
   expect(entryBlock).toContain("get gemId() { return entryGemId; }");
-  expect(entryBlock).toContain("entryGemId = profileId");
+  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
+  expect(profileBlock).toContain("entryGemId = profileId");
   expect(processBlock).toContain("existing.gemId === activeGemId");
   expect(processBlock).toContain("existing.activeGemFamily === activeGemFamily");
   expect(runtime).toContain("Diamond catalog identity is synchronized in-place by entry.setProfile()");
+});
+
+test("white diamond profiles preserve their catalog RGB boost through fast BVH synchronization", () => {
+  const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
+  const whiteOne = catalog.slice(catalog.indexOf('id:"diamante_natural"'), catalog.indexOf('id:"diamante_vs"'));
+  const whiteTwo = catalog.slice(catalog.indexOf('id:"diamante_vs"'), catalog.indexOf('id:"diamante_inclusiones"'));
+  expect(whiteOne).toContain("boostFactors:{x:1,y:1,z:1}");
+  expect(whiteTwo).toContain("boostFactors:{x:1,y:1,z:1}");
+  expect(profileBlock).toContain("const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 }");
+  expect(profileBlock).toContain("rgbBoost: boost");
+  expect(profileBlock).toContain("entryGemId = profileId");
 });
 
 test("diamond BVH logs effective RGB boost at initialization and after profile synchronization", () => {
