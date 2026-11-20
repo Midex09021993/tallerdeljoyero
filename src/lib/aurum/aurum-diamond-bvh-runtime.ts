@@ -106,6 +106,36 @@ function readAurumDiamondRgbBoost(material: THREE.Material): [number, number, nu
   return null;
 }
 
+export type AurumDiamondOpticalProfileBaseline = {
+  profileId: string;
+  dispersion: number;
+  environmentIntensity: number;
+  reflectivity: number;
+  gamma: number;
+  rgbBoost: [number, number, number];
+};
+
+/** Resolve profile values without losing the exact startup calibration when returning to the original catalog profile. */
+export function resolveAurumDiamondProfileOptics(
+  profile: any,
+  baseline: AurumDiamondOpticalProfileBaseline,
+) {
+  const parameters = profile?.diamondMaterialParameters ?? {};
+  const profileId = String(profile?.id ?? "");
+  const restoringInitialProfile = profileId !== "" && profileId === baseline.profileId;
+  const boostFactors = parameters.boostFactors ?? profile?.boostFactors;
+  const fallbackBoost = restoringInitialProfile ? baseline.rgbBoost : [1, 1, 1];
+  return {
+    dispersion: Math.max(0, Math.min(0.1, Number(parameters.dispersion ?? profile?.dispersion ?? (restoringInitialProfile ? baseline.dispersion : 0)))),
+    environmentIntensity: Math.max(0, Number(profile?.envMapIntensity ?? (restoringInitialProfile ? baseline.environmentIntensity : 1.3))),
+    reflectivity: Number(parameters.reflectivity ?? (restoringInitialProfile ? baseline.reflectivity : 0.5)),
+    gamma: Number(parameters.gammaFactor ?? (restoringInitialProfile ? baseline.gamma : 1)),
+    rgbBoost: boostFactors
+      ? [Number(boostFactors.x ?? fallbackBoost[0]), Number(boostFactors.y ?? fallbackBoost[1]), Number(boostFactors.z ?? fallbackBoost[2])]
+      : fallbackBoost,
+  };
+}
+
 function readAurumDiamondShaderAudit(material: THREE.Material): Record<string, unknown> {
   const shader = material as THREE.ShaderMaterial & { userData?: Record<string, any> };
   const uniforms = shader.uniforms ?? {};
@@ -738,6 +768,14 @@ export async function createAurumDiamondBvhRuntime(options: {
         let baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
         let baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
         let baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09;
+        const initialDiamondProfileBaseline: AurumDiamondOpticalProfileBaseline = {
+          profileId: activeGemId,
+          dispersion: baseDiamondDispersion,
+          environmentIntensity: baseDiamondEnvironmentIntensity,
+          reflectivity: baseDiamondReflectivity,
+          gamma: baseDiamondGamma,
+          rgbBoost: initialRgbBoost ?? [1, 1, 1],
+        };
         const isProtectedCenter = () => Boolean(
           mesh.userData?.aurumDiamondMicroCenterProtected
           || isAurumDiamondBvhCenterTarget(mesh)
@@ -801,25 +839,17 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (family !== "diamante" || !nextProfile) return;
             const parameters = nextProfile.diamondMaterialParameters ?? {};
             const nextColor = Number(nextProfile.color ?? 0xffffff);
-            const nextDispersion = Math.max(0, Math.min(0.1, Number(parameters.dispersion ?? nextProfile.dispersion ?? 0)));
-            const nextEnvironmentIntensity = Math.max(0, Number(nextProfile.envMapIntensity ?? 1.3));
-            const nextReflectivity = Number(parameters.reflectivity ?? 0.5);
-            const nextGamma = Number(parameters.gammaFactor ?? 1);
             const profileId = String(nextProfile.id ?? "");
-            // Always write a complete RGB boost. Omitting this option would leave
-            // the previous profile's shader uniform active (e.g. blue -> white).
-            // Catalog values are authoritative; missing values reset to neutral.
-            const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 };
-            // Preserve the already-calibrated live blue/pink shader response.
-            // White/neutral profiles restore their exact catalog boost (1,1,1
-            // for the supplied Blanco 1 .dmat), never the temporary 2x test.
+            const resolvedOptics = resolveAurumDiamondProfileOptics(nextProfile, initialDiamondProfileBaseline);
+            const nextDispersion = resolvedOptics.dispersion;
+            const nextEnvironmentIntensity = resolvedOptics.environmentIntensity;
+            const nextReflectivity = resolvedOptics.reflectivity;
+            const nextGamma = resolvedOptics.gamma;
+            // Preserve the established blue/pink response; all other profiles
+            // use their explicit catalog boost or a neutral/profile baseline.
             const boost = profileId === "diamante_azul" ? [2, 2, 2]
               : profileId === "diamante_rosa" ? [1.3, 1, 1]
-              : [
-                  Number.isFinite(Number(boostFactors.x)) ? Number(boostFactors.x) : 1,
-                  Number.isFinite(Number(boostFactors.y)) ? Number(boostFactors.y) : 1,
-                  Number.isFinite(Number(boostFactors.z)) ? Number(boostFactors.z) : 1,
-                ];
+              : resolvedOptics.rgbBoost;
             const transmission = Math.max(0, Math.min(1, Number(parameters.transmission ?? nextProfile.transmission ?? 0)));
             const ior = Math.max(1, Number(parameters.refractiveIndex ?? nextProfile.ior ?? 2.6));
             const absorption = Math.max(0, Number(parameters.absorptionFactor ?? 1));
