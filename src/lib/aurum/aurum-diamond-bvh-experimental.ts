@@ -75,6 +75,7 @@ export function setAurumDiamondBvhOpticalParameters(
 ): void {
   if (!(material instanceof THREE.ShaderMaterial)) return;
   const uniforms = material.uniforms;
+  let shaderPatched = false;
   if (!uniforms.geometryFactor) uniforms.geometryFactor = { value: 0.5 };
   if (!uniforms.squashFactor) uniforms.squashFactor = { value: 0.98 };
   if (!material.fragmentShader.includes("uniform float geometryFactor;")) {
@@ -82,24 +83,28 @@ export function setAurumDiamondBvhOpticalParameters(
       "uniform float facetSharpness;",
       "uniform float facetSharpness;\n  uniform float geometryFactor;\n  uniform float squashFactor;",
     );
+    shaderPatched = true;
   }
   if (!material.fragmentShader.includes("AURUM_BVH_SQUASH_CONTROL")) {
     material.fragmentShader = material.fragmentShader.replace(
       "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);",
       "if (length(entryRay) < 0.001) entryRay = reflect(localIncident, localNormal);\n    // AURUM_BVH_SQUASH_CONTROL\n    entryRay = normalize(mix(entryRay, localNormal, clamp(1.0 - squashFactor, 0.0, 0.08)));",
     );
+    shaderPatched = true;
   }
   if (!material.fragmentShader.includes("AURUM_BVH_ABSORPTION_CONTROL")) {
     material.fragmentShader = material.fragmentShader.replace(
       "if (absorption > 1.001) accumulated *= exp(-vec3(0.04) * (absorption - 1.0) * totalDistance);",
       "// AURUM_BVH_ABSORPTION_CONTROL: neutral at 1.0; bounded attenuation above/below the calibrated baseline.\n    accumulated *= exp(-vec3((absorption - 1.0) * 0.12));",
     );
+    shaderPatched = true;
   }
   if (!material.fragmentShader.includes("AURUM_BVH_GEOMETRY_CONTROL")) {
     material.fragmentShader = material.fragmentShader.replace(
       "gl_FragColor = vec4(aces(hdrColor), 1.0);",
       "// AURUM_BVH_GEOMETRY_CONTROL\n    hdrColor *= mix(0.96, 1.0, clamp(geometryFactor, 0.0, 1.0));\n    gl_FragColor = vec4(aces(hdrColor), 1.0);",
     );
+    shaderPatched = true;
   }
   const set = (key: string, value: number | undefined, min: number, max: number) => {
     if (value === undefined || !Number.isFinite(Number(value))) return;
@@ -118,7 +123,7 @@ export function setAurumDiamondBvhOpticalParameters(
       transmission: uniforms.transmission,
     },
   };
-  material.needsUpdate = true;
+  if (shaderPatched) material.needsUpdate = true;
 }
 
 /**
