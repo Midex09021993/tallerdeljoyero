@@ -86,7 +86,7 @@ export const auriInterno = createServerFn({ method: "POST" })
               contents,
               tools: [{ functionDeclarations: declarations }],
               toolConfig: { functionCallingConfig: { mode: "AUTO" } },
-              generationConfig: { maxOutputTokens: 500, thinkingConfig: { thinkingLevel: "LOW" } },
+              generationConfig: { maxOutputTokens: 500, thinkingConfig: { thinkingLevel: "low" } },
             }),
           },
         );
@@ -97,7 +97,19 @@ export const auriInterno = createServerFn({ method: "POST" })
           return { reply: "", herramientas: usadas, error: "La conexión de AURI con Gemini necesita revisar su configuración." };
         }
         if (!response.ok) {
-          console.error("auri-interno Gemini request failed", response.status);
+          const providerError = await response.text().catch(() => "");
+          // Registrar solo código y mensaje técnico acotado; nunca registrar API key ni contenido del usuario.
+          console.error("auri-interno Gemini request failed", {
+            status: response.status,
+            providerMessage: providerError.slice(0, 1200),
+            model,
+          });
+          if (response.status === 400) {
+            return { reply: "", herramientas: usadas, error: "La solicitud de AURI fue rechazada por la configuración de Gemini. Estamos revisando sus parámetros." };
+          }
+          if (response.status === 404) {
+            return { reply: "", herramientas: usadas, error: "El modelo de Gemini configurado para AURI no está disponible." };
+          }
           return { reply: "", herramientas: usadas, error: "Gemini no pudo responder ahora. Inténtalo nuevamente." };
         }
 
