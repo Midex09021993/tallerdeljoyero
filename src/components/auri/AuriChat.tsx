@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Bot, Mic, MicOff, Send, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -76,7 +76,7 @@ export function AuriChat({ onContact }: { onContact: () => void }) {
     instance.start();
   }
 
-  async function sendMessage(event?: React.FormEvent<HTMLFormElement>) {
+  async function sendMessage(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     const question = draft.trim();
     if (!question || loading) return;
