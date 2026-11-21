@@ -26,9 +26,11 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "estado": {
+              "description": "Filtra por estado oficial del pedido.",
               "type": "string",
               "enum": [
                 "Recibido",
@@ -36,27 +38,25 @@
                 "Listo para Entrega",
                 "En Camino",
                 "Entregado"
-              ],
-              "description": "Filtra por estado oficial del pedido."
+              ]
             },
             "busqueda": {
+              "description": "Texto a buscar en referencia, cliente, pieza o trabajo.",
               "type": "string",
-              "maxLength": 80,
-              "description": "Texto a buscar en referencia, cliente, pieza o trabajo."
+              "maxLength": 80
             },
             "incluir_entregados": {
-              "type": "boolean",
-              "description": "Incluye pedidos ya entregados (histórico). Por defecto false."
+              "description": "Incluye pedidos ya entregados (histórico). Por defecto false.",
+              "type": "boolean"
             },
             "limite": {
+              "description": "Máximo de pedidos a devolver (1-100, por defecto 25).",
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "description": "Máximo de pedidos a devolver (1-100, por defecto 25)."
+              "maximum": 100
             }
           },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -70,22 +70,23 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "id": {
+              "description": "Id del pedido (devuelto por listar_pedidos).",
               "type": "string",
               "format": "uuid",
-              "description": "Id del pedido (devuelto por listar_pedidos)."
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             },
             "referencia": {
+              "description": "Referencia visible del pedido, por ejemplo PED-0001.",
               "type": "string",
               "minLength": 1,
-              "maxLength": 60,
-              "description": "Referencia visible del pedido, por ejemplo PED-0001."
+              "maxLength": 60
             }
           },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -116,22 +117,22 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "busqueda": {
+              "description": "Texto a buscar en el número de contrato o el cliente.",
               "type": "string",
-              "maxLength": 80,
-              "description": "Texto a buscar en el número de contrato o el cliente."
+              "maxLength": 80
             },
             "limite": {
+              "description": "Máximo de contratos (1-50, por defecto 20).",
               "type": "integer",
               "minimum": 1,
-              "maximum": 50,
-              "description": "Máximo de contratos (1-50, por defecto 20)."
+              "maximum": 50
             }
           },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -145,22 +146,22 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "busqueda": {
+              "description": "Texto a buscar. Vacío lista los clientes más recientes.",
               "type": "string",
-              "maxLength": 80,
-              "description": "Texto a buscar. Vacío lista los clientes más recientes."
+              "maxLength": 80
             },
             "limite": {
+              "description": "Máximo de clientes (1-50, por defecto 20).",
               "type": "integer",
               "minimum": 1,
-              "maximum": 50,
-              "description": "Máximo de clientes (1-50, por defecto 20)."
+              "maximum": 50
             }
           },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       }
