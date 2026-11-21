@@ -870,6 +870,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentRotationOffsetRadians: meshEnvironmentAlignment.offsetRadians,
           environmentRotationCorrection: meshEnvironmentAlignment.correctionQuaternion,
           get tier() { return currentDiamondTier; },
+          setTier: (nextTier: "micro" | "small" | "medium" | "brilliant") => {
+            if (family !== "diamante") return;
+            applyDiamondTierOptics(nextTier);
+          },
           setSourceDispersion: (nextDispersion: number) => {
             if (family !== "diamante") return;
             const next = Math.max(0, Math.min(0.1, Number(nextDispersion) || 0));
@@ -1228,7 +1232,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       for (const [mesh, entry] of entries) {
         if (entry.family !== "diamante") continue;
         const nextTier = mesh.userData?.aurumDiamondMicroTier;
-        if ((nextTier === "micro" || nextTier === "small" || nextTier === "brilliant") && nextTier !== entry.tier) {
+        if ((nextTier === "micro" || nextTier === "small" || nextTier === "medium" || nextTier === "brilliant") && nextTier !== entry.tier) {
           entry.setTier(nextTier);
         }
       }
