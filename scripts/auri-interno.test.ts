@@ -1,12 +1,20 @@
 import { describe, expect, test } from "bun:test";
-import { AURI_TOOLS, ejecutarHerramienta, filtrarParaModelo } from "../src/lib/auri/tool-registry";
+import { AURI_TOOLS, ejecutarHerramienta, esConfirmacionExplicita, filtrarParaModelo } from "../src/lib/auri/tool-registry";
 
 describe("AURI interno", () => {
-  test("reutiliza las cinco herramientas MCP existentes, todas de solo lectura", () => {
+  test("incluye cinco consultas de solo lectura y una herramienta de registro con confirmación", () => {
     expect(AURI_TOOLS.map((tool) => tool.name).sort()).toEqual([
-      "buscar_clientes", "listar_contratos", "listar_pedidos", "resumen_produccion", "ver_pedido",
+      "buscar_clientes", "crear_cliente", "listar_contratos", "listar_pedidos", "resumen_produccion", "ver_pedido",
     ]);
-    expect(AURI_TOOLS.every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
+    expect(AURI_TOOLS.filter((tool) => tool.name !== "crear_cliente").every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
+    expect(AURI_TOOLS.find((tool) => tool.name === "crear_cliente")?.annotations?.readOnlyHint).toBe(false);
+  });
+
+  test("exige una confirmación breve y explícita antes de permitir el registro", () => {
+    expect(esConfirmacionExplicita("Sí, confirmo")).toBe(true);
+    expect(esConfirmacionExplicita("adelante")).toBe(true);
+    expect(esConfirmacionExplicita("todavía no")).toBe(false);
+    expect(esConfirmacionExplicita("registra a Juan")).toBe(false);
   });
 
   test("solo permite campos operativos anonimizados hacia Gemini", () => {

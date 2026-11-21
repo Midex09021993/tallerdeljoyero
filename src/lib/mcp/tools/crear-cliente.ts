@@ -47,14 +47,14 @@ export default defineTool({
   handler: async (args, ctx) => {
     if (!ctx.isAuthenticated()) throw new ToolError("No autenticado.");
     const supabase = supabaseForUser(ctx);
-    const { data: roles, error: rolesError } = await supabase.from("user_roles").select("role").eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? "");
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) throw new ToolError("La sesión no es válida.");
+    const userId = authData.user.id;
+    const { data: roles, error: rolesError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
     if (rolesError) throw new ToolError("No se pudo verificar el permiso del usuario.");
     const roleNames = (roles ?? []).map((r) => String(r.role));
     if (!roleNames.includes("dueno") && !roleNames.includes("gerente")) throw new ToolError("No tienes permisos para registrar clientes.");
 
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData.user) throw new ToolError("La sesión no es válida.");
-    const userId = authData.user.id;
     const { data: cuentas, error: cuentasError } = await supabase.from("participante_cuentas")
       .select("participante_id").eq("user_id", userId).eq("estado", "activo");
     if (cuentasError) throw new ToolError("No se pudo determinar el taller activo.");
@@ -91,11 +91,13 @@ export default defineTool({
 
     // Detección preventiva de duplicados dentro del alcance RLS del usuario.
     if (documento) {
-      const { data: duplicate } = await supabase.from("clientes").select("id").eq("sede_id", participante.sede_id!).eq("documento", documento).limit(1).maybeSingle();
+      const { data: duplicate, error: duplicateError } = await supabase.from("clientes").select("id").eq("sede_id", participante.sede_id!).eq("documento", documento).limit(1).maybeSingle();
+      if (duplicateError) throw new ToolError("No se pudo comprobar si el documento ya está registrado.");
       if (duplicate) throw new ToolError("Ya existe un cliente con ese documento en este taller. No se creó un duplicado.");
     }
     if (email) {
-      const { data: duplicate } = await supabase.from("clientes").select("id").eq("sede_id", participante.sede_id!).ilike("email", email).limit(1).maybeSingle();
+      const { data: duplicate, error: duplicateError } = await supabase.from("clientes").select("id").eq("sede_id", participante.sede_id!).ilike("email", email).limit(1).maybeSingle();
+      if (duplicateError) throw new ToolError("No se pudo comprobar si el correo ya está registrado.");
       if (duplicate) throw new ToolError("Ya existe un cliente con ese correo en este taller. No se creó un duplicado.");
     }
 

@@ -58,6 +58,10 @@ export function declaracionesParaModelo() {
   });
 }
 
+export function esConfirmacionExplicita(value: string): boolean {
+  return /^(?:s[ií]|confirmo|confirmar|adelante|guarda(?:r)?|registra(?:r)?)(?:[\\s,!].*)?$/i.test(value.trim());
+}
+
 export type ResultadoHerramienta = { ok: true; datos: unknown } | { ok: false; error: string };
 
 /**
@@ -69,6 +73,7 @@ export async function ejecutarHerramienta(
   nombre: string,
   args: unknown,
   sesion: { token: string },
+  confirmacionUsuario = false,
 ): Promise<ResultadoHerramienta> {
   const tool = AURI_TOOLS.find((item) => item.name === nombre);
   if (!tool || (tool.annotations?.readOnlyHint !== true && nombre !== "crear_cliente")) return { ok: false, error: "Herramienta no disponible." };
