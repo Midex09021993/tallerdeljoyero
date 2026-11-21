@@ -51,6 +51,10 @@ verify_jwt = true
 [functions.catalogo-generar-descripcion]
 verify_jwt = true
 
+# AURI is a public informational assistant; the handler only exposes public help content.
+[functions.auri-chat]
+verify_jwt = false
+
 [functions.marketplace-descargar-archivo]
 verify_jwt = true
 
