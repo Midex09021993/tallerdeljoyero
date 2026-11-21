@@ -30,6 +30,7 @@ import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from 
 import { supabase } from "@/integrations/supabase/client";
 import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { AlertaAutorizacionProduccion } from "@/components/AlertaAutorizacionProduccion";
+import { AuriInternoBoton } from "@/components/auri/AuriInternoBoton";
 import { puedeAccederAurumIntelligence } from "@/lib/aurum-intelligence-access";
 
 type Seccion = {
@@ -647,6 +648,7 @@ export function AppShell({
           </Panel>
         ) : children}
       </main>
+      {sesion && !pathname.startsWith("/aurum-render") ? <AuriInternoBoton /> : null}
     </div>
   );
 }

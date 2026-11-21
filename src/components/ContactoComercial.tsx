@@ -62,7 +62,7 @@ export function ContactoComercial({ className = "" }: { className?: string }) {
                   <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">Hablemos con AURI</p><h2 id="contacto-comercial-titulo" className="mt-1 font-display text-2xl text-[#27333e]">Tu asistente de AURUM LAB</h2></div>
                   <button type="button" onClick={() => setMostrarAuri(false)} className="shrink-0 rounded-lg border border-[#d9c58e] px-3 py-2 text-xs font-semibold text-[#96732e] hover:bg-[#f7f2e6]">Formulario</button>
                 </div>
-                <AuriChat onContact={() => setMostrarAuri(false)} />
+                <AuriChat modo="publico" onContact={() => setMostrarAuri(false)} />
               </>
             ) : !enviado ? (
               <>

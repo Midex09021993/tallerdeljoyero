@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Bot, Mic, MicOff, Send, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { auriInterno } from "@/lib/auri/auri-interno.functions";
 
 type Message = { role: "user" | "model"; text: string };
 type SpeechRecognitionResultLike = { 0: { transcript: string }; isFinal: boolean };
@@ -24,8 +26,18 @@ const WELCOME: Message = {
   text: "¡Hola! Soy AURI, tu asistente de AURUM LAB. ✨ Puedo orientarte sobre nuestras herramientas, módulos y cómo empezar. ¿Qué te gustaría conocer?",
 };
 
-export function AuriChat({ onContact }: { onContact: () => void }) {
-  const [messages, setMessages] = useState<Message[]>([WELCOME]);
+const WELCOME_INTERNO: Message = {
+  role: "model",
+  text: "Hola, soy AURI. Puedo consultar pedidos, producción, contratos y clientes que tú ya puedes ver. Solo lectura, sin costes ni notas internas.",
+};
+const CONSENT_KEY = "auri-interno-acceso";
+
+export function AuriChat({ onContact, modo = "publico" }: { onContact: () => void; modo?: "publico" | "interno" }) {
+  const interno = modo === "interno";
+  const llamarInterno = useServerFn(auriInterno);
+  const [autorizado, setAutorizado] = useState(false);
+  useEffect(() => { if (interno) setAutorizado(window.localStorage.getItem(CONSENT_KEY) === "1"); }, [interno]);
+  const [messages, setMessages] = useState<Message[]>([interno ? WELCOME_INTERNO : WELCOME]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -86,6 +98,13 @@ export function AuriChat({ onContact }: { onContact: () => void }) {
     setError("");
     setLoading(true);
     try {
+      if (interno) {
+        const r = await llamarInterno({ data: { message: question, history: nextMessages.slice(-9, -1) } });
+        if (r.error || !r.reply) throw new Error(r.error || "AURI no pudo responder en este momento.");
+        setMessages((current) => [...current, { role: "model", text: r.reply }]);
+        speak(r.reply);
+        return;
+      }
       const { data, error: invokeError } = await supabase.functions.invoke("auri-chat", {
         body: {
           message: question,
@@ -102,6 +121,16 @@ export function AuriChat({ onContact }: { onContact: () => void }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (interno && !autorizado) {
+    return (
+      <div className="flex min-h-[320px] flex-col justify-center gap-4 rounded-2xl border border-[#d9c58e]/50 bg-white p-6 text-[#394653]">
+        <p className="font-semibold text-[#293744]">Activar AURI con datos del taller</p>
+        <p className="text-sm leading-6">AURI consultará pedidos, producción, contratos y clientes que tú ya puedes ver con tu cuenta. Solo lectura; no incluye costes, teléfonos, correos ni notas internas. Las respuestas se redactan con Gemini usando solo esos datos mínimos.</p>
+        <button type="button" onClick={() => { window.localStorage.setItem(CONSENT_KEY, "1"); setAutorizado(true); }} className="self-start rounded-xl bg-[#c7a65b] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#ad8b40]">Autorizar acceso</button>
+      </div>
+    );
   }
 
   return (
@@ -152,8 +181,12 @@ export function AuriChat({ onContact }: { onContact: () => void }) {
           </button>
         </form>
         <div className="mt-2 flex items-center justify-between gap-2 px-1">
-          <p className="text-[10px] text-[#969b9e]">AURI usa Gemini para responder. No compartas datos privados.</p>
-          <button type="button" onClick={onContact} className="shrink-0 text-[10px] font-semibold text-[#96732e] underline underline-offset-2">Contactar al equipo</button>
+          <p className="text-[10px] text-[#969b9e]">{interno ? "Datos según tus permisos. Solo lectura." : "AURI usa Gemini para responder. No compartas datos privados."}</p>
+          {interno ? (
+            <button type="button" onClick={() => { window.localStorage.removeItem(CONSENT_KEY); setAutorizado(false); }} className="shrink-0 text-[10px] font-semibold text-[#96732e] underline underline-offset-2">Desactivar acceso a datos</button>
+          ) : (
+            <button type="button" onClick={onContact} className="shrink-0 text-[10px] font-semibold text-[#96732e] underline underline-offset-2">Contactar al equipo</button>
+          )}
         </div>
       </div>
     </div>

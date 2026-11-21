@@ -69,6 +69,12 @@ Deno.serve(async (req: Request) => {
     let body: Record<string, unknown>;
     try { body = JSON.parse(raw); } catch { return json({ error: "Solicitud no válida." }, 400); }
 
+    // Endpoint solo público: nunca acepta contexto privado ni herramientas.
+    const permitidos = new Set(["message", "history"]);
+    if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some((k) => !permitidos.has(k))) {
+      return json({ error: "Solicitud no válida." }, 400);
+    }
+
     const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim().slice(0, 80);
     if (isRateLimited(ip)) return json({ error: "Has enviado varias consultas seguidas. Espera unos minutos antes de volver a escribir." }, 429);
 
