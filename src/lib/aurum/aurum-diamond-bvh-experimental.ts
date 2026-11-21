@@ -76,8 +76,8 @@ export function setAurumDiamondBvhOpticalParameters(
   if (!(material instanceof THREE.ShaderMaterial)) return;
   const uniforms = material.uniforms;
   let shaderPatched = false;
-  if (!uniforms.geometryFactor) uniforms.geometryFactor = { value: 0.5 };
-  if (!uniforms.squashFactor) uniforms.squashFactor = { value: 0.98 };
+  if (!uniforms["geometryFactor"]) uniforms["geometryFactor"] = { value: 0.5 };
+  if (!uniforms["squashFactor"]) uniforms["squashFactor"] = { value: 0.98 };
   if (!material.fragmentShader.includes("uniform float geometryFactor;")) {
     material.fragmentShader = material.fragmentShader.replace(
       "uniform float facetSharpness;",
@@ -108,7 +108,9 @@ export function setAurumDiamondBvhOpticalParameters(
   }
   const set = (key: string, value: number | undefined, min: number, max: number) => {
     if (value === undefined || !Number.isFinite(Number(value))) return;
-    uniforms[key].value = Math.max(min, Math.min(max, Number(value)));
+    const uniform = uniforms[key];
+    if (!uniform) return;
+    uniform.value = Math.max(min, Math.min(max, Number(value)));
   };
   set("geometryFactor", values.geometryFactor, 0, 1);
   set("squashFactor", values.squashFactor, 0, 1);
@@ -117,10 +119,10 @@ export function setAurumDiamondBvhOpticalParameters(
   material.userData = {
     ...(material.userData ?? {}),
     aurumDiamondBvhOpticalControls: {
-      geometryFactor: uniforms.geometryFactor,
-      squashFactor: uniforms.squashFactor,
-      absorptionFactor: uniforms.absorption,
-      transmission: uniforms.transmission,
+      geometryFactor: uniforms["geometryFactor"],
+      squashFactor: uniforms["squashFactor"],
+      absorptionFactor: uniforms["absorption"],
+      transmission: uniforms["transmission"],
     },
   };
   if (shaderPatched) material.needsUpdate = true;
