@@ -1,106 +1,58 @@
-# Auditoría solo lectura: cadena de variables públicas del backend
+# AURI interno con datos reales (plan, sin cambios aún)
 
-No se modificó, creó ni desplegó nada. Solo lectura.
+## Respuesta clave: ¿la app puede usar su propio MCP con la sesión actual?
+- **No a través del endpoint `/mcp`.** El servidor MCP exige token OAuth con `client_id` (`requireOAuthClientClaim`), así que la sesión normal de la app es rechazada a propósito. Saltarse esa regla debilitaría el control; no se hará.
+- **Sí reutilizando las mismas herramientas dentro del servidor de la app.** Cada herramienta es un `defineTool` cuyo `handler(args, ctx)` solo usa `ctx.isAuthenticated()` y `ctx.getToken()` para crear `supabaseForUser`. Una función de servidor protegida (`requireSupabaseAuth`, que valida la sesión con el backend) puede llamar esos handlers con un contexto mínimo que entrega el token ya verificado del usuario. RLS aplica igual que en MCP. No es protocolo MCP; es reutilización directa de las cinco herramientas, sin duplicarlas.
+- **Alternativa rechazada:** que la app actúe como cliente MCP OAuth contra sí misma (registro DCR, consentimiento, guardar refresh tokens). Más complejo, más secretos que custodiar, sin beneficio de seguridad para un usuario ya dentro de la app. Queda disponible para asistentes externos (Claude, ChatGPT) tal como está.
+- **Riesgo a confirmar en la implementación:** que el tipo `ToolContext` acepte un adaptador. Si exige una clase no construible, se extrae la lógica de cada handler a una función compartida `(supabase, args)` que usan tanto la herramienta MCP como AURI interno (sigue siendo una sola implementación).
 
-## 1. Variables presentes en el entorno (sin valores)
-
-Nombres relacionados con SUPABASE visibles en el entorno del sandbox:
-
+## Separación de modos
 ```text
-EXPO_PUBLIC_SUPABASE_ANON_KEY
-EXPO_PUBLIC_SUPABASE_PROJECT_ID
-EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-EXPO_PUBLIC_SUPABASE_URL
-LOVABLE_BROWSER_SUPABASE_ACCESS_TOKEN
-LOVABLE_BROWSER_SUPABASE_COOKIES_JSON
-LOVABLE_BROWSER_SUPABASE_SESSION_JSON
-LOVABLE_BROWSER_SUPABASE_STORAGE_KEY
-SUPABASE_DB_URL
-SUPABASE_PROJECT_ID
-SUPABASE_PUBLISHABLE_KEY
-SUPABASE_SERVICE_ROLE_KEY
-SUPABASE_URL
-VITE_SUPABASE_ANON_KEY
-VITE_SUPABASE_PROJECT_ID
-VITE_SUPABASE_PUBLISHABLE_KEY
-VITE_SUPABASE_URL
+Público (sin cambios)            Privado (nuevo)
+ContactoComercial "Hablemos"     AppShell (zona autenticada)
+AuriChat modo="publico"          AuriChat modo="interno"
+Edge Function auri-chat          createServerFn auri-interno (TanStack)
+sin JWT, sin datos               requireSupabaseAuth + RLS del usuario
 ```
+- `auri-chat` queda **solo público**: se endurece para ignorar/rechazar cualquier campo distinto de mensajes de texto (`context`, `tools`, `datos`), y su prompt sigue siendo informativo. Nunca recibe datos privados.
+- El modo interno no usa Edge Functions: función de servidor de la app (patrón del proyecto).
 
-Comprobación puntual (set = definida y no vacía):
+## Flujo AURI interno
+1. Usuario con sesión abre AURI desde AppShell. Primera vez: aviso de autorización ("AURI consultará pedidos, contratos y clientes que tú ya puedes ver; solo lectura; sin costes ni notas internas"). Aceptar guarda la preferencia localmente; se puede revocar desde el mismo panel.
+2. Cliente envía pregunta → `auriInterno` (server fn con `requireSupabaseAuth`).
+3. Servidor llama a Gemini (Lovable AI) con **tool calling**: se le declaran las 5 herramientas (nombre, descripción, esquema derivados de los `defineTool`). Gemini elige herramienta y argumentos.
+4. Servidor ejecuta el handler con el token del usuario (RLS). Máximo 3 llamadas por pregunta y límites ya presentes (≤100 filas; se recorta a 25 para el modelo).
+5. **Contexto mínimo a Gemini:** solo el texto resumido que devuelve la herramienta (referencia, cliente, estado, área, fechas), nunca importes, costes, notas internas, teléfonos ni correos; se aplica una lista blanca de campos antes de enviar. Se justifica porque sin esos datos no se puede redactar la respuesta. Alternativa más estricta opcional: respuestas de plantilla sin enviar datos a Gemini (ver pregunta abierta).
+6. Respuesta con texto + tarjetas (pedidos/estado) renderizadas desde `structuredContent`, no desde lo que diga el modelo, para evitar datos inventados.
 
-| Variable | Estado |
-| --- | --- |
-| SUPABASE_URL | set |
-| SUPABASE_PUBLISHABLE_KEY | set |
-| VITE_SUPABASE_URL | set |
-| VITE_SUPABASE_PUBLISHABLE_KEY | set |
-| VITE_SUPABASE_PROJECT_ID | set |
+## Permisos, expiración, revocación y fallback
+- Permisos: los decide RLS del usuario (Operario ve solo sus áreas, etc.). AURI no añade ni amplía nada.
+- Expiración: la sesión de la app caduca/renueva como hoy; si el token falla → mensaje "Tu sesión expiró, vuelve a iniciar sesión".
+- Revocación: botón "Desactivar acceso a datos" en AURI interno; cerrar sesión lo revoca de inmediato. El acceso MCP externo se sigue revocando por OAuth.
+- Fallback: si Gemini o una herramienta falla, AURI responde con el error legible y enlaces directos a Pedidos/Producción/Contratos; nunca cae al modo público con datos.
+- Límite de uso por usuario (p. ej. 30 preguntas/10 min) en servidor.
 
-Alcance observable: esto corresponde al entorno del sandbox de desarrollo/preview. El entorno del proceso de build de producción publicado no es inspeccionable con las herramientas disponibles, por lo que no puede confirmarse que allí estén presentes las mismas variables.
+## Diseño
+- Reutilizar `AuriChat.tsx` con prop `modo`; estilo blanco/dorado/azul de la captura, tokens del sistema de diseño, panel lateral en escritorio y hoja inferior en móvil.
+- Sin nuevo service worker ni cambios en manifest/PWA. Sin tocar Aurum Render.
 
-## 2. Mecanismo de inyección VITE_* del wrapper
+## Cambios por archivo
+- `src/lib/mcp/tools/*.ts`: sin cambios funcionales (solo exportar handler/lógica si el adaptador no tipa).
+- `src/lib/auri/tool-registry.ts` (nuevo): importa las 5 herramientas, expone esquemas para Gemini y `ejecutarHerramienta(nombre, args, token)`; lista blanca de campos.
+- `src/lib/auri/auri-interno.functions.ts` (nuevo): `createServerFn` + `requireSupabaseAuth`, bucle de tool calling con Lovable AI (Gemini), límites.
+- `src/components/auri/AuriChat.tsx`: modo público/interno, aviso de autorización, tarjetas, estados de error.
+- `src/components/AppShell` (archivo de layout autenticado): botón AURI.
+- `src/components/ContactoComercial.tsx`: fija `modo="publico"`.
+- `supabase/functions/auri-chat/index.ts`: rechazar campos extra; sin cambios de prompt.
+- `AGENTS.md`: regla "AURI interno reutiliza handlers MCP vía server fn autenticada; auri-chat es solo público".
 
-Archivo: `node_modules/@lovable.dev/vite-tanstack-config/dist/index.js` (versión 2.23.1), dentro de `defineConfig`:
+## Pruebas
+- Unitarias (bun test): la lista blanca elimina costes/notas; `auri-chat` rechaza `context`; el registro contiene exactamente las 5 herramientas, todas de solo lectura; sin token → error.
+- Typecheck (`tsgo -b --noEmit`), lint, build, `deno check` de `auri-chat`, workflow CI existente.
+- Navegador: usuario de prueba con sesión pregunta "¿qué pedidos están en producción?" y ve solo sus pedidos; sin sesión, el modal "Hablemos" sigue informativo.
+- Re-extraer manifiesto MCP para confirmar que no cambió.
 
-```js
-let envDefine = {};
-if (options.envDefine !== false) {
-  const loadedEnv = loadEnv(mode, process.cwd(), "VITE_");
-  for (const [key, value] of Object.entries(loadedEnv))
-    envDefine[`import.meta.env.${key}`] = JSON.stringify(value);
-}
-let config = {
-  define: envDefine,
-  ...
-};
-if (options.vite) config = mergeConfig(config, options.vite);
-```
-
-`loadEnv` es la función de Vite (`node_modules/vite/dist/node/chunks/node.js:5673`), que reúne claves con prefijo `VITE_` desde: los archivos `.env` del directorio indicado y, además, desde `process.env`:
-
-```js
-for (const [key, value] of Object.entries(parsed))
-  if (prefixes.some((prefix) => key.startsWith(prefix))) env[key] = value;
-for (const prefix of prefixes) Object.assign(env, getEnvs({ prefix }));
-for (const key in process.env)
-  if (prefixes.some((prefix) => key.startsWith(prefix))) env[key] = process.env[key];
-```
-
-Consecuencia verificable: el wrapper solo inyecta claves con prefijo `VITE_`. Las variables sin prefijo (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`) nunca llegan al bundle por este mecanismo.
-
-Detalle de forma: las claves generadas son literales con punto (`import.meta.env.VITE_SUPABASE_URL`). Vite convierte esas entradas al objeto `import.meta.env` del cliente (`node_modules/vite/dist/node/chunks/node.js:24721` y `:24761`), por lo que el acceso por corchetes también queda resuelto en build de cliente.
-
-## 3. Archivo `.env`
-
-Existe `.env` en la raíz del proyecto (361 bytes, 6 líneas). Claves contenidas, sin valores:
-
-```text
-SUPABASE_PROJECT_ID
-SUPABASE_PUBLISHABLE_KEY
-SUPABASE_URL
-VITE_SUPABASE_PROJECT_ID
-VITE_SUPABASE_PUBLISHABLE_KEY
-VITE_SUPABASE_URL
-```
-
-## 4. `dist` / `.output` y contenido del bundle
-
-No se pudo ejecutar esta comprobación. No existe ningún directorio `dist`, `.output` ni `.nitro` en el proyecto: no hay artefacto de build presente en el sandbox para inspeccionar. Por tanto no puede observarse si el bundle contiene literalmente la URL, la clave pública o la expresión `import.meta.env` sin valor. Generar un build sería una acción de cambio de estado y no se realizó, conforme a la instrucción de solo lectura.
-
-Tampoco hay evidencia en los registros disponibles: la búsqueda de `Missing Supabase`, `SUPABASE_URL` y `VITE_SUPABASE` en `/tmp/dev-server-logs/dev-server.log` no devolvió coincidencias.
-
-## 5. `vite.config.ts` frente al mecanismo del wrapper
-
-El `vite.config.ts` actual construye su propio `define`:
-
-- Lee `VITE_SUPABASE_URL` con respaldo a `SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` con respaldo a `SUPABASE_PUBLISHABLE_KEY`, y lo mismo para el identificador de proyecto.
-- Filtra valores vacíos y emite claves `import.meta.env.VITE_*`.
-- Se entrega al wrapper como `vite: { define }`, que lo aplica mediante `mergeConfig(config, options.vite)`; al ir en segundo lugar, esas claves prevalecen sobre las del wrapper.
-
-Resultado de la comparación: no hay interferencia ni conflicto con el mecanismo del wrapper. Las claves emitidas usan exactamente el mismo formato, y el `define` del proyecto es estrictamente aditivo: cubre el caso en que el entorno solo ofrece los nombres sin prefijo, que el wrapper por sí solo ignoraría. Si las tres variables faltan por completo, `define` queda vacío y no se inyecta nada, igual que con el wrapper solo.
-
-## Qué no pudo observarse
-
-- El entorno de variables del proceso de build de producción publicado.
-- El contenido literal del bundle publicado (no hay artefacto de build en el sandbox y no se generó ninguno).
-- Por ello no puede afirmarse todavía si el fallo se origina antes del wrapper (variables ausentes en el build), dentro de él o después; la evidencia disponible descarta únicamente un conflicto de configuración local.
+## Riesgos
+- Gemini puede pedir herramientas con argumentos inválidos → validación Zod existente.
+- Enviar nombres de clientes a Gemini es transferencia de datos personales a un tercero; mitigado con mínimos campos (decisión del Dueño).
+- Inyección de instrucciones vía textos de pedidos → el modelo no tiene herramientas de escritura, impacto limitado a la respuesta.
