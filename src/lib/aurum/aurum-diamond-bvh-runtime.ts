@@ -650,7 +650,13 @@ export async function createAurumDiamondBvhRuntime(options: {
       // to their physical material. The protected center normally retains its
       // approved calibration; Diamante rosado 2 is the explicit exception because
       // its imported .dmat is the requested source calibration for every size.
-      const diamondSourceParameters = (calibrateSecondaryDiamond || activeGemId === "diamante_rosa_2")
+      const isWhiteDiamondProfile = activeGemId === "diamante_natural"
+        || activeGemId === "diamante_vs"
+        || activeGemId === "diamante_inclusiones";
+      // White catalog profiles define reflectivity/gamma for every stone,
+      // including the explicitly protected center. Do not fall back to the
+      // legacy 0.46 / 1.09 values merely because center calibration is protected.
+      const diamondSourceParameters = (calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")
         ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
         : null;
       const initialDiamondParameters = currentMaterial?.userData?.aurumIJEWELParameters ?? {};
@@ -792,10 +798,10 @@ export async function createAurumDiamondBvhRuntime(options: {
             : rubyProfile?.color ?? sapphireProfile?.color ?? (family === "diamante"
               ? selectedCatalogDiamondColor
               : resolveAurumCatalogGemBvhColor(materials[0], isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff)),
-          reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : isEmerald
+          reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? (isWhiteDiamondProfile ? 0.5 : 0.46)) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09,
+          gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09)) : 1.09,
           geometryFactor: initialDiamondGeometryFactor,
           squashFactor: initialDiamondSquashFactor,
           diamondOrientedEnvMap: Number(diamondSourceParameters?.diamondOrientedEnvMap ?? 0),
@@ -808,8 +814,8 @@ export async function createAurumDiamondBvhRuntime(options: {
           ...(family === "diamante" ? { environmentRotationEuler: getAurumDiamondEnvironmentRotationEuler(meshEnvironmentAlignment.rotationRadians + sourceEnvironmentOffset, meshEnvironmentAlignment.correctionQuaternion) } : {}),
         });
         let baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
-        let baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46) : (prepared.material as any).reflectivity ?? 0.46;
-        let baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09)) : 1.09;
+        let baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? (isWhiteDiamondProfile ? 0.5 : 0.46)) : (prepared.material as any).reflectivity ?? 0.46;
+        let baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09)) : 1.09;
         const initialDiamondProfileBaseline: AurumDiamondOpticalProfileBaseline = {
           profileId: activeGemId,
           dispersion: baseDiamondDispersion,
@@ -841,8 +847,11 @@ export async function createAurumDiamondBvhRuntime(options: {
           const profile = getAurumDiamondMicroOpticalProfile(effectiveTier);
           const dispersion = baseDiamondDispersion * profile.dispersionScale;
           const environmentIntensity = baseDiamondEnvironmentIntensity * profile.environmentIntensityScale;
-          const reflectivity = baseDiamondReflectivity * profile.reflectivityScale;
-          const gamma = baseDiamondGamma * profile.gammaScale;
+          // Reflectivity and gamma are calibrated profile controls, not size
+          // compensation. Keep their exact catalog values across MICRO/SMALL/
+          // MEDIUM/BRILLIANT; size tiers continue to scale dispersion and energy.
+          const reflectivity = baseDiamondReflectivity;
+          const gamma = baseDiamondGamma;
           packageApi.setDiamondOptions(prepared.material, {
             dispersion,
             environmentIntensity,
