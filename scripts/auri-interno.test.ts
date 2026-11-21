@@ -11,8 +11,10 @@ describe("AURI interno", () => {
   });
 
   test("exige una confirmación breve y explícita antes de permitir el registro", () => {
-    expect(esConfirmacionExplicita("Sí, confirmo")).toBe(true);
-    expect(esConfirmacionExplicita("adelante")).toBe(true);
+    expect(esConfirmacionExplicita("CONFIRMO EL REGISTRO")).toBe(true);
+    expect(esConfirmacionExplicita("Sí, confirmo el registro")).toBe(true);
+    expect(esConfirmacionExplicita("adelante")).toBe(false);
+    expect(esConfirmacionExplicita("sí")).toBe(false);
     expect(esConfirmacionExplicita("todavía no")).toBe(false);
     expect(esConfirmacionExplicita("registra a Juan")).toBe(false);
   });

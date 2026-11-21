@@ -59,7 +59,7 @@ export function declaracionesParaModelo() {
 }
 
 export function esConfirmacionExplicita(value: string): boolean {
-  return /^(?:s[ií]|confirmo|confirmar|adelante|guarda(?:r)?|registra(?:r)?)(?:[\s,!].*)?$/i.test(value.trim());
+  return /^(?:s[ií],? )?confirmo el registro[.! ]*$/i.test(value.trim());
 }
 
 export type ResultadoHerramienta = { ok: true; datos: unknown } | { ok: false; error: string };
@@ -95,6 +95,6 @@ export async function ejecutarHerramienta(
   } catch (error) {
     // No propagar mensajes de base de datos ni valores que puedan contener información privada.
     console.error("auri-interno tool failed", { tool: nombre, error: error instanceof Error ? error.message : "unknown" });
-    return { ok: false, error: "La consulta no se pudo completar." };
+    return { ok: false, error: error instanceof Error && error.name === "ToolError" ? error.message : "La consulta no se pudo completar." };
   }
 }
