@@ -56,9 +56,9 @@ function renderAuriMessage(value: string) {
 
 function textoParaVoz(value: string) {
   return value
-    .replace(/\\*\\*(.*?)\\*\\*/g, "$1")
-    .replace(/^\\s*(?:\\*|-)\\s+/gm, "")
-    .replace(/\\n{2,}/g, ". ");
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/^\s*(?:\*|-)\s+/gm, "")
+    .replace(/\n{2,}/g, ". ");
 }
 
 
