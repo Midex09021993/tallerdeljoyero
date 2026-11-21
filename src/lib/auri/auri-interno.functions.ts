@@ -40,6 +40,79 @@ type GeminiPart = {
   [key: string]: unknown;
 };
 
+const MODELOS_GEMINI_AURI = [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash-lite",
+] as const;
+
+const ESTADOS_REINTENTABLES = new Set([404, 408, 429, 500, 502, 503, 504]);
+
+async function generarConRespaldo(
+  apiKey: string,
+  contents: { role: "user" | "model"; parts: GeminiPart[] }[],
+  declarations: ReturnType<typeof declaracionesParaModelo>,
+): Promise<{ response: Response; modelo: string }> {
+  let ultimoEstado = 503;
+  let ultimoDetalle = "Sin respuesta de Gemini";
+
+  for (let index = 0; index < MODELOS_GEMINI_AURI.length; index += 1) {
+    const modelo = MODELOS_GEMINI_AURI[index];
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          signal: AbortSignal.timeout(10_000),
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SISTEMA }] },
+            contents,
+            tools: [{ functionDeclarations: declarations }],
+            toolConfig: { functionCallingConfig: { mode: "AUTO" } },
+            generationConfig: { maxOutputTokens: 500, thinkingConfig: { thinkingLevel: "low" } },
+          }),
+        },
+      );
+
+      if (response.ok) {
+        if (index > 0) console.info("AURI Gemini fallback succeeded", { modelo, intento: index + 1 });
+        return { response, modelo };
+      }
+
+      ultimoEstado = response.status;
+      const detalle = await response.text().catch(() => "");
+      ultimoDetalle = detalle.slice(0, 800);
+      console.warn("AURI Gemini model unavailable; trying fallback", {
+        modelo, status: response.status, intento: index + 1,
+      });
+
+      // No cambiar de modelo ante errores de clave, permisos o payload inválido.
+      if (!ESTADOS_REINTENTABLES.has(response.status)) break;
+    } catch (error) {
+      ultimoEstado = error instanceof Error && error.name === "TimeoutError" ? 504 : 503;
+      ultimoDetalle = error instanceof Error ? error.name : "NetworkError";
+      console.warn("AURI Gemini transport failed; trying fallback", {
+        modelo, error: ultimoDetalle, intento: index + 1,
+      });
+    }
+
+    if (index < MODELOS_GEMINI_AURI.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 400 * (index + 1)));
+    }
+  }
+
+  console.error("All AURI Gemini models failed", {
+    status: ultimoEstado,
+    detail: ultimoDetalle,
+    models: MODELOS_GEMINI_AURI,
+  });
+  const error = new Error("AURI_GEMINI_FALLBACK_FAILED");
+  Object.assign(error, { status: ultimoEstado });
+  throw error;
+}
+
 export const auriInterno = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { message: string; history?: Turno[] }) => {
@@ -71,48 +144,9 @@ export const auriInterno = createServerFn({ method: "POST" })
     ];
     const declarations = declaracionesParaModelo();
     const usadas: string[] = [];
-    const model = process.env["GEMINI_AURI_MODEL"] || "gemini-3.8-flash";
-
     try {
       for (let step = 0; step < 4; step += 1) {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-            signal: AbortSignal.timeout(45_000),
-            body: JSON.stringify({
-              systemInstruction: { parts: [{ text: SISTEMA }] },
-              contents,
-              tools: [{ functionDeclarations: declarations }],
-              toolConfig: { functionCallingConfig: { mode: "AUTO" } },
-              generationConfig: { maxOutputTokens: 500, thinkingConfig: { thinkingLevel: "low" } },
-            }),
-          },
-        );
-
-        if (response.status === 429) return { reply: "", herramientas: usadas, error: "Gemini alcanzó temporalmente su límite de consultas. Inténtalo más tarde." };
-        if (response.status === 401 || response.status === 403) {
-          console.error("auri-interno Gemini auth/config error", response.status);
-          return { reply: "", herramientas: usadas, error: "La conexión de AURI con Gemini necesita revisar su configuración." };
-        }
-        if (!response.ok) {
-          const providerError = await response.text().catch(() => "");
-          // Registrar solo código y mensaje técnico acotado; nunca registrar API key ni contenido del usuario.
-          console.error("auri-interno Gemini request failed", {
-            status: response.status,
-            providerMessage: providerError.slice(0, 1200),
-            model,
-          });
-          if (response.status === 400) {
-            return { reply: "", herramientas: usadas, error: "La solicitud de AURI fue rechazada por la configuración de Gemini. Estamos revisando sus parámetros." };
-          }
-          if (response.status === 404) {
-            return { reply: "", herramientas: usadas, error: "El modelo de Gemini configurado para AURI no está disponible." };
-          }
-          return { reply: "", herramientas: usadas, error: "Gemini no pudo responder ahora. Inténtalo nuevamente." };
-        }
-
+        const { response, modelo } = await generarConRespaldo(apiKey, contents, declarations);
         const payload = await response.json() as {
           candidates?: Array<{ content?: { role?: string; parts?: GeminiPart[] }; finishReason?: string }>;
         };
@@ -126,7 +160,7 @@ export const auriInterno = createServerFn({ method: "POST" })
           return { reply: reply || "No pude preparar una respuesta. Inténtalo nuevamente.", herramientas: usadas };
         }
 
-        // Se conserva el turno del modelo y se devuelven respuestas de función anonimizadas.
+        console.info("AURI Gemini selected model", { modelo, step: step + 1 });
         contents.push({ role: "model", parts });
         for (const call of calls.slice(0, 3)) {
           const result = await ejecutarHerramienta(call.name, call.args, { token }, call.name !== "crear_cliente" || esConfirmacionExplicita(data.message));
@@ -145,9 +179,14 @@ export const auriInterno = createServerFn({ method: "POST" })
       }
       return { reply: "No pude completar la consulta. Prueba con una pregunta más concreta.", herramientas: usadas };
     } catch (error) {
-      console.error("auri-interno request failed", error instanceof Error ? error.name : "unknown");
+      const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
+      console.error("auri-interno request failed", { name: error instanceof Error ? error.message : "unknown", status });
+      if (status === 429) return { reply: "", herramientas: usadas, error: "Gemini alcanzó el límite temporal de solicitudes en todos los modelos disponibles. Espera un momento e inténtalo de nuevo." };
+      if (status === 401 || status === 403) return { reply: "", herramientas: usadas, error: "La clave o los permisos de Gemini necesitan revisión." };
+      if (status === 400) return { reply: "", herramientas: usadas, error: "Gemini rechazó la solicitud. Revisaremos la configuración de AURI." };
+      if (error instanceof Error && error.message === "AURI_GEMINI_FALLBACK_FAILED") return { reply: "", herramientas: usadas, error: "Los cuatro modelos de Gemini están temporalmente no disponibles. Inténtalo nuevamente en unos minutos." };
       if (error instanceof Error && error.name === "TimeoutError") {
-        return { reply: "", herramientas: usadas, error: "AURI agotó el tiempo de espera al consultar Gemini. La solicitud no se confirmó como guardada; revisa antes de repetir el registro." };
+        return { reply: "", herramientas: usadas, error: "AURI agotó el tiempo de espera. No se confirmó ningún registro; revisa antes de repetir la operación." };
       }
       return { reply: "", herramientas: usadas, error: "Ocurrió un problema al conectar con AURI." };
     }
