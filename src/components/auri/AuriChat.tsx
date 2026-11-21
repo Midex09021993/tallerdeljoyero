@@ -31,6 +31,36 @@ const WELCOME_INTERNO: Message = {
   text: "Hola, soy AURI. Puedo consultar información de tu taller y ayudarte a registrar clientes nuevos. Antes de guardar, siempre te mostraré la ficha y pediré tu confirmación.",
 };
 const CONSENT_KEY = "auri-interno-acceso";
+function renderAuriInline(value: string) {
+  return value.split(/(\\*\\*[^*]+\\*\\*)/g).map((part, index) =>
+    part.startsWith("**") && part.endsWith("**")
+      ? <strong key={index} className="font-semibold text-[#293744]">{part.slice(2, -2)}</strong>
+      : part,
+  );
+}
+
+function renderAuriMessage(value: string) {
+  return value.split("\\n").map((rawLine, index) => {
+    const line = rawLine.trim();
+    if (!line) return <div key={index} className="h-2" />;
+    const bullet = /^(?:\\*|-)\\s+/.test(line);
+    const content = bullet ? line.replace(/^(?:\\*|-)\\s+/, "") : line;
+    return (
+      <p key={index} className={bullet ? "flex gap-2 pl-1" : undefined}>
+        {bullet && <span aria-hidden="true" className="text-[#b18b3e]">•</span>}
+        <span>{renderAuriInline(content)}</span>
+      </p>
+    );
+  });
+}
+
+function textoParaVoz(value: string) {
+  return value
+    .replace(/\\*\\*(.*?)\\*\\*/g, "$1")
+    .replace(/^\\s*(?:\\*|-)\\s+/gm, "")
+    .replace(/\\n{2,}/g, ". ");
+}
+
 
 export function AuriChat({ onContact, modo = "publico" }: { onContact: () => void; modo?: "publico" | "interno" }) {
   const interno = modo === "interno";
@@ -102,7 +132,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         const r = await llamarInterno({ data: { message: question, history: nextMessages.slice(-9, -1) } });
         if (r.error || !r.reply) throw new Error(r.error || "AURI no pudo responder en este momento.");
         setMessages((current) => [...current, { role: "model", text: r.reply }]);
-        speak(r.reply);
+        speak(textoParaVoz(r.reply));
         return;
       }
       const { data, error: invokeError } = await supabase.functions.invoke("auri-chat", {
@@ -115,7 +145,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
       if (!data?.reply || typeof data.reply !== "string") throw new Error(data?.error || "AURI no pudo responder en este momento.");
       const answer: Message = { role: "model", text: data.reply };
       setMessages((current) => [...current, answer]);
-      speak(answer.text);
+      speak(textoParaVoz(answer.text));
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo conectar con AURI. Inténtalo nuevamente.");
     } finally {
@@ -151,9 +181,9 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         {messages.map((message, index) => (
           <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "rounded-br-md bg-[#263746] text-white" : "rounded-bl-md border border-[#eee6d5] bg-white text-[#394653] shadow-sm"}`}>
-              {message.text}
+              {renderAuriMessage(message.text)}
               {message.role === "model" && index > 0 && voiceEnabled && (
-                <button type="button" onClick={() => speak(message.text)} aria-label="Escuchar respuesta" className="ml-2 inline-flex align-middle text-[#a88742] hover:text-[#72551e]"><Volume2 className="size-3.5" /></button>
+                <button type="button" onClick={() => speak(textoParaVoz(message.text))} aria-label="Escuchar respuesta" className="ml-2 inline-flex align-middle text-[#a88742] hover:text-[#72551e]"><Volume2 className="size-3.5" /></button>
               )}
             </div>
           </div>
