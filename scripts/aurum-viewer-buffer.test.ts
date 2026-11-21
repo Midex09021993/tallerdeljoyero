@@ -778,7 +778,9 @@ test("video export restores the viewer and resumes the demand-driven loop", () =
 
   expect(videoStart).toBeGreaterThan(-1);
   expect(videoBlock).toContain("() => loop?.resume?.(),");
-  expect(videoBlock).toContain("() => loop?.resize?.(),");
+  expect(videoBlock).toContain("loop?.setCaptureResizeLock?.(false)");
+  expect(videoBlock).toContain("() => loop?.resume?.(),");
+  expect(videoBlock).not.toContain("() => loop?.resize?.(),");
 });
 
 
