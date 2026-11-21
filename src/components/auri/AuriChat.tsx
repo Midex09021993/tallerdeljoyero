@@ -32,7 +32,7 @@ const WELCOME_INTERNO: Message = {
 };
 const CONSENT_KEY = "auri-interno-acceso";
 function renderAuriInline(value: string) {
-  return value.split(/(\\*\\*[^*]+\\*\\*)/g).map((part, index) =>
+  return value.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
     part.startsWith("**") && part.endsWith("**")
       ? <strong key={index} className="font-semibold text-[#293744]">{part.slice(2, -2)}</strong>
       : part,
@@ -40,11 +40,11 @@ function renderAuriInline(value: string) {
 }
 
 function renderAuriMessage(value: string) {
-  return value.split("\\n").map((rawLine, index) => {
+  return value.split("\n").map((rawLine, index) => {
     const line = rawLine.trim();
     if (!line) return <div key={index} className="h-2" />;
-    const bullet = /^(?:\\*|-)\\s+/.test(line);
-    const content = bullet ? line.replace(/^(?:\\*|-)\\s+/, "") : line;
+    const bullet = /^(?:\*|-)\s+/g.test(line);
+    const content = bullet ? line.replace(/^(?:\*|-)\s+/g, "") : line;
     return (
       <p key={index} className={bullet ? "flex gap-2 pl-1" : undefined}>
         {bullet && <span aria-hidden="true" className="text-[#b18b3e]">•</span>}
