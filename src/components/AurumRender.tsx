@@ -1454,29 +1454,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const lucesAurum = (lightingController as any).lights ?? {};
       const aplicarIluminacionPublica = () => {
         if (!PUBLIC_VIEWER_PRESENTATION_MODE) return;
-        // Disable the AURUM-only studio rig. Use the exact three-light setup
-        // from PublicCatalogViewer instead.
-        Object.values(lucesAurum).forEach((light: any) => {
-          if (light) light.visible = false;
-        });
-        if (!escena.userData.aurumPublicViewerLights) {
-          const hemisphere = new THREE.HemisphereLight(0xffffff, 0x77716a, 0.6);
-          hemisphere.name = "PublicViewer Hemisphere";
-          const key = new THREE.DirectionalLight(0xffffff, 2.1);
-          key.name = "PublicViewer Key";
-          key.position.set(4, 7, 5);
-          const fill = new THREE.DirectionalLight(0xffffff, 1.0);
-          fill.name = "PublicViewer Fill";
-          fill.position.set(-5, 2, -3);
-          const rim = new THREE.DirectionalLight(0xffffff, 0.55);
-          rim.name = "PublicViewer Rim";
-          rim.position.set(-1, 4, -6);
-          [hemisphere, key, fill, rim].forEach((light) => {
-            light.userData.aurumPublicViewerLight = true;
-            escena.add(light);
-          });
-          escena.userData.aurumPublicViewerLights = [hemisphere, key, fill, rim];
-        }
+        // Presentation mode keeps its render-quality/shadow restrictions, but
+        // must not replace or disable the production AURUM lighting controller.
+        // The studio rig remains the single source of direct and rectangular lights.
         renderer.shadowMap.enabled = false;
         renderer.shadowMap.autoUpdate = false;
       };
@@ -1543,7 +1523,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         setRenderQualityId(id);
       };
       const actualizarLucesAurum = (patch:any) => {
-        if (PUBLIC_VIEWER_PRESENTATION_MODE) return;
+        // Presentation mode must not block the user's explicit studio-light edits.
         lightingController.update(patch);
         // Lighting changes affect both the beauty frame and the shadow map.
         renderer.shadowMap.needsUpdate = true;
@@ -1555,7 +1535,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       aplicarIluminacionPublica();
 
       const aplicarIluminacion = (id:IluminacionId) => {
-        if (PUBLIC_VIEWER_PRESENTATION_MODE) return;
         lightingController.applyPreset(id);
         renderer.shadowMap.needsUpdate = true;
         resetTemporalAccumulationRef.current?.();
