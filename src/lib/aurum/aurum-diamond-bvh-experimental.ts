@@ -214,14 +214,14 @@ export function prepareAurumDiamondBvhExperiment(
   }
   material.fragmentShader = material.fragmentShader.replace(
     "uniform float facetSharpness;",
-    "uniform float facetSharpness;\\n  uniform vec3 aurumGemLightPosition;\\n  uniform float aurumGemLightIntensity;\\n  uniform float aurumGemLightRadius;",
+    "uniform float facetSharpness;\n  uniform vec3 aurumGemLightPosition;\n  uniform float aurumGemLightIntensity;\n  uniform float aurumGemLightRadius;",
   );
   if (!material.fragmentShader.includes("uniform vec3 aurumGemLightPosition;")) {
     throw new Error("[AURUM diamond BVH] No se pudieron registrar los uniformes de luz Gem.");
   }
   material.fragmentShader = material.fragmentShader.replace(
     acesOutput,
-    "// AURUM_BVH_GEM_LIGHT: localized surface response; BVH rays and optical transport remain unchanged.\\n    vec3 gemLightVector = aurumGemLightPosition - vWorldPos;\\n    float gemLightDistance = length(gemLightVector);\\n    vec3 gemLightDirection = gemLightDistance > 0.0001 ? gemLightVector / gemLightDistance : vec3(0.0, 1.0, 0.0);\\n    float gemLightRadiusSafe = max(aurumGemLightRadius, 0.001);\\n    float gemLightRange = 1.0 - smoothstep(2.0, 4.0, gemLightDistance / gemLightRadiusSafe);\\n    float gemLightAttenuation = gemLightRange / (1.0 + pow(gemLightDistance / gemLightRadiusSafe, 2.0));\\n    float gemLightDiffuse = max(dot(worldNormal, gemLightDirection), 0.0);\\n    vec3 gemLightHalfVector = normalize(gemLightDirection + view);\\n    float gemLightSpecular = pow(max(dot(worldNormal, gemLightHalfVector), 0.0), 36.0);\\n    float gemLightEnergy = max(aurumGemLightIntensity, 0.0) * gemLightAttenuation;\\n    hdrColor += vec3(gemLightEnergy * (0.22 * gemLightDiffuse + 0.12 * gemLightSpecular));\\n    gl_FragColor = vec4(hdrColor, 1.0);",
+    "// AURUM_BVH_GEM_LIGHT: localized surface response; BVH rays and optical transport remain unchanged.\n    vec3 gemLightVector = aurumGemLightPosition - vWorldPos;\n    float gemLightDistance = length(gemLightVector);\n    vec3 gemLightDirection = gemLightDistance > 0.0001 ? gemLightVector / gemLightDistance : vec3(0.0, 1.0, 0.0);\n    float gemLightRadiusSafe = max(aurumGemLightRadius, 0.001);\n    float gemLightRange = 1.0 - smoothstep(2.0, 4.0, gemLightDistance / gemLightRadiusSafe);\n    float gemLightAttenuation = gemLightRange / (1.0 + pow(gemLightDistance / gemLightRadiusSafe, 2.0));\n    float gemLightDiffuse = max(dot(worldNormal, gemLightDirection), 0.0);\n    vec3 gemLightHalfVector = normalize(gemLightDirection + view);\n    float gemLightSpecular = pow(max(dot(worldNormal, gemLightHalfVector), 0.0), 36.0);\n    float gemLightEnergy = max(aurumGemLightIntensity, 0.0) * gemLightAttenuation;\n    hdrColor += vec3(gemLightEnergy * (0.22 * gemLightDiffuse + 0.12 * gemLightSpecular));\n    gl_FragColor = vec4(hdrColor, 1.0);",
   );
   material.userData = {
     ...(material.userData ?? {}),
