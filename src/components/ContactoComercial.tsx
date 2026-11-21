@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, CheckCircle2, LoaderCircle, MessageCircle, X } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, LoaderCircle, MessageCircle, X } from "lucide-react";
+import { AuriChat } from "@/components/auri/AuriChat";
 import { enviarConsultaComercial } from "@/lib/contacto.functions";
 import { registrarEvento } from "@/lib/analytics";
 
@@ -11,6 +12,7 @@ const INTERESES = [
 
 export function ContactoComercial({ className = "" }: { className?: string }) {
   const [abierto, setAbierto] = useState(false);
+  const [mostrarAuri, setMostrarAuri] = useState(false);
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -47,18 +49,27 @@ export function ContactoComercial({ className = "" }: { className?: string }) {
 
   return (
     <>
-      <button type="button" aria-haspopup="dialog" aria-expanded={abierto} onClick={() => { setAbierto(true); registrarEvento("contact_started"); setEnviado(false); }} className={className}>
+      <button type="button" aria-haspopup="dialog" aria-expanded={abierto} onClick={() => { setAbierto(true); setMostrarAuri(false); registrarEvento("contact_started"); setEnviado(false); }} className={className}>
         <MessageCircle className="size-4" /> Hablemos
       </button>
       {abierto ? (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#17212b]/55 p-3 backdrop-blur-md sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) cerrar(); }}>
           <section role="dialog" aria-modal="true" aria-labelledby="contacto-comercial-titulo" className="relative my-auto max-h-[min(90dvh,850px)] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-[#c7a65b]/35 bg-[#fcfbf8] p-5 text-[#303943] shadow-[0_32px_100px_rgba(28,35,42,.24)] sm:p-8 md:p-9">
             <button type="button" aria-label="Cerrar contacto" onClick={cerrar} className="absolute right-4 top-4 grid size-10 place-items-center rounded-full border border-[#dedbd3] bg-white text-[#68727c] transition hover:border-[#c7a65b] hover:bg-[#f7f2e6] hover:text-[#9b762e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a65b]"><X className="size-5" /></button>
-            {!enviado ? (
+            {!enviado && mostrarAuri ? (
+              <>
+                <div className="mb-4 flex items-center justify-between gap-3 pr-10">
+                  <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">Hablemos con AURI</p><h2 id="contacto-comercial-titulo" className="mt-1 font-display text-2xl text-[#27333e]">Tu asistente de AURUM LAB</h2></div>
+                  <button type="button" onClick={() => setMostrarAuri(false)} className="shrink-0 rounded-lg border border-[#d9c58e] px-3 py-2 text-xs font-semibold text-[#96732e] hover:bg-[#f7f2e6]">Formulario</button>
+                </div>
+                <AuriChat onContact={() => setMostrarAuri(false)} />
+              </>
+            ) : !enviado ? (
               <>
                 <div className="mb-5 flex items-center gap-3"><span className="h-px w-8 bg-[#b99642]/80" /><p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#a98535]">Taller del Joyero <span className="mx-1.5 text-[#aeb4b9]">/</span> Atención personalizada</p></div>
                 <h2 id="contacto-comercial-titulo" className="mt-2 pr-10 font-display text-3xl leading-tight text-[#27333e] sm:text-4xl">Cuéntanos qué te interesa</h2>
                 <p className="mt-3 max-w-lg text-sm leading-6 text-[#687580]">Déjanos tus datos y te explicaremos personalmente cómo podemos ayudarte.</p>
+                <button type="button" onClick={() => setMostrarAuri(true)} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#c7a65b]/65 bg-white px-4 py-3 text-sm font-semibold text-[#876a2e] shadow-sm transition hover:bg-[#faf6eb] sm:w-auto"><Bot className="size-4" /> Conversar con AURI <span className="rounded-full bg-[#edf4ff] px-2 py-0.5 text-[10px] font-bold text-[#3979bc]">Gemini</span></button>
                 <form onSubmit={enviar} className="mt-7 space-y-5 border-t border-[#e6e1d7] pt-6">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block text-xs text-[#596571]">Nombre *
