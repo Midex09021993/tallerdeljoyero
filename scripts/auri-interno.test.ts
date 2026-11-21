@@ -2,20 +2,36 @@ import { describe, expect, test } from "bun:test";
 import { AURI_TOOLS, ejecutarHerramienta, filtrarParaModelo } from "../src/lib/auri/tool-registry";
 
 describe("AURI interno", () => {
-  test("reutiliza exactamente las cinco herramientas MCP, todas de solo lectura", () => {
-    expect(AURI_TOOLS.map((t) => t.name).sort()).toEqual(["buscar_clientes", "listar_contratos", "listar_pedidos", "resumen_produccion", "ver_pedido"]);
-    expect(AURI_TOOLS.every((t) => t.annotations?.readOnlyHint === true)).toBe(true);
+  test("reutiliza las cinco herramientas MCP existentes, todas de solo lectura", () => {
+    expect(AURI_TOOLS.map((tool) => tool.name).sort()).toEqual([
+      "buscar_clientes", "listar_contratos", "listar_pedidos", "resumen_produccion", "ver_pedido",
+    ]);
+    expect(AURI_TOOLS.every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
   });
-  test("no envía teléfonos, correos, costes ni notas al modelo", () => {
-    const out = filtrarParaModelo({ clientes: [{ nombre: "Ana", telefono: "999", email: "a@b.pe", notas: "x", precio: 10 }] });
-    expect(out).toEqual({ clientes: [{ nombre: "Ana" }] });
+
+  test("solo permite campos operativos anonimizados hacia Gemini", () => {
+    const out = filtrarParaModelo({
+      pedidos: [{
+        id: "uuid", referencia: "PED-001", cliente: "Ana", nombre: "Ana",
+        telefono: "999", email: "a@b.pe", notas: "x", precio: 10,
+        estado: "En Producción", pieza: "Anillo", trabajo: "Fabricación",
+      }],
+    });
+    expect(out).toEqual({ pedidos: [{ estado: "En Producción", pieza: "Anillo", trabajo: "Fabricación" }] });
   });
+
+  test("no filtra campos desconocidos ni identificadores", () => {
+    expect(filtrarParaModelo({ id: "abc", customer_name: "Ana", secret: "x", estado: "Recibido" }))
+      .toEqual({ estado: "Recibido" });
+  });
+
   test("sin token no ejecuta herramientas", async () => {
-    const r = await ejecutarHerramienta("listar_pedidos", {}, { token: "", userId: "u", claims: {} });
-    expect(r.ok).toBe(false);
+    const result = await ejecutarHerramienta("listar_pedidos", {}, { token: "" });
+    expect(result.ok).toBe(false);
   });
+
   test("rechaza herramientas desconocidas y argumentos extra", async () => {
-    expect((await ejecutarHerramienta("borrar_todo", {}, { token: "t", userId: "u", claims: {} })).ok).toBe(false);
-    expect((await ejecutarHerramienta("listar_pedidos", { x: 1 }, { token: "t", userId: "u", claims: {} })).ok).toBe(false);
+    expect((await ejecutarHerramienta("borrar_todo", {}, { token: "t" })).ok).toBe(false);
+    expect((await ejecutarHerramienta("listar_pedidos", { x: 1 }, { token: "t" })).ok).toBe(false);
   });
 });
