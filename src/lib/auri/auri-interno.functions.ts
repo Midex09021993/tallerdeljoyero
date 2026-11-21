@@ -36,7 +36,7 @@ function extraerTexto(parts: unknown[]): string {
 
 type GeminiPart = {
   text?: string;
-  functionCall?: { name?: string; args?: Record<string, unknown> };
+  functionCall?: { id?: string; name?: string; args?: Record<string, unknown> };
   [key: string]: unknown;
 };
 
@@ -71,7 +71,7 @@ export const auriInterno = createServerFn({ method: "POST" })
     ];
     const declarations = declaracionesParaModelo();
     const usadas: string[] = [];
-    const model = process.env["GEMINI_AURI_MODEL"] || "gemini-2.5-flash";
+    const model = process.env["GEMINI_AURI_MODEL"] || "gemini-3.8-flash";
 
     try {
       for (let step = 0; step < 4; step += 1) {
@@ -86,7 +86,7 @@ export const auriInterno = createServerFn({ method: "POST" })
               contents,
               tools: [{ functionDeclarations: declarations }],
               toolConfig: { functionCallingConfig: { mode: "AUTO" } },
-              generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
+              generationConfig: { maxOutputTokens: 700 },
             }),
           },
         );
@@ -123,6 +123,7 @@ export const auriInterno = createServerFn({ method: "POST" })
             role: "user",
             parts: [{
               functionResponse: {
+                ...(call.id ? { id: call.id } : {}),
                 name: call.name,
                 response: result.ok ? { result: result.datos } : { error: result.error },
               },
