@@ -15,6 +15,24 @@ function cleanText(value: unknown, max = 1200) {
   return typeof value === "string" ? value.replace(/\u0000/g, "").trim().slice(0, max) : "";
 }
 
+const requestBuckets = new Map<string, { count: number; resetAt: number }>();
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT = 15;
+
+function isRateLimited(ip: string) {
+  const now = Date.now();
+  for (const [key, bucket] of requestBuckets) {
+    if (bucket.resetAt <= now) requestBuckets.delete(key);
+  }
+  const current = requestBuckets.get(ip);
+  if (!current || current.resetAt <= now) {
+    requestBuckets.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  current.count += 1;
+  return current.count > RATE_LIMIT;
+}
+
 const SYSTEM_INSTRUCTION = `Eres AURI, la asistente virtual oficial de AURUM LAB y Taller del Joyero. Hablas español claro, amable, cercano y profesional. Tu lema es: "Estoy aquí para ayudarte a crear, aprender y crecer".
 
 Tu alcance en esta conversación pública es orientar sobre la plataforma y sus servicios. Puedes explicar de forma general:
@@ -50,6 +68,9 @@ Deno.serve(async (req: Request) => {
     if (raw.length > 18_000) return json({ error: "El mensaje es demasiado largo." }, 413);
     let body: Record<string, unknown>;
     try { body = JSON.parse(raw); } catch { return json({ error: "Solicitud no válida." }, 400); }
+
+    const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim().slice(0, 80);
+    if (isRateLimited(ip)) return json({ error: "Has enviado varias consultas seguidas. Espera unos minutos antes de volver a escribir." }, 429);
 
     const message = cleanText(body.message);
     if (message.length < 2) return json({ error: "Escribe una pregunta para AURI." }, 400);
