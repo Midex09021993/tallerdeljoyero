@@ -80,13 +80,13 @@ export const auriInterno = createServerFn({ method: "POST" })
           {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-            signal: AbortSignal.timeout(20_000),
+            signal: AbortSignal.timeout(45_000),
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: SISTEMA }] },
               contents,
               tools: [{ functionDeclarations: declarations }],
               toolConfig: { functionCallingConfig: { mode: "AUTO" } },
-              generationConfig: { maxOutputTokens: 700 },
+              generationConfig: { maxOutputTokens: 500, thinkingConfig: { thinkingLevel: "LOW" } },
             }),
           },
         );
@@ -135,7 +135,7 @@ export const auriInterno = createServerFn({ method: "POST" })
     } catch (error) {
       console.error("auri-interno request failed", error instanceof Error ? error.name : "unknown");
       if (error instanceof Error && error.name === "TimeoutError") {
-        return { reply: "", herramientas: usadas, error: "Gemini está tardando demasiado en responder. Inténtalo nuevamente." };
+        return { reply: "", herramientas: usadas, error: "AURI agotó el tiempo de espera al consultar Gemini. La solicitud no se confirmó como guardada; revisa antes de repetir el registro." };
       }
       return { reply: "", herramientas: usadas, error: "Ocurrió un problema al conectar con AURI." };
     }

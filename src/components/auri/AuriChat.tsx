@@ -28,7 +28,7 @@ const WELCOME: Message = {
 
 const WELCOME_INTERNO: Message = {
   role: "model",
-  text: "Hola, soy AURI. Puedo consultar pedidos, producción, contratos y clientes que tú ya puedes ver. Solo lectura, sin costes ni notas internas.",
+  text: "Hola, soy AURI. Puedo consultar información de tu taller y ayudarte a registrar clientes nuevos. Antes de guardar, siempre te mostraré la ficha y pediré tu confirmación.",
 };
 const CONSENT_KEY = "auri-interno-acceso";
 
