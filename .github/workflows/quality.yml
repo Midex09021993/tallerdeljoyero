@@ -154,6 +154,8 @@ jobs:
         run: deno check supabase/functions/catalogo-extraer-ficha-pdf/index.ts
       - name: Type-check Catalog description generation
         run: deno check supabase/functions/catalogo-generar-descripcion/index.ts
+      - name: Type-check AURI Gemini chat
+        run: deno check supabase/functions/auri-chat/index.ts
       - name: Type-check Marketplace file download
         run: deno check supabase/functions/marketplace-descargar-archivo/index.ts
       - name: Type-check Marketplace payment initialization
