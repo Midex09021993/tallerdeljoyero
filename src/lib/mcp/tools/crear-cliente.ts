@@ -38,7 +38,7 @@ export default defineTool({
     email: z.string().trim().email().max(254).optional().describe("Correo electrónico; opcional."),
     ciudad: z.string().trim().max(100).optional().describe("Ciudad; opcional."),
     direccion: z.string().trim().max(240).optional().describe("Dirección; opcional."),
-    fecha_nacimiento: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional().describe("Fecha en formato YYYY-MM-DD; opcional."),
+    fecha_nacimiento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Fecha en formato YYYY-MM-DD; opcional."),
     observaciones: z.string().trim().max(1000).optional().describe("Observaciones comerciales; opcional."),
     taller: z.string().trim().max(120).optional().describe("Nombre del taller si el usuario tiene más de un taller activo."),
     confirmacion_explicita: z.literal(true).describe("Debe ser true solo después de que el usuario confirme explícitamente el resumen de registro."),
@@ -77,7 +77,7 @@ export default defineTool({
     }
     const participante = coincidencias[0]!;
     const tipo = args.tipo === "empresa" ? "empresa" : "persona";
-    const nombre = String(args.nombre).trim().replace(/\\s+/g, " ");
+    const nombre = String(args.nombre).trim().replace(/\s+/g, " ");
     const documento = typeof args.documento === "string" ? args.documento.trim() : "";
     const email = typeof args.email === "string" ? args.email.trim().toLowerCase() : "";
     const pais = typeof args.pais_telefono === "string" ? args.pais_telefono : "PE";

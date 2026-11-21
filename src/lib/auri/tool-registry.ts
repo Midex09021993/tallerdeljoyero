@@ -59,7 +59,7 @@ export function declaracionesParaModelo() {
 }
 
 export function esConfirmacionExplicita(value: string): boolean {
-  return /^(?:s[ií]|confirmo|confirmar|adelante|guarda(?:r)?|registra(?:r)?)(?:[\\s,!].*)?$/i.test(value.trim());
+  return /^(?:s[ií]|confirmo|confirmar|adelante|guarda(?:r)?|registra(?:r)?)(?:[\s,!].*)?$/i.test(value.trim());
 }
 
 export type ResultadoHerramienta = { ok: true; datos: unknown } | { ok: false; error: string };
@@ -79,7 +79,8 @@ export async function ejecutarHerramienta(
   if (!tool || (tool.annotations?.readOnlyHint !== true && nombre !== "crear_cliente")) return { ok: false, error: "Herramienta no disponible." };
   if (!sesion.token) return { ok: false, error: "No autenticado." };
   const parsed = z.object(tool.inputSchema ?? {}).strict().safeParse(args ?? {});
-  if (!parsed.success) return { ok: false, error: "Argumentos no válidos." };\n  if (nombre === "crear_cliente" && !confirmacionUsuario) return { ok: false, error: "Antes de guardar, presenta el resumen y espera una confirmación explícita del usuario." };
+  if (!parsed.success) return { ok: false, error: "Argumentos no válidos." };
+  if (nombre === "crear_cliente" && !confirmacionUsuario) return { ok: false, error: "Antes de guardar, presenta el resumen y espera una confirmación explícita del usuario." };
 
   // supabaseForUser solo requiere getToken(); los handlers también verifican isAuthenticated().
   const context = {
