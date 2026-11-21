@@ -28,6 +28,13 @@ describe("AURI interno", () => {
     expect(props.nombre.description).toBe("Nombre");
     expect(props.confirmacion.const).toBeUndefined();
     expect(props.tipo.enum).toEqual(["persona", "empresa"]);
+    const bounded = adaptarEsquemaGemini({
+      type: "object",
+      properties: { limite: { type: "integer", minimum: 1, maximum: 100 } },
+    }) as Record<string, unknown>;
+    const limite = (bounded.properties as Record<string, Record<string, unknown>>).limite;
+    expect(limite.minimum).toBeUndefined();
+    expect(limite.maximum).toBeUndefined();
     // No se elimina la validación real: cada llamada se valida con Zod en el servidor.
   });
 

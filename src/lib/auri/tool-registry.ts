@@ -53,9 +53,10 @@ export function filtrarParaModelo(value: unknown): unknown {
 // Gemini FunctionDeclaration acepta un subconjunto de OpenAPI Schema, no JSON Schema completo.
 // Zod 4 emite additionalProperties, const, pattern y límites de longitud que pueden provocar HTTP 400.
 // Las reglas omitidas siguen aplicándose en el servidor mediante safeParse() antes de ejecutar cada herramienta.
+// Lista exacta de campos admitidos por Gemini FunctionDeclaration Schema.
 const GEMINI_SCHEMA_KEYS = new Set([
-  "type", "description", "format", "enum", "items", "properties", "required",
-  "nullable", "minimum", "maximum", "minItems", "maxItems", "anyOf", "oneOf",
+  "type", "nullable", "required", "format", "description", "properties",
+  "items", "enum", "anyOf", "$ref", "$defs",
 ]);
 
 export function adaptarEsquemaGemini(value: unknown): unknown {
