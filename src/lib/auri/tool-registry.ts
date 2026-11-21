@@ -50,10 +50,36 @@ export function filtrarParaModelo(value: unknown): unknown {
   return null;
 }
 
+// Gemini FunctionDeclaration acepta un subconjunto de OpenAPI Schema, no JSON Schema completo.
+// Zod 4 emite additionalProperties, const, pattern y límites de longitud que pueden provocar HTTP 400.
+// Las reglas omitidas siguen aplicándose en el servidor mediante safeParse() antes de ejecutar cada herramienta.
+const GEMINI_SCHEMA_KEYS = new Set([
+  "type", "description", "format", "enum", "items", "properties", "required",
+  "nullable", "minimum", "maximum", "minItems", "maxItems", "anyOf", "oneOf",
+]);
+
+export function adaptarEsquemaGemini(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(adaptarEsquemaGemini);
+  if (!value || typeof value !== "object") return value;
+  const source = value as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(source)) {
+    if (!GEMINI_SCHEMA_KEYS.has(key)) continue;
+    if (key === "properties" && item && typeof item === "object" && !Array.isArray(item)) {
+      out.properties = Object.fromEntries(
+        Object.entries(item as Record<string, unknown>).map(([name, schema]) => [name, adaptarEsquemaGemini(schema)]),
+      );
+    } else {
+      out[key] = adaptarEsquemaGemini(item);
+    }
+  }
+  return out;
+}
+
 export function declaracionesParaModelo() {
   return AURI_TOOLS.map((tool) => {
     const schema = z.toJSONSchema(z.object(tool.inputSchema ?? {}), { target: "draft-7", io: "input" }) as Record<string, unknown>;
-    const { $schema: _omit, ...parameters } = schema;
+    const parameters = adaptarEsquemaGemini(schema) as Record<string, unknown>;
     return { name: tool.name, description: tool.description, parameters };
   });
 }

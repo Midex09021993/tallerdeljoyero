@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { AURI_TOOLS, ejecutarHerramienta, esConfirmacionExplicita, filtrarParaModelo } from "../src/lib/auri/tool-registry";
+import { AURI_TOOLS, adaptarEsquemaGemini, ejecutarHerramienta, esConfirmacionExplicita, filtrarParaModelo } from "../src/lib/auri/tool-registry";
 
 describe("AURI interno", () => {
   test("incluye cinco consultas de solo lectura y una herramienta de registro con confirmación", () => {
@@ -8,6 +8,27 @@ describe("AURI interno", () => {
     ]);
     expect(AURI_TOOLS.filter((tool) => tool.name !== "crear_cliente").every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
     expect(AURI_TOOLS.find((tool) => tool.name === "crear_cliente")?.annotations?.readOnlyHint).toBe(false);
+  });
+
+  test("adapta los esquemas Zod al subconjunto OpenAPI admitido por Gemini", () => {
+    const schema = adaptarEsquemaGemini({
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        nombre: { type: "string", minLength: 2, maxLength: 160, pattern: "^[A-Z]+$", description: "Nombre" },
+        confirmacion: { type: "boolean", const: true },
+        tipo: { type: "string", enum: ["persona", "empresa"] },
+      },
+      required: ["nombre"],
+    }) as Record<string, unknown>;
+    const props = schema.properties as Record<string, Record<string, unknown>>;
+    expect(schema.additionalProperties).toBeUndefined();
+    expect(props.nombre.minLength).toBeUndefined();
+    expect(props.nombre.pattern).toBeUndefined();
+    expect(props.nombre.description).toBe("Nombre");
+    expect(props.confirmacion.const).toBeUndefined();
+    expect(props.tipo.enum).toEqual(["persona", "empresa"]);
+    // No se elimina la validación real: cada llamada se valida con Zod en el servidor.
   });
 
   test("exige una confirmación breve y explícita antes de permitir el registro", () => {
