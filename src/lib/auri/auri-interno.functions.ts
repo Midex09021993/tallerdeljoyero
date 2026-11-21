@@ -107,7 +107,7 @@ export const auriInterno = createServerFn({ method: "POST" })
         const candidate = payload.candidates?.[0];
         const parts = candidate?.content?.parts ?? [];
         if (candidate?.finishReason === "SAFETY") return { reply: "No puedo responder esa solicitud. Reformula la pregunta.", herramientas: usadas };
-        const calls = parts.flatMap((part) => part.functionCall?.name ? [{ name: part.functionCall.name, args: part.functionCall.args ?? {} }] : []);
+        const calls = parts.flatMap((part) => part.functionCall?.name ? [{ id: part.functionCall.id, name: part.functionCall.name, args: part.functionCall.args ?? {} }] : []);
 
         if (calls.length === 0) {
           const reply = limpiar(extraerTexto(parts), 3000);
