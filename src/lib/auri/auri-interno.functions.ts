@@ -71,7 +71,7 @@ async function generarConRespaldo(
             contents,
             tools: [{ functionDeclarations: declarations }],
             toolConfig: { functionCallingConfig: { mode: "AUTO" } },
-            generationConfig: { maxOutputTokens: 500, thinkingConfig: { thinkingLevel: "low" } },
+            generationConfig: { maxOutputTokens: 500, thinkingConfig: { thinkingLevel: "LOW" } },
           }),
         },
       );
