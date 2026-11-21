@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "sdk_version": "3.6.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ynetgjhghfhvyinwvqkl.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "tallerdeljoyero",
+      "version": "0.1.0",
+      "title": "tallerdeljoyero"
+    },
+    "tools": [
+      {
+        "name": "listar_pedidos",
+        "title": "Listar pedidos",
+        "description": "Lista los pedidos del taller que el usuario puede ver, por defecto solo los activos (no entregados).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "estado": {
+              "type": "string",
+              "enum": [
+                "Recibido",
+                "En Producción",
+                "Listo para Entrega",
+                "En Camino",
+                "Entregado"
+              ],
+              "description": "Filtra por estado oficial del pedido."
+            },
+            "busqueda": {
+              "type": "string",
+              "maxLength": 80,
+              "description": "Texto a buscar en referencia, cliente, pieza o trabajo."
+            },
+            "incluir_entregados": {
+              "type": "boolean",
+              "description": "Incluye pedidos ya entregados (histórico). Por defecto false."
+            },
+            "limite": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Máximo de pedidos a devolver (1-100, por defecto 25)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "ver_pedido",
+        "title": "Ver pedido",
+        "description": "Muestra el detalle de un pedido por su id o su referencia (sin costes ni notas internas).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Id del pedido (devuelto por listar_pedidos)."
+            },
+            "referencia": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60,
+              "description": "Referencia visible del pedido, por ejemplo PED-0001."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "resumen_produccion",
+        "title": "Resumen de producción",
+        "description": "Cuenta los pedidos activos por estado y por área de producción, e indica cuántos están atrasados.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "listar_contratos",
+        "title": "Listar contratos",
+        "description": "Lista los contratos del taller con el número de pedidos que contiene cada uno.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "busqueda": {
+              "type": "string",
+              "maxLength": 80,
+              "description": "Texto a buscar en el número de contrato o el cliente."
+            },
+            "limite": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Máximo de contratos (1-50, por defecto 20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "buscar_clientes",
+        "title": "Buscar clientes",
+        "description": "Busca clientes del taller por nombre, ciudad, teléfono o correo.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "busqueda": {
+              "type": "string",
+              "maxLength": 80,
+              "description": "Texto a buscar. Vacío lista los clientes más recientes."
+            },
+            "limite": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Máximo de clientes (1-50, por defecto 20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

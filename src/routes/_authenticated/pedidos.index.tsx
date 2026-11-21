@@ -6,6 +6,8 @@ import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useBorrarPedido, usePedidos, esEstadoFinalPedido, pedidoPendienteAutorizacionProduccion, estadoClases, type Pedido } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 import { useSesion } from "@/lib/auth";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 export const Route = createFileRoute("/_authenticated/pedidos/")({
   head: () => ({ meta: [{ title: "Pedidos — Taller del Joyero" }, { name: "description", content: "Centro operativo de pedidos, producción y entrega del taller." }] }),
@@ -13,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/")({
 });
 
 type Vista = "todos" | "atencion" | "produccion" | "entrega";
+const VISTAS: readonly Vista[] = ["todos", "atencion", "produccion", "entrega"];
 
 function diasEntrega(fecha: string | null | undefined) {
   if (!fecha) return null;
@@ -44,6 +47,44 @@ function PedidosPage() {
   const lista = base.filter((p) => {
     const q = busqueda.trim().toLowerCase();
     return !q || [p.referencia, p.cliente, p.trabajo, p.pieza, p.estado, p.area_actual].some((v) => (v ?? "").toLowerCase().includes(q));
+  });
+
+  // Herramientas WebMCP: un asistente del navegador puede leer y filtrar esta bandeja.
+  function filtrarBandeja(next: { vista?: unknown; busqueda?: unknown }) {
+    if (next.vista !== undefined && !VISTAS.includes(next.vista as Vista)) throw new Error("Vista desconocida; usa todos, atencion, produccion o entrega.");
+    if (next.busqueda !== undefined && typeof next.busqueda !== "string") throw new Error("La búsqueda debe ser texto.");
+    if (next.vista !== undefined) setVista(next.vista as Vista);
+    if (next.busqueda !== undefined) setBusqueda(next.busqueda as string);
+  }
+
+  useWebMCP({
+    name: "list_visible_orders",
+    description: "Lista los pedidos que muestra ahora la bandeja de Pedidos, respetando la vista y la búsqueda activas.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool("list_visible_orders", () => {
+      if (isLoading) return "Los pedidos aún se están cargando.";
+      if (isError) throw new Error("No se pudieron cargar los pedidos.");
+      if (lista.length === 0) return `No hay pedidos en la vista "${vista}".`;
+      return `Vista: ${vista}${busqueda ? ` · búsqueda: "${busqueda}"` : ""}\n` + lista.slice(0, 50).map((p) => `${p.referencia} · ${p.cliente || "Cliente pendiente"} · ${p.estado}${p.estado === "En Producción" && p.area_actual ? ` (${p.area_actual})` : ""} · entrega ${fmtFecha(p.fecha_entrega ?? p.entrega) || "sin fecha"}`).join("\n");
+    }),
+  });
+
+  useWebMCP({
+    name: "filter_orders",
+    description: "Cambia la bandeja de Pedidos: vista (todos, atencion, produccion, entrega) y/o texto de búsqueda.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        vista: { type: "string", enum: ["todos", "atencion", "produccion", "entrega"], description: "Vista a mostrar: todos los activos, que requieren atención, en producción o por entregar." },
+        busqueda: { type: "string", description: "Texto para buscar por pedido, cliente, pieza, estado o área. Cadena vacía limpia la búsqueda." },
+      },
+      additionalProperties: false,
+    },
+    execute: (args: { vista?: Vista; busqueda?: string }) => runWebMCPTool("filter_orders", () => {
+      filtrarBandeja(args ?? {});
+      return "Bandeja de pedidos actualizada.";
+    }),
   });
 
   return (

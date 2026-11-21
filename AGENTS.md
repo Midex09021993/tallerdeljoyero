@@ -12,3 +12,9 @@
 ## Interactive viewer
 
 - Keep the interactive WebGL drawing buffer preserved while the viewer uses demand-driven rendering; otherwise the browser can clear the last frame after the render loop becomes idle.
+
+## Agent integrations (MCP)
+
+- MCP server logic lives in `src/lib/mcp/` (one `defineTool` per file, registered in `index.ts`) and uses OAuth tokens from the managed auth issuer with a caller-scoped client so RLS always applies as the signed-in user; never use admin keys there.
+- MCP tools stay read-only and exclude costs and internal notes unless the owner explicitly asks otherwise, because operators and other roles share the same connector.
+- `/auth` honors a validated same-origin `next` path after login so the OAuth consent route (`src/routes/[.]lovable.oauth.consent.tsx`) can resume.

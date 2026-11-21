@@ -6,10 +6,19 @@ import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Menu, X, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import { iniciarSesionUsuario, registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 import { registrarEvento } from "@/lib/analytics";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 const RegistroTaller = lazy(() => import("@/components/RegistroTaller").then((module) => ({ default: module.RegistroTaller })));
 const ComunidadAurumLab = lazy(() => import("@/components/ComunidadAurumLab").then((module) => ({ default: module.ComunidadAurumLab })));
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((module) => ({ default: module.MiniAurumRender })));
+/** Destino validado tras iniciar sesión (p. ej. la autorización de un asistente externo). */
+function destinoSiguiente(): string | null {
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (!next) return null;
+  const destino = oauthReturnPath(next);
+  return destino === "/" ? null : destino;
+}
+
 const ContactoComercial = lazy(() => import("@/components/ContactoComercial").then((module) => ({ default: module.ContactoComercial })));
 
 export const Route = createFileRoute("/auth")({
@@ -114,6 +123,11 @@ function LoginPage() {
 
   useEffect(() => {
     if (!sesion) return;
+    const siguiente = destinoSiguiente();
+    if (siguiente) {
+      window.location.assign(siguiente);
+      return;
+    }
     const importTransfer = new URLSearchParams(window.location.search).get("importTransfer");
     if (importTransfer && /^[A-Za-z0-9_-]{30,100}$/.test(importTransfer)) {
       window.location.assign(`/mi-nube?importTransfer=${encodeURIComponent(importTransfer)}`);
@@ -188,6 +202,11 @@ function LoginPage() {
         throw new Error("La sesión se creó, pero no se pudo resolver el acceso al taller");
       }
       registrarEvento("login_completed", { mode: modoAlta ? "initial_owner" : "existing_user" });
+      const siguiente = destinoSiguiente();
+      if (siguiente) {
+        window.location.assign(siguiente);
+        return;
+      }
       if (window.sessionStorage.getItem("aurum_peso_draft")) {
         window.location.assign("/herramientas?recuperarPeso=1");
         return;

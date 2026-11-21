@@ -204,9 +204,9 @@ export function prepareAurumDiamondBvhExperiment(
     intensity: { value: 0 },
     radius: { value: 1 },
   };
-  material.uniforms.aurumGemLightPosition = gemLightUniforms.position;
-  material.uniforms.aurumGemLightIntensity = gemLightUniforms.intensity;
-  material.uniforms.aurumGemLightRadius = gemLightUniforms.radius;
+  material.uniforms["aurumGemLightPosition"] = gemLightUniforms.position;
+  material.uniforms["aurumGemLightIntensity"] = gemLightUniforms.intensity;
+  material.uniforms["aurumGemLightRadius"] = gemLightUniforms.radius;
 
   const acesOutput = "gl_FragColor = vec4(aces(hdrColor), 1.0);";
   if (!material.fragmentShader.includes(acesOutput)) {

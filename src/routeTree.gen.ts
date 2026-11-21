@@ -22,10 +22,12 @@ import { Route as DirectorioRouteImport } from './routes/directorio'
 import { Route as GaleriaJoyasRouteImport } from './routes/galeria-joyas'
 import { Route as GuiasRouteImport } from './routes/guias'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAulaComandosRouteImport } from './routes/_authenticated/aula-comandos'
 import { Route as AuthenticatedAulaFormacionRouteImport } from './routes/_authenticated/aula-formacion'
@@ -68,6 +70,7 @@ import { Route as TransferIndexRouteImport } from './routes/transfer.index'
 import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
 import { Route as VTokenRouteImport } from './routes/v.$token'
 import { Route as SlugColeccionColeccionRouteImport } from './routes/$slug/coleccion/$coleccion'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedContratosIndexRouteImport } from './routes/_authenticated/contratos.index'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
 import { Route as AuthenticatedContratosNuevoRouteImport } from './routes/_authenticated/contratos.nuevo'
@@ -147,6 +150,11 @@ const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
   path: '/herramientas-publicas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecuperarContrasenaRoute = RecuperarContrasenaRouteImport.update({
   id: '/recuperar-contrasena',
   path: '/recuperar-contrasena',
@@ -167,6 +175,12 @@ const SlugProductoRoute = SlugProductoRouteImport.update({
   path: '/$producto',
   getParentRoute: () => SlugRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -392,6 +406,11 @@ const SlugColeccionColeccionRoute = SlugColeccionColeccionRouteImport.update({
   path: '/coleccion/$coleccion',
   getParentRoute: () => SlugRoute,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedContratosIndexRoute =
   AuthenticatedContratosIndexRouteImport.update({
     id: '/contratos/',
@@ -484,9 +503,11 @@ export interface FileRoutesByFullPath {
   '/galeria-joyas': typeof GaleriaJoyasRoute
   '/guias': typeof GuiasRouteWithChildren
   '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
+  '/mcp': typeof McpRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
@@ -530,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/$slug/': typeof SlugIndexRoute
   '/transfer/': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -557,9 +579,11 @@ export interface FileRoutesByTo {
   '/galeria-joyas': typeof GaleriaJoyasRoute
   '/guias': typeof GuiasRouteWithChildren
   '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
+  '/mcp': typeof McpRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
@@ -601,6 +625,7 @@ export interface FileRoutesByTo {
   '/$slug': typeof SlugIndexRoute
   '/transfer': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -631,9 +656,11 @@ export interface FileRoutesById {
   '/galeria-joyas': typeof GaleriaJoyasRoute
   '/guias': typeof GuiasRouteWithChildren
   '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
+  '/mcp': typeof McpRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/_authenticated/aula-formacion': typeof AuthenticatedAulaFormacionRoute
@@ -677,6 +704,7 @@ export interface FileRoutesById {
   '/$slug/': typeof SlugIndexRoute
   '/transfer/': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -707,9 +735,11 @@ export interface FileRouteTypes {
     | '/galeria-joyas'
     | '/guias'
     | '/herramientas-publicas'
+    | '/mcp'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/.well-known/oauth-protected-resource'
     | '/agenda'
     | '/aula-comandos'
     | '/aula-formacion'
@@ -753,6 +783,7 @@ export interface FileRouteTypes {
     | '/$slug/'
     | '/transfer/'
     | '/$slug/coleccion/$coleccion'
+    | '/.lovable/oauth/consent'
     | '/contratos/$id'
     | '/contratos/nuevo'
     | '/cotizaciones/$id'
@@ -780,9 +811,11 @@ export interface FileRouteTypes {
     | '/galeria-joyas'
     | '/guias'
     | '/herramientas-publicas'
+    | '/mcp'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/.well-known/oauth-protected-resource'
     | '/agenda'
     | '/aula-comandos'
     | '/aula-formacion'
@@ -824,6 +857,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/transfer'
     | '/$slug/coleccion/$coleccion'
+    | '/.lovable/oauth/consent'
     | '/contratos/$id'
     | '/contratos/nuevo'
     | '/cotizaciones/$id'
@@ -853,9 +887,11 @@ export interface FileRouteTypes {
     | '/galeria-joyas'
     | '/guias'
     | '/herramientas-publicas'
+    | '/mcp'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/agenda'
     | '/_authenticated/aula-comandos'
     | '/_authenticated/aula-formacion'
@@ -899,6 +935,7 @@ export interface FileRouteTypes {
     | '/$slug/'
     | '/transfer/'
     | '/$slug/coleccion/$coleccion'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/contratos/$id'
     | '/_authenticated/contratos/nuevo'
     | '/_authenticated/cotizaciones/$id'
@@ -929,14 +966,17 @@ export interface RootRouteChildren {
   GaleriaJoyasRoute: typeof GaleriaJoyasRoute
   GuiasRoute: typeof GuiasRouteWithChildren
   HerramientasPublicasRoute: typeof HerramientasPublicasRouteWithChildren
+  McpRoute: typeof McpRoute
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
   FormacionSlugRoute: typeof FormacionSlugRoute
   JoyaTokenRoute: typeof JoyaTokenRoute
   TransferTokenRoute: typeof TransferTokenRoute
   VTokenRoute: typeof VTokenRoute
   TransferIndexRoute: typeof TransferIndexRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -1035,6 +1075,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HerramientasPublicasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recuperar-contrasena': {
       id: '/recuperar-contrasena'
       path: '/recuperar-contrasena'
@@ -1062,6 +1109,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$slug/$producto'
       preLoaderRoute: typeof SlugProductoRouteImport
       parentRoute: typeof SlugRoute
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/agenda': {
       id: '/_authenticated/agenda'
@@ -1357,6 +1411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SlugColeccionColeccionRouteImport
       parentRoute: typeof SlugRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/contratos/': {
       id: '/_authenticated/contratos/'
       path: '/contratos'
@@ -1644,14 +1705,18 @@ const rootRouteChildren: RootRouteChildren = {
   GaleriaJoyasRoute: GaleriaJoyasRoute,
   GuiasRoute: GuiasRouteWithChildren,
   HerramientasPublicasRoute: HerramientasPublicasRouteWithChildren,
+  McpRoute: McpRoute,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
   FormacionSlugRoute: FormacionSlugRoute,
   JoyaTokenRoute: JoyaTokenRoute,
   TransferTokenRoute: TransferTokenRoute,
   VTokenRoute: VTokenRoute,
   TransferIndexRoute: TransferIndexRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
