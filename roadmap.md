@@ -14,3 +14,9 @@
 
 ## AURUM Render
 - [x] Quitar el bloqueo de AURUM Render para siempre
+
+## Seguridad de dependencias
+- [x] Actualizar zod (4.6.7) y renovar seroval (1.8.2) del enrutador; escaneo sin vulnerabilidades
+
+## AURI interno (correcciones de la auditoría del commit 618772aa)
+- [ ] Aplicar los 10 puntos de la auditoría (privacidad hacia Gemini, sesión verificada, lógica compartida sin contexto MCP falso, pruebas)

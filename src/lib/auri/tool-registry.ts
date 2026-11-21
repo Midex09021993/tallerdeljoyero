@@ -11,7 +11,7 @@ import buscarClientes from "../mcp/tools/buscar-clientes";
 type AnyTool = {
   name: string;
   description: string;
-  inputSchema?: Record<string, z.ZodTypeAny> | undefined;
+  inputSchema?: Record<string, z.ZodType> | undefined;
   annotations?: { readOnlyHint?: boolean };
   handler: (args: Record<string, unknown>, ctx: ToolContext) => unknown;
 };
@@ -34,32 +34,12 @@ export function filtrarParaModelo(value: unknown): unknown {
   return value;
 }
 
-function zodToJson(schema: z.ZodTypeAny): Record<string, unknown> {
-  const def = schema._def as { typeName?: string; innerType?: z.ZodTypeAny; values?: string[]; description?: string };
-  const desc = schema.description ? { description: schema.description } : {};
-  switch (def.typeName) {
-    case "ZodOptional":
-    case "ZodDefault":
-    case "ZodNullable":
-      return { ...zodToJson(def.innerType as z.ZodTypeAny), ...desc };
-    case "ZodString": return { type: "string", ...desc };
-    case "ZodNumber": return { type: "number", ...desc };
-    case "ZodBoolean": return { type: "boolean", ...desc };
-    case "ZodEnum": return { type: "string", enum: def.values ?? [], ...desc };
-    default: return { type: "string", ...desc };
-  }
-}
-
 export function declaracionesParaModelo() {
   return AURI_TOOLS.map((t) => {
-    const shape = t.inputSchema ?? {};
-    const properties: Record<string, unknown> = {};
-    const required: string[] = [];
-    for (const [k, v] of Object.entries(shape)) {
-      properties[k] = zodToJson(v);
-      if (!v.isOptional()) required.push(k);
-    }
-    return { type: "function" as const, function: { name: t.name, description: t.description, parameters: { type: "object", properties, required } } };
+    // Conversión oficial de Zod 4: respeta opcionales, enums, límites y descripciones.
+    const schema = z.toJSONSchema(z.object(t.inputSchema ?? {}), { target: "draft-7", io: "input" }) as Record<string, unknown>;
+    const { $schema: _omit, ...parameters } = schema;
+    return { type: "function" as const, function: { name: t.name, description: t.description, parameters } };
   });
 }
 
