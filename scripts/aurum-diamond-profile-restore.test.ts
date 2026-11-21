@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { resolveAurumDiamondProfileOptics } from "../src/lib/aurum/aurum-diamond-bvh-runtime";
 
 const blanco1CatalogProfile = {
@@ -113,4 +114,15 @@ test("non-initial diamond profiles continue to use their own catalog values for 
     absorptionFactor: 1.2,
     transmission: 0.08,
   });
+});
+
+test("white diamond BVH keeps catalog reflectivity 0.50 and gamma 1.00 at every screen-space tier", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  expect(runtime).toContain('activeGemId === "diamante_natural"');
+  expect(runtime).toContain('activeGemId === "diamante_vs"');
+  expect(runtime).toContain('activeGemId === "diamante_inclusiones"');
+  expect(runtime).toContain('(isWhiteDiamondProfile ? 0.5 : 0.46)');
+  expect(runtime).toContain('(isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09)');
+  expect(runtime).toContain("const reflectivity = baseDiamondReflectivity;");
+  expect(runtime).toContain("const gamma = baseDiamondGamma;");
 });
