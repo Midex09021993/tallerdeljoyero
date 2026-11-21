@@ -34,7 +34,13 @@ export function filtrarParaModelo(value: unknown): unknown {
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};
     for (const [key, item] of Object.entries(value)) {
-      if (CAMPOS_PERMITIDOS.has(key.toLowerCase())) out[key] = filtrarParaModelo(item);
+      if (CAMPOS_PERMITIDOS.has(key.toLowerCase())) {
+        if ((key === "por_estado" || key === "por_area") && item && typeof item === "object" && !Array.isArray(item)) {
+          out[key] = Object.fromEntries(Object.entries(item).slice(0, 20).map(([label, count]) => [label.slice(0, 80), typeof count === "number" ? count : 0]));
+        } else {
+          out[key] = filtrarParaModelo(item);
+        }
+      }
     }
     return out;
   }
