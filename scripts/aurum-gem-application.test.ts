@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { createAurumGemEnvironment } from "../src/lib/aurum/gem-environment";
 import { getAurumDiamondEnvironmentRotationEuler } from "../src/lib/aurum/aurum-diamond-bvh-runtime";
+import { setAurumDiamondBvhOpticalParameters } from "../src/lib/aurum/aurum-diamond-bvh-experimental";
 import { applyAurumGemToTarget, getAurumGemLayerIdentity, isAurumGemTarget, prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 import { setAurumGemShaderQuality } from "../src/lib/aurum/scintillation";
@@ -46,6 +47,15 @@ test("diamond micro classifier protects the center from active catalog identity 
   diamondMaterial.dispose();
   emeraldGeometry.dispose();
   emeraldMaterial.dispose();
+});
+
+test("BVH optical controls tolerate optional upstream uniforms while preserving bounded values", () => {
+  const material = new THREE.ShaderMaterial({ uniforms: {} });
+  setAurumDiamondBvhOpticalParameters(material, { geometryFactor: 0.72, squashFactor: 0.94, absorptionFactor: 1.1, transmission: 0 });
+  expect(material.uniforms["geometryFactor"]?.value).toBe(0.72);
+  expect(material.uniforms["squashFactor"]?.value).toBe(0.94);
+  expect(material.userData.aurumDiamondBvhOpticalControls.geometryFactor).toBe(material.uniforms["geometryFactor"]);
+  material.dispose();
 });
 
 test("gem environment updates only the meshes resolved for the selected stone", () => {
@@ -92,15 +102,15 @@ test("gem layer index is prepared once and rebuilt for a reused scene root", () 
   const geometry = new THREE.BufferGeometry();
   const material = new THREE.MeshPhysicalMaterial();
   const gem = new THREE.Mesh(geometry, material);
-  gem.userData = { aurumRhino: { categoria: "gema", capa: "Gem 01" } };
+  gem.userData = { aurumRhino: { categoria: "gema", capa: "Stone Custom" } };
   scene.add(gem);
 
   const first = prepareAurumGemLayerIndex(scene);
-  expect(first?.byLayerName.get("gem 01")).toEqual([gem]);
+  expect(first?.byLayerName.get("stone custom")).toEqual([gem]);
 
   gem.userData.aurumRhino.categoria = "metal";
   const rebuilt = prepareAurumGemLayerIndex(scene);
-  expect(rebuilt?.byLayerName.has("gem 01")).toBe(false);
+  expect(rebuilt?.byLayerName.has("stone custom")).toBe(false);
 
   scene.remove(gem);
   geometry.dispose();
