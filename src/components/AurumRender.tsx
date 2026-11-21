@@ -2178,6 +2178,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             delete next.aurumGemTransitionSnapshot;
             mesh.userData=next;
           });
+          // BVH may replace the physical material, so it must wait until the appearance transition completes.
           gemTransitionRef.current=previousAppearance.length
             ? createAurumGemTransition(
                 resolvedTargets,
