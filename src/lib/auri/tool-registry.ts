@@ -6,6 +6,7 @@ import verPedido from "../mcp/tools/ver-pedido";
 import resumenProduccion from "../mcp/tools/resumen-produccion";
 import listarContratos from "../mcp/tools/listar-contratos";
 import buscarClientes from "../mcp/tools/buscar-clientes";
+import crearCliente from "../mcp/tools/crear-cliente";
 
 type AnyTool = {
   name: string;
@@ -16,7 +17,7 @@ type AnyTool = {
 };
 
 export const AURI_TOOLS: readonly AnyTool[] = [
-  listarPedidos, verPedido, resumenProduccion, listarContratos, buscarClientes,
+  listarPedidos, verPedido, resumenProduccion, listarContratos, buscarClientes, crearCliente,
 ] as unknown as AnyTool[];
 
 // Lista positiva: ningún identificador, nombre, referencia, dato de contacto o campo financiero
@@ -70,10 +71,10 @@ export async function ejecutarHerramienta(
   sesion: { token: string },
 ): Promise<ResultadoHerramienta> {
   const tool = AURI_TOOLS.find((item) => item.name === nombre);
-  if (!tool || tool.annotations?.readOnlyHint !== true) return { ok: false, error: "Herramienta no disponible." };
+  if (!tool || (tool.annotations?.readOnlyHint !== true && nombre !== "crear_cliente")) return { ok: false, error: "Herramienta no disponible." };
   if (!sesion.token) return { ok: false, error: "No autenticado." };
   const parsed = z.object(tool.inputSchema ?? {}).strict().safeParse(args ?? {});
-  if (!parsed.success) return { ok: false, error: "Argumentos no válidos." };
+  if (!parsed.success) return { ok: false, error: "Argumentos no válidos." };\n  if (nombre === "crear_cliente" && !confirmacionUsuario) return { ok: false, error: "Antes de guardar, presenta el resumen y espera una confirmación explícita del usuario." };
 
   // supabaseForUser solo requiere getToken(); los handlers también verifican isAuthenticated().
   const context = {

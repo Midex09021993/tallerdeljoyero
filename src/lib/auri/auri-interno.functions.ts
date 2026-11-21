@@ -117,7 +117,7 @@ export const auriInterno = createServerFn({ method: "POST" })
         // Se conserva el turno del modelo y se devuelven respuestas de función anonimizadas.
         contents.push({ role: "model", parts });
         for (const call of calls.slice(0, 3)) {
-          const result = await ejecutarHerramienta(call.name, call.args, { token });
+          const result = await ejecutarHerramienta(call.name, call.args, { token }, call.name !== "crear_cliente" || /^(?:s[ií]|confirmo|confirmar|adelante|guarda(?:r)?|registra(?:r)?)(?:[\\s,!].*)?$/i.test(data.message.trim()));
           if (result.ok) usadas.push(call.name);
           contents.push({
             role: "user",
