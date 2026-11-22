@@ -78,6 +78,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
   const [error, setError] = useState("");
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const recognition = useRef<SpeechRecognitionLike | null>(null);
@@ -119,6 +120,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
     if (!Recognition || loading) return;
     recognition.current?.stop();
     pendingVoiceText.current = "";
+    setVoiceTranscript("");
     const instance = new Recognition();
     instance.lang = "es-PE";
     instance.interimResults = false;
@@ -127,6 +129,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
       if (last?.[0]?.transcript) {
         const transcript = last[0].transcript.trim();
         pendingVoiceText.current = transcript;
+        setVoiceTranscript(transcript);
         if (vista === "texto") setDraft((current) => (current ? current + " " : "") + transcript);
       }
     };
@@ -187,6 +190,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
 
   const voiceStatus = listening ? "Te estoy escuchando" : loading ? "Estoy preparando tu respuesta" : speaking ? "AURI está hablando" : "Tu espacio de conversación";
   const voiceHint = listening ? "Habla con naturalidad. Suelta el botón para enviar." : loading ? "Estoy consultando la información para darte una respuesta." : speaking ? "Puedes interrumpir la respuesta cuando quieras." : "Mantén presionado el micrófono y conversa conmigo.";
+  const latestAssistantMessage = [...messages].reverse().find((message) => message.role === "model");
 
   return (
     <section className="auri-shell flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white text-[#263746] sm:rounded-2xl sm:border sm:border-[#e8dfcc]" aria-label="Asistente AURI">
@@ -223,7 +227,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
       </header>
 
       {vista === "voz" ? (
-        <div className="relative flex min-h-0 flex-1 flex-col items-center justify-between overflow-y-auto bg-[radial-gradient(ellipse_at_50%_38%,#fffdf7_0%,#f8f4e9_48%,#f0eadb_100%)] px-5 py-6 sm:py-8">
+        <div className="relative flex min-h-0 flex-1 flex-col items-center justify-between overflow-y-auto bg-[radial-gradient(ellipse_at_50%_38%,#fffdf7_0%,#f8f4e9_48%,#f0eadb_100%)] px-5 py-6 pb-[max(24px,env(safe-area-inset-bottom))] sm:py-8">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d7bd79] to-transparent" />
           <div className="relative z-10 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#a98535]">AURI · VOICE EXPERIENCE</p>
@@ -253,6 +257,8 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             {speaking && <button type="button" onClick={() => { window.speechSynthesis?.cancel(); setSpeaking(false); }} className="mt-4 rounded-full border border-[#ded4bc] bg-white/80 px-4 py-2 text-xs font-semibold text-[#80662e] hover:bg-white">Interrumpir respuesta</button>}
           </div>
           <div className="relative z-10 w-full max-w-md text-center">
+            {voiceTranscript && <p className="mx-auto mb-3 max-w-sm rounded-xl border border-[#e6dcc5] bg-white/75 px-4 py-2.5 text-center text-xs leading-5 text-[#53616b]">“{voiceTranscript}”</p>}
+            {messages.length > 1 && latestAssistantMessage && <div className="mx-auto mb-4 max-h-24 w-full max-w-sm overflow-y-auto rounded-xl border border-[#e6dcc5] bg-white/80 px-4 py-3 text-left text-xs leading-5 text-[#53616b]"><p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#a98535]">Respuesta de AURI</p>{latestAssistantMessage.text}</div>}
             <div className="mx-auto flex max-w-[210px] items-center justify-center gap-1.5" aria-hidden="true">
               {Array.from({ length: 19 }, (_, i) => <span key={i} className={`auri-wave-bar ${listening ? "active" : speaking ? "speaking" : ""}`} style={{ animationDelay: `${i * 45}ms`, height: `${8 + Math.abs(9 - i) % 5 * 3}px` }} />)}
             </div>
