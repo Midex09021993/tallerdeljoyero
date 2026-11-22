@@ -598,7 +598,7 @@ function InicioPublico() {
             />
             <span className="leading-tight">
               <span className="block text-[17px] font-extrabold tracking-tight text-[#182838]">AURUM<span className="text-[#C5A36B]"> LAB</span></span>
-              <span className="block text-[9px] font-medium uppercase tracking-[.15em] text-[#687887]">Tecnología para joyeros</span>
+              <span className="hidden text-[9px] font-medium uppercase tracking-[.15em] text-[#687887] sm:block">Tecnología para joyeros</span>
             </span>
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] font-medium text-slate-700 lg:flex" aria-label="Navegación principal">
