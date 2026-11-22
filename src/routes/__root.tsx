@@ -18,6 +18,7 @@ import { registrarServiceWorker } from "@/lib/pwa-push";
 import { registrarEvento } from "@/lib/analytics";
 
 const ContactoComercial = lazy(() => import("@/components/ContactoComercial").then((module) => ({ default: module.ContactoComercial })));
+const AuriPublicoBoton = lazy(() => import("@/components/auri/AuriPublicoBoton").then((module) => ({ default: module.AuriPublicoBoton })));
 
 function NotFoundComponent() {
   return (
@@ -214,13 +215,20 @@ function ContactoFlotante() {
     "cursos-formacion", "diseno-3d", "impresion-3d", "corte-laser", "ventas",
   ]);
   const esCatalogoPublico = Boolean(slugCatalogo) && !rutasInternas.has(slugCatalogo);
+  const esHerramientasPublicas = pathname === "/herramientas-publicas" ||
+    pathname.startsWith("/herramientas-publicas/");
   const esPaginaPublica = pathname === "/" || pathname === "/cursos-diseno-3d" ||
     /^\/formacion\/[^/]+\/?$/.test(pathname) || esCatalogoPublico;
-  // La portada ya tiene el lanzador AURI; evita superponer el antiguo botón comercial «Hablemos».
-  const mostrarContacto = !sesionCargando && !sesion && esPaginaPublica && pathname !== "/";
-  if (!mostrarContacto) return null;
+  // Las herramientas públicas usan AURI como único acceso flotante; no mostrar el CTA antiguo «Hablemos».
+  const mostrarAuri = !sesionCargando && !sesion && esHerramientasPublicas;
+  const mostrarContacto = !sesionCargando && !sesion && esPaginaPublica &&
+    pathname !== "/" && !esHerramientasPublicas;
+  if (!mostrarAuri && !mostrarContacto) return null;
   return (
-    <Suspense fallback={null}><ContactoComercial className={`group fixed bottom-5 right-5 z-[80] ${esCatalogoPublico ? "hidden sm:inline-flex" : "inline-flex"} min-h-14 items-center gap-2.5 rounded-full border border-[#d8bd7b]/65 bg-[#171815]/95 px-6 py-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#e2c982] shadow-[0_12px_38px_rgba(0,0,0,.42)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:border-[#e6cf91] hover:bg-[#d8bd7b] hover:text-[#211c12] hover:shadow-[0_16px_42px_rgba(0,0,0,.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b] focus-visible:ring-offset-4 focus-visible:ring-offset-[#171815] [&_svg]:transition-transform group-hover:[&_svg]:scale-110`} /></Suspense>
+    <>
+      {mostrarAuri && <Suspense fallback={null}><AuriPublicoBoton /></Suspense>}
+      {mostrarContacto && <Suspense fallback={null}><ContactoComercial className={`group fixed bottom-5 right-5 z-[80] ${esCatalogoPublico ? "hidden sm:inline-flex" : "inline-flex"} min-h-14 items-center gap-2.5 rounded-full border border-[#d8bd7b]/65 bg-[#171815]/95 px-6 py-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#e2c982] shadow-[0_12px_38px_rgba(0,0,0,.42)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:border-[#e6cf91] hover:bg-[#d8bd7b] hover:text-[#211c12] hover:shadow-[0_16px_42px_rgba(0,0,0,.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b] focus-visible:ring-offset-4 focus-visible:ring-offset-[#171815] [&_svg]:transition-transform group-hover:[&_svg]:scale-110`} /></Suspense>}
+    </>
   );
 }
 
