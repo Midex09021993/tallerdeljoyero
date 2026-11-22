@@ -83,10 +83,8 @@ function CursosDiseno3DPage() {
   const [nivelEscrito, setNivelEscrito] = useState(0);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setNivelEscrito(7);
-      return;
-    }
+    // La escritura es parte visible de la identidad del curso:
+    // se ejecuta también cuando el sistema solicita reducir movimiento.
     setNivelEscrito(0);
     let letras = 0;
     let escritura: number | undefined;
@@ -100,10 +98,10 @@ function CursosDiseno3DPage() {
             pausa = window.setTimeout(() => {
               letras = 0;
               setNivelEscrito(0);
-            }, 1800);
+            }, 1400);
           }
         }
-      }, 650);
+      }, 850);
     }, 500);
     return () => {
       window.clearTimeout(inicio);
@@ -138,7 +136,7 @@ function CursosDiseno3DPage() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
             
-            <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– <span className="inline-block whitespace-nowrap border-r-2 border-[#b58b37] pr-[.08em] align-bottom" style={{ borderRightColor: nivelEscrito >= 7 ? "transparent" : "#b58b37" }}>{ "Nivel 1".slice(0, nivelEscrito) }<span className="sr-only">Nivel 1</span></span></span></h1>
+            <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– <span className="inline-block min-w-[1ch] whitespace-nowrap border-r-2 border-[#b58b37] pr-[.08em] align-bottom animate-pulse" style={{ borderRightColor: nivelEscrito >= 7 ? "transparent" : "#b58b37" }}>{ "Nivel 1".slice(0, nivelEscrito) }<span className="sr-only">Nivel 1</span></span></span></h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#52677b] sm:text-lg sm:leading-7">Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada.</p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</div>
             <div className="mt-5 flex flex-wrap gap-3">
