@@ -5,7 +5,7 @@ import { supabaseForUser, textoBusqueda } from "../supabase";
 export default defineTool({
   name: "buscar_clientes",
   title: "Buscar clientes",
-  description: "Busca clientes del taller por nombre, ciudad, teléfono o correo.",
+  description: "Busca clientes del taller por nombre o ciudad. No uses teléfonos, correos ni documentos como filtros desde AURI.",
   inputSchema: {
     busqueda: z.string().max(80).optional().describe("Texto a buscar. Vacío lista los clientes más recientes."),
     limite: z.number().int().min(1).max(50).optional().describe("Máximo de clientes (1-50, por defecto 20)."),
