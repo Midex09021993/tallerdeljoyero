@@ -86,6 +86,30 @@ REGLAS DE SEGURIDAD Y PRECISIÓN
 9. Distingue claramente las funciones públicas de las funciones que requieren registro, plan o permisos. Si no conoces el requisito exacto, recomienda consultar los planes o contactar al equipo.
 `;
 
+let lastWorkingModel: string | null = null;
+let discoveredCache: { models: string[]; at: number } | null = null;
+
+async function listGenerateModels(apiKey: string): Promise<string[]> {
+  if (discoveredCache && Date.now() - discoveredCache.at < 60 * 60 * 1000) return discoveredCache.models;
+  try {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", {
+      headers: { "x-goog-api-key": apiKey },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];  // sin lista: se intentan los modelos configurados
+    const data = await res.json() as { models?: Array<{ name?: string; supportedGenerationMethods?: string[] }> };
+    const models = (data.models ?? [])
+      .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+      .map((m) => (m.name ?? "").replace(/^models\//, ""))
+      .filter(Boolean)
+      .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+    discoveredCache = { models, at: Date.now() };
+    return models;
+  } catch {
+    return [];
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
@@ -126,7 +150,19 @@ Deno.serve(async (req: Request) => {
     ].filter((model, index, all) => all.indexOf(model) === index);
 
     let lastStatus = 503;
-    for (const model of apiModels) {
+    const tried = new Set<string>();
+    // Lista real de modelos de la clave (solo nombres, cacheada 1 h) para evitar 404 lentos.
+    const available = await listGenerateModels(apiKey);
+    const isFlash = (n: string) => /^gemini-[\d.]+-flash(-lite)?(-latest)?$/.test(n) || n === "gemini-flash-latest" || n === "gemini-flash-lite-latest";
+    const preferred = available.length
+      ? [...apiModels.filter((m) => available.includes(m)), ...available.filter(isFlash)].slice(0, 4)
+      : apiModels;
+    const queue = lastWorkingModel ? [lastWorkingModel, ...preferred] : [...preferred];
+    let discovered = available.length > 0;
+    while (queue.length) {
+      const model = queue.shift() as string;
+      if (tried.has(model)) continue;
+      tried.add(model);
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
@@ -142,11 +178,19 @@ Deno.serve(async (req: Request) => {
         const reply = cleanText((result?.candidates?.[0]?.content?.parts ?? [])
           .map((part: { text?: string }) => part?.text ?? "").join(""), 2400);
         if (!reply) return json({ error: "No pude preparar una respuesta. Inténtalo de nuevo." }, 502);
+        lastWorkingModel = model;
         return json({ reply, model });
       }
       if (![404, 429, 500, 502, 503, 504].includes(response.status)) {
         console.error("AURI Gemini request rejected", { model, status: response.status });
         return json({ error: "No pude responder en este momento. Inténtalo nuevamente." }, 502);
+      }
+      // Si los modelos configurados no existen para esta clave, consulta los disponibles (solo nombres).
+      if (!queue.length && !discovered && lastStatus === 404) {
+        discovered = true;
+        const extra = (await listGenerateModels(apiKey)).filter((m) => isFlash(m) && !tried.has(m));
+        console.warn("AURI Gemini configured models not found; trying discovered", { count: extra.length, first: extra[0] ?? null });
+        queue.push(...extra.slice(0, 3));
       }
     }
 
