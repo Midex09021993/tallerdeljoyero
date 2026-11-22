@@ -88,11 +88,11 @@ function CursosDiseno3DPage() {
       <header className="sticky top-0 z-30 border-b border-[#e7e2d8] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-7 lg:px-10">
           <Link to="/herramientas" className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-xl bg-[#fff2c5] text-[#9c741e]"><Gem className="size-5" /></span>
+            <img src="/brand/aurum-symbol.svg" alt="AURUM LAB" width="42" height="34" className="h-9 w-10 shrink-0 object-contain" />
             <span><span className="block text-sm font-bold tracking-wide text-[#1d2b39]">AURUM LAB</span><span className="block text-[9px] uppercase tracking-[.2em] text-[#718096]">Formación profesional</span></span>
           </Link>
           <nav className="hidden items-center gap-6 text-xs font-medium text-[#586b7e] md:flex">
-            <a href="#programa" className="hover:text-[#a77d32]">Programa</a>
+            <a href="#programa" onClick={(event) => { event.preventDefault(); setProgramaAbierto(true); window.setTimeout(() => document.getElementById("programa")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80); }} className="hover:text-[#a77d32]">Programa</a>
             <a href="#laboratorios" className="hover:text-[#a77d32]">Laboratorios</a>
             <a href="#inversion" className="hover:text-[#a77d32]">Inversión</a>
           </nav>
