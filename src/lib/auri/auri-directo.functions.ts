@@ -68,7 +68,7 @@ function formatearPedidos(data: unknown): string {
   if (!pedidos.length) return "No encontré pedidos con esos filtros o no tienes acceso a ellos.";
   const lineas = pedidos.slice(0, 25).map((item) => {
     const p = objeto(item);
-    const referencia = textoSeguro(p.referencia) || "Pedido sin referencia";
+    const referencia = `Pedido ${pedidos.indexOf(item) + 1}`;
     const estado = textoSeguro(p.estado) || "Estado no registrado";
     const pieza = textoSeguro(p.pieza) || "Pieza no especificada";
     const entrega = textoSeguro(p.fecha_entrega) || "Sin fecha";
@@ -77,12 +77,12 @@ function formatearPedidos(data: unknown): string {
   return `Encontré ${pedidos.length} pedido(s):\n${lineas.join("\n")}`;
 }
 
-function formatearPedido(data: unknown): string {
+function formatearPedido(data: unknown, referenciaSolicitada?: string): string {
   const root = objeto(data);
   const p = objeto(root.pedido);
   if (!Object.keys(p).length) return "No encontré ese pedido o no tienes permiso para consultarlo.";
   const fields: Array<[string, unknown]> = [
-    ["Referencia", p.referencia],
+    ["Referencia", referenciaSolicitada],
     ["Pieza", p.pieza],
     ["Trabajo", p.trabajo],
     ["Estado", p.estado],
@@ -120,7 +120,7 @@ export const auriDirecto = createServerFn({ method: "POST" })
     const refPedido = referenciaEn(data.message);
     let toolName: string;
     let args: Record<string, unknown>;
-    let format: (value: unknown) => string;
+    let format: (value: unknown, reference?: string) => string;
 
     if (refPedido) {
       toolName = "ver_pedido";
@@ -149,5 +149,5 @@ export const auriDirecto = createServerFn({ method: "POST" })
 
     const result = await ejecutarHerramienta(toolName, args, { token });
     if (!result.ok) return { reply: "", herramientas: [toolName], error: result.error };
-    return { reply: format(result.datos), herramientas: [toolName] };
+    return { reply: format(result.datos, refPedido), herramientas: [toolName] };
   });

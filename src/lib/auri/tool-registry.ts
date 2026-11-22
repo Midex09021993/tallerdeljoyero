@@ -23,7 +23,7 @@ export const AURI_TOOLS: readonly AnyTool[] = [
 // Lista positiva: ningún identificador, nombre, referencia, dato de contacto o campo financiero
 // puede salir hacia Gemini. Los valores operativos se conservan para resumir el trabajo.
 const CAMPOS_PERMITIDOS = new Set([
-  "estado", "area_produccion", "referencia", "pieza", "trabajo", "material", "piedras", "talla",
+  "estado", "area_produccion", "pieza", "trabajo", "material", "piedras", "talla",
   "peso_estimado", "cantidad_piezas", "fecha_ingreso", "fecha_entrega",
   "fecha_listo_entrega", "fecha_envio", "fecha_entregado", "medio_envio",
   "actualizado", "pedido", "pedidos", "activos", "atrasados", "por_estado", "por_area",
