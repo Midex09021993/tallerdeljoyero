@@ -98,8 +98,8 @@ function CursosDiseno3DPage() {
           window.clearInterval(escritura);
           escritura = undefined;
         }
-      }, 300);
-    }, 250);
+      }, 650);
+    }, 500);
     return () => {
       window.clearTimeout(inicio);
       if (escritura !== undefined) window.clearInterval(escritura);
