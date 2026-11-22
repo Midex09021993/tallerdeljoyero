@@ -107,26 +107,29 @@ function CursosDiseno3DPage() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
             <style>{`
-              @keyframes aurum-type-reveal {
-                from { clip-path: inset(0 100% 0 0); }
-                to { clip-path: inset(0 0 0 0); }
+              @keyframes aurum-typewriter-write {
+                from { width: 0; }
+                to { width: 7ch; }
               }
-              @keyframes aurum-type-cursor {
+              @keyframes aurum-typewriter-cursor {
                 0%, 48% { border-color: #b58b37; }
                 49%, 100% { border-color: transparent; }
               }
               .aurum-typewriter {
                 display: inline-block;
+                width: 0;
+                overflow: hidden;
                 white-space: nowrap;
-                clip-path: inset(0 100% 0 0);
+                vertical-align: bottom;
                 border-right: 2px solid #b58b37;
                 padding-right: .08em;
-                animation: aurum-type-reveal 1.15s steps(7, end) .35s forwards,
-                           aurum-type-cursor 1.8s step-end .35s forwards;
+                animation: aurum-typewriter-write 1.15s steps(7, end) .25s forwards,
+                           aurum-typewriter-cursor 1.8s step-end .25s forwards;
               }
               @media (prefers-reduced-motion: reduce) {
                 .aurum-typewriter {
-                  clip-path: none;
+                  width: auto;
+                  overflow: visible;
                   border-right: 0;
                   animation: none;
                 }
