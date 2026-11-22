@@ -5,7 +5,7 @@ import { supabaseForUser } from "../supabase";
 export default defineTool({
   name: "ver_pedido",
   title: "Ver pedido",
-  description: "Muestra el detalle de un pedido por su id o su referencia (sin costes ni notas internas).",
+  description: "Consulta la ficha técnica completa de un pedido por id o referencia. Devuelve expresamente trabajo, material, piedras, talla, peso_estimado, cantidad_piezas, ruta de fabricación y datos de Corte Láser. Usa esta herramienta siempre que pregunten por la ficha técnica o qué información falta para fabricar. No incluye costes ni notas internas.",
   inputSchema: {
     id: z.string().uuid().optional().describe("Id del pedido (devuelto por listar_pedidos)."),
     referencia: z.string().min(1).max(60).optional().describe("Referencia visible del pedido, por ejemplo PED-0001."),
@@ -57,8 +57,9 @@ export default defineTool({
       `${pedido.referencia} — ${pedido.cliente || "Sin cliente"}`,
       `Estado: ${pedido.estado}${pedido.area_produccion ? ` (área: ${pedido.area_produccion})` : ""}`,
       `Pieza: ${pedido.pieza || "—"} · Trabajo: ${pedido.trabajo || "—"}`,
-      `Material: ${pedido.material || "—"} · Piedras: ${pedido.piedras || "—"} · Talla: ${pedido.talla || "—"}`,
+      `Material: ${pedido.material || "No registrado"} · Piedras: ${pedido.piedras || "No registrado"} · Talla: ${pedido.talla || "No registrada"} · Peso estimado: ${pedido.peso_estimado ?? "No registrado"} · Cantidad: ${pedido.cantidad_piezas ?? "No registrada"}`,
       `Ruta de fabricación: ${pedido.ruta.join(" → ") || "sin definir"}`,
+      `Corte Láser: texto ${pedido.corte_texto || "No registrado"} · tipografía ${pedido.corte_tipografia || "No registrada"} · ubicación ${pedido.corte_ubicacion || "No registrada"} · observaciones ${pedido.corte_observaciones || "No registradas"}`
       `Ingreso: ${pedido.fecha_ingreso} · Entrega prevista: ${pedido.fecha_entrega ?? "sin fecha"}`,
     ].join("\n");
     return { content: [{ type: "text", text: texto }], structuredContent: { pedido } };
