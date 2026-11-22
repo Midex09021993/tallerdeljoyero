@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import { AuriChat, AuriMascota } from "@/components/auri/AuriChat";
 
 export function AuriPublicoBoton() {
   const [abierto, setAbierto] = useState(false);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
     <>
@@ -17,7 +19,7 @@ export function AuriPublicoBoton() {
           >
             <X className="size-4" />
           </button>
-          <AuriChat modo="publico" onContact={() => setAbierto(false)} />
+          <AuriChat modo="publico" onContact={() => setAbierto(false)} rutaActual={pathname} />
         </div>
       ) : (
         <button
