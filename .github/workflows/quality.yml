@@ -31,6 +31,8 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: AURI assistant regression tests
+        run: bun test scripts/auri-interno.test.ts
       - name: TypeScript
         run: bun run typecheck
       - name: Lint
