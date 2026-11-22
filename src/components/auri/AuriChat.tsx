@@ -182,8 +182,8 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         </div>
         {interno && <div className="flex items-center gap-1 rounded-lg border border-[#e8dfcc] bg-white p-1 text-[10px] font-semibold"><button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-md px-2 py-1 ${!modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Gemini</button><button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-md px-2 py-1 ${modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Sin IA</button></div>}
         <div className="ml-auto flex items-center gap-1 rounded-full border border-[#e8dfcc] bg-white p-1 text-[10px] font-semibold">
-          <button type="button" onClick={() => setVista("texto")} aria-pressed={vista === "texto"} className={\`rounded-full px-2.5 py-1.5 transition \${vista === "texto" ? "bg-[#263746] text-white" : "text-[#69737b]"}\`}>Texto</button>
-          <button type="button" onClick={() => setVista("voz")} aria-pressed={vista === "voz"} className={\`flex items-center gap-1 rounded-full px-2.5 py-1.5 transition \${vista === "voz" ? "bg-[#263746] text-white" : "text-[#69737b]"}\`}><Mic className="size-3" /> Voz</button>
+          <button type="button" onClick={() => setVista("texto")} aria-pressed={vista === "texto"} className={`rounded-full px-2.5 py-1.5 transition ${vista === "texto" ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Texto</button>
+          <button type="button" onClick={() => setVista("voz")} aria-pressed={vista === "voz"} className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 transition ${vista === "voz" ? "bg-[#263746] text-white" : "text-[#69737b]"}`}><Mic className="size-3" /> Voz</button>
         </div>
         <Sparkles className="size-5 shrink-0 text-[#c2a252]" />
       </div>
@@ -196,8 +196,8 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             <p className="mt-2 text-sm text-slate-300">{modoDirecto ? "Modo directo · Sin inteligencia artificial" : "Asistente inteligente"}</p>
           </div>
           <div className="relative z-10 flex flex-col items-center py-5">
-            <div className={\`relative grid size-52 place-items-center rounded-full border border-[#d7bd79]/50 bg-[#d8bd79]/[0.06] shadow-[0_0_70px_rgba(199,166,91,0.18)] \${listening || loading ? "animate-pulse" : ""}\`}>
-              <div className={\`absolute inset-3 rounded-full border border-[#d7bd79]/35 \${listening ? "animate-ping" : ""}\`} />
+            <div className={`relative grid size-52 place-items-center rounded-full border border-[#d7bd79]/50 bg-[#d8bd79]/[0.06] shadow-[0_0_70px_rgba(199,166,91,0.18)] ${listening || loading ? "animate-pulse" : ""}`}>
+              <div className={`absolute inset-3 rounded-full border border-[#d7bd79]/35 ${listening ? "animate-ping" : ""}`} />
               <div className="absolute inset-7 rounded-full border border-[#7ca6bd]/40" />
               <div className="absolute inset-11 rounded-full bg-[radial-gradient(circle_at_35%_30%,_#f1dfaa_0%,_#b9954d_22%,_#344b5d_58%,_#162737_100%)] shadow-[0_0_38px_rgba(214,185,112,0.45)]" />
               <Bot className="relative z-10 size-14 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.65)]" />
@@ -205,7 +205,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             </div>
             <p className="mt-7 text-lg font-semibold tracking-wide">{listening ? "Te estoy escuchando…" : loading ? "Estoy procesando…" : "Hola, soy AURI"}</p>
             <p className="mt-2 max-w-xs text-center text-sm leading-6 text-slate-300">{listening ? "Habla con claridad. Cuando termines, detén el micrófono." : loading ? "Estoy preparando tu respuesta." : "Toca el núcleo para hablar conmigo."}</p>
-            <button type="button" onClick={listening ? () => recognition.current?.stop() : startListening} disabled={!voiceSupported || loading} aria-label={listening ? "Detener escucha" : "Hablar con AURI"} className={\`mt-7 grid size-16 place-items-center rounded-full border shadow-[0_0_30px_rgba(199,166,91,0.25)] transition \${listening ? "border-red-300 bg-red-500 text-white" : "border-[#e2ca8b] bg-[#c7a65b] text-[#182838] hover:scale-105"} disabled:cursor-not-allowed disabled:opacity-40\`}>
+            <button type="button" onClick={listening ? () => recognition.current?.stop() : startListening} disabled={!voiceSupported || loading} aria-label={listening ? "Detener escucha" : "Hablar con AURI"} className={`mt-7 grid size-16 place-items-center rounded-full border shadow-[0_0_30px_rgba(199,166,91,0.25)] transition ${listening ? "border-red-300 bg-red-500 text-white" : "border-[#e2ca8b] bg-[#c7a65b] text-[#182838] hover:scale-105"} disabled:cursor-not-allowed disabled:opacity-40`}>
               {listening ? <MicOff className="size-7" /> : <Mic className="size-7" />}
             </button>
             {!voiceSupported && <p className="mt-3 text-xs text-amber-200">Este navegador no admite dictado por voz. Puedes usar la vista de texto.</p>}
