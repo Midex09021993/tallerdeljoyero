@@ -533,10 +533,6 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
         .auri-voice__reactor.is-listening .auri-voice__soundwave--three,.auri-voice__reactor.is-speaking .auri-voice__soundwave--three { animation-delay:1.1s; }
         .auri-voice__reactor.is-thinking .auri-voice__soundwave { border-color:rgba(215,183,101,.5); opacity:.5; transform:scale(1); animation:auri-voice-pulse 1.8s ease-in-out infinite; }
         @keyframes auri-voice-ripple { 0% { opacity:0; transform:scale(.72); } 25% { opacity:.8; } 100% { opacity:0; transform:scale(1.35); } }
-        .auri-voice__wavebar { display:block; width:3px; height:var(--bar-height); min-height:5px; border-radius:9px; background:linear-gradient(180deg,#e0c27d,#5f9bb0); opacity:.48; transform:scaleY(.55); transform-origin:center; }
-        .auri-voice__wavebar.active,.auri-voice__wavebar.speaking { opacity:1; animation:auri-voice-wave .52s ease-in-out infinite alternate; background:linear-gradient(180deg,#65f1fa,#c9a95f); }
-        .auri-voice__wavebar.thinking { opacity:.85; animation:auri-voice-wave .9s ease-in-out infinite alternate; }
-        @keyframes auri-voice-wave { to { transform:scaleY(1.8); } }
         @keyframes auri-voice-pulse { 50% { transform:scale(1.055); opacity:.55; } }
         @keyframes auri-voice-orbit { to { transform:rotate(360deg); } }
         @keyframes auri-voice-speak { 50% { transform:scale(1.08); box-shadow:0 0 0 16px rgba(206,173,102,.08),0 0 68px rgba(74,201,224,.38),inset 0 2px 12px rgba(255,255,255,.7); } }
