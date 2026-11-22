@@ -385,6 +385,9 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
           </div>
           <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center py-5">
             <div className={`auri-voice__reactor relative grid place-items-center ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : ""}`}>
+              <span className="auri-voice__soundwave auri-voice__soundwave--one" />
+              <span className="auri-voice__soundwave auri-voice__soundwave--two" />
+              <span className="auri-voice__soundwave auri-voice__soundwave--three" />
               <span className="auri-voice__orbit auri-voice__orbit--one" />
               <span className="auri-voice__orbit auri-voice__orbit--two" />
               <span className="auri-voice__orbit auri-voice__orbit--three" />
@@ -421,9 +424,6 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
           <div className="relative z-10 w-full max-w-md text-center">
             {voiceTranscript && <p className="auri-voice__transcript mx-auto mb-3 max-w-sm rounded-xl px-4 py-2.5 text-center text-xs leading-5">“{voiceTranscript}”</p>}
             
-            <div className="auri-voice__wave mx-auto flex max-w-[270px] items-center justify-center gap-1.5" aria-hidden="true">
-              {Array.from({ length: 31 }, (_, i) => <span key={i} className={`auri-voice__wavebar ${listening ? "active" : speaking ? "speaking" : loading ? "thinking" : ""}`} style={{ animationDelay: `${i * 32}ms`, "--bar-height": `${8 + (Math.abs(15 - i) % 7) * 3}px` } as React.CSSProperties} />)}
-            </div>
             <p className="mt-2 text-[9px] font-medium uppercase tracking-[0.2em] text-[#71869a]">AURUM LAB · VOICE SYSTEM</p>
             {error && <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-950/40 px-3 py-2 text-xs text-red-100">{error}</p>}
           </div>
@@ -525,7 +525,14 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
         .auri-voice__mic:hover { box-shadow:0 0 0 11px rgba(205,171,99,.12),0 12px 38px rgba(0,0,0,.3); }
         .auri-voice__mic.is-active { color:#092331; border-color:#71f1fa; background:linear-gradient(145deg,#75f2fa,#22a9c1); box-shadow:0 0 0 9px rgba(67,222,240,.12),0 0 42px rgba(67,222,240,.4); transform:scale(1.06); }
         .auri-voice__transcript,.auri-voice__reply { border:1px solid rgba(150,181,198,.22); background:rgba(24,48,67,.84); color:#d6e1e8; }
-        .auri-voice__wave { min-height:42px; }
+        .auri-voice__soundwave { position:absolute; z-index:1; inset:17%; border:1px solid rgba(91,220,239,.0); border-radius:50%; opacity:0; transform:scale(.72); pointer-events:none; }
+        .auri-voice__soundwave--two { inset:10%; }
+        .auri-voice__soundwave--three { inset:3%; }
+        .auri-voice__reactor.is-listening .auri-voice__soundwave,.auri-voice__reactor.is-speaking .auri-voice__soundwave { border-color:rgba(91,220,239,.65); animation:auri-voice-ripple 1.65s ease-out infinite; }
+        .auri-voice__reactor.is-listening .auri-voice__soundwave--two,.auri-voice__reactor.is-speaking .auri-voice__soundwave--two { animation-delay:.55s; }
+        .auri-voice__reactor.is-listening .auri-voice__soundwave--three,.auri-voice__reactor.is-speaking .auri-voice__soundwave--three { animation-delay:1.1s; }
+        .auri-voice__reactor.is-thinking .auri-voice__soundwave { border-color:rgba(215,183,101,.5); opacity:.5; transform:scale(1); animation:auri-voice-pulse 1.8s ease-in-out infinite; }
+        @keyframes auri-voice-ripple { 0% { opacity:0; transform:scale(.72); } 25% { opacity:.8; } 100% { opacity:0; transform:scale(1.35); } }
         .auri-voice__wavebar { display:block; width:3px; height:var(--bar-height); min-height:5px; border-radius:9px; background:linear-gradient(180deg,#e0c27d,#5f9bb0); opacity:.48; transform:scaleY(.55); transform-origin:center; }
         .auri-voice__wavebar.active,.auri-voice__wavebar.speaking { opacity:1; animation:auri-voice-wave .52s ease-in-out infinite alternate; background:linear-gradient(180deg,#65f1fa,#c9a95f); }
         .auri-voice__wavebar.thinking { opacity:.85; animation:auri-voice-wave .9s ease-in-out infinite alternate; }
