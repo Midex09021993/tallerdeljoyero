@@ -86,7 +86,7 @@ function renderAuriInline(value: string) {
       return <strong key={index} className="font-semibold text-[#263746]">{part.slice(2, -2)}</strong>;
     }
     const link = part.match(/^\[([^\]]+)\]\((\/[^)]+)\)$/);
-    if (link && AURI_PUBLIC_LINKS.has(link[2])) {
+    if (link?.[2] && AURI_PUBLIC_LINKS.has(link[2])) {
       return <a key={index} href={link[2]} className="font-semibold text-[#96732e] underline decoration-[#d7c28c] underline-offset-4 hover:text-[#263746]">{link[1]}</a>;
     }
     return part;
