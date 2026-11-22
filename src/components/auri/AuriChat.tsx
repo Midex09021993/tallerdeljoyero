@@ -190,7 +190,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
 
   return (
     <section className="auri-shell flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white text-[#263746] sm:rounded-2xl sm:border sm:border-[#e8dfcc]" aria-label="Asistente AURI">
-      <header className="relative z-10 shrink-0 border-b border-[#eee8da] bg-white px-4 py-3 sm:px-5">
+      <header className="relative z-10 shrink-0 border-b border-[#eee8da] bg-white px-4 py-3 pr-14 sm:px-5 sm:pr-14">
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative grid size-11 shrink-0 place-items-center rounded-2xl border border-[#e4d3a5] bg-gradient-to-br from-[#fffdf7] to-[#f5edd9] shadow-sm">
