@@ -397,16 +397,25 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
             <p className="mt-7 text-center text-xl font-semibold tracking-tight text-white">{voiceStatus}</p>
             <p className="mt-2 max-w-xs text-center text-sm leading-6 text-[#aab9c8]">{voiceHint}</p>
             <button type="button"
-              onPointerDown={(event) => { event.preventDefault(); if (!voiceSupported || loading || speaking || listening) return; event.currentTarget.setPointerCapture(event.pointerId); startListening(); }}
-              onPointerUp={(event) => { event.preventDefault(); if (listening) recognition.current?.stop(); }}
-              onPointerCancel={() => { if (listening) recognition.current?.stop(); }}
-              onContextMenu={(event) => event.preventDefault()}
-              disabled={!voiceSupported || loading || speaking}
-              aria-label="Mantén presionado para hablar con AURI" aria-pressed={listening}
-              className={`auri-voice__mic mt-7 grid size-[76px] touch-none select-none place-items-center rounded-full border transition duration-200 ${listening ? "is-active" : ""} disabled:cursor-not-allowed disabled:opacity-45`}>
+              onClick={() => {
+                if (!voiceSupported || loading) return;
+                if (listening) {
+                  recognition.current?.stop();
+                  return;
+                }
+                if (speaking) {
+                  window.speechSynthesis?.cancel();
+                  setSpeaking(false);
+                }
+                startListening();
+              }}
+              disabled={!voiceSupported || loading}
+              aria-label={listening ? "Terminar de hablar y enviar consulta" : speaking ? "Interrumpir respuesta y hablar con AURI" : "Iniciar conversación por voz con AURI"}
+              aria-pressed={listening}
+              className={`auri-voice__mic mt-7 grid size-[76px] place-items-center rounded-full border transition duration-300 ${listening ? "is-active" : ""} disabled:cursor-not-allowed disabled:opacity-45`}>
               {listening ? <MicOff className="size-7" /> : <Mic className="size-7" />}
             </button>
-            <p className="mt-3 text-[10px] font-semibold tracking-[0.16em] text-[#d5c18f]">{listening ? "SUELTA PARA ENVIAR" : "MANTÉN PRESIONADO PARA HABLAR"}</p>
+            <p className="mt-3 text-[10px] font-semibold tracking-[0.16em] text-[#d5c18f]">{listening ? "TOCA PARA ENVIAR" : speaking ? "TOCA PARA INTERRUMPIR Y HABLAR" : "TOCA PARA HABLAR"}</p>
             {!voiceSupported && <p className="mt-3 rounded-lg border border-[#806c42] bg-[#24394b] px-3 py-2 text-xs text-[#f0dcae]">Este navegador no admite dictado por voz. Puedes conversar desde la vista de texto.</p>}
             {speaking && <button type="button" onClick={() => { window.speechSynthesis?.cancel(); setSpeaking(false); }} className="mt-4 rounded-full border border-[#718394] bg-[#203447] px-4 py-2 text-xs font-semibold text-[#e6d5a9] hover:bg-[#2a4359]">Interrumpir respuesta</button>}
           </div>
