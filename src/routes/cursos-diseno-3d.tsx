@@ -89,11 +89,21 @@ function CursosDiseno3DPage() {
     }
     setNivelEscrito(0);
     let letras = 0;
+    const inicio = window.setTimeout(() => {
+      const escritura = window.setInterval(() => {
+        letras += 1;
+        setNivelEscrito(letras);
+        if (letras >= 7) window.clearInterval(escritura);
+      }, 300);
+    }, 250);
     const escritura = window.setInterval(() => {
-      letras += 1;
-      setNivelEscrito(letras);
-      if (letras >= 7) window.clearInterval(escritura);
-    }, 145);
+      if (letras < 7) return;
+      window.clearInterval(escritura);
+    }, 300);
+    return () => {
+      window.clearTimeout(inicio);
+      window.clearInterval(escritura);
+    };
     return () => window.clearInterval(escritura);
   }, []);
 
