@@ -170,22 +170,33 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
   }
 
   return (
-    <div className="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-[#d9c58e]/50 bg-white">
-      <div className="flex items-center gap-3 border-b border-[#eee8da] bg-[#fcfaf5] px-4 py-3">
-        <div className="relative grid size-11 shrink-0 place-items-center rounded-full border border-[#c9aa61] bg-white shadow-sm">
-          <Bot className="size-6 text-[#b18b3e]" />
-          <span className="absolute bottom-2 right-2 size-1.5 rounded-full bg-[#2786e8] shadow-[0_0_7px_#2786e8]" />
+    <div className="flex min-h-[440px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#d9c58e]/50 bg-white">
+      <div className="border-b border-[#eee8da] bg-[#fcfaf5] px-4 py-3">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative grid size-11 shrink-0 place-items-center rounded-full border border-[#c9aa61] bg-white shadow-sm">
+              <Bot className="size-6 text-[#b18b3e]" />
+              <span className="absolute bottom-2 right-2 size-1.5 rounded-full bg-[#2786e8] shadow-[0_0_7px_#2786e8]" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold leading-tight text-[#293744]">AURI <span className="ml-1 text-[10px] font-medium uppercase tracking-wider text-[#a4843d]">Asistente virtual</span></p>
+              <p className="mt-1 hidden text-xs text-[#7b858c] sm:block">Tu asistente de AURUM LAB</p>
+            </div>
+          </div>
+          <Sparkles className="size-5 shrink-0 text-[#c2a252]" />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-[#293744]">AURI <span className="ml-1 text-[10px] font-medium uppercase tracking-wider text-[#a4843d]">Asistente virtual</span></p>
-          <p className="text-xs text-[#7b858c]">Estoy aquí para ayudarte a crear, aprender y crecer</p>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          {interno ? (
+            <div className="inline-flex items-center gap-1 rounded-full border border-[#e8dfcc] bg-white p-1 text-xs font-semibold shadow-sm">
+              <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1.5 transition ${!modoDirecto ? "bg-[#263746] text-white shadow-sm" : "text-[#69737b] hover:bg-[#f7f4ed]"}`}>Gemini</button>
+              <button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-full px-3 py-1.5 transition ${modoDirecto ? "bg-[#263746] text-white shadow-sm" : "text-[#69737b] hover:bg-[#f7f4ed]"}`}>Sin IA</button>
+            </div>
+          ) : <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#a4843d]">AURUM LAB</span>}
+          <div className="inline-flex items-center gap-1 rounded-full border border-[#e8dfcc] bg-white p-1 text-xs font-semibold shadow-sm">
+            <button type="button" onClick={() => setVista("texto")} aria-pressed={vista === "texto"} className={`rounded-full px-3 py-1.5 transition ${vista === "texto" ? "bg-[#263746] text-white shadow-sm" : "text-[#69737b] hover:bg-[#f7f4ed]"}`}>Texto</button>
+            <button type="button" onClick={() => setVista("voz")} aria-pressed={vista === "voz"} className={`flex items-center gap-1 rounded-full px-3 py-1.5 transition ${vista === "voz" ? "bg-[#263746] text-white shadow-sm" : "text-[#69737b] hover:bg-[#f7f4ed]"}`}><Mic className="size-3.5" /> Voz</button>
+          </div>
         </div>
-        {interno && <div className="flex items-center gap-1 rounded-lg border border-[#e8dfcc] bg-white p-1 text-[10px] font-semibold"><button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-md px-2 py-1 ${!modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Gemini</button><button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-md px-2 py-1 ${modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Sin IA</button></div>}
-        <div className="ml-auto flex items-center gap-1 rounded-full border border-[#e8dfcc] bg-white p-1 text-[10px] font-semibold">
-          <button type="button" onClick={() => setVista("texto")} aria-pressed={vista === "texto"} className={`rounded-full px-2.5 py-1.5 transition ${vista === "texto" ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Texto</button>
-          <button type="button" onClick={() => setVista("voz")} aria-pressed={vista === "voz"} className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 transition ${vista === "voz" ? "bg-[#263746] text-white" : "text-[#69737b]"}`}><Mic className="size-3" /> Voz</button>
-        </div>
-        <Sparkles className="size-5 shrink-0 text-[#c2a252]" />
       </div>
 
       {vista === "voz" ? (
@@ -196,10 +207,10 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             <p className="mt-2 text-sm text-slate-300">{modoDirecto ? "Modo directo · Sin inteligencia artificial" : "Asistente inteligente"}</p>
           </div>
           <div className="relative z-10 flex flex-col items-center py-5">
-            <div className={`relative grid size-52 place-items-center rounded-full border border-[#d7bd79]/50 bg-[#d8bd79]/[0.06] shadow-[0_0_70px_rgba(199,166,91,0.18)] ${listening || loading ? "animate-pulse" : ""}`}>
+            <div className={`relative grid size-48 place-items-center rounded-full border border-[#d7bd79]/50 bg-[#d8bd79]/[0.06] shadow-[0_0_70px_rgba(199,166,91,0.18)] ${listening || loading ? "animate-pulse" : ""}`}>
               <div className={`absolute inset-3 rounded-full border border-[#d7bd79]/35 ${listening ? "animate-ping" : ""}`} />
               <div className="absolute inset-7 rounded-full border border-[#7ca6bd]/40" />
-              <div className="absolute inset-11 rounded-full bg-[radial-gradient(circle_at_35%_30%,_#f1dfaa_0%,_#b9954d_22%,_#344b5d_58%,_#162737_100%)] shadow-[0_0_38px_rgba(214,185,112,0.45)]" />
+              <div className="absolute inset-10 rounded-full bg-[radial-gradient(circle_at_35%_30%,_#f1dfaa_0%,_#b9954d_22%,_#344b5d_58%,_#162737_100%)] shadow-[0_0_38px_rgba(214,185,112,0.45)]" />
               <Bot className="relative z-10 size-14 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.65)]" />
               <span className="absolute right-7 top-8 size-2 rounded-full bg-[#8bd4e8] shadow-[0_0_12px_#8bd4e8]" />
             </div>
