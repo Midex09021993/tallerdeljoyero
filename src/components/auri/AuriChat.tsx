@@ -123,68 +123,6 @@ type PublicPageConfig = {
 
 function getPublicPageConfig(pathname = ""): PublicPageConfig {
   if (pathname.startsWith("/herramientas-publicas")) {
-    const tool = pathname.split("/").filter(Boolean)[1];
-    const tools = [
-      { label: "Yeso y agua", prompt: "Quiero calcular el revestimiento y el agua para mi cilindro de fundición.", icon: Activity },
-      { label: "Aleación de oro", prompt: "Ayúdame a calcular una aleación de oro y alcanzar los quilates deseados.", icon: Gem },
-      { label: "Peso de joya 3D", prompt: "Quiero calcular el peso de una joya a partir de un modelo 3D.", icon: PackageSearch },
-      { label: "Peso de gemas", prompt: "Quiero calcular o convertir el peso de mis gemas.", icon: Gem },
-      { label: "Tallas de anillos", prompt: "Necesito convertir o identificar una talla de anillo.", icon: MessageCircle },
-    ] as const;
-    const current = tools.find((item) => item.label.toLowerCase().replace(/ /g, "-") === tool);
-    const toolTitles: Record<string, string> = {
-      "yeso-agua": "Calculadora de yeso y agua",
-      "aleacion-oro": "Calculadora de aleaciones de oro",
-      "peso-joya-3d": "Calculadora de peso de joya 3D",
-      "peso-gemas": "Calculadora de peso de gemas",
-      "tallas-anillos": "Conversor de tallas de anillos",
-    };
-    const title = toolTitles[tool ?? ""] ?? "Herramientas técnicas para joyería";
-    return {
-      eyebrow: "ASISTENCIA DE HERRAMIENTAS",
-      title: toolTitles[tool ?? ""] ? `¿Qué necesitas saber sobre ${title}?` : "¿Qué herramienta necesitas utilizar?",
-      description: toolTitles[tool ?? ""] ? "Estoy aquí para ayudarte con esta calculadora y orientarte paso a paso." : "Te ayudo a elegir y utilizar las calculadoras de joyería y fundición disponibles en esta sección.",
-      welcome: toolTitles[tool ?? ""] ? `¡Hola! Estás en ${title}. Puedo explicarte cómo utilizar esta herramienta y qué datos necesitas.` : "¡Hola! Estás en Herramientas Públicas. Puedo ayudarte con yeso y agua, aleaciones, peso de joyas 3D, peso de gemas y tallas de anillos. ¿Qué cálculo necesitas realizar?",
-      actions: toolTitles[tool ?? ""] ? tools.filter((item) => item.label.toLowerCase().replace(/ /g, "-") === tool) : tools,
-      focus: toolTitles[tool ?? ""] ? `La persona está en la página ${title}. Responde exclusivamente sobre esta calculadora: su propósito, datos de entrada, interpretación y uso. No promociones otras secciones ni herramientas, salvo que la persona lo solicite expresamente.` : "La persona está en la sección Herramientas Públicas. Prioriza exclusivamente las cinco calculadoras de esta sección: yeso y agua para fundición, aleación de oro, peso de joya desde modelo 3D, peso de gemas y tallas de anillos. No muestres promociones generales de AURUM LAB, planes, render o cursos salvo que la persona lo solicite expresamente.",
-    };
-  }
-  if (pathname === "/cursos-diseno-3d") {
-    return {
-      eyebrow: "ASESORÍA DE FORMACIÓN",
-      title: "¿Qué quieres conocer del curso?",
-      description: "Te oriento sobre el programa, sus sesiones, laboratorios y modalidad.",
-      welcome: "¡Hola! Estás en la página del curso de Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1. Puedo explicarte el contenido, las sesiones, los laboratorios y cómo participar.",
-      actions: [
-        { label: "Contenido del curso", prompt: "¿Qué aprenderé en este curso y cuáles son sus objetivos?", icon: MessageCircle },
-        { label: "Sesiones y duración", prompt: "Explícame cómo se organizan las sesiones y cuánto dura el curso.", icon: Activity },
-        { label: "Laboratorios", prompt: "¿Qué laboratorios y prácticas incluye el curso?", icon: PackageSearch },
-        { label: "Inscripción", prompt: "¿Cómo puedo solicitar información para inscribirme?", icon: Gem },
-      ],
-      focus: "La persona está en la página pública del curso CAD 3D Nivel 1. Responde sobre el programa, objetivos, sesiones, duración, laboratorios, modalidad e inscripción. No promociones herramientas, planes ni otras secciones salvo que lo solicite.",
-    };
-  }
-  return {
-    eyebrow: "GUÍA VIRTUAL DE TALLER DEL JOYERO",
-    title: "¿Qué te gustaría conocer de AURUM LAB?",
-    description: "Te explico nuestras herramientas, render 3D, recursos de formación y planes.",
-    welcome: WELCOME.text,
-    actions: PUBLIC_QUICK_ACTIONS,
-    focus: "La persona está explorando el sitio público de AURUM LAB. Responde de forma general y ofrece solo las secciones relevantes a su consulta.",
-  };
-}
-
-type PublicPageConfig = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  welcome: string;
-  actions: ReadonlyArray<{ label: string; prompt: string; icon: typeof Gem }>;
-  focus: string;
-};
-
-function getPublicPageConfig(pathname = ""): PublicPageConfig {
-  if (pathname.startsWith("/herramientas-publicas")) {
     const tool = pathname.split("/").filter(Boolean)[1] ?? "";
     const tools = [
       { label: "Yeso y agua", prompt: "Quiero calcular el revestimiento y el agua para mi cilindro de fundición.", icon: Activity },
