@@ -20,7 +20,8 @@ function limitado(userId: string) {
 }
 
 function textoSeguro(value: unknown, max = 180): string {
-  return typeof value === "string" ? value.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max) : "";
+  if (typeof value !== "string" && typeof value !== "number") return "";
+  return String(value).replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
 }
 
 function objeto(value: unknown): Record<string, unknown> {

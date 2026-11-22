@@ -26,7 +26,7 @@ const CAMPOS_PERMITIDOS = new Set([
   "estado", "area_produccion", "referencia", "pieza", "trabajo", "material", "piedras", "talla",
   "peso_estimado", "cantidad_piezas", "fecha_ingreso", "fecha_entrega",
   "fecha_listo_entrega", "fecha_envio", "fecha_entregado", "medio_envio",
-  "actualizado", "pedidos", "activos", "atrasados", "por_estado", "por_area",
+  "actualizado", "pedido", "pedidos", "activos", "atrasados", "por_estado", "por_area",
   "fecha", "tipo", "ciudad",
 ]);
 
