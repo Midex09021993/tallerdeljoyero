@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { ArrowRight, Gem, Ruler } from "lucide-react";
 
 export const Route = createFileRoute("/guias")({
@@ -122,6 +122,9 @@ function categoriaId(categoria: string) {
 const categorias = Array.from(new Set(guias.map((guia) => guia.categoria)));
 
 function GuiasPage() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  if (pathname !== "/guias" && pathname !== "/guias/") return <Outlet />;
+
   return (
     <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
       <header className="border-b border-slate-200 bg-white">
