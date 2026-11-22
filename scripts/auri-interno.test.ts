@@ -76,6 +76,7 @@ describe("AURI interno", () => {
 describe("AURI Directo · extracción de filtros", () => {
   test("extrae nombre de cliente, contrato y cliente asociado a pedidos", () => {
     expect(extraerBusqueda("Buscar cliente Juan Pérez", "cliente")).toBe("Juan Pérez");
+    expect(extraerBusqueda("Clientes de Juan Pérez", "cliente")).toBe("Juan Pérez");
     expect(extraerBusqueda("Contratos de Acme", "contrato")).toBe("Acme");
     expect(extraerBusqueda("Pedidos de Juan Pérez", "pedido")).toBe("Juan Pérez");
   });
