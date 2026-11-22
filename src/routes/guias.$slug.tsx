@@ -12,8 +12,8 @@ const slugTallas = "convertir-tallas-anillos-espana-europa-usa";
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
     const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas].includes(params.slug);
-    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya desde un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo calcular el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
-    const descripcion = params.slug === slugPeso ? "Guía técnica para validar el volumen de un modelo 3D, controlar unidades y estimar la masa de una joya según la densidad de su aleación." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Aprende a convertir gramos a quilates y estimar el peso de diamantes y gemas por dimensiones, forma de talla y gravedad específica." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
+    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya desde un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo estimar el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
+    const descripcion = params.slug === slugPeso ? "Guía técnica para validar el volumen de un modelo 3D, controlar unidades y estimar la masa de una joya según la densidad de su aleación." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Guía gemológica para estimar el peso en quilates mediante dimensiones, gravedad específica, forma de talla y proporciones de la piedra." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
     return {
       meta: [
         { title: valida ? `${titulo} | Guías técnicas AURUM LAB` : "Guía no encontrada | AURUM LAB" },
@@ -75,52 +75,130 @@ function GuiaTecnicaPage() {
             <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-gemas" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Calculadora de peso de gemas</Link>
           </div>
         </header>
-        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
           <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Gemología</span></nav>
-          <header className="mt-6 border-b border-slate-200 pb-8">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Gemología · Guía técnica</p>
-            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo calcular el peso de una gema por sus medidas</h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">El peso de una gema se expresa habitualmente en quilates. Si no tienes una balanza a mano, sus dimensiones, forma y gravedad específica permiten obtener una estimación, siempre que se conozcan las limitaciones del método.</p>
+          <header className="relative mt-6 overflow-hidden rounded-[1.75rem] border border-[#eadca7] bg-gradient-to-br from-[#fff9e8] via-white to-[#f5f7fa] p-6 pb-8 sm:p-9">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 size-56 rounded-full border-[24px] border-[#f5e8bd]/45" />
+            <div className="relative">
+              <div className="flex flex-wrap items-center gap-2"><span className="rounded-full border border-[#e8d7a4] bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Gemología</span><span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Manual técnico · AURUM LAB</span></div>
+              <h1 className="mt-5 max-w-3xl text-3xl font-extrabold leading-[1.08] tracking-tight text-[#17232d] sm:text-5xl">Cómo estimar el peso de una gema por sus medidas</h1>
+              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Aprende a convertir dimensiones en una estimación de quilates mediante la forma de talla, la gravedad específica y las proporciones de la piedra. Una metodología práctica para el taller, con sus alcances y límites gemológicos.</p>
+              <div className="mt-6 flex flex-wrap gap-2"><span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Nivel: básico–intermedio</span><span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Lectura: 10–12 min</span><span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Unidades: mm · ct · g</span></div>
+            </div>
           </header>
+
+          <section className="mt-7 grid gap-3 sm:grid-cols-3" aria-label="Conceptos gemológicos clave">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Quilate métrico</p><p className="mt-1 text-2xl font-extrabold text-[#17232d]">0,20 g</p><p className="text-xs text-slate-500">Equivalencia exacta de 1 ct</p></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Gravedad específica</p><p className="mt-1 text-2xl font-extrabold text-[#17232d]">SG</p><p className="text-xs text-slate-500">Relación con igual volumen de agua</p></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Factor de forma</p><p className="mt-1 text-2xl font-extrabold text-[#17232d]">Talla</p><p className="text-xs text-slate-500">Compensa el volumen geométrico aproximado</p></div>
+          </section>
+
+          <aside className="mt-7 rounded-2xl border border-slate-200 bg-[#f7f8fa] p-5 sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">En esta guía</p>
+            <div className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#quilate">01 · El quilate métrico</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#medicion">02 · Medir la gema</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#sg">03 · Gravedad específica</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#forma">04 · Forma y factor de talla</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#formula">05 · Fórmula y ejemplo</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#perfil">06 · Proporciones y correcciones</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#calculadora">07 · Usar la calculadora</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#limites">08 · Límites y control</a>
+            </div>
+          </aside>
+
           <div className="prose prose-slate mt-8 max-w-none prose-headings:scroll-mt-24 prose-headings:tracking-tight prose-headings:font-bold prose-headings:text-[#17232d] prose-h2:mb-3 prose-h2:mt-12 prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-3 prose-p:leading-7 prose-li:leading-7 prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
-            <h2>1. Qué significa el quilate en gemología</h2>
-            <p>El quilate métrico (ct) es una unidad de masa, no una medida de tamaño. Un quilate equivale exactamente a 0,20 gramos o 200 miligramos, y se divide en 100 puntos. Por eso, dos piedras con el mismo diámetro pueden tener pesos diferentes si cambian su material o sus proporciones.</p>
-            <p>Para convertir un peso conocido en gramos a quilates, multiplica los gramos por cinco. Para convertir quilates a gramos, multiplica los quilates por 0,20.</p>
-            <h2>2. Qué medidas necesitas para estimar el peso</h2>
-            <p>La estimación por dimensiones requiere largo, ancho y profundidad en milímetros. También debes seleccionar el material y la forma de talla que más se aproxime a la piedra que estás evaluando.</p>
-            <ul>
-              <li>Mide la piedra en sus dimensiones máximas y utiliza milímetros.</li>
-              <li>Identifica si la forma es redonda, oval, esmeralda, rectangular, marquise, pera, cuadrada, cushion o cabujón.</li>
-              <li>Selecciona el material correcto, porque la gravedad específica influye directamente en la estimación.</li>
-              <li>Considera la profundidad y el perfil real; no todas las piedras de una misma forma tienen las mismas proporciones.</li>
-            </ul>
-            <h2>3. Por qué importa la forma de talla y la gravedad específica</h2>
-            <p>Las dimensiones por sí solas no determinan el peso. La gravedad específica representa la relación entre la densidad del material y la del agua; junto con el volumen aproximado y un factor de forma, permite estimar la masa.</p>
-            <p>Una corona alta, un pabellón profundo, una cintura gruesa o un domo pronunciado pueden cambiar el volumen real respecto al supuesto por una forma promedio. La herramienta permite aplicar una corrección manual de perfil, pero esa corrección debe basarse en una medición o criterio gemológico razonable.</p>
-            <h2>4. Cómo utilizar la calculadora de peso de gemas</h2>
-            <ol>
-              <li>Para convertir un peso conocido, abre el modo «Peso real» e introduce los gramos.</li>
-              <li>Para estimar por dimensiones, selecciona «Estimar por medidas».</li>
-              <li>Elige el material y la forma de talla más adecuados.</li>
-              <li>Introduce largo, ancho y profundidad en milímetros.</li>
-              <li>Revisa el peso estimado, el equivalente en gramos y el rango orientativo.</li>
-            </ol>
-            <h2>5. Cuándo debes confirmar el peso con una balanza</h2>
-            <p>La estimación no sustituye el pesaje directo. Para una tasación, compraventa, certificación o ficha técnica definitiva, utiliza una balanza gemológica calibrada y registra el peso real. En piedras montadas, las dimensiones visibles pueden no representar toda la geometría y el acceso para medir la profundidad puede ser limitado.</p>
-            <h2>Preguntas frecuentes sobre el peso de las gemas</h2>
-            <h3>¿Cuántos quilates equivale un gramo?</h3>
-            <p>Un gramo equivale a cinco quilates métricos, porque un quilate corresponde a 0,20 gramos.</p>
-            <h3>¿Dos diamantes del mismo diámetro pesan lo mismo?</h3>
-            <p>No necesariamente. La profundidad, las proporciones de la talla y el perfil pueden variar y modificar el volumen y el peso.</p>
-            <h3>¿Puedo estimar el peso de una esmeralda o un rubí por sus medidas?</h3>
-            <p>Puedes obtener una estimación si seleccionas el material y la forma adecuados y dispones de dimensiones fiables. La precisión dependerá de la gravedad específica configurada y de cuánto se parezca la piedra real al perfil promedio utilizado.</p>
-            <h3>¿La estimación reemplaza el peso de una balanza?</h3>
-            <p>No. Es una referencia orientativa. Para determinar el peso real, utiliza una balanza gemológica.</p>
+            <section>
+              <h2 id="quilate">01. El quilate métrico: masa, no tamaño</h2>
+              <p>En gemología, el quilate métrico (ct) es una unidad de masa. Un quilate equivale exactamente a 0,20 gramos o 200 miligramos y se divide en 100 puntos. Por tanto, 0,50 ct equivale a medio quilate y 1,25 ct equivale a un quilate y veinticinco puntos.</p>
+              <div className="not-prose my-6 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-5 text-center sm:p-7"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#987400]">Conversión fundamental</p><p className="mt-2 text-xl font-extrabold text-[#604900] sm:text-2xl">1 ct = 0,20 g</p><p className="mt-2 text-sm text-slate-600">Quilates = gramos × 5 · Gramos = quilates × 0,20</p></div>
+              <p>No confundas el quilate de las gemas (ct), que expresa masa, con el quilate del oro (K), que expresa proporción de oro fino en una aleación. Son conceptos y magnitudes diferentes.</p>
+            </section>
+
+            <section>
+              <h2 id="medicion">02. Cómo medir correctamente una gema</h2>
+              <p>Para estimar el peso de una piedra suelta necesitas, como mínimo, largo, ancho y profundidad en milímetros. La medición debe seguir los ejes máximos de la piedra y no la dimensión aparente de una fotografía.</p>
+              <ul>
+                <li><strong>Largo:</strong> dimensión máxima de extremo a extremo en la vista superior.</li>
+                <li><strong>Ancho:</strong> dimensión perpendicular al largo, también en vista superior.</li>
+                <li><strong>Profundidad:</strong> distancia desde la parte superior de la corona hasta la base del pabellón o del cabujón.</li>
+                <li><strong>Forma:</strong> identifica el contorno de la talla: redonda, oval, esmeralda/rectangular, cuadrada, pera, marquise, corazón o cabujón, entre otras.</li>
+                <li><strong>Perfil:</strong> observa la altura de la corona, el grosor de la cintura, la profundidad del pabellón y cualquier abultamiento inferior.</li>
+              </ul>
+              <p>En una piedra montada, la montura puede ocultar la cintura o el pabellón e impedir medir la profundidad real. En ese caso, documenta qué dimensiones son observadas y cuáles son estimadas; la incertidumbre aumenta.</p>
+            </section>
+
+            <section>
+              <h2 id="sg">03. Gravedad específica: por qué dos gemas del mismo tamaño pesan distinto</h2>
+              <p>La gravedad específica (SG) expresa la relación entre la densidad de un material y la densidad del agua de referencia. En gemología se utiliza para describir cuánto pesa una gema respecto de un volumen igual de agua. Es un parámetro del material, no de la forma de la talla.</p>
+              <p>Por ejemplo, el diamante tiene una SG aproximada de 3,52, mientras que el corindón (rubí y zafiro) suele situarse alrededor de 4,0. Por ello, dos piedras con dimensiones y proporciones semejantes pueden tener masas diferentes si están hechas de materiales distintos.</p>
+              <p>La SG puede variar dentro de una especie por composición, sustituciones químicas, inclusiones y otras características. Utiliza rangos de referencia gemológicos y no supongas que una cifra única identifica por sí sola una piedra.</p>
+            </section>
+
+            <section>
+              <h2 id="forma">04. La forma de talla y el factor de forma</h2>
+              <p>Largo × ancho × profundidad describe el volumen de una caja rectangular, no el volumen real de una gema facetada. Para aproximar el volumen de la piedra se aplica un factor de forma, que varía según el contorno y el tipo de talla.</p>
+              <p>Una talla redonda brillante, una oval, una esmeralda rectangular y un cabujón no ocupan la misma fracción de la caja imaginaria que contiene sus dimensiones. Por eso no existe un único factor universal que sea correcto para todas las formas.</p>
+              <p>Los métodos publicados por GIA emplean factores de forma basados en mediciones de piedras y distinguen la silueta vista desde arriba y las variaciones de perfil. Las fórmulas de estimación son aproximaciones estadísticas para piedras de proporciones habituales, no sustitutos de una medición directa.</p>
+            </section>
+
+            <section>
+              <h2 id="formula">05. Fórmula de estimación y ejemplo práctico</h2>
+              <p>Una forma general de expresar el método es:</p>
+              <div className="not-prose my-6 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-5 text-center sm:p-7"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#987400]">Modelo de estimación</p><p className="mt-2 text-lg font-extrabold text-[#604900] sm:text-xl">Peso (ct) ≈ L × A × P × SG × F</p><p className="mt-2 text-xs leading-5 text-slate-600">L, A y P en milímetros · SG = gravedad específica · F = factor de forma calibrado para la talla</p></div>
+              <p>El factor F incorpora la geometría aproximada y la conversión de unidades según la convención de la fórmula utilizada. No mezcles factores de distintas tablas o metodologías: comprueba siempre sus unidades y definición.</p>
+              <p><strong>Ejemplo ilustrativo:</strong> una gema oval de 8 × 6 × 4 mm, con SG supuesta de 3,52 y un factor de forma de 0,0020 tomado de una tabla de estimación para ovales bien proporcionados:</p>
+              <ol><li>Multiplica las dimensiones: 8 × 6 × 4 = 192.</li><li>Multiplica por la SG: 192 × 3,52 = 675,84.</li><li>Aplica el factor de forma: 675,84 × 0,0020 ≈ 1,35 ct.</li></ol>
+              <p>El resultado es una estimación didáctica condicionada a que la forma, la SG y las proporciones coincidan con los supuestos. No debe interpretarse como el peso real de una piedra concreta.</p>
+            </section>
+
+            <section>
+              <h2 id="perfil">06. Proporciones: cintura, corona y pabellón</h2>
+              <p>Dos gemas con el mismo contorno y las mismas medidas máximas pueden diferir en peso por su perfil. Una piedra más profunda puede contener más volumen; una cintura más gruesa también puede aumentar la masa. Una corona alta, un pabellón abultado o una culata pronunciada pueden apartar la piedra de las proporciones promedio asumidas por la fórmula.</p>
+              <ul><li><strong>Cintura delgada:</strong> puede reducir la masa respecto al modelo promedio.</li><li><strong>Cintura gruesa:</strong> puede incrementarla.</li><li><strong>Pabellón profundo o abultado:</strong> puede añadir volumen que no se aprecia en la vista superior.</li><li><strong>Proporciones poco habituales:</strong> pueden hacer que la estimación se desvíe de forma significativa.</li></ul>
+              <p>GIA describe el uso de factores de corrección para piedras cuyo perfil difiere de las proporciones de referencia. En una práctica profesional, no apliques porcentajes improvisados: utiliza una metodología publicada y registra cualquier corrección que realices.</p>
+            </section>
+
+            <section>
+              <h2 id="calculadora">07. Cómo utilizar la calculadora de peso de gemas de AURUM LAB</h2>
+              <ol><li>Si ya conoces la masa en gramos, utiliza el modo «Peso real» para convertirla a quilates.</li><li>Si necesitas estimar una piedra, selecciona «Estimar por medidas».</li><li>Elige el material correcto y la forma de talla que mejor represente la gema.</li><li>Introduce largo, ancho y profundidad en milímetros, utilizando medidas fiables.</li><li>Revisa el resultado en quilates y gramos y considera el rango orientativo si la herramienta lo proporciona.</li></ol>
+              <p>La selección de material y forma es esencial: la herramienta aplica los parámetros asociados a esas opciones. Si no conoces con seguridad el material o la talla, el resultado debe considerarse preliminar.</p>
+            </section>
+
+            <section>
+              <h2 id="limites">08. Límites del método y control gemológico</h2>
+              <p>La estimación por dimensiones es especialmente útil cuando la gema no puede retirarse de una montura o cuando se necesita una referencia inicial. Sin embargo, no sustituye el pesaje de una piedra suelta con una balanza gemológica calibrada.</p>
+              <ul><li>Las medidas imprecisas afectan directamente al cálculo.</li><li>La SG debe corresponder al material real y puede presentar variaciones naturales.</li><li>Las tallas comerciales no siempre siguen proporciones promedio.</li><li>Los tratamientos, rellenos, ensamblajes o materiales compuestos pueden invalidar una estimación basada en una gema sólida homogénea.</li><li>En piedras montadas, parte de la geometría puede quedar oculta.</li></ul>
+              <p>Para tasación, compraventa, certificación o documentación comercial, registra el peso medido cuando sea posible. Si solo dispones de una estimación, identifícala expresamente como tal y no la presentes como peso certificado.</p>
+            </section>
+
+            <section>
+              <h2>Preguntas frecuentes</h2>
+              <h3>¿Cuántos quilates equivale un gramo?</h3><p>Un gramo equivale a cinco quilates métricos, porque 1 ct corresponde a 0,20 g.</p>
+              <h3>¿Dos diamantes del mismo diámetro pesan lo mismo?</h3><p>No necesariamente. La profundidad, las proporciones de la talla y el grosor de la cintura pueden cambiar el volumen y el peso.</p>
+              <h3>¿Puedo estimar el peso de una esmeralda o un rubí por sus medidas?</h3><p>Sí, como aproximación, si conoces el material, utilizas una SG razonable y eliges el factor de forma adecuado. Las proporciones reales pueden hacer que el resultado varíe.</p>
+              <h3>¿La estimación reemplaza el peso de una balanza?</h3><p>No. Es una referencia orientativa. Para conocer la masa real de una piedra suelta, utiliza una balanza gemológica calibrada.</p>
+              <h3>¿Puedo estimar una gema que ya está engastada?</h3><p>Es posible si puedes obtener medidas suficientemente fiables, pero la montura puede ocultar la profundidad y las proporciones. Indica siempre que se trata de una estimación.</p>
+            </section>
           </div>
+
+          <section className="not-prose mt-10 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Bibliografía y referencias</p>
+            <h2 className="mt-2 text-xl font-bold text-[#17232d]">Fuentes gemológicas consultadas</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Esta guía es una síntesis didáctica original de AURUM LAB. Las fuentes siguientes respaldan las unidades, los principios de gravedad específica y los métodos de estimación por forma y proporciones.</p>
+            <ol className="mt-5 space-y-4 text-sm leading-6 text-slate-700">
+              <li><strong>Gemological Institute of America (GIA).</strong> 4Cs: Carat Weight. Define el quilate métrico, su equivalencia de 0,20 gramos y la división en puntos. <a className="font-semibold text-[#876500] underline" href="https://www.gia.edu/gia-about/4cs-carat" target="_blank" rel="noreferrer">Consultar GIA</a>.</li>
+              <li><strong>GIA, Gems &amp; Gemology.</strong> Estimating Weights of Mounted Colored Gemstones. Explica el uso de dimensiones, gravedad específica, factor de forma y correcciones de perfil a partir de muestras medidas. <a className="font-semibold text-[#876500] underline" href="https://www.gia.edu/gems-gemology/fall-1998-estimating-weights-mounted-stones-carmona" target="_blank" rel="noreferrer">Consultar artículo técnico</a>.</li>
+              <li><strong>International Gem Society (IGS).</strong> Specific Gravity Values of Selected Gems. Referencia introductoria de valores y rangos de gravedad específica de materiales gemológicos. <a className="font-semibold text-[#876500] underline" href="https://www.gemsociety.org/article/select-gems-ordered-density/" target="_blank" rel="noreferrer">Consultar tabla de SG</a>.</li>
+              <li><strong>IGS.</strong> How to Estimate Gem Weight in a Jewelry Setting. Describe mediciones, fórmulas por forma y limitaciones por proporciones. <a className="font-semibold text-[#876500] underline" href="https://www.gemsociety.org/article/estimating-gem-weight/" target="_blank" rel="noreferrer">Consultar metodología</a>.</li>
+            </ol>
+            <p className="mt-5 border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">Nota: los factores de forma varían según la fuente, la geometría y la población de piedras utilizada para calibrarlos. El ejemplo numérico es ilustrativo y no constituye una fórmula universal ni un certificado gemológico.</p>
+          </section>
+
           <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
-            <h2 className="mt-2 text-xl font-bold">Convierte gramos a quilates o estima una gema</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Utiliza las dimensiones y los parámetros de tu piedra para obtener una referencia antes de confirmar su peso real.</p>
+            <h2 className="mt-2 text-xl font-bold">Estima el peso de tu gema</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Introduce las dimensiones, selecciona el material y la talla y utiliza el resultado como referencia antes de confirmar el peso real.</p>
             <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-gemas" }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Abrir calculadora de peso de gemas</Link>
           </section>
           <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
