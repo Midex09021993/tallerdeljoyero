@@ -214,9 +214,10 @@ function HerramientasPublicasPage() {
             className="group flex min-h-52 flex-col rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#e5c04a] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]"
           >
             <span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4] text-[#987400]"><Gem className="size-5" /></span>
-            <span className="mt-4 text-base font-semibold">Presenta tu diseño con AURUM RENDER</span>
+            <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#8b6b28]">Dentro de AURUM LAB · Requiere iniciar sesión</span>
+            <span className="mt-3 text-base font-semibold">Presenta tu diseño con AURUM RENDER</span>
             <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Accede a AURUM RENDER para visualizar tu modelo y preparar su presentación.</span>
-            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Acceder a AURUM RENDER <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Acceder a AURUM LAB <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
           </Link>}
           {mostrarTransfer && <Link
             to="/transfer"
@@ -234,15 +235,17 @@ function HerramientasPublicasPage() {
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <Link to="/cotizaciones" className="group flex min-h-48 flex-col rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#e5c04a] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
                 <span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4] text-[#987400]"><Coins className="size-5" /></span>
-                <span className="mt-4 text-base font-semibold">Gestiona cotizaciones de joyería</span>
+                <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#8b6b28]">Dentro de AURUM LAB · Requiere iniciar sesión</span>
+                <span className="mt-3 text-base font-semibold">Gestiona cotizaciones de joyería</span>
                 <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Consulta las herramientas de cotización y organiza la información comercial de tu taller.</span>
-                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Entrar a Aurum Lab <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Acceder a AURUM LAB <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
               </Link>
               <Link to="/catalogo" className="group flex min-h-48 flex-col rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#e5c04a] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
                 <span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4] text-[#987400]"><Gem className="size-5" /></span>
-                <span className="mt-4 text-base font-semibold">Consulta el catálogo de tu taller</span>
+                <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#8b6b28]">Dentro de AURUM LAB · Requiere iniciar sesión</span>
+                <span className="mt-3 text-base font-semibold">Consulta el catálogo de tu taller</span>
                 <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Organiza tus piezas y consulta la información técnica disponible en tu catálogo.</span>
-                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Abrir catálogo <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Acceder a AURUM LAB <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
               </Link>
             </div>
           </div>}
