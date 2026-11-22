@@ -222,7 +222,10 @@ function ContactoFlotante() {
   // AURI es el acceso flotante en herramientas públicas y en la landing del curso.
   // En esas rutas no mostrar el CTA comercial antiguo «Hablemos».
   const esLandingCurso = pathname === "/cursos-diseno-3d";
-  const mostrarAuri = !sesionCargando && !sesion && (esHerramientasPublicas || esLandingCurso);
+  // La landing del curso es pública: AURI debe mostrarse también si el visitante ya inició sesión.
+  const mostrarAuri = !sesionCargando && (
+    esLandingCurso || (!sesion && esHerramientasPublicas)
+  );
   const mostrarContacto = !sesionCargando && !sesion && esPaginaPublica &&
     pathname !== "/" && !esHerramientasPublicas && !esLandingCurso;
   if (!mostrarAuri && !mostrarContacto) return null;
