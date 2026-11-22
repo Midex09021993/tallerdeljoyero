@@ -38,6 +38,37 @@ const QUICK_ACTIONS = [
 ] as const;
 const CONSENT_KEY = "auri-interno-acceso";
 
+function AuriMascota({ estado = "idle", compact = false }: { estado?: "idle" | "thinking" | "listening" | "speaking"; compact?: boolean }) {
+  return (
+    <span className={`auri-mascot auri-mascot--${estado} ${compact ? "auri-mascot--compact" : ""}`} role="img" aria-label="Mascota AURI animada">
+      <svg viewBox="0 0 96 104" aria-hidden="true" className="auri-mascot__art">
+        <defs>
+          <linearGradient id="auri-shell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff" /><stop offset=".55" stopColor="#f4f1e8" /><stop offset="1" stopColor="#d9d7d0" /></linearGradient>
+          <linearGradient id="auri-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f8e7b5" /><stop offset=".5" stopColor="#c6a052" /><stop offset="1" stopColor="#8e6b2d" /></linearGradient>
+          <linearGradient id="auri-screen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#29475a" /><stop offset="1" stopColor="#142b3c" /></linearGradient>
+        </defs>
+        <ellipse cx="48" cy="97" rx="27" ry="4" fill="#9a824e" opacity=".16" />
+        <g className="auri-mascot__body">
+          <path d="M24 68 Q13 70 15 84 Q18 91 29 86 L35 78" fill="url(#auri-shell)" stroke="url(#auri-gold)" strokeWidth="2.5" />
+          <path d="M72 68 Q83 70 81 84 Q78 91 67 86 L61 78" fill="url(#auri-shell)" stroke="url(#auri-gold)" strokeWidth="2.5" />
+          <rect x="24" y="52" width="48" height="39" rx="15" fill="url(#auri-shell)" stroke="url(#auri-gold)" strokeWidth="2.5" />
+          <circle cx="48" cy="77" r="6" fill="url(#auri-gold)" />
+          <path d="M45 77h6M48 74v6" stroke="#fff9e9" strokeWidth="1.4" strokeLinecap="round" />
+          <path d="M48 13v7" stroke="url(#auri-gold)" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="48" cy="10" r="5" fill="url(#auri-gold)" />
+          <rect x="13" y="19" width="70" height="48" rx="17" fill="url(#auri-shell)" stroke="url(#auri-gold)" strokeWidth="3" />
+          <rect x="20" y="26" width="56" height="34" rx="12" fill="url(#auri-screen)" />
+          <g className="auri-mascot__eyes" fill="#8fe8f0"><ellipse cx="36" cy="42" rx="4" ry="5.5" /><ellipse cx="60" cy="42" rx="4" ry="5.5" /></g>
+          <path d="M41 52 Q48 57 55 52" fill="none" stroke="#d5bd7d" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M10 37h4M82 37h4" stroke="url(#auri-gold)" strokeWidth="3" strokeLinecap="round" />
+        </g>
+        <path d="M27 29 Q48 21 69 29" fill="none" stroke="#fff" strokeWidth="2" opacity=".8" />
+      </svg>
+      <span className="auri-mascot__aura" />
+    </span>
+  );
+}
+
 function renderAuriInline(value: string) {
   return value.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
     part.startsWith("**") && part.endsWith("**")
@@ -194,19 +225,19 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
 
   return (
     <section className="auri-shell flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white text-[#263746] sm:rounded-2xl sm:border sm:border-[#e8dfcc]" aria-label="Asistente AURI">
-      <header className="relative z-10 shrink-0 border-b border-[#eee8da] bg-white px-4 py-3 pr-14 sm:px-5 sm:pr-14">
-        <div className="flex min-w-0 items-center justify-between gap-3">
+      <header className="auri-header relative z-10 shrink-0 border-b border-[#eee8da] bg-white px-3 py-3 pr-14 sm:px-5 sm:pr-14">
+        <div className="auri-header__row flex min-w-0 items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative grid size-11 shrink-0 place-items-center rounded-2xl border border-[#e4d3a5] bg-gradient-to-br from-[#fffdf7] to-[#f5edd9] shadow-sm">
               <Bot className="size-6 text-[#a98535]" />
               <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-[#4b9b79]" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2"><p className="font-semibold tracking-tight text-[#263746]">AURI</p><span className="rounded-full border border-[#e9dfc7] bg-[#fbf8ef] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#9b7936]">AURUM LAB</span></div>
+              <div className="flex items-center gap-2"><p className="font-semibold tracking-tight text-[#263746]">AURI</p><span className="auri-brand-tag rounded-full border border-[#e9dfc7] bg-[#fbf8ef] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#9b7936]">AURUM LAB</span></div>
               <p className="mt-0.5 truncate text-[11px] text-[#87919a]">{interno ? "Tu asistente de gestión" : "Asistente virtual de AURUM LAB"}</p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="auri-header__controls flex shrink-0 items-center gap-1.5 sm:gap-2">
             {interno && <div className="hidden items-center gap-1 rounded-full bg-[#f7f5f0] p-1 sm:flex">
               <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition ${!modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790] hover:text-[#263746]"}`}>Gemini</button>
               <button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition ${modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790] hover:text-[#263746]"}`}>Directo</button>
@@ -237,7 +268,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             <div className={`auri-orb relative grid size-44 place-items-center rounded-full sm:size-52 ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : ""}`}>
               <div className="auri-orb__ring auri-orb__ring--outer" />
               <div className="auri-orb__ring auri-orb__ring--inner" />
-              <div className="auri-orb__core"><Sparkles className="size-12 text-white drop-shadow-md sm:size-14" /></div>
+              <div className="auri-orb__core"><AuriMascota estado={listening ? "listening" : loading ? "thinking" : speaking ? "speaking" : "idle"} /></div>
               <span className="auri-orb__glint" />
             </div>
             <p className="mt-7 text-lg font-semibold tracking-tight text-[#263746]">{voiceStatus}</p>
@@ -281,7 +312,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             <div className="space-y-4">
               {messages.map((message, index) => (
                 <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {message.role === "model" && <div className="mr-2 mt-1 grid size-7 shrink-0 place-items-center rounded-lg border border-[#e8d9b4] bg-[#fbf8ef] text-[#a98535]"><Bot className="size-4" /></div>}
+                  {message.role === "model" && <div className="mr-2 mt-1 grid size-10 shrink-0 place-items-center"><AuriMascota compact /></div>}
                   <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-[13px] leading-[1.7] ${message.role === "user" ? "rounded-br-md bg-[#263746] text-white shadow-sm" : "rounded-bl-md border border-[#eee8dc] bg-white text-[#485560] shadow-[0_2px_10px_rgba(38,55,70,.035)]"}`}>
                     {renderAuriMessage(message.text)}
                     {message.role === "model" && index > 0 && <button type="button" onClick={() => speak(textoParaVoz(message.text))} aria-label="Escuchar respuesta" className="ml-2 inline-flex align-middle text-[#a88742] hover:text-[#72551e]"><Volume2 className="size-3.5" /></button>}
@@ -310,6 +341,28 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         </>
       )}
       <style>{`
+        .auri-mascot { position:relative; display:inline-grid; width:68px; height:76px; place-items:center; isolation:isolate; animation:auri-float 3.2s ease-in-out infinite; }
+        .auri-mascot__art { position:relative; z-index:1; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 4px 5px rgba(93,75,38,.13)); }
+        .auri-mascot__aura { position:absolute; z-index:0; inset:16% 8%; border-radius:50%; background:radial-gradient(circle,rgba(220,193,125,.22),transparent 70%); filter:blur(5px); }
+        .auri-mascot--compact { width:43px; height:48px; }
+        .auri-mascot--thinking .auri-mascot__art { animation:auri-think 1.4s ease-in-out infinite; }
+        .auri-mascot--listening .auri-mascot__aura,.auri-mascot--speaking .auri-mascot__aura { animation:auri-aura 1s ease-in-out infinite; }
+        .auri-mascot--speaking .auri-mascot__body { animation:auri-speak .65s ease-in-out infinite; transform-origin:48px 55px; }
+        .auri-mascot--listening .auri-mascot__art { animation:auri-listen 1.1s ease-in-out infinite; }
+        .auri-mascot--thinking .auri-mascot__eyes { animation:auri-blink 1.5s ease-in-out infinite; }
+        .auri-shell { container-type:inline-size; }
+        .auri-header__brand { flex:1 1 auto; }
+        @container (max-width: 440px) {
+          .auri-brand-tag { display:none; }
+          .auri-header__brand { gap:6px; }
+          .auri-header__controls { gap:4px; }
+          .auri-header__controls button { padding-left:8px; padding-right:8px; }
+        }
+        @keyframes auri-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+        @keyframes auri-think { 0%,100% { transform:rotate(0); } 30% { transform:rotate(-4deg) translateY(-2px); } 70% { transform:rotate(4deg); } }
+        @keyframes auri-listen { 0%,100% { transform:rotate(0); } 35% { transform:rotate(-5deg); } 70% { transform:rotate(4deg); } }
+        @keyframes auri-aura { 50% { transform:scale(1.18); opacity:.5; } }
+        @keyframes auri-blink { 0%,43%,49%,100% { opacity:1; } 46% { opacity:.18; } }
         .auri-orb { isolation:isolate; background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.96) 0 38%,rgba(232,215,172,.44) 57%,rgba(199,166,91,.10) 70%,transparent 72%); }
         .auri-orb__ring { position:absolute; border-radius:9999px; border:1px solid rgba(183,148,73,.38); }
         .auri-orb__ring--outer { inset:0; box-shadow:0 0 35px rgba(190,158,91,.10),inset 0 0 25px rgba(190,158,91,.08); }
@@ -325,7 +378,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         @keyframes auri-rotate { to { transform:rotate(360deg); } }
         @keyframes auri-speak { 50% { transform:scale(1.07); box-shadow:0 12px 42px rgba(157,121,56,.42),inset 0 2px 8px rgba(255,255,255,.7); } }
         @keyframes auri-wave { to { transform:scaleY(2.2); } }
-        @media (prefers-reduced-motion:reduce) { .auri-orb *, .auri-wave-bar { animation:none!important; transition:none!important; } }
+        @media (prefers-reduced-motion:reduce) { .auri-mascot, .auri-mascot *, .auri-orb *, .auri-wave-bar { animation:none!important; transition:none!important; } }
       `}</style>
     </section>
   );
