@@ -82,7 +82,7 @@ function GuiaTecnicaPage() {
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo calcular el peso de una gema por sus medidas</h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">El peso de una gema se expresa habitualmente en quilates. Si no tienes una balanza a mano, sus dimensiones, forma y gravedad específica permiten obtener una estimación, siempre que se conozcan las limitaciones del método.</p>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:scroll-mt-24 prose-headings:tracking-tight prose-headings:font-bold prose-headings:text-[#17232d] prose-h2:mb-3 prose-h2:mt-12 prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-3 prose-p:leading-7 prose-li:leading-7 prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
             <h2>1. Qué significa el quilate en gemología</h2>
             <p>El quilate métrico (ct) es una unidad de masa, no una medida de tamaño. Un quilate equivale exactamente a 0,20 gramos o 200 miligramos, y se divide en 100 puntos. Por eso, dos piedras con el mismo diámetro pueden tener pesos diferentes si cambian su material o sus proporciones.</p>
             <p>Para convertir un peso conocido en gramos a quilates, multiplica los gramos por cinco. Para convertir quilates a gramos, multiplica los quilates por 0,20.</p>
@@ -458,15 +458,46 @@ function GuiaTecnicaPage() {
 
       <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
         <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Metalurgia y materiales</span></nav>
-        <header className="mt-6 border-b border-slate-200 pb-8">
-          <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Metalurgia y materiales · Guía técnica</p>
-          <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo calcular aleaciones de oro de 18K, 14K y 9K</h1>
-          <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Aprende a interpretar el quilataje, calcular la proporción de oro fino y determinar cuánto metal de liga corresponde a una masa teórica de aleación. Utiliza los ejemplos como base de cálculo y verifica siempre la composición real de los materiales de tu taller.</p>
+        <header className="relative mt-6 overflow-hidden rounded-[1.75rem] border border-[#eadca7] bg-gradient-to-br from-[#fff9e8] via-white to-[#f5f7fa] p-6 pb-8 sm:p-9">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 size-56 rounded-full border-[24px] border-[#f5e8bd]/45" />
+          <div className="relative">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-[#e8d7a4] bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Metalurgia y materiales</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Manual técnico · AURUM LAB</span>
+            </div>
+            <h1 className="mt-5 max-w-3xl text-3xl font-extrabold leading-[1.08] tracking-tight text-[#17232d] sm:text-5xl">Cálculo de aleaciones de oro: 18K, 14K y 9K</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Una guía práctica para interpretar la ley, calcular el contenido de oro fino y planificar ajustes de masa con balance metalúrgico. Incluye fórmulas, ejemplos de taller, controles y límites del cálculo.</p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Nivel: básico–intermedio</span>
+              <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Lectura: 8–10 min</span>
+              <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Unidades: g · ‰ · K</span>
+            </div>
+          </div>
         </header>
+
+        <section className="mt-7 grid gap-3 sm:grid-cols-3" aria-label="Resumen de leyes nominales">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Oro 18K</p><p className="mt-1 text-2xl font-extrabold text-[#17232d]">750‰</p><p className="text-xs text-slate-500">75,0 % de oro fino nominal</p></div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Oro 14K</p><p className="mt-1 text-2xl font-extrabold text-[#17232d]">583,3‰</p><p className="text-xs text-slate-500">58,33 % de oro fino teórico</p></div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Oro 9K</p><p className="mt-1 text-2xl font-extrabold text-[#17232d]">375‰</p><p className="text-xs text-slate-500">37,5 % de oro fino nominal</p></div>
+        </section>
+
+        <aside className="mt-7 rounded-2xl border border-slate-200 bg-[#f7f8fa] p-5 sm:p-6">
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">En esta guía</p>
+          <div className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#ley-oro">01 · Interpretar la ley del oro</a>
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#formula-oro-fino">02 · Fórmula de oro fino</a>
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#ejemplo-10g">03 · Ejemplo de 10 gramos</a>
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#balance-masa">04 · Balance de masa</a>
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#bajar-ley">05 · Reducir la ley</a>
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#subir-ley">06 · Elevar la ley</a>
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#mezclar-aleaciones">07 · Mezclar aleaciones</a>
+            <a className="font-medium text-slate-700 hover:text-[#876500]" href="#controles">08 · Controles y límites</a>
+          </div>
+        </aside>
 
         <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
           <section>
-            <h2>1. ¿Qué significa el quilataje del oro?</h2>
+            <h2 id="ley-oro">01. Interpretar la ley del oro</h2>
             <p>En una aleación de oro expresada en quilates, el valor indica cuántas partes de oro fino hay por cada 24 partes de masa. Por eso, el oro de 24K se toma como referencia teórica de pureza, mientras que las aleaciones de 18K, 14K y 9K contienen proporciones menores de oro y el resto corresponde a otros metales.</p>
             <ul>
               <li><strong>18K:</strong> 18 ÷ 24 = 0,750; equivale nominalmente a 75 % de oro fino.</li>
@@ -477,7 +508,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>2. Fórmula básica para calcular el oro fino</h2>
+            <h2 id="formula-oro-fino">02. Calcular el contenido de oro fino</h2>
             <p>Para una masa total teórica conocida, calcula el contenido de oro fino multiplicando la masa por la ley expresada como fracción:</p>
             <div className="my-5 rounded-xl border border-[#eadca7] bg-[#fff9df] p-5 text-center">
               <p className="text-lg font-bold text-[#604900]">Oro fino = masa total × (quilates ÷ 24)</p>
@@ -489,7 +520,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>3. Ejemplos para 10 gramos de aleación</h2>
+            <h2 id="ejemplo-10g">03. Ejemplo de cálculo para 10 gramos</h2>
             <p>Si el objetivo es preparar 10 g de aleación final y se parte de componentes puros con masa suficiente, las cantidades teóricas son:</p>
             <div className="my-5 overflow-x-auto rounded-xl border border-slate-200 bg-white">
               <table className="w-full min-w-[320px] border-collapse text-left text-sm">
@@ -505,7 +536,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>4. Ajustar una aleación existente mediante balance de masa</h2>
+            <h2 id="balance-masa">04. Ajustar una aleación mediante balance de masa</h2>
             <p>Para modificar la ley de un lote, registra la masa inicial y la finura de oro de cada material. La finura se expresa como fracción másica: por ejemplo, 18K nominal equivale a 18/24 = 0,750. El balance conserva la masa de oro fino antes y después de añadir material.</p>
             <div className="my-5 rounded-xl border border-[#eadca7] bg-[#fff9df] p-5 text-center">
               <p className="font-bold text-[#604900]">m inicial × f inicial + m añadido × f añadido = m final × f objetivo</p>
@@ -514,7 +545,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>5. Cómo bajar la ley añadiendo liga sin oro</h2>
+            <h2 id="bajar-ley">05. Reducir la ley añadiendo metal de liga</h2>
             <p>Cuando se añade una liga que no contiene oro fino (f añadido = 0), la masa de liga necesaria es:</p>
             <div className="my-5 rounded-xl border border-slate-200 bg-white p-5 text-center">
               <p className="font-bold">x = m inicial × (f inicial − f objetivo) ÷ f objetivo</p>
@@ -524,7 +555,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>6. Cómo subir la ley añadiendo oro fino</h2>
+            <h2 id="subir-ley">06. Elevar la ley añadiendo oro fino</h2>
             <p>Si se añade oro fino de 24K (f añadido = 1) para elevar la ley, la masa necesaria es:</p>
             <div className="my-5 rounded-xl border border-slate-200 bg-white p-5 text-center">
               <p className="font-bold">x = m inicial × (f objetivo − f inicial) ÷ (1 − f objetivo)</p>
@@ -534,7 +565,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>7. Cómo mezclar dos aleaciones de ley conocida</h2>
+            <h2 id="mezclar-aleaciones">07. Mezclar dos aleaciones de ley conocida</h2>
             <p>Para mezclar un lote inicial con una segunda aleación de finura conocida y alcanzar una ley intermedia:</p>
             <div className="my-5 rounded-xl border border-slate-200 bg-white p-5 text-center">
               <p className="font-bold">x = m inicial × (f objetivo − f inicial) ÷ (f añadido − f objetivo)</p>
@@ -544,7 +575,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>8. Límites y controles del cálculo</h2>
+            <h2 id="controles">08. Controles y límites del cálculo</h2>
             <ul>
               <li>Utiliza la ley ensayada o documentada de cada material siempre que esté disponible.</li>
               <li>No asumas que piezas usadas, soldaduras, recubrimientos o lotes mezclados tienen una ley uniforme.</li>
@@ -564,6 +595,19 @@ function GuiaTecnicaPage() {
               <li>Registra los pesos y verifica el resultado con los controles habituales del taller.</li>
             </ol>
             <p>Los cálculos no sustituyen los procedimientos de seguridad, el control de composición ni las especificaciones del proveedor de la aleación. Utiliza equipo de protección adecuado y sigue las prácticas de fundición de tu taller.</p>
+          </section>
+
+          <section className="not-prose mt-10 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Bibliografía y referencias</p>
+            <h2 className="mt-2 text-xl font-bold text-[#17232d]">Fuentes técnicas consultadas</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Esta guía es una explicación didáctica original de AURUM LAB. Las referencias siguientes respaldan los conceptos de finura, identificación de ley y composición; no sustituyen la norma aplicable ni el ensayo del lote.</p>
+            <ol className="mt-5 space-y-4 text-sm leading-6 text-slate-700">
+              <li><strong>Instituto Nacional de Calidad (INACAL, Perú).</strong> Recomendaciones sobre la identificación clara e indeleble de la ley del metal precioso en productos de joyería y orfebrería. <a className="font-semibold text-[#876500] underline" href="https://www.gob.pe/institucion/inacal/noticias/1162243-dia-de-la-madre-inacal-recomienda-elegir-regalos-con-criterios-de-seguridad-y-calidad" target="_blank" rel="noreferrer">Consultar publicación oficial</a>.</li>
+              <li><strong>World Gold Council.</strong> Gold Jewellery: Colour, Carat & Purity. Referencia internacional sobre quilataje y finuras habituales; explica, entre otros puntos, la diferencia entre 14K teórico (14/24) y la marca comercial 585‰ usada en muchos mercados. <a className="font-semibold text-[#876500] underline" href="https://www.gold.org/about-gold/about-gold-jewellery" target="_blank" rel="noreferrer">Consultar documento</a>.</li>
+              <li><strong>World Gold Council.</strong> Gold Hallmarks & Makers Marks. Contexto sobre marcas de finura, identificación y diferencias entre sistemas nacionales. <a className="font-semibold text-[#876500] underline" href="https://www.gold.org/about-gold/about-gold-jewellery/gold-hallmarks" target="_blank" rel="noreferrer">Consultar documento</a>.</li>
+              <li><strong>GOV.UK.</strong> Hallmarking: practical guidance – summary. Ejemplo regulatorio del Reino Unido sobre finura expresada en partes por mil y marcas de contraste. Se cita como referencia comparativa, no como legislación peruana. <a className="font-semibold text-[#876500] underline" href="https://www.gov.uk/government/publications/hallmarking-guidance-notes/hallmarking-is-the-law-guidance-summary" target="_blank" rel="noreferrer">Consultar guía oficial</a>.</li>
+            </ol>
+            <p className="mt-5 border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">Criterio editorial: los cálculos de masa de esta guía son balances teóricos. Para declarar o marcar la ley de una pieza, confirma la composición mediante documentación o ensayo apropiado y revisa los requisitos vigentes del mercado donde se comercializa.</p>
           </section>
 
           <section>
