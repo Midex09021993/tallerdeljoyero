@@ -103,18 +103,18 @@ function CursosDiseno3DPage() {
       <section className="relative overflow-hidden border-b border-[#e8e1d4] bg-white">
         <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-0 size-[28rem] rounded-full bg-[#fff2c5]/70 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 bottom-0 size-[26rem] rounded-full bg-[#e6edf4]/80 blur-3xl" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-7 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:py-24">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-9 sm:px-7 sm:py-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-9 lg:px-10 lg:py-10 xl:gap-12">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
-            <h1 className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-6xl">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– Nivel 1</span></h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-[#52677b] sm:text-lg">Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada.</p>
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</div>
-            <div className="mt-7 flex flex-wrap gap-3">
+            <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– Nivel 1</span></h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[#52677b] sm:text-lg sm:leading-7">Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada.</p>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</div>
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
               <button type="button" aria-expanded={programaAbierto} aria-controls="programa" onClick={() => setProgramaAbierto((abierto) => !abierto)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d9e0e6] bg-white px-5 text-sm font-semibold text-[#33485b] transition hover:border-[#c5a45a]">{programaAbierto ? "Ocultar programa" : "Ver las 10 sesiones"} <span aria-hidden="true" className={`transition-transform ${programaAbierto ? "rotate-180" : ""}`}>⌄</span></button>
             </div>
-            <div className="mt-3 flex items-end justify-between gap-2">
-              <p className="max-w-[22rem] pb-3 text-xs leading-5 text-[#738397]">Crear tu cuenta en AURUM LAB es gratuito. La matrícula del curso es independiente.</p>
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <p className="max-w-[19rem] pb-2 text-xs leading-5 text-[#738397]">Crear tu cuenta en AURUM LAB es gratuito. La matrícula del curso es independiente.</p>
               <img
                 src="/Robot%20futurista%20sonriente%20con%20pulgar%20arriba.png"
                 alt="AURI, asistente virtual de AURUM LAB"
@@ -122,21 +122,21 @@ function CursosDiseno3DPage() {
                 height="260"
                 loading="lazy"
                 decoding="async"
-                className="h-auto w-32 shrink-0 object-contain sm:w-44 lg:w-48"
+                className="h-auto w-24 shrink-0 object-contain sm:w-32 lg:w-36"
               />
             </div>
           </div>
           <div className="relative">
             <div className="absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-[#f8e8b5] via-white to-[#dfe8f0] blur-xl" />
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-[#e5dfd3] bg-white p-5 shadow-[0_24px_70px_rgba(31,45,58,.12)] sm:p-7">
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-[#e5dfd3] bg-white p-4 shadow-[0_20px_55px_rgba(31,45,58,.11)] sm:p-5 lg:p-6">
               <div className="flex items-center justify-between border-b border-[#edf0f2] pb-4">
                 <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#a17a2e]">Tu ruta de aprendizaje</p><p className="mt-1 text-sm font-semibold text-[#243547]">De los fundamentos al proyecto final</p></div>
                 <span className="grid size-11 place-items-center rounded-2xl bg-[#fff3cc] text-[#a17a2e]"><GraduationCap className="size-6" /></span>
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                {[{icon:Clock3,value:"20 horas",label:"académicas"},{icon:BookOpen,value:"10 sesiones",label:"de 2 horas"},{icon:Monitor,value:"Nivel inicial",label:"progresivo"},{icon:ShieldCheck,value:"Práctica",label:"con laboratorios"}].map((item)=><div key={item.value} className="rounded-xl border border-[#e9edf0] bg-[#fbfcfd] p-4"><item.icon className="size-4 text-[#b18a3e]" /><p className="mt-3 text-lg font-bold text-[#23374a]">{item.value}</p><p className="text-xs text-[#718196]">{item.label}</p></div>)}
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {[{icon:Clock3,value:"20 horas",label:"académicas"},{icon:BookOpen,value:"10 sesiones",label:"de 2 horas"},{icon:Monitor,value:"Nivel inicial",label:"progresivo"},{icon:ShieldCheck,value:"Práctica",label:"con laboratorios"}].map((item)=><div key={item.value} className="rounded-xl border border-[#e9edf0] bg-[#fbfcfd] p-3"><item.icon className="size-4 text-[#b18a3e]" /><p className="mt-2 text-base font-bold text-[#23374a]">{item.value}</p><p className="text-xs text-[#718196]">{item.label}</p></div>)}
               </div>
-              <div className="mt-5 rounded-xl border border-[#eadcb7] bg-[#fffaf0] p-4">
+              <div className="mt-4 rounded-xl border border-[#eadcb7] bg-[#fffaf0] p-3.5">
                 <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#98742f]">Al finalizar</p>
                 <p className="mt-1 text-sm leading-6 text-[#53677a]">Aprenderás desde la navegación básica hasta validar y exportar un modelo de joyería.</p>
               </div>
