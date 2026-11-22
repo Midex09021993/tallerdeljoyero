@@ -68,6 +68,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
   const llamarInterno = useServerFn(auriInterno);
   const llamarDirecto = useServerFn(auriDirecto);
   const [modoDirecto, setModoDirecto] = useState(false);
+  const [vista, setVista] = useState<"texto" | "voz">("texto");
   const [autorizado, setAutorizado] = useState(false);
   useEffect(() => { if (interno) setAutorizado(window.localStorage.getItem(CONSENT_KEY) === "1"); }, [interno]);
   const [messages, setMessages] = useState<Message[]>([interno ? WELCOME_INTERNO : WELCOME]);
@@ -180,9 +181,51 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
           <p className="text-xs text-[#7b858c]">Estoy aquí para ayudarte a crear, aprender y crecer</p>
         </div>
         {interno && <div className="flex items-center gap-1 rounded-lg border border-[#e8dfcc] bg-white p-1 text-[10px] font-semibold"><button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-md px-2 py-1 ${!modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Gemini</button><button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-md px-2 py-1 ${modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Sin IA</button></div>}
-        <Sparkles className="size-5 text-[#c2a252]" />
+        <div className="ml-auto flex items-center gap-1 rounded-full border border-[#e8dfcc] bg-white p-1 text-[10px] font-semibold">
+          <button type="button" onClick={() => setVista("texto")} aria-pressed={vista === "texto"} className={\`rounded-full px-2.5 py-1.5 transition \${vista === "texto" ? "bg-[#263746] text-white" : "text-[#69737b]"}\`}>Texto</button>
+          <button type="button" onClick={() => setVista("voz")} aria-pressed={vista === "voz"} className={\`flex items-center gap-1 rounded-full px-2.5 py-1.5 transition \${vista === "voz" ? "bg-[#263746] text-white" : "text-[#69737b]"}\`}><Mic className="size-3" /> Voz</button>
+        </div>
+        <Sparkles className="size-5 shrink-0 text-[#c2a252]" />
       </div>
 
+      {vista === "voz" ? (
+        <div className="relative flex min-h-[480px] flex-1 flex-col items-center justify-between overflow-hidden bg-[radial-gradient(ellipse_at_center,_#24394a_0%,_#152535_55%,_#101c29_100%)] px-5 py-8 text-white">
+          <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(#d9c58e 0.7px, transparent 0.7px)", backgroundSize: "22px 22px" }} />
+          <div className="relative z-10 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#d8bd78]">AURUM LAB · AURI</p>
+            <p className="mt-2 text-sm text-slate-300">{modoDirecto ? "Modo directo · Sin inteligencia artificial" : "Asistente inteligente"}</p>
+          </div>
+          <div className="relative z-10 flex flex-col items-center py-5">
+            <div className={\`relative grid size-52 place-items-center rounded-full border border-[#d7bd79]/50 bg-[#d8bd79]/[0.06] shadow-[0_0_70px_rgba(199,166,91,0.18)] \${listening || loading ? "animate-pulse" : ""}\`}>
+              <div className={\`absolute inset-3 rounded-full border border-[#d7bd79]/35 \${listening ? "animate-ping" : ""}\`} />
+              <div className="absolute inset-7 rounded-full border border-[#7ca6bd]/40" />
+              <div className="absolute inset-11 rounded-full bg-[radial-gradient(circle_at_35%_30%,_#f1dfaa_0%,_#b9954d_22%,_#344b5d_58%,_#162737_100%)] shadow-[0_0_38px_rgba(214,185,112,0.45)]" />
+              <Bot className="relative z-10 size-14 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.65)]" />
+              <span className="absolute right-7 top-8 size-2 rounded-full bg-[#8bd4e8] shadow-[0_0_12px_#8bd4e8]" />
+            </div>
+            <p className="mt-7 text-lg font-semibold tracking-wide">{listening ? "Te estoy escuchando…" : loading ? "Estoy procesando…" : "Hola, soy AURI"}</p>
+            <p className="mt-2 max-w-xs text-center text-sm leading-6 text-slate-300">{listening ? "Habla con claridad. Cuando termines, detén el micrófono." : loading ? "Estoy preparando tu respuesta." : "Toca el núcleo para hablar conmigo."}</p>
+            <button type="button" onClick={listening ? () => recognition.current?.stop() : startListening} disabled={!voiceSupported || loading} aria-label={listening ? "Detener escucha" : "Hablar con AURI"} className={\`mt-7 grid size-16 place-items-center rounded-full border shadow-[0_0_30px_rgba(199,166,91,0.25)] transition \${listening ? "border-red-300 bg-red-500 text-white" : "border-[#e2ca8b] bg-[#c7a65b] text-[#182838] hover:scale-105"} disabled:cursor-not-allowed disabled:opacity-40\`}>
+              {listening ? <MicOff className="size-7" /> : <Mic className="size-7" />}
+            </button>
+            {!voiceSupported && <p className="mt-3 text-xs text-amber-200">Este navegador no admite dictado por voz. Puedes usar la vista de texto.</p>}
+          </div>
+          <div className="relative z-10 w-full max-w-md">
+            {messages.length > 1 && (
+              <div className="mb-3 max-h-28 overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.07] p-3 text-sm leading-6 text-slate-100 backdrop-blur">
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[#d8bd78]">Última respuesta</p>
+                {messages[messages.length - 1]?.text}
+              </div>
+            )}
+            <form onSubmit={sendMessage} className="flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.08] p-2 backdrop-blur">
+              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="O escribe aquí…" aria-label="Mensaje para AURI" className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-slate-400" />
+              <button type="submit" disabled={!draft.trim() || loading} aria-label="Enviar mensaje" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c7a65b] text-[#182838] disabled:opacity-40"><Send className="size-4" /></button>
+            </form>
+            {error && <p role="alert" className="mt-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-100">{error}</p>}
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="flex-1 space-y-3 overflow-y-auto bg-[#fffefa] p-4">
         {messages.map((message, index) => (
           <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -225,6 +268,8 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
