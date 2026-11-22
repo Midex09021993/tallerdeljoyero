@@ -36,9 +36,15 @@ const QUICK_ACTIONS = [
   { label: "Buscar cliente", prompt: "Ayúdame a buscar un cliente.", icon: MessageCircle },
   { label: "Fichas técnicas", prompt: "Quiero consultar una ficha técnica de joyería.", icon: Gem },
 ] as const;
+const PUBLIC_QUICK_ACTIONS = [
+  { label: "AURUM RENDER", prompt: "Explícame qué es AURUM RENDER y dónde puedo conocerlo.", icon: Gem },
+  { label: "Herramientas", prompt: "¿Qué herramientas públicas ofrece Taller del Joyero?", icon: PackageSearch },
+  { label: "Planes y precios", prompt: "¿Qué planes ofrece AURUM LAB y dónde puedo ver sus precios?", icon: Activity },
+  { label: "Formación", prompt: "¿Qué recursos de formación y guías técnicas hay disponibles?", icon: MessageCircle },
+] as const;
 const CONSENT_KEY = "auri-interno-acceso";
 
-function AuriMascota({ estado = "idle", compact = false }: { estado?: "idle" | "thinking" | "listening" | "speaking"; compact?: boolean }) {
+export function AuriMascota({ estado = "idle", compact = false }: { estado?: "idle" | "thinking" | "listening" | "speaking"; compact?: boolean }) {
   return (
     <span className={`auri-mascot auri-mascot--${estado} ${compact ? "auri-mascot--compact" : ""}`} role="img" aria-label="Mascota AURI animada">
       <svg viewBox="0 0 96 104" aria-hidden="true" className="auri-mascot__art">
@@ -69,12 +75,22 @@ function AuriMascota({ estado = "idle", compact = false }: { estado?: "idle" | "
   );
 }
 
+const AURI_PUBLIC_LINKS = new Set([
+  "/herramientas-publicas", "/aurum-render-public", "/auth", "/guias",
+  "/comunidad", "/#planes", "/#como-funciona", "/#aurum-render", "/#contacto",
+]);
+
 function renderAuriInline(value: string) {
-  return value.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
-    part.startsWith("**") && part.endsWith("**")
-      ? <strong key={index} className="font-semibold text-[#263746]">{part.slice(2, -2)}</strong>
-      : part,
-  );
+  return value.split(/(\\*\\*[^*]+\\*\\*|\\[[^\\]]+\\]\\(\\/[^)]+\\))/g).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index} className="font-semibold text-[#263746]">{part.slice(2, -2)}</strong>;
+    }
+    const link = part.match(/^\\[([^\\]]+)\\]\\((\\/[^)]+)\\)$/);
+    if (link && AURI_PUBLIC_LINKS.has(link[2])) {
+      return <a key={index} href={link[2]} className="font-semibold text-[#96732e] underline decoration-[#d7c28c] underline-offset-4 hover:text-[#263746]">{link[1]}</a>;
+    }
+    return part;
+  });
 }
 
 function renderAuriMessage(value: string) {
@@ -299,13 +315,13 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
       ) : (
         <>
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#fffefa] px-4 py-4 sm:px-5">
-            {messages.length === 1 && interno && (
+            {messages.length === 1 && (
               <div className="mb-5 mt-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">CENTRO DE ASISTENCIA</p>
-                <h2 className="mt-2 font-display text-2xl leading-tight text-[#263746] sm:text-[27px]">¿Qué necesitas resolver hoy?</h2>
-                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">Consulta la información de tu taller en lenguaje natural.</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">{interno ? "CENTRO DE ASISTENCIA" : "GUÍA VIRTUAL DE TALLER DEL JOYERO"}</p>
+                <h2 className="mt-2 font-display text-2xl leading-tight text-[#263746] sm:text-[27px]">{interno ? "¿Qué necesitas resolver hoy?" : "¿Qué te gustaría conocer de AURUM LAB?"}</h2>
+                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">{interno ? "Consulta la información de tu taller en lenguaje natural." : "Te explico nuestras herramientas, render 3D, recursos de formación y planes. También puedo guiarte a cada sección de la web."}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {QUICK_ACTIONS.map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void sendMessage(undefined, prompt)} disabled={loading} className="group flex min-h-[66px] items-center gap-2.5 rounded-xl border border-[#e9e2d3] bg-white px-3 py-3 text-left shadow-[0_2px_8px_rgba(38,55,70,.025)] transition hover:-translate-y-0.5 hover:border-[#d5bf87] hover:shadow-md disabled:opacity-50"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#f8f3e7] text-[#a98535] transition group-hover:bg-[#f1e6c9]"><Icon className="size-4" /></span><span className="text-[11px] font-semibold leading-4 text-[#475663]">{label}</span></button>)}
+                  {(interno ? QUICK_ACTIONS : PUBLIC_QUICK_ACTIONS).map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void sendMessage(undefined, prompt)} disabled={loading} className="group flex min-h-[66px] items-center gap-2.5 rounded-xl border border-[#e9e2d3] bg-white px-3 py-3 text-left shadow-[0_2px_8px_rgba(38,55,70,.025)] transition hover:-translate-y-0.5 hover:border-[#d5bf87] hover:shadow-md disabled:opacity-50"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#f8f3e7] text-[#a98535] transition group-hover:bg-[#f1e6c9]"><Icon className="size-4" /></span><span className="text-[11px] font-semibold leading-4 text-[#475663]">{label}</span></button>)}
                 </div>
               </div>
             )}
