@@ -3,6 +3,7 @@ import { Bot, Mic, MicOff, Send, Volume2, VolumeX, Sparkles } from "lucide-react
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { auriInterno } from "@/lib/auri/auri-interno.functions";
+import { auriDirecto } from "@/lib/auri/auri-directo.functions";
 
 type Message = { role: "user" | "model"; text: string };
 type SpeechRecognitionResultLike = { 0: { transcript: string }; isFinal: boolean };
@@ -28,7 +29,7 @@ const WELCOME: Message = {
 
 const WELCOME_INTERNO: Message = {
   role: "model",
-  text: "Hola, soy AURI. Puedo consultar información de tu taller y ayudarte a registrar clientes nuevos. Antes de guardar, siempre te mostraré la ficha y pediré tu confirmación.",
+  text: "Hola, soy AURI. Puedo consultar tu taller con Gemini o usar AURI Directo, que funciona sin IA y solo realiza consultas de lectura.",
 };
 const CONSENT_KEY = "auri-interno-acceso";
 function renderAuriInline(value: string) {
@@ -65,6 +66,8 @@ function textoParaVoz(value: string) {
 export function AuriChat({ onContact, modo = "publico" }: { onContact: () => void; modo?: "publico" | "interno" }) {
   const interno = modo === "interno";
   const llamarInterno = useServerFn(auriInterno);
+  const llamarDirecto = useServerFn(auriDirecto);
+  const [modoDirecto, setModoDirecto] = useState(false);
   const [autorizado, setAutorizado] = useState(false);
   useEffect(() => { if (interno) setAutorizado(window.localStorage.getItem(CONSENT_KEY) === "1"); }, [interno]);
   const [messages, setMessages] = useState<Message[]>([interno ? WELCOME_INTERNO : WELCOME]);
@@ -129,7 +132,9 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
     setLoading(true);
     try {
       if (interno) {
-        const r = await llamarInterno({ data: { message: question, history: nextMessages.slice(-9, -1) } });
+        const r = modoDirecto
+          ? await llamarDirecto({ data: { message: question } })
+          : await llamarInterno({ data: { message: question, history: nextMessages.slice(-9, -1) } });
         if (r.error || !r.reply) throw new Error(r.error || "AURI no pudo responder en este momento.");
         setMessages((current) => [...current, { role: "model", text: r.reply }]);
         speak(textoParaVoz(r.reply));
@@ -157,7 +162,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
     return (
       <div className="flex min-h-[320px] flex-col justify-center gap-4 rounded-2xl border border-[#d9c58e]/50 bg-white p-6 text-[#394653]">
         <p className="font-semibold text-[#293744]">Activar AURI con datos del taller</p>
-        <p className="text-sm leading-6">AURI consultará pedidos, producción, contratos y clientes que tú ya puedes ver con tu cuenta. Solo lectura; no incluye costes, teléfonos, correos ni notas internas. Las respuestas se redactan con Gemini usando solo esos datos mínimos.</p>
+        <p className="text-sm leading-6">AURI consultará únicamente la información que tu cuenta ya puede ver. El modo Gemini usa el proveedor de IA; AURI Directo no usa IA y ejecuta consultas predeterminadas de solo lectura. Ninguno de los modos puede modificar pedidos desde este asistente.</p>
         <button type="button" onClick={() => { window.localStorage.setItem(CONSENT_KEY, "1"); setAutorizado(true); }} className="self-start rounded-xl bg-[#c7a65b] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#ad8b40]">Autorizar acceso</button>
       </div>
     );
@@ -174,6 +179,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
           <p className="font-semibold text-[#293744]">AURI <span className="ml-1 text-[10px] font-medium uppercase tracking-wider text-[#a4843d]">Asistente virtual</span></p>
           <p className="text-xs text-[#7b858c]">Estoy aquí para ayudarte a crear, aprender y crecer</p>
         </div>
+        {interno && <div className="flex items-center gap-1 rounded-lg border border-[#e8dfcc] bg-white p-1 text-[10px] font-semibold"><button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-md px-2 py-1 ${!modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Gemini</button><button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-md px-2 py-1 ${modoDirecto ? "bg-[#263746] text-white" : "text-[#69737b]"}`}>Sin IA</button></div>}
         <Sparkles className="size-5 text-[#c2a252]" />
       </div>
 
@@ -211,7 +217,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
           </button>
         </form>
         <div className="mt-2 flex items-center justify-between gap-2 px-1">
-          <p className="text-[10px] text-[#969b9e]">{interno ? "Datos según tus permisos. Solo lectura." : "AURI usa Gemini para responder. No compartas datos privados."}</p>
+          <p className="text-[10px] text-[#969b9e]">{interno ? (modoDirecto ? "AURI Directo · Sin IA · Solo lectura." : "AURI Gemini · Datos según tus permisos.") : "AURI usa Gemini para responder. No compartas datos privados."}</p>
           {interno ? (
             <button type="button" onClick={() => { window.localStorage.removeItem(CONSENT_KEY); setAutorizado(false); }} className="shrink-0 text-[10px] font-semibold text-[#96732e] underline underline-offset-2">Desactivar acceso a datos</button>
           ) : (
