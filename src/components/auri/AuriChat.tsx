@@ -219,7 +219,27 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
       setMessages((current) => [...current, { role: "model", text: data.reply }]);
       speak(textoParaVoz(data.reply));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo conectar con AURI. Inténtalo nuevamente.");
+      if (!interno && err && typeof err === "object" && "context" in err) {
+        const context = (err as { context?: unknown }).context;
+        if (context instanceof Response) {
+          const payload = await context.clone().json().catch(() => null) as { error?: unknown } | null;
+          if (typeof payload?.error === "string" && payload.error.trim()) {
+            setError(payload.error.trim().slice(0, 240));
+          } else if (context.status === 429) {
+            setError("AURI recibió demasiadas consultas seguidas. Espera unos minutos e inténtalo nuevamente.");
+          } else if (context.status >= 500) {
+            setError("AURI está temporalmente sin conexión. Inténtalo nuevamente en unos minutos o utiliza Contactar.");
+          } else {
+            setError("No se pudo procesar tu consulta. Revisa el mensaje e inténtalo nuevamente.");
+          }
+        } else {
+          setError("No se pudo conectar con AURI. Comprueba tu conexión e inténtalo nuevamente.");
+        }
+      } else if (interno) {
+        setError(err instanceof Error ? err.message : "No se pudo conectar con AURI. Inténtalo nuevamente.");
+      } else {
+        setError("No se pudo conectar con AURI. Comprueba tu conexión e inténtalo nuevamente.");
+      }
     } finally {
       setLoading(false);
     }
