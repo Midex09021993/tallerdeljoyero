@@ -51,7 +51,7 @@ export function extraerBusqueda(message: string, tipo: "cliente" | "contrato" | 
   const patterns = tipo === "cliente"
     ? [
         /\b(?:buscar|buscame|encuentra|localiza)\s+(?:un\s+)?cliente(?:s)?(?:\s+(?:llamado|llamada|de nombre|por nombre))?\s+(.+)$/i,
-        /\bcliente(?:s)?\s+(?:llamado|llamada|de nombre)?\s+(.+)$/i,
+        /\bcliente(?:s)?\s+(?:de|llamado|llamada|de nombre|por nombre)?\s+(.+)$/i,
       ]
     : tipo === "contrato"
       ? [
