@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, BookOpen, CheckCircle2, Clock3, Gem, GraduationCap,
@@ -80,6 +80,22 @@ const complementos = [
 
 function CursosDiseno3DPage() {
   const [programaAbierto, setProgramaAbierto] = useState(false);
+  const [nivelEscrito, setNivelEscrito] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setNivelEscrito(7);
+      return;
+    }
+    setNivelEscrito(0);
+    let letras = 0;
+    const escritura = window.setInterval(() => {
+      letras += 1;
+      setNivelEscrito(letras);
+      if (letras >= 7) window.clearInterval(escritura);
+    }, 145);
+    return () => window.clearInterval(escritura);
+  }, []);
 
   return (
     <>
@@ -106,36 +122,8 @@ function CursosDiseno3DPage() {
         <div className="relative mx-auto grid max-w-7xl items-start gap-8 px-4 py-9 sm:px-7 sm:py-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-9 lg:px-10 lg:py-10 xl:gap-12">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
-            <style>{`
-              @keyframes aurum-typewriter-write {
-                from { width: 0; }
-                to { width: 7ch; }
-              }
-              @keyframes aurum-typewriter-cursor {
-                0%, 48% { border-color: #b58b37; }
-                49%, 100% { border-color: transparent; }
-              }
-              .aurum-typewriter {
-                display: inline-block;
-                width: 0;
-                overflow: hidden;
-                white-space: nowrap;
-                vertical-align: bottom;
-                border-right: 2px solid #b58b37;
-                padding-right: .08em;
-                animation: aurum-typewriter-write 1.15s steps(7, end) .25s forwards,
-                           aurum-typewriter-cursor 1.8s step-end .25s forwards;
-              }
-              @media (prefers-reduced-motion: reduce) {
-                .aurum-typewriter {
-                  width: auto;
-                  overflow: visible;
-                  border-right: 0;
-                  animation: none;
-                }
-              }
-            `}</style>
-            <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– <span className="aurum-typewriter">Nivel 1</span></span></h1>
+            
+            <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– <span className="inline-block whitespace-nowrap border-r-2 border-[#b58b37] pr-[.08em] align-bottom" style={{ borderRightColor: nivelEscrito >= 7 ? "transparent" : "#b58b37" }}>{ "Nivel 1".slice(0, nivelEscrito) }<span className="sr-only">Nivel 1</span></span></span></h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#52677b] sm:text-lg sm:leading-7">Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada.</p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</div>
             <div className="mt-5 flex flex-wrap gap-3">
