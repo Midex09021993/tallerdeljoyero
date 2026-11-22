@@ -195,6 +195,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
   const [error, setError] = useState("");
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [voiceBeat, setVoiceBeat] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceSupported, setVoiceSupported] = useState(false);
@@ -233,9 +234,10 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "es-PE";
     utterance.rate = 1;
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
+    utterance.onstart = () => { setSpeaking(true); setVoiceBeat(true); };
+    utterance.onboundary = () => setVoiceBeat((current) => !current);
+    utterance.onend = () => { setSpeaking(false); setVoiceBeat(false); };
+    utterance.onerror = () => { setSpeaking(false); setVoiceBeat(false); };
     window.speechSynthesis.speak(utterance);
   }
 
@@ -374,7 +376,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
       </header>
 
       {vista === "voz" ? (
-        <div className={`auri-voice relative flex min-h-0 flex-1 flex-col items-center justify-between overflow-y-auto px-5 py-5 pb-[max(24px,env(safe-area-inset-bottom))] sm:py-7 ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : "is-idle"}`}>
+        <div className={`auri-voice relative flex min-h-0 flex-1 flex-col items-center justify-between overflow-hidden px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] sm:px-5 sm:py-7 ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : "is-idle"}`}>
           <div className="auri-voice__ambient" aria-hidden="true"><span /><span /><span /></div>
           <div className="relative z-10 flex w-full max-w-md items-center justify-between">
             <div>
@@ -383,8 +385,8 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
             </div>
             <span className="auri-voice__status"><i />{listening ? "ESCUCHANDO" : loading ? "PROCESANDO" : speaking ? "HABLANDO" : "EN ESPERA"}</span>
           </div>
-          <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center py-5">
-            <div className={`auri-voice__reactor relative grid place-items-center ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : ""}`}>
+          <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center py-2 sm:py-5">
+            <div className={`auri-voice__reactor relative grid place-items-center ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : ""}`} data-voice-beat={voiceBeat ? "on" : "off"}>
               <span className="auri-voice__soundwave auri-voice__soundwave--one" />
               <span className="auri-voice__soundwave auri-voice__soundwave--two" />
               <span className="auri-voice__soundwave auri-voice__soundwave--three" />
@@ -408,6 +410,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
                 if (speaking) {
                   window.speechSynthesis?.cancel();
                   setSpeaking(false);
+                  setVoiceBeat(false);
                 }
                 startListening();
               }}
@@ -465,7 +468,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
             <div className="mt-2 flex items-center justify-between gap-2 px-1">
               <p className="min-w-0 truncate text-[9px] text-[#9aa1a5]">{interno ? (modoDirecto ? "AURI Directo · Consultas de solo lectura" : "Gemini · Datos según tus permisos") : "No compartas información privada."}</p>
               <div className="flex shrink-0 items-center gap-3">
-                <button type="button" onClick={() => { setVoiceEnabled((value) => !value); window.speechSynthesis?.cancel(); setSpeaking(false); }} aria-label={voiceEnabled ? "Silenciar respuestas" : "Activar voz"} className="text-[#9b7a36] hover:text-[#72551e]">{voiceEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}</button>
+                <button type="button" onClick={() => { setVoiceEnabled((value) => !value); window.speechSynthesis?.cancel(); setSpeaking(false); setVoiceBeat(false); }} aria-label={voiceEnabled ? "Silenciar respuestas" : "Activar voz"} className="text-[#9b7a36] hover:text-[#72551e]">{voiceEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}</button>
                 {interno ? <button type="button" onClick={() => { window.localStorage.removeItem(CONSENT_KEY); setAutorizado(false); }} className="text-[9px] font-semibold text-[#96732e] underline underline-offset-2">Desactivar acceso</button> : <button type="button" onClick={onContact} className="text-[9px] font-semibold text-[#96732e] underline underline-offset-2">Contactar</button>}
               </div>
             </div>
@@ -506,7 +509,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
         .auri-voice.is-listening .auri-voice__status i { background:#4ee7f4; box-shadow:0 0 12px #4ee7f4; }
         .auri-voice.is-thinking .auri-voice__status i { background:#e4bc68; box-shadow:0 0 12px #e4bc68; }
         .auri-voice.is-speaking .auri-voice__status i { background:#4ee7f4; box-shadow:0 0 12px #4ee7f4; }
-        .auri-voice__reactor { width:min(68vw,280px); aspect-ratio:1; }
+        .auri-voice__reactor { width:min(68vw,280px,30dvh); max-width:min(280px,30dvh); aspect-ratio:1; flex-shrink:0; }
         .auri-voice__orbit { position:absolute; inset:8%; border:1px solid rgba(203,174,105,.38); border-radius:50%; box-shadow:inset 0 0 28px rgba(192,162,92,.06),0 0 24px rgba(85,177,202,.05); }
         .auri-voice__orbit--two { inset:17%; border-color:rgba(108,197,220,.30); transform:rotateX(62deg) rotate(-22deg); }
         .auri-voice__orbit--three { inset:0; border-color:rgba(199,169,103,.25); border-style:dashed; animation:auri-voice-orbit 28s linear infinite; }
@@ -520,7 +523,9 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
         .auri-voice__reactor.is-listening .auri-voice__orbit--one,.auri-voice.is-listening .auri-voice__orbit--one { animation:auri-voice-pulse 1.2s ease-in-out infinite; border-color:rgba(76,226,244,.8); box-shadow:0 0 28px rgba(76,226,244,.16); }
         .auri-voice__reactor.is-listening .auri-voice__orbit--two { animation:auri-voice-orbit 5s linear infinite; border-color:rgba(76,226,244,.6); }
         .auri-voice__reactor.is-thinking .auri-voice__orbit--three { animation:auri-voice-orbit 3s linear infinite; border-color:rgba(223,186,102,.72); }
-        .auri-voice__reactor.is-speaking .auri-voice__core { animation:auri-voice-speak 1s ease-in-out infinite; }
+        .auri-voice__core { transition:transform 180ms ease,box-shadow 180ms ease,filter 180ms ease; }
+        .auri-voice__reactor.is-speaking[data-voice-beat="on"] .auri-voice__core { transform:scale(1.075); box-shadow:0 0 0 16px rgba(206,173,102,.09),0 0 72px rgba(74,201,224,.42),inset 0 2px 12px rgba(255,255,255,.72); filter:brightness(1.08); }
+        .auri-voice__reactor.is-speaking[data-voice-beat="off"] .auri-voice__core { transform:scale(.985); box-shadow:0 0 0 8px rgba(206,173,102,.05),0 0 34px rgba(74,201,224,.18),inset 0 2px 12px rgba(255,255,255,.5); }
         .auri-voice__mic { color:#10283a; border:1px solid rgba(246,220,160,.9); background:linear-gradient(145deg,#f2d994,#bd984b); box-shadow:0 0 0 8px rgba(205,171,99,.10),0 10px 35px rgba(0,0,0,.28),inset 0 1px 2px rgba(255,255,255,.7); }
         .auri-voice__mic:hover { box-shadow:0 0 0 11px rgba(205,171,99,.12),0 12px 38px rgba(0,0,0,.3); }
         .auri-voice__mic.is-active { color:#092331; border-color:#71f1fa; background:linear-gradient(145deg,#75f2fa,#22a9c1); box-shadow:0 0 0 9px rgba(67,222,240,.12),0 0 42px rgba(67,222,240,.4); transform:scale(1.06); }
@@ -528,7 +533,10 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
         .auri-voice__soundwave { position:absolute; z-index:1; inset:17%; border:1px solid rgba(91,220,239,.0); border-radius:50%; opacity:0; transform:scale(.72); pointer-events:none; }
         .auri-voice__soundwave--two { inset:10%; }
         .auri-voice__soundwave--three { inset:3%; }
-        .auri-voice__reactor.is-listening .auri-voice__soundwave,.auri-voice__reactor.is-speaking .auri-voice__soundwave { border-color:rgba(91,220,239,.65); animation:auri-voice-ripple 1.65s ease-out infinite; }
+        .auri-voice__reactor.is-listening .auri-voice__soundwave { border-color:rgba(91,220,239,.65); animation:auri-voice-ripple 1.65s ease-out infinite; }
+        .auri-voice__reactor.is-speaking .auri-voice__soundwave { border-color:rgba(91,220,239,.7); opacity:.28; transform:scale(.88); transition:opacity 180ms ease,transform 180ms ease,box-shadow 180ms ease; box-shadow:0 0 22px rgba(91,220,239,.12); }
+        .auri-voice__reactor.is-speaking[data-voice-beat="on"] .auri-voice__soundwave { opacity:.95; transform:scale(1.18); box-shadow:0 0 30px rgba(91,220,239,.28); }
+        .auri-voice__reactor.is-speaking[data-voice-beat="off"] .auri-voice__soundwave { opacity:.3; transform:scale(.9); }
         .auri-voice__reactor.is-listening .auri-voice__soundwave--two,.auri-voice__reactor.is-speaking .auri-voice__soundwave--two { animation-delay:.55s; }
         .auri-voice__reactor.is-listening .auri-voice__soundwave--three,.auri-voice__reactor.is-speaking .auri-voice__soundwave--three { animation-delay:1.1s; }
         .auri-voice__reactor.is-thinking .auri-voice__soundwave { border-color:rgba(215,183,101,.5); opacity:.5; transform:scale(1); animation:auri-voice-pulse 1.8s ease-in-out infinite; }
@@ -551,6 +559,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
         @keyframes auri-rotate { to { transform:rotate(360deg); } }
         @keyframes auri-speak { 50% { transform:scale(1.07); box-shadow:0 12px 42px rgba(157,121,56,.42),inset 0 2px 8px rgba(255,255,255,.7); } }
         @keyframes auri-wave { to { transform:scaleY(2.2); } }
+        @media (max-width:640px) and (max-height:720px) { .auri-voice__reactor { width:min(58vw,220px,30dvh); max-width:min(220px,30dvh); } .auri-voice__reactor + p { margin-top:.65rem; } .auri-voice__reactor + p + p { margin-top:.2rem; } .auri-voice__reactor + p + p + button { margin-top:.8rem; } .auri-voice__reactor + p + p + button + p { margin-top:.45rem; } }
         @media (prefers-reduced-motion:reduce) { .auri-mascot, .auri-mascot *, .auri-orb *, .auri-wave-bar, .auri-voice *, .auri-voice__ambient span { animation:none!important; transition:none!important; } }
       `}</style>
     </section>
