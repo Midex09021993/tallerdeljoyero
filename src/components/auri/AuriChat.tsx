@@ -294,21 +294,27 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
       </header>
 
       {vista === "voz" ? (
-        <div className="relative flex min-h-0 flex-1 flex-col items-center justify-between overflow-y-auto bg-[radial-gradient(ellipse_at_50%_38%,#fffdf7_0%,#f8f4e9_48%,#f0eadb_100%)] px-5 py-6 pb-[max(24px,env(safe-area-inset-bottom))] sm:py-8">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d7bd79] to-transparent" />
-          <div className="relative z-10 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#a98535]">AURI · VOICE EXPERIENCE</p>
-            <p className="mt-2 text-sm text-[#7c8790]">{modoDirecto && interno ? "Modo directo · Sin IA" : "Conversación por voz"}</p>
-          </div>
-          <div className="relative z-10 flex w-full flex-col items-center py-4">
-            <div className={`auri-orb relative grid size-44 place-items-center rounded-full sm:size-52 ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : ""}`}>
-              <div className="auri-orb__ring auri-orb__ring--outer" />
-              <div className="auri-orb__ring auri-orb__ring--inner" />
-              <div className="auri-orb__core"><AuriMascota estado={listening ? "listening" : loading ? "thinking" : speaking ? "speaking" : "idle"} /></div>
-              <span className="auri-orb__glint" />
+        <div className={`auri-voice relative flex min-h-0 flex-1 flex-col items-center justify-between overflow-y-auto px-5 py-5 pb-[max(24px,env(safe-area-inset-bottom))] sm:py-7 ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : "is-idle"}`}>
+          <div className="auri-voice__ambient" aria-hidden="true"><span /><span /><span /></div>
+          <div className="relative z-10 flex w-full max-w-md items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#d7b765]">AURI · VOICE INTELLIGENCE</p>
+              <p className="mt-1.5 text-xs text-[#aab9c8]">{modoDirecto && interno ? "Modo directo · Sin IA" : "Interfaz de conversación inteligente"}</p>
             </div>
-            <p className="mt-7 text-lg font-semibold tracking-tight text-[#263746]">{voiceStatus}</p>
-            <p className="mt-2 max-w-xs text-center text-sm leading-6 text-[#7b858c]">{voiceHint}</p>
+            <span className="auri-voice__status"><i />{listening ? "ESCUCHANDO" : loading ? "PROCESANDO" : speaking ? "HABLANDO" : "EN ESPERA"}</span>
+          </div>
+          <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center py-5">
+            <div className={`auri-voice__reactor relative grid place-items-center ${listening ? "is-listening" : loading ? "is-thinking" : speaking ? "is-speaking" : ""}`}>
+              <span className="auri-voice__orbit auri-voice__orbit--one" />
+              <span className="auri-voice__orbit auri-voice__orbit--two" />
+              <span className="auri-voice__orbit auri-voice__orbit--three" />
+              <span className="auri-voice__particle auri-voice__particle--one" />
+              <span className="auri-voice__particle auri-voice__particle--two" />
+              <span className="auri-voice__particle auri-voice__particle--three" />
+              <div className="auri-voice__core"><span className="auri-voice__core-glow" /><AuriMascota estado={listening ? "listening" : loading ? "thinking" : speaking ? "speaking" : "idle"} /></div>
+            </div>
+            <p className="mt-7 text-center text-xl font-semibold tracking-tight text-white">{voiceStatus}</p>
+            <p className="mt-2 max-w-xs text-center text-sm leading-6 text-[#aab9c8]">{voiceHint}</p>
             <button type="button"
               onPointerDown={(event) => { event.preventDefault(); if (!voiceSupported || loading || speaking || listening) return; event.currentTarget.setPointerCapture(event.pointerId); startListening(); }}
               onPointerUp={(event) => { event.preventDefault(); if (listening) recognition.current?.stop(); }}
@@ -316,20 +322,21 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
               onContextMenu={(event) => event.preventDefault()}
               disabled={!voiceSupported || loading || speaking}
               aria-label="Mantén presionado para hablar con AURI" aria-pressed={listening}
-              className={`mt-7 grid size-[68px] touch-none select-none place-items-center rounded-full border transition duration-200 ${listening ? "scale-105 border-[#b84e45] bg-[#b84e45] text-white shadow-[0_8px_28px_rgba(184,78,69,.24)]" : "border-[#d6bd7e] bg-gradient-to-b from-[#e5cf96] to-[#c4a45b] text-[#263746] shadow-[0_8px_28px_rgba(173,138,61,.24)] hover:-translate-y-0.5"} disabled:cursor-not-allowed disabled:opacity-45`}>
+              className={`auri-voice__mic mt-7 grid size-[76px] touch-none select-none place-items-center rounded-full border transition duration-200 ${listening ? "is-active" : ""} disabled:cursor-not-allowed disabled:opacity-45`}>
               {listening ? <MicOff className="size-7" /> : <Mic className="size-7" />}
             </button>
-            <p className="mt-3 text-[10px] font-medium text-[#92999d]">{listening ? "SUELTA PARA ENVIAR" : "MANTÉN PRESIONADO PARA HABLAR"}</p>
-            {!voiceSupported && <p className="mt-3 text-xs text-[#9a6b35]">Este navegador no admite dictado por voz. Puedes conversar desde la vista de texto.</p>}
-            {speaking && <button type="button" onClick={() => { window.speechSynthesis?.cancel(); setSpeaking(false); }} className="mt-4 rounded-full border border-[#ded4bc] bg-white/80 px-4 py-2 text-xs font-semibold text-[#80662e] hover:bg-white">Interrumpir respuesta</button>}
+            <p className="mt-3 text-[10px] font-semibold tracking-[0.16em] text-[#d5c18f]">{listening ? "SUELTA PARA ENVIAR" : "MANTÉN PRESIONADO PARA HABLAR"}</p>
+            {!voiceSupported && <p className="mt-3 rounded-lg border border-[#806c42] bg-[#24394b] px-3 py-2 text-xs text-[#f0dcae]">Este navegador no admite dictado por voz. Puedes conversar desde la vista de texto.</p>}
+            {speaking && <button type="button" onClick={() => { window.speechSynthesis?.cancel(); setSpeaking(false); }} className="mt-4 rounded-full border border-[#718394] bg-[#203447] px-4 py-2 text-xs font-semibold text-[#e6d5a9] hover:bg-[#2a4359]">Interrumpir respuesta</button>}
           </div>
           <div className="relative z-10 w-full max-w-md text-center">
-            {voiceTranscript && <p className="mx-auto mb-3 max-w-sm rounded-xl border border-[#e6dcc5] bg-white/75 px-4 py-2.5 text-center text-xs leading-5 text-[#53616b]">“{voiceTranscript}”</p>}
-            {messages.length > 1 && latestAssistantMessage && <div className="mx-auto mb-4 max-h-24 w-full max-w-sm overflow-y-auto rounded-xl border border-[#e6dcc5] bg-white/80 px-4 py-3 text-left text-xs leading-5 text-[#53616b]"><p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#a98535]">Respuesta de AURI</p>{latestAssistantMessage.text}</div>}
-            <div className="mx-auto flex max-w-[210px] items-center justify-center gap-1.5" aria-hidden="true">
-              {Array.from({ length: 19 }, (_, i) => <span key={i} className={`auri-wave-bar ${listening ? "active" : speaking ? "speaking" : ""}`} style={{ animationDelay: `${i * 45}ms`, height: `${8 + Math.abs(9 - i) % 5 * 3}px` }} />)}
+            {voiceTranscript && <p className="auri-voice__transcript mx-auto mb-3 max-w-sm rounded-xl px-4 py-2.5 text-center text-xs leading-5">“{voiceTranscript}”</p>}
+            {messages.length > 1 && latestAssistantMessage && <div className="auri-voice__reply mx-auto mb-4 max-h-24 w-full max-w-sm overflow-y-auto rounded-xl px-4 py-3 text-left text-xs leading-5"><p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#d7b765]">Respuesta de AURI</p>{latestAssistantMessage.text}</div>}
+            <div className="auri-voice__wave mx-auto flex max-w-[270px] items-center justify-center gap-1.5" aria-hidden="true">
+              {Array.from({ length: 31 }, (_, i) => <span key={i} className={`auri-voice__wavebar ${listening ? "active" : speaking ? "speaking" : loading ? "thinking" : ""}`} style={{ animationDelay: `${i * 32}ms`, "--bar-height": `${8 + (Math.abs(15 - i) % 7) * 3}px` } as React.CSSProperties} />)}
             </div>
-            {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
+            <p className="mt-2 text-[9px] font-medium uppercase tracking-[0.2em] text-[#71869a]">AURUM LAB · VOICE SYSTEM</p>
+            {error && <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-950/40 px-3 py-2 text-xs text-red-100">{error}</p>}
           </div>
         </div>
       ) : (
@@ -399,6 +406,44 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         @keyframes auri-listen { 0%,100% { transform:rotate(0); } 35% { transform:rotate(-5deg); } 70% { transform:rotate(4deg); } }
         @keyframes auri-aura { 50% { transform:scale(1.18); opacity:.5; } }
         @keyframes auri-blink { 0%,43%,49%,100% { opacity:1; } 46% { opacity:.18; } }
+        .auri-voice { isolation:isolate; color:#fff; background:radial-gradient(ellipse at 50% 42%,#213d53 0%,#142b3d 46%,#0b1723 100%); }
+        .auri-voice::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.22; background-image:linear-gradient(rgba(146,178,199,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(146,178,199,.10) 1px,transparent 1px); background-size:42px 42px; mask-image:radial-gradient(ellipse at center,#000,transparent 78%); }
+        .auri-voice__ambient { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+        .auri-voice__ambient span { position:absolute; width:340px; height:340px; border:1px solid rgba(194,165,99,.09); border-radius:50%; left:50%; top:42%; transform:translate(-50%,-50%); }
+        .auri-voice__ambient span:nth-child(2) { width:480px; height:480px; border-color:rgba(99,190,214,.07); }
+        .auri-voice__ambient span:nth-child(3) { width:620px; height:620px; border-color:rgba(194,165,99,.05); }
+        .auri-voice__status { display:inline-flex; align-items:center; gap:7px; border:1px solid rgba(190,170,122,.24); border-radius:999px; padding:7px 10px; color:#d9c28d; background:rgba(18,38,54,.72); font-size:9px; font-weight:700; letter-spacing:.12em; white-space:nowrap; }
+        .auri-voice__status i { width:6px; height:6px; border-radius:50%; background:#75c7a5; box-shadow:0 0 10px rgba(117,199,165,.8); }
+        .auri-voice.is-listening .auri-voice__status i { background:#4ee7f4; box-shadow:0 0 12px #4ee7f4; }
+        .auri-voice.is-thinking .auri-voice__status i { background:#e4bc68; box-shadow:0 0 12px #e4bc68; }
+        .auri-voice.is-speaking .auri-voice__status i { background:#4ee7f4; box-shadow:0 0 12px #4ee7f4; }
+        .auri-voice__reactor { width:min(68vw,280px); aspect-ratio:1; }
+        .auri-voice__orbit { position:absolute; inset:8%; border:1px solid rgba(203,174,105,.38); border-radius:50%; box-shadow:inset 0 0 28px rgba(192,162,92,.06),0 0 24px rgba(85,177,202,.05); }
+        .auri-voice__orbit--two { inset:17%; border-color:rgba(108,197,220,.30); transform:rotateX(62deg) rotate(-22deg); }
+        .auri-voice__orbit--three { inset:0; border-color:rgba(199,169,103,.25); border-style:dashed; animation:auri-voice-orbit 28s linear infinite; }
+        .auri-voice__particle { position:absolute; z-index:3; width:7px; height:7px; border-radius:50%; background:#65e6f2; box-shadow:0 0 14px #65e6f2; }
+        .auri-voice__particle--one { top:13%; right:17%; }
+        .auri-voice__particle--two { bottom:18%; left:13%; width:5px; height:5px; background:#d8b765; box-shadow:0 0 12px #d8b765; }
+        .auri-voice__particle--three { top:48%; left:3%; width:4px; height:4px; }
+        .auri-voice__core { position:relative; z-index:2; display:grid; width:46%; aspect-ratio:1; place-items:center; border:1px solid rgba(225,196,126,.72); border-radius:50%; background:radial-gradient(circle at 34% 24%,#f5e7c4 0%,#c5a45c 35%,#6b592f 72%,#23384a 100%); box-shadow:0 0 0 12px rgba(206,173,102,.06),0 0 55px rgba(74,201,224,.20),inset 0 2px 12px rgba(255,255,255,.55); }
+        .auri-voice__core-glow { position:absolute; inset:-18%; border-radius:50%; background:radial-gradient(circle,rgba(75,213,235,.22),transparent 68%); filter:blur(10px); }
+        .auri-voice__core .auri-mascot { width:76%; height:84%; }
+        .auri-voice__reactor.is-listening .auri-voice__orbit--one,.auri-voice.is-listening .auri-voice__orbit--one { animation:auri-voice-pulse 1.2s ease-in-out infinite; border-color:rgba(76,226,244,.8); box-shadow:0 0 28px rgba(76,226,244,.16); }
+        .auri-voice__reactor.is-listening .auri-voice__orbit--two { animation:auri-voice-orbit 5s linear infinite; border-color:rgba(76,226,244,.6); }
+        .auri-voice__reactor.is-thinking .auri-voice__orbit--three { animation:auri-voice-orbit 3s linear infinite; border-color:rgba(223,186,102,.72); }
+        .auri-voice__reactor.is-speaking .auri-voice__core { animation:auri-voice-speak 1s ease-in-out infinite; }
+        .auri-voice__mic { color:#10283a; border:1px solid rgba(246,220,160,.9); background:linear-gradient(145deg,#f2d994,#bd984b); box-shadow:0 0 0 8px rgba(205,171,99,.10),0 10px 35px rgba(0,0,0,.28),inset 0 1px 2px rgba(255,255,255,.7); }
+        .auri-voice__mic:hover { box-shadow:0 0 0 11px rgba(205,171,99,.12),0 12px 38px rgba(0,0,0,.3); }
+        .auri-voice__mic.is-active { color:#092331; border-color:#71f1fa; background:linear-gradient(145deg,#75f2fa,#22a9c1); box-shadow:0 0 0 9px rgba(67,222,240,.12),0 0 42px rgba(67,222,240,.4); transform:scale(1.06); }
+        .auri-voice__transcript,.auri-voice__reply { border:1px solid rgba(150,181,198,.22); background:rgba(24,48,67,.84); color:#d6e1e8; }
+        .auri-voice__wave { min-height:42px; }
+        .auri-voice__wavebar { display:block; width:3px; height:var(--bar-height); min-height:5px; border-radius:9px; background:linear-gradient(180deg,#e0c27d,#5f9bb0); opacity:.48; transform:scaleY(.55); transform-origin:center; }
+        .auri-voice__wavebar.active,.auri-voice__wavebar.speaking { opacity:1; animation:auri-voice-wave .52s ease-in-out infinite alternate; background:linear-gradient(180deg,#65f1fa,#c9a95f); }
+        .auri-voice__wavebar.thinking { opacity:.85; animation:auri-voice-wave .9s ease-in-out infinite alternate; }
+        @keyframes auri-voice-wave { to { transform:scaleY(1.8); } }
+        @keyframes auri-voice-pulse { 50% { transform:scale(1.055); opacity:.55; } }
+        @keyframes auri-voice-orbit { to { transform:rotate(360deg); } }
+        @keyframes auri-voice-speak { 50% { transform:scale(1.08); box-shadow:0 0 0 16px rgba(206,173,102,.08),0 0 68px rgba(74,201,224,.38),inset 0 2px 12px rgba(255,255,255,.7); } }
         .auri-orb { isolation:isolate; background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.96) 0 38%,rgba(232,215,172,.44) 57%,rgba(199,166,91,.10) 70%,transparent 72%); }
         .auri-orb__ring { position:absolute; border-radius:9999px; border:1px solid rgba(183,148,73,.38); }
         .auri-orb__ring--outer { inset:0; box-shadow:0 0 35px rgba(190,158,91,.10),inset 0 0 25px rgba(190,158,91,.08); }
@@ -414,7 +459,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         @keyframes auri-rotate { to { transform:rotate(360deg); } }
         @keyframes auri-speak { 50% { transform:scale(1.07); box-shadow:0 12px 42px rgba(157,121,56,.42),inset 0 2px 8px rgba(255,255,255,.7); } }
         @keyframes auri-wave { to { transform:scaleY(2.2); } }
-        @media (prefers-reduced-motion:reduce) { .auri-mascot, .auri-mascot *, .auri-orb *, .auri-wave-bar { animation:none!important; transition:none!important; } }
+        @media (prefers-reduced-motion:reduce) { .auri-mascot, .auri-mascot *, .auri-orb *, .auri-wave-bar, .auri-voice *, .auri-voice__ambient span { animation:none!important; transition:none!important; } }
       `}</style>
     </section>
   );
