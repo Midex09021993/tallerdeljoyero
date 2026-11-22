@@ -6,7 +6,6 @@ import verPedido from "../mcp/tools/ver-pedido";
 import resumenProduccion from "../mcp/tools/resumen-produccion";
 import listarContratos from "../mcp/tools/listar-contratos";
 import buscarClientes from "../mcp/tools/buscar-clientes";
-import crearCliente from "../mcp/tools/crear-cliente";
 
 type AnyTool = {
   name: string;
@@ -16,18 +15,20 @@ type AnyTool = {
   handler: (args: Record<string, unknown>, ctx: ToolContext) => unknown;
 };
 
+// AURI permanece en modo de solo lectura hasta disponer de un flujo de autorización
+// y confirmación visible, separado de la autorización general de acceso.
 export const AURI_TOOLS: readonly AnyTool[] = [
-  listarPedidos, verPedido, resumenProduccion, listarContratos, buscarClientes, crearCliente,
+  listarPedidos, verPedido, resumenProduccion, listarContratos, buscarClientes,
 ] as unknown as AnyTool[];
 
-// Lista positiva: se permiten referencia visible y nombre del cliente únicamente para localizar pedidos
-// dentro del ámbito RLS del usuario. Se siguen excluyendo UUID, teléfonos, correos y campos financieros.
+// Lista positiva: nombres y datos operativos mínimos para responder consultas autorizadas.
+// Se excluyen UUID, documentos, teléfonos, correos, direcciones y datos financieros.
 const CAMPOS_PERMITIDOS = new Set([
   "referencia", "cliente", "estado", "area_produccion", "pieza", "trabajo", "material", "piedras", "talla",
   "peso_estimado", "cantidad_piezas", "ruta", "corte_texto", "corte_tipografia", "corte_ubicacion", "corte_observaciones", "fecha_ingreso", "fecha_entrega",
   "fecha_listo_entrega", "fecha_envio", "fecha_entregado", "medio_envio",
   "actualizado", "pedido", "pedidos", "activos", "atrasados", "por_estado", "por_area",
-  "fecha", "tipo", "ciudad",
+  "fecha", "tipo", "ciudad", "clientes", "nombre", "contratos", "numero", "creado",
 ]);
 
 export function filtrarParaModelo(value: unknown): unknown {
@@ -51,9 +52,7 @@ export function filtrarParaModelo(value: unknown): unknown {
 }
 
 // Gemini FunctionDeclaration acepta un subconjunto de OpenAPI Schema, no JSON Schema completo.
-// Zod 4 emite additionalProperties, const, pattern y límites de longitud que pueden provocar HTTP 400.
 // Las reglas omitidas siguen aplicándose en el servidor mediante safeParse() antes de ejecutar cada herramienta.
-// Lista exacta de campos admitidos por Gemini FunctionDeclaration Schema.
 const GEMINI_SCHEMA_KEYS = new Set([
   "type", "nullable", "required", "format", "description", "properties",
   "items", "enum", "anyOf", "$ref", "$defs",
@@ -109,7 +108,6 @@ export async function ejecutarHerramienta(
   if (!parsed.success) return { ok: false, error: "Argumentos no válidos." };
   if (nombre === "crear_cliente" && !confirmacionUsuario) return { ok: false, error: "Antes de guardar, presenta el resumen y espera una confirmación explícita del usuario." };
 
-  // supabaseForUser solo requiere getToken(); los handlers también verifican isAuthenticated().
   const context = {
     isAuthenticated: () => true,
     getToken: () => sesion.token,
@@ -120,7 +118,6 @@ export async function ejecutarHerramienta(
     if (result?.isError) return { ok: false, error: "La consulta no se pudo completar." };
     return { ok: true, datos: filtrarParaModelo(result?.structuredContent ?? null) };
   } catch (error) {
-    // No propagar mensajes de base de datos ni valores que puedan contener información privada.
     console.error("auri-interno tool failed", { tool: nombre, error: error instanceof Error ? error.message : "unknown" });
     return { ok: false, error: error instanceof Error && error.name === "ToolError" ? error.message : "La consulta no se pudo completar." };
   }
