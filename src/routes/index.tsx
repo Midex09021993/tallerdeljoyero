@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
+import { AuriPublicoBoton } from "@/components/auri/AuriPublicoBoton";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
@@ -921,6 +922,7 @@ function InicioPublico() {
           </div>
         </div>
       </footer>
-    </main>
+          <AuriPublicoBoton />
+</main>
   );
 }
