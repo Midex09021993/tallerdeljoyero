@@ -104,7 +104,6 @@ function CursosDiseno3DPage() {
       window.clearTimeout(inicio);
       if (escritura !== undefined) window.clearInterval(escritura);
     };
-    return () => window.clearInterval(escritura);
   }, []);
 
   return (
