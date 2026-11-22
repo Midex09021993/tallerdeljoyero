@@ -77,7 +77,7 @@ export function AuriMascota({ estado = "idle", compact = false }: { estado?: "id
 
 const AURI_PUBLIC_LINKS = new Set([
   "/herramientas-publicas", "/aurum-render-public", "/auth", "/guias", "/transfer",
-  "/comunidad", "/#planes", "/#como-funciona", "/#aurum-render", "/#contacto",
+  "/comunidad", "/cursos-diseno-3d", "/galeria-joyas", "/tienda", "/herramientas-publicas/aleacion-oro", "/#planes", "/#como-funciona", "/#aurum-render", "/#contacto",
 ]);
 
 function renderAuriInline(value: string) {
