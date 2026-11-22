@@ -17,7 +17,7 @@ export default defineTool({
     const supabase = supabaseForUser(ctx);
     let query = supabase
       .from("pedidos")
-      .select("id, referencia, cliente, pieza, trabajo, estado, area_actual, material, piedras, talla, peso_estimado, cantidad_piezas, contrato, fecha_ingreso, fecha_entrega, fecha_listo_entrega, fecha_envio, fecha_entregado, medio_envio, guia_envio, updated_at")
+      .select("id, referencia, cliente, pieza, trabajo, estado, area_actual, material, piedras, talla, peso_estimado, cantidad_piezas, ruta, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, contrato, fecha_ingreso, fecha_entrega, fecha_listo_entrega, fecha_envio, fecha_entregado, medio_envio, guia_envio, updated_at")
       .limit(2);
     query = id ? query.eq("id", id) : query.eq("referencia", referencia!.trim());
     const { data, error } = await query;
@@ -38,6 +38,11 @@ export default defineTool({
       talla: p.talla,
       peso_estimado: p.peso_estimado,
       cantidad_piezas: p.cantidad_piezas,
+      ruta: Array.isArray(p.ruta) ? p.ruta : [],
+      corte_texto: p.corte_texto,
+      corte_tipografia: p.corte_tipografia,
+      corte_ubicacion: p.corte_ubicacion,
+      corte_observaciones: p.corte_observaciones,
       contrato: p.contrato,
       fecha_ingreso: p.fecha_ingreso,
       fecha_entrega: p.fecha_entrega,
@@ -53,6 +58,7 @@ export default defineTool({
       `Estado: ${pedido.estado}${pedido.area_produccion ? ` (área: ${pedido.area_produccion})` : ""}`,
       `Pieza: ${pedido.pieza || "—"} · Trabajo: ${pedido.trabajo || "—"}`,
       `Material: ${pedido.material || "—"} · Piedras: ${pedido.piedras || "—"} · Talla: ${pedido.talla || "—"}`,
+      `Ruta de fabricación: ${pedido.ruta.join(" → ") || "sin definir"}`,
       `Ingreso: ${pedido.fecha_ingreso} · Entrega prevista: ${pedido.fecha_entrega ?? "sin fecha"}`,
     ].join("\n");
     return { content: [{ type: "text", text: texto }], structuredContent: { pedido } };

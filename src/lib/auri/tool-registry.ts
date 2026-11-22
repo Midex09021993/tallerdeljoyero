@@ -24,7 +24,7 @@ export const AURI_TOOLS: readonly AnyTool[] = [
 // puede salir hacia Gemini. Los valores operativos se conservan para resumir el trabajo.
 const CAMPOS_PERMITIDOS = new Set([
   "estado", "area_produccion", "pieza", "trabajo", "material", "piedras", "talla",
-  "peso_estimado", "cantidad_piezas", "fecha_ingreso", "fecha_entrega",
+  "peso_estimado", "cantidad_piezas", "ruta", "corte_texto", "corte_tipografia", "corte_ubicacion", "corte_observaciones", "fecha_ingreso", "fecha_entrega",
   "fecha_listo_entrega", "fecha_envio", "fecha_entregado", "medio_envio",
   "actualizado", "pedido", "pedidos", "activos", "atrasados", "por_estado", "por_area",
   "fecha", "tipo", "ciudad",

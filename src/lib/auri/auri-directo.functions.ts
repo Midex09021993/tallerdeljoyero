@@ -92,14 +92,41 @@ function formatearPedido(data: unknown, referenciaSolicitada?: string): string {
     ["Talla", p.talla],
     ["Peso estimado", p.peso_estimado],
     ["Cantidad", p.cantidad_piezas],
+    ["Ruta de fabricación", Array.isArray(p.ruta) ? p.ruta.join(" → ") : ""],
     ["Fecha de ingreso", p.fecha_ingreso],
     ["Fecha de entrega", p.fecha_entrega],
   ];
+  const valueFor = (key: string) => p[key];
+  const required = [
+    ["Trabajo / descripción", "trabajo"],
+    ["Material", "material"],
+    ["Cantidad de piezas", "cantidad_piezas"],
+  ] as const;
+  const sinRegistrar = required.filter(([, key]) => valueFor(key) === null || valueFor(key) === undefined || valueFor(key) === "").map(([label]) => label);
+  const ruta = Array.isArray(p.ruta) ? p.ruta.map((item) => textoSeguro(item)).filter(Boolean) : [];
+  const esCorteLaser = ruta.some((area) => area.toLowerCase().includes("corte láser") || area.toLowerCase().includes("corte laser"));
+  const laserFields: Array<[string, string]> = [
+    ["Texto a grabar o cortar", "corte_texto"],
+    ["Ubicación", "corte_ubicacion"],
+    ["Tipografía", "corte_tipografia"],
+    ["Observaciones de corte", "corte_observaciones"],
+  ];
+  const laserPendientes = esCorteLaser
+    ? laserFields.filter(([, key]) => !textoSeguro(p[key])).map(([label]) => label)
+    : [];
   return [
-    "**Ficha del pedido**",
+    "**Ficha técnica del pedido**",
     ...fields.map(([label, value]) => `- **${label}:** ${value === null || value === undefined || value === "" ? "No registrado" : textoSeguro(value)}`),
     "",
-    "Puedo mostrar los datos registrados. No completaré información que no figure en el pedido.",
+    "**Revisión de información**",
+    sinRegistrar.length
+      ? `- Datos básicos sin registrar: ${sinRegistrar.join(", ")}.`
+      : "- Los campos básicos de trabajo, material y cantidad están registrados.",
+    esCorteLaser
+      ? (laserPendientes.length ? `- Detalles de Corte Láser sin registrar: ${laserPendientes.join(", ")}.` : "- Los campos específicos de Corte Láser están registrados.")
+      : "- No se detecta una ruta de Corte Láser en este pedido.",
+    "",
+    "Los campos no registrados son puntos para revisar con el taller; no significan automáticamente que sean obligatorios para toda pieza.",
   ].join("\n");
 }
 
