@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { AURI_TOOLS, adaptarEsquemaGemini, ejecutarHerramienta, esConfirmacionExplicita, filtrarParaModelo } from "../src/lib/auri/tool-registry";
+import { extraerBusqueda } from "../src/lib/auri/auri-directo.functions";
 
 describe("AURI interno", () => {
-  test("incluye cinco consultas de solo lectura y una herramienta de registro con confirmación", () => {
+  test("expone únicamente consultas de solo lectura hasta implementar consentimiento de escritura", () => {
     expect(AURI_TOOLS.map((tool) => tool.name).sort()).toEqual([
-      "buscar_clientes", "crear_cliente", "listar_contratos", "listar_pedidos", "resumen_produccion", "ver_pedido",
+      "buscar_clientes", "listar_contratos", "listar_pedidos", "resumen_produccion", "ver_pedido",
     ]);
-    expect(AURI_TOOLS.filter((tool) => tool.name !== "crear_cliente").every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
-    expect(AURI_TOOLS.find((tool) => tool.name === "crear_cliente")?.annotations?.readOnlyHint).toBe(false);
+    expect(AURI_TOOLS.every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
   });
 
   test("adapta los esquemas Zod al subconjunto OpenAPI admitido por Gemini", () => {
@@ -35,7 +35,6 @@ describe("AURI interno", () => {
     const limite = (bounded.properties as Record<string, Record<string, unknown>>).limite;
     expect(limite.minimum).toBeUndefined();
     expect(limite.maximum).toBeUndefined();
-    // No se elimina la validación real: cada llamada se valida con Zod en el servidor.
   });
 
   test("exige una confirmación breve y explícita antes de permitir el registro", () => {
@@ -47,15 +46,15 @@ describe("AURI interno", () => {
     expect(esConfirmacionExplicita("registra a Juan")).toBe(false);
   });
 
-  test("solo permite campos operativos anonimizados hacia Gemini", () => {
+  test("filtra resultados de clientes y contratos sin exponer PII", () => {
     const out = filtrarParaModelo({
-      pedidos: [{
-        id: "uuid", referencia: "PED-001", cliente: "Ana", nombre: "Ana",
-        telefono: "999", email: "a@b.pe", notas: "x", precio: 10,
-        estado: "En Producción", pieza: "Anillo", trabajo: "Fabricación",
-      }],
+      clientes: [{ id: "uuid", nombre: "Ana Pérez", tipo: "persona", ciudad: "Lima", estado: "activo", telefono: "999", email: "a@b.pe", documento: "123" }],
+      contratos: [{ id: "uuid", numero: "CT-01", cliente: "Ana Pérez", creado: "2026-01-01", pedidos: 2, direccion: "privada" }],
     });
-    expect(out).toEqual({ pedidos: [{ estado: "En Producción", pieza: "Anillo", trabajo: "Fabricación" }] });
+    expect(out).toEqual({
+      clientes: [{ nombre: "Ana Pérez", tipo: "persona", ciudad: "Lima", estado: "activo" }],
+      contratos: [{ numero: "CT-01", cliente: "Ana Pérez", creado: "2026-01-01", pedidos: 2 }],
+    });
   });
 
   test("no filtra campos desconocidos ni identificadores", () => {
@@ -71,5 +70,18 @@ describe("AURI interno", () => {
   test("rechaza herramientas desconocidas y argumentos extra", async () => {
     expect((await ejecutarHerramienta("borrar_todo", {}, { token: "t" })).ok).toBe(false);
     expect((await ejecutarHerramienta("listar_pedidos", { x: 1 }, { token: "t" })).ok).toBe(false);
+  });
+});
+
+describe("AURI Directo · extracción de filtros", () => {
+  test("extrae nombre de cliente, contrato y cliente asociado a pedidos", () => {
+    expect(extraerBusqueda("Buscar cliente Juan Pérez", "cliente")).toBe("Juan Pérez");
+    expect(extraerBusqueda("Contratos de Acme", "contrato")).toBe("Acme");
+    expect(extraerBusqueda("Pedidos de Juan Pérez", "pedido")).toBe("Juan Pérez");
+  });
+
+  test("no inventa filtros cuando el usuario no especifica un valor", () => {
+    expect(extraerBusqueda("Consultar pedidos", "pedido")).toBeUndefined();
+    expect(extraerBusqueda("Buscar cliente", "cliente")).toBeUndefined();
   });
 });
