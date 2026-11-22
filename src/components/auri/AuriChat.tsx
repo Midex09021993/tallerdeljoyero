@@ -79,6 +79,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const recognition = useRef<SpeechRecognitionLike | null>(null);
+  const pendingVoiceText = useRef("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,18 +114,27 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
     instance.interimResults = false;
     instance.onresult = (event) => {
       const last = event.results[event.results.length - 1];
-      if (last?.[0]?.transcript) setDraft((current) => (current ? current + " " : "") + last[0].transcript);
+      if (last?.[0]?.transcript) {
+        const transcript = last[0].transcript.trim();
+        pendingVoiceText.current = transcript;
+        if (vista === "texto") setDraft((current) => (current ? current + " " : "") + transcript);
+      }
     };
     instance.onerror = () => setListening(false);
-    instance.onend = () => setListening(false);
+    instance.onend = () => {
+      setListening(false);
+      const spokenQuestion = pendingVoiceText.current;
+      pendingVoiceText.current = "";
+      if (vista === "voz" && spokenQuestion) void sendMessage(undefined, spokenQuestion);
+    };
     recognition.current = instance;
     setListening(true);
     instance.start();
   }
 
-  async function sendMessage(event?: FormEvent<HTMLFormElement>) {
+  async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?: string) {
     event?.preventDefault();
-    const question = draft.trim();
+    const question = (messageOverride ?? draft).trim();
     if (!question || loading) return;
     const nextMessages: Message[] = [...messages, { role: "user", text: question }];
     setMessages(nextMessages);
@@ -221,18 +231,9 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             </button>
             {!voiceSupported && <p className="mt-3 text-xs text-amber-200">Este navegador no admite dictado por voz. Puedes usar la vista de texto.</p>}
           </div>
-          <div className="relative z-10 w-full max-w-md">
-            {messages.length > 1 && (
-              <div className="mb-3 max-h-28 overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.07] p-3 text-sm leading-6 text-slate-100 backdrop-blur">
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[#d8bd78]">Última respuesta</p>
-                {messages[messages.length - 1]?.text}
-              </div>
-            )}
-            <form onSubmit={sendMessage} className="flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.08] p-2 backdrop-blur">
-              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="O escribe aquí…" aria-label="Mensaje para AURI" className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-slate-400" />
-              <button type="submit" disabled={!draft.trim() || loading} aria-label="Enviar mensaje" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c7a65b] text-[#182838] disabled:opacity-40"><Send className="size-4" /></button>
-            </form>
-            {error && <p role="alert" className="mt-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-100">{error}</p>}
+          <div className="relative z-10 w-full max-w-md text-center">
+            <p className="text-xs text-slate-400">{listening ? "Escuchando tu consulta" : loading ? "Preparando respuesta de voz" : "Pulsa el micrófono y habla"}</p>
+            {error && <p role="alert" className="mt-3 rounded-xl border border-red-300/20 bg-red-500/10 px-3 py-2 text-xs text-red-100">{error}</p>}
           </div>
         </div>
       ) : (
