@@ -338,7 +338,6 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
 
   const voiceStatus = listening ? "Te estoy escuchando" : loading ? "Estoy preparando tu respuesta" : speaking ? "AURI está hablando" : "Tu espacio de conversación";
   const voiceHint = listening ? "Te escucho. Cuando termines, toca el botón para enviar tu consulta." : loading ? "Estoy consultando la información para darte una respuesta." : speaking ? "AURI está respondiendo. Toca el micrófono para interrumpir y hablar." : "Toca el micrófono una vez para empezar a hablar.";
-  const latestAssistantMessage = [...messages].reverse().find((message) => message.role === "model");
 
   return (
     <section className="auri-shell flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white text-[#263746] sm:rounded-2xl sm:border sm:border-[#e8dfcc]" aria-label="Asistente AURI">
@@ -421,7 +420,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
           </div>
           <div className="relative z-10 w-full max-w-md text-center">
             {voiceTranscript && <p className="auri-voice__transcript mx-auto mb-3 max-w-sm rounded-xl px-4 py-2.5 text-center text-xs leading-5">“{voiceTranscript}”</p>}
-            {messages.length > 1 && latestAssistantMessage && <div className="auri-voice__reply mx-auto mb-4 max-h-24 w-full max-w-sm overflow-y-auto rounded-xl px-4 py-3 text-left text-xs leading-5"><p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#d7b765]">Respuesta de AURI</p>{latestAssistantMessage.text}</div>}
+            
             <div className="auri-voice__wave mx-auto flex max-w-[270px] items-center justify-center gap-1.5" aria-hidden="true">
               {Array.from({ length: 31 }, (_, i) => <span key={i} className={`auri-voice__wavebar ${listening ? "active" : speaking ? "speaking" : loading ? "thinking" : ""}`} style={{ animationDelay: `${i * 32}ms`, "--bar-height": `${8 + (Math.abs(15 - i) % 7) * 3}px` } as React.CSSProperties} />)}
             </div>
