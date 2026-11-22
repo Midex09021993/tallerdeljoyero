@@ -82,7 +82,7 @@ function GuiaTecnicaPage() {
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo calcular el peso de una gema por sus medidas</h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">El peso de una gema se expresa habitualmente en quilates. Si no tienes una balanza a mano, sus dimensiones, forma y gravedad específica permiten obtener una estimación, siempre que se conozcan las limitaciones del método.</p>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
             <h2>1. Qué significa el quilate en gemología</h2>
             <p>El quilate métrico (ct) es una unidad de masa, no una medida de tamaño. Un quilate equivale exactamente a 0,20 gramos o 200 miligramos, y se divide en 100 puntos. Por eso, dos piedras con el mismo diámetro pueden tener pesos diferentes si cambian su material o sus proporciones.</p>
             <p>Para convertir un peso conocido en gramos a quilates, multiplica los gramos por cinco. Para convertir quilates a gramos, multiplica los quilates por 0,20.</p>
@@ -145,7 +145,7 @@ function GuiaTecnicaPage() {
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo convertir tallas de anillos entre España, Europa y USA</h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Las tallas de anillos utilizan sistemas de numeración distintos según el país o la referencia comercial. Para convertir una medida correctamente, primero identifica el sistema de origen y confirma el diámetro interior o la circunferencia del aro.</p>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
             <h2>1. Diferencia entre diámetro interior y circunferencia</h2>
             <p>El diámetro interior es la distancia recta entre dos puntos opuestos de la parte interna del anillo. La circunferencia interior es la longitud del contorno. Ambos valores describen el tamaño interior, pero no son la misma medida.</p>
             <p>Si mides el diámetro, hazlo en milímetros y evita incluir el grosor del metal. Una medición inclinada o tomada sobre el exterior del aro puede producir una talla incorrecta.</p>
@@ -207,7 +207,7 @@ function GuiaTecnicaPage() {
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Fundición de joyería: guía del revestimiento y preparación del cilindro</h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Una preparación consistente del cilindro empieza por medir correctamente, seguir la ficha del revestimiento y coordinar la mezcla, el fraguado y el ciclo de horno. Esta guía incorpora información legible de la ficha de producto Whip Mix Omni-Cast como referencia de fabricante, sin convertirla en una receta universal.</p>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
             <h2>1. Qué aporta la ficha de Omni-Cast</h2>
             <p>La ficha de Whip Mix describe Omni-Cast como un revestimiento para fundición de joyería y presenta referencias de proporción de mezcla, procedimiento de mezclado y temperaturas para distintos metales. También indica un uso para temperaturas de colado de hasta 1.350 °C. Ese dato corresponde al producto descrito en la ficha; no significa que todas las aleaciones deban colarse a esa temperatura.</p>
             <p>El documento incluye una tabla de temperaturas del metal y del cilindro para distintas aleaciones. Antes de usar un valor concreto, comprueba que coincida con la aleación exacta, el equipo y la versión completa de las instrucciones del fabricante. No extrapoles un valor de oro amarillo a oro blanco ni de una ley a otra.</p>
@@ -280,7 +280,7 @@ function GuiaTecnicaPage() {
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo estimar el peso de una joya a partir de un modelo 3D</h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Un modelo 3D ayuda a anticipar el consumo de metal antes de fabricar una pieza. Para que la estimación sea útil, revisa la geometría, las unidades y el material elegido; el resultado no equivale al peso final de una pieza fundida o terminada.</p>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
             <h2>1. Prepara el modelo antes de calcular</h2>
             <ul>
               <li>Comprueba que el archivo represente la geometría que realmente se fabricará, incluidas paredes, huecos y detalles importantes.</li>
@@ -345,7 +345,7 @@ function GuiaTecnicaPage() {
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo organizar la distribución de un taller de joyería</h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Una distribución clara ayuda a trabajar con orden, reduce recorridos innecesarios y permite separar tareas que requieren condiciones distintas. Adapta cualquier plano a las dimensiones reales del local y de tus equipos.</p>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight">
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight [&_p]:text-justify [&_li]:text-justify">
             <h2>1. Define las zonas según el flujo de trabajo</h2>
             <p>Antes de mover máquinas, dibuja el recorrido de una pieza desde el diseño hasta el acabado. Considera zonas diferenciadas para:</p>
             <ul>
@@ -404,7 +404,7 @@ function GuiaTecnicaPage() {
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Impresión 3D para joyería: del archivo a la pieza</h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">La impresión 3D puede acelerar la validación de un diseño y preparar patrones para procesos posteriores. El resultado depende del modelo, la tecnología de impresión, el material y el posprocesado indicado por el fabricante.</p>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight">
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight [&_p]:text-justify [&_li]:text-justify">
             <h2>1. Revisa el archivo antes de imprimir</h2>
             <ul>
               <li>Comprueba unidades y escala del modelo.</li>
@@ -464,7 +464,7 @@ function GuiaTecnicaPage() {
           <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Aprende a interpretar el quilataje, calcular la proporción de oro fino y determinar cuánto metal de liga corresponde a una masa teórica de aleación. Utiliza los ejemplos como base de cálculo y verifica siempre la composición real de los materiales de tu taller.</p>
         </header>
 
-        <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+        <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
           <section>
             <h2>1. ¿Qué significa el quilataje del oro?</h2>
             <p>En una aleación de oro expresada en quilates, el valor indica cuántas partes de oro fino hay por cada 24 partes de masa. Por eso, el oro de 24K se toma como referencia teórica de pureza, mientras que las aleaciones de 18K, 14K y 9K contienen proporciones menores de oro y el resto corresponde a otros metales.</p>
