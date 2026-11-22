@@ -46,8 +46,8 @@ const CONSENT_KEY = "auri-interno-acceso";
 
 export function AuriMascota({ estado = "idle", compact = false }: { estado?: "idle" | "thinking" | "listening" | "speaking"; compact?: boolean }) {
   return (
-    <span className={`auri-mascot auri-mascot--${estado} ${compact ? "auri-mascot--compact" : ""}`} role="img" aria-label="Mascota AURI animada">
-      <svg viewBox="0 0 96 104" aria-hidden="true" className="auri-mascot__art">
+    <span className={`auri-mascot auri-mascot--${estado} ${compact ? "auri-mascot--compact" : ""}`} style={{ position: "relative", display: "inline-grid", width: compact ? 43 : 68, height: compact ? 48 : 76, placeItems: "center", flexShrink: 0, isolation: "isolate" }} role="img" aria-label="Mascota AURI animada">
+      <svg viewBox="0 0 96 104" aria-hidden="true" className="auri-mascot__art" style={{ position: "relative", zIndex: 1, display: "block", width: "100%", height: "100%", overflow: "visible" }}>
         <defs>
           <linearGradient id="auri-shell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff" /><stop offset=".55" stopColor="#f4f1e8" /><stop offset="1" stopColor="#d9d7d0" /></linearGradient>
           <linearGradient id="auri-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f8e7b5" /><stop offset=".5" stopColor="#c6a052" /><stop offset="1" stopColor="#8e6b2d" /></linearGradient>
