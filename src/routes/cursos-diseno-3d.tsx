@@ -69,7 +69,7 @@ const laboratorios = [
   { icon: Ruler, title: "Coordenadas, Osnap y SmartTrack", desc: "Practica coordenadas, referencias y alineaciones paso a paso." },
   { icon: PenTool, title: "Curve Editor y NURBS Studio", desc: "Edita curvas, mueve puntos y compara su continuidad." },
   { icon: Monitor, title: "Laboratorios de sólidos", desc: "Practica extrusiones, revoluciones y modelado de anillos." },
-  { icon: Target, title: "Prácticas de capas MatrixGold", desc: "Ordena las piezas de tu proyecto con capas." },
+  { icon: Target, title: "Prácticas de organización por capas", desc: "Ordena las piezas de tu proyecto con capas." },
 ] as const;
 
 const complementos = [
