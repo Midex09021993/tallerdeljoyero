@@ -238,7 +238,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             </div>
           </div>
           <div className="auri-header__controls flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {interno && <div className="hidden items-center gap-1 rounded-full bg-[#f7f5f0] p-1 sm:flex">
+            {interno && <div className="auri-desktop-modes hidden items-center gap-1 rounded-full bg-[#f7f5f0] p-1 sm:flex">
               <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition ${!modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790] hover:text-[#263746]"}`}>Gemini</button>
               <button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition ${modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790] hover:text-[#263746]"}`}>Directo</button>
             </div>}
@@ -248,7 +248,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
             </div>
           </div>
         </div>
-        {interno && <div className="mt-2 flex items-center justify-between sm:hidden">
+        {interno && <div className="auri-mobile-modes mt-2 flex items-center justify-between sm:hidden">
           <span className="text-[10px] text-[#8b949b]">Motor de consulta</span>
           <div className="flex items-center gap-1 rounded-full bg-[#f7f5f0] p-1">
             <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1 text-[10px] font-semibold ${!modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790]"}`}>Gemini</button>
