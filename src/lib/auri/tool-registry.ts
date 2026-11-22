@@ -1,4 +1,4 @@
-// Reutiliza las herramientas MCP existentes. Solo se envían a Gemini campos operativos no identificables.
+// Reutiliza las herramientas MCP existentes. Solo se envían a Gemini campos mínimos; algunos, como el nombre, pueden identificar registros.
 import { ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import listarPedidos from "../mcp/tools/listar-pedidos";
