@@ -12,8 +12,8 @@ const slugTallas = "convertir-tallas-anillos-espana-europa-usa";
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
     const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas].includes(params.slug);
-    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo calcular el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
-    const descripcion = params.slug === slugPeso ? "Aprende a preparar un modelo 3D y estimar el peso teórico de una joya según su volumen, unidades y densidad del metal." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Aprende a convertir gramos a quilates y estimar el peso de diamantes y gemas por dimensiones, forma de talla y gravedad específica." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
+    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya desde un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo calcular el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
+    const descripcion = params.slug === slugPeso ? "Guía técnica para validar el volumen de un modelo 3D, controlar unidades y estimar la masa de una joya según la densidad de su aleación." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Aprende a convertir gramos a quilates y estimar el peso de diamantes y gemas por dimensiones, forma de talla y gravedad específica." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
     return {
       meta: [
         { title: valida ? `${titulo} | Guías técnicas AURUM LAB` : "Guía no encontrada | AURUM LAB" },
@@ -273,53 +273,191 @@ function GuiaTecnicaPage() {
             <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-joya-3d" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Abrir herramienta 3D</Link>
           </div>
         </header>
-        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
           <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Diseño y fabricación</span></nav>
-          <header className="mt-6 border-b border-slate-200 pb-8">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Diseño y fabricación · Guía técnica</p>
-            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo estimar el peso de una joya a partir de un modelo 3D</h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Un modelo 3D ayuda a anticipar el consumo de metal antes de fabricar una pieza. Para que la estimación sea útil, revisa la geometría, las unidades y el material elegido; el resultado no equivale al peso final de una pieza fundida o terminada.</p>
+          <header className="relative mt-6 overflow-hidden rounded-[1.75rem] border border-[#eadca7] bg-gradient-to-br from-[#fff9e8] via-white to-[#f5f7fa] p-6 pb-8 sm:p-9">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 size-56 rounded-full border-[24px] border-[#f5e8bd]/45" />
+            <div className="relative">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-[#e8d7a4] bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Diseño y fabricación</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Manual técnico · AURUM LAB</span>
+              </div>
+              <h1 className="mt-5 max-w-3xl text-3xl font-extrabold leading-[1.08] tracking-tight text-[#17232d] sm:text-5xl">Cómo estimar el peso de una joya desde un modelo 3D</h1>
+              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Convierte el volumen digital de una pieza en una estimación de masa. Aprende a validar la geometría, revisar las unidades, seleccionar una densidad coherente y entender qué factores hacen que el peso final pueda variar.</p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Nivel: básico–intermedio</span>
+                <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Lectura: 8–10 min</span>
+                <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Unidades: mm³ · cm³ · g</span>
+              </div>
+            </div>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
-            <h2>1. Prepara el modelo antes de calcular</h2>
-            <ul>
-              <li>Comprueba que el archivo represente la geometría que realmente se fabricará, incluidas paredes, huecos y detalles importantes.</li>
-              <li>Verifica la unidad de medida. Un archivo interpretado en milímetros como si estuviera en centímetros puede alterar drásticamente el resultado.</li>
-              <li>Busca superficies abiertas, piezas duplicadas o geometría interna no deseada que pueda afectar el volumen calculado.</li>
-            </ul>
-            <h2>2. El peso depende del volumen y la densidad</h2>
-            <p>La relación básica es <strong>masa = volumen × densidad</strong>. El volumen y la densidad deben utilizar unidades compatibles. Si cambias de plata a oro, platino u otra aleación, el peso estimado cambia aunque la geometría sea la misma.</p>
-            <h2>3. Utiliza la herramienta de AURUM LAB</h2>
-            <ol>
-              <li>Abre el visualizador y calculadora de peso 3D.</li>
-              <li>Carga un archivo compatible y espera a que termine de procesarse.</li>
-              <li>Selecciona el metal o la densidad que corresponda al material previsto.</li>
-              <li>Revisa el resultado y confirma las unidades y la geometría antes de presupuestar.</li>
-            </ol>
-            <h2>4. Interpreta el resultado como una estimación</h2>
-            <p>El cálculo no incluye automáticamente todas las variables de fabricación. Canales de colada, soportes, acabado, piedras y otros componentes pueden afectar el peso y el consumo real. Define el margen de material según el proceso habitual de tu taller.</p>
-            <h2>Lista rápida de comprobación</h2>
-            <ul>
-              <li>¿El modelo está en la unidad correcta y tiene un volumen válido?</li>
-              <li>¿La densidad corresponde a la aleación real y no solo al nombre genérico del metal?</li>
-              <li>¿Separaste el peso del metal del peso de las gemas u otros componentes?</li>
-              <li>¿Prevés un margen de fabricación basado en tu proceso?</li>
-            </ul>
-            <h2>Preguntas frecuentes sobre el peso de una joya en 3D</h2>
-            <h3>¿Cómo calcular el peso de una joya a partir de un archivo STL o 3D?</h3>
-            <p>Primero confirma que el modelo tenga la escala y las unidades correctas y que represente el volumen de la pieza. Después, aplica una densidad compatible con el metal elegido. La estimación depende de que la geometría y el material estén correctamente definidos.</p>
-            <h3>¿Una misma joya pesa igual en plata y en oro?</h3>
-            <p>No. Si el volumen se mantiene, la masa cambia con la densidad del material. Además, la densidad concreta puede variar según la aleación; utiliza el valor que corresponda al material que realmente vas a trabajar.</p>
-            <h3>¿El resultado de la calculadora es el peso final de la pieza?</h3>
-            <p>No necesariamente. Es una estimación teórica del modelo y no contempla automáticamente todas las pérdidas de fabricación, los canales de colada, el acabado ni el peso de piedras y otros componentes.</p>
-            <p>Si también necesitas estimar la composición de una aleación, consulta nuestra <a href="/guias/calcular-aleaciones-oro-18k-14k-9k">guía para calcular aleaciones de oro de 18K, 14K y 9K</a> y verifica los datos antes de preparar el lote.</p>
-            <h3>¿Por qué puede diferir el peso calculado del peso de la pieza terminada?</h3>
-            <p>El cálculo se basa en el volumen representado por el modelo y en la densidad seleccionada. La aleación real, las modificaciones del diseño, las piedras, los componentes añadidos y las etapas de fabricación pueden cambiar el resultado. Compara siempre la estimación con las condiciones reales de tu proceso.</p>
+
+          <section className="mt-7 grid gap-3 sm:grid-cols-3" aria-label="Conceptos clave">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Geometría</p><p className="mt-1 text-xl font-extrabold text-[#17232d]">Volumen</p><p className="text-xs text-slate-500">El espacio ocupado por el metal</p></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Material</p><p className="mt-1 text-xl font-extrabold text-[#17232d]">Densidad</p><p className="text-xs text-slate-500">Masa por unidad de volumen</p></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Resultado</p><p className="mt-1 text-xl font-extrabold text-[#17232d]">Masa (g)</p><p className="text-xs text-slate-500">Estimación teórica del metal</p></div>
+          </section>
+
+          <aside className="mt-7 rounded-2xl border border-slate-200 bg-[#f7f8fa] p-5 sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">En esta guía</p>
+            <div className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#principio">01 · Volumen y densidad</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#validar-modelo">02 · Validar el modelo</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#unidades">03 · Controlar las unidades</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#densidades">04 · Elegir la densidad</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#ejemplo">05 · Ejemplo de cálculo</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#flujo">06 · Flujo de trabajo</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#desviaciones">07 · Diferencias con la pieza real</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#control-final">08 · Lista de control</a>
+            </div>
+          </aside>
+
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:scroll-mt-24 prose-headings:tracking-tight prose-headings:font-bold prose-headings:text-[#17232d] prose-h2:mb-3 prose-h2:mt-12 prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-3 prose-p:leading-7 prose-li:leading-7 prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
+            <section>
+              <h2 id="principio">01. El principio: volumen × densidad</h2>
+              <p>El peso teórico de una pieza maciza se obtiene a partir de dos datos: el volumen de material que contiene el modelo y la densidad del material elegido. La relación física es sencilla, pero su fiabilidad depende de que ambos datos sean correctos y utilicen unidades compatibles.</p>
+              <div className="not-prose my-6 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-5 text-center sm:p-7">
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-[#987400]">Fórmula fundamental</p>
+                <p className="mt-2 text-xl font-extrabold text-[#604900] sm:text-2xl">Masa = Volumen × Densidad</p>
+                <p className="mt-2 text-xs text-slate-600">g = cm³ × g/cm³</p>
+              </div>
+              <p>El resultado representa la masa teórica del material contenido en el volumen medido. No es, por sí solo, una predicción completa del peso de la pieza terminada ni del metal que debes comprar para producirla.</p>
+            </section>
+
+            <section>
+              <h2 id="validar-modelo">02. Validar la geometría antes de medir</h2>
+              <p>Un archivo visualmente correcto puede contener errores que alteren el cálculo: superficies abiertas, caras duplicadas, sólidos superpuestos o componentes internos que no deberían formar parte del metal. Antes de medir, revisa la geometría y confirma que el volumen represente el material real de la pieza.</p>
+              <ul>
+                <li><strong>Sólidos cerrados:</strong> comprueba que las superficies delimiten un volumen completo. En mallas, verifica que sean cerradas y estén correctamente orientadas.</li>
+                <li><strong>Espesores reales:</strong> revisa paredes, fondos, galerías, brazos y zonas caladas. No conviertas una superficie sin espesor en un volumen imaginario.</li>
+                <li><strong>Duplicados y solapes:</strong> evita contar dos veces el mismo material o sumar cuerpos que se interpenetran.</li>
+                <li><strong>Huecos y cavidades:</strong> distingue los vacíos de diseño del volumen que realmente ocupará el metal.</li>
+                <li><strong>Componentes separados:</strong> identifica piedras, gomas, insertos, pasadores y piezas de otro material para no sumarlos a la masa del metal equivocado.</li>
+              </ul>
+              <p>Si trabajas en Rhinoceros, el comando <strong>Volume</strong> permite consultar el volumen de superficies, polisuperficies y mallas compatibles. La documentación de McNeel advierte que, cuando se usan objetos que no son sólidos, el usuario debe asegurarse de que las superficies realmente encierren el volumen y tengan normales orientadas correctamente.</p>
+            </section>
+
+            <section>
+              <h2 id="unidades">03. Controlar las unidades: el error que más altera el resultado</h2>
+              <p>La escala del archivo debe confirmarse antes de calcular. Un modelo diseñado en milímetros no puede interpretarse como si sus coordenadas estuvieran en centímetros. También debes convertir el volumen a una unidad compatible con la densidad seleccionada.</p>
+              <div className="not-prose my-5 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                <table className="w-full min-w-[320px] text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-600"><tr><th className="px-4 py-3">Conversión</th><th className="px-4 py-3">Equivalencia</th></tr></thead>
+                  <tbody>
+                    <tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">Longitud</td><td className="px-4 py-3">10 mm = 1 cm</td></tr>
+                    <tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">Volumen</td><td className="px-4 py-3">1 cm³ = 1.000 mm³</td></tr>
+                    <tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">Densidad</td><td className="px-4 py-3">Se expresa habitualmente en g/cm³</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Si la herramienta recibe el volumen en mm³ y la densidad en g/cm³, la operación debe incluir la conversión de mm³ a cm³. Comprueba qué unidad muestra el resultado de tu herramienta y no asumas que todos los formatos de archivo conservan la unidad de trabajo original.</p>
+            </section>
+
+            <section>
+              <h2 id="densidades">04. Seleccionar una densidad adecuada al material</h2>
+              <p>La densidad no depende únicamente del nombre del metal. El oro puro, la plata pura y el platino puro tienen densidades diferentes; las aleaciones de joyería también cambian según su composición. En particular, dos aleaciones de oro de la misma ley pueden tener densidades distintas si cambia la proporción de cobre, plata, paladio u otros elementos.</p>
+              <div className="not-prose my-5 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                <table className="w-full min-w-[420px] text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-600"><tr><th className="px-4 py-3">Material de referencia</th><th className="px-4 py-3">Densidad aprox. (g/cm³)</th><th className="px-4 py-3">Observación</th></tr></thead>
+                  <tbody>
+                    <tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">Oro puro</td><td className="px-4 py-3">19,28</td><td className="px-4 py-3">Referencia del elemento, no de oro 18K</td></tr>
+                    <tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">Plata pura</td><td className="px-4 py-3">10,50</td><td className="px-4 py-3">La plata 925 tiene otra densidad</td></tr>
+                    <tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">Platino puro</td><td className="px-4 py-3">21,46</td><td className="px-4 py-3">El platino 950 es una aleación</td></tr>
+                    <tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">Oro 18K (ejemplo Ag/Cu)</td><td className="px-4 py-3">15,4</td><td className="px-4 py-3">Ejemplo específico citado por LBMA</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Los valores de oro, plata y platino puros proceden de datos tabulados por USGS. LBMA señala que una aleación de oro de 18 quilates con proporciones iguales de plata y cobre tiene una densidad aproximada de 15,4 g/cm³; no debe generalizarse ese valor a todas las variantes de oro 18K. Para presupuestar una pieza, utiliza la densidad de la aleación concreta que vas a fundir, preferiblemente confirmada por el proveedor o por la ficha técnica.</p>
+              <p><strong>Regla de taller:</strong> si no conoces la composición de la aleación, declara el resultado como estimación y evita presentar más decimales de los que justifican los datos de entrada.</p>
+            </section>
+
+            <section>
+              <h2 id="ejemplo">05. Ejemplo práctico: estimar una pieza de 250 mm³</h2>
+              <p>Supongamos que el volumen metálico validado del modelo es de 250 mm³ y, solo para este ejemplo, se utiliza una densidad de 15,4 g/cm³ correspondiente al ejemplo de oro 18K con proporciones iguales de plata y cobre descrito por LBMA.</p>
+              <ol>
+                <li>Convierte el volumen: 250 mm³ ÷ 1.000 = 0,25 cm³.</li>
+                <li>Multiplica por la densidad: 0,25 cm³ × 15,4 g/cm³ = 3,85 g.</li>
+                <li>Interpreta el resultado: la masa teórica del metal del modelo es aproximadamente 3,85 g.</li>
+              </ol>
+              <div className="not-prose my-5 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-5 sm:p-6">
+                <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#987400]">Resultado del ejemplo</p>
+                <p className="mt-2 text-3xl font-extrabold text-[#604900]">3,85 g</p>
+                <p className="mt-1 text-sm text-slate-600">Masa teórica para 0,25 cm³ a 15,4 g/cm³. No incluye canales, árbol, pérdidas ni componentes adicionales.</p>
+              </div>
+              <p>Si cambia la densidad seleccionada, cambia el resultado aunque el volumen permanezca igual. Por eso no conviene reutilizar una densidad genérica para todos los colores, leyes y proveedores.</p>
+            </section>
+
+            <section>
+              <h2 id="flujo">06. Procedimiento recomendado en AURUM LAB</h2>
+              <ol>
+                <li><strong>Prepara:</strong> exporta o carga el modelo en el formato admitido por el visualizador.</li>
+                <li><strong>Comprueba:</strong> confirma escala, unidades, cuerpos duplicados, huecos y superficies abiertas.</li>
+                <li><strong>Calcula:</strong> obtén el volumen de la geometría que representa exclusivamente el metal.</li>
+                <li><strong>Selecciona:</strong> elige el metal o la densidad correspondiente a la aleación prevista.</li>
+                <li><strong>Registra:</strong> anota volumen, densidad utilizada, unidad y masa estimada para poder repetir el cálculo.</li>
+                <li><strong>Contrasta:</strong> compara la estimación con una pieza fabricada y pesada para conocer el comportamiento real de tu proceso.</li>
+              </ol>
+              <p>La herramienta pública de AURUM LAB está pensada para apoyar esta estimación desde un modelo 3D. Los nombres de materiales y densidades disponibles en el selector son los parámetros que debes revisar antes de interpretar el resultado.</p>
+            </section>
+
+            <section>
+              <h2 id="desviaciones">07. Por qué el peso calculado puede diferir del peso final</h2>
+              <p>El cálculo volumen × densidad estima la masa del material representado en el modelo. El peso de la pieza terminada puede variar por modificaciones del diseño, tolerancias, porosidad, mecanizado, limado, pulido, soldaduras, componentes añadidos o sustitución de materiales.</p>
+              <ul>
+                <li><strong>Canales y árbol de colada:</strong> si no están incluidos en el modelo, su metal no forma parte del resultado calculado.</li>
+                <li><strong>Acabado:</strong> el lijado y pulido pueden retirar material; el resultado final dependerá de cuánto se elimine.</li>
+                <li><strong>Piedras:</strong> separa el volumen y la masa de las gemas del metal, especialmente si el modelo incluye engastes o piedras de referencia.</li>
+                <li><strong>Aleación real:</strong> la densidad depende de la composición exacta, no solo de los quilates.</li>
+                <li><strong>Fabricación:</strong> las pérdidas, rebabas, uniones y ajustes se deben evaluar según el proceso real del taller.</li>
+              </ul>
+              <p>No apliques un porcentaje universal de merma sin datos. Construye tu propio margen a partir de registros de producción comparando el peso estimado, el peso antes del acabado y el peso final.</p>
+            </section>
+
+            <section>
+              <h2 id="control-final">08. Lista de control antes de presupuestar</h2>
+              <ul>
+                <li>El modelo corresponde a la versión final del diseño.</li>
+                <li>La unidad del archivo y la unidad de volumen están verificadas.</li>
+                <li>El volumen corresponde al metal, sin duplicados ni cuerpos auxiliares.</li>
+                <li>Las mallas o superficies delimitan correctamente un volumen.</li>
+                <li>La densidad coincide con la aleación y el proveedor previstos.</li>
+                <li>Las piedras y componentes de otros materiales están separados.</li>
+                <li>El resultado está identificado como masa teórica, no como peso final garantizado.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2>Preguntas frecuentes</h2>
+              <h3>¿Cómo calcular el peso de una joya desde un STL?</h3>
+              <p>Valida primero que la malla represente un volumen cerrado y tenga la escala correcta. Obtén el volumen, conviértelo a una unidad compatible con la densidad y aplica masa = volumen × densidad.</p>
+              <h3>¿Una joya del mismo volumen pesa igual en oro y plata?</h3>
+              <p>No. La masa depende de la densidad. Además, la densidad de una aleación de oro o plata depende de su composición concreta.</p>
+              <h3>¿Puedo usar la densidad del oro puro para oro 18K?</h3>
+              <p>No es recomendable. El oro 18K contiene otros metales y su densidad es inferior a la del oro puro; utiliza la densidad de la aleación concreta.</p>
+              <h3>¿El resultado incluye el árbol de colada y las pérdidas?</h3>
+              <p>Solo si esos volúmenes están incluidos en la geometría que se calcula. El margen de proceso debe estimarse con los datos reales del taller.</p>
+              <h3>¿Qué hago si el modelo tiene superficies abiertas?</h3>
+              <p>Repara la geometría y confirma que delimite un volumen válido antes de confiar en el cálculo. Un modelo visualmente cerrado no garantiza por sí mismo que el volumen se esté midiendo correctamente.</p>
+            </section>
           </div>
+
+          <section className="not-prose mt-10 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Bibliografía y referencias</p>
+            <h2 className="mt-2 text-xl font-bold text-[#17232d]">Fuentes técnicas consultadas</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Las fórmulas y los ejemplos didácticos son elaboración de AURUM LAB. Las fuentes siguientes respaldan las propiedades físicas y los criterios de medición de volumen.</p>
+            <ol className="mt-5 space-y-4 text-sm leading-6 text-slate-700">
+              <li><strong>U.S. Geological Survey (USGS).</strong> Tablas de propiedades minerales y elementos; incluye densidades tabuladas de plata, oro y platino a temperatura ambiente. <a className="font-semibold text-[#876500] underline" href="https://pubs.usgs.gov/tei/822/report.pdf" target="_blank" rel="noreferrer">Consultar tabla técnica</a>.</li>
+              <li><strong>London Bullion Market Association (LBMA).</strong> Density of Gold. Explica densidad, temperatura y variación de densidad al alear oro con plata y cobre; cita un ejemplo de oro 18K de 15,4 g/cm³. <a className="font-semibold text-[#876500] underline" href="https://www.lbma.org.uk/wonders-of-gold/items/density-of-gold" target="_blank" rel="noreferrer">Consultar publicación</a>.</li>
+              <li><strong>McNeel Rhinoceros.</strong> Comando Volume. Documenta el cálculo de volumen en superficies, polisuperficies, mallas y SubD, además de la configuración de unidades. <a className="font-semibold text-[#876500] underline" href="https://docs.mcneel.com/rhino/8/help/es-es/commands/volume.htm" target="_blank" rel="noreferrer">Consultar documentación oficial</a>.</li>
+              <li><strong>McNeel Rhinoceros.</strong> Volume mass properties. Explica las condiciones geométricas necesarias para calcular correctamente el volumen de objetos no sólidos y la orientación de sus normales. <a className="font-semibold text-[#876500] underline" href="https://docs.mcneel.com/rhino/mac/help/en-us/information/massproperties.htm" target="_blank" rel="noreferrer">Consultar documentación técnica</a>.</li>
+            </ol>
+            <p className="mt-5 border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">Nota técnica: las densidades de elementos puros no deben utilizarse como si fueran densidades de aleaciones comerciales. Para una estimación de producción, confirma la densidad del material exacto con su proveedor o ficha técnica.</p>
+          </section>
+
           <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
             <h2 className="mt-2 text-xl font-bold">Estima el peso de tu modelo 3D</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Abre la herramienta pública y revisa la estimación con el archivo y el material que utilizarás.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Carga tu diseño, revisa la geometría y selecciona el material para obtener una referencia de masa antes de fabricar.</p>
             <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-joya-3d" }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Abrir calculadora de peso 3D</Link>
           </section>
           <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
@@ -327,7 +465,6 @@ function GuiaTecnicaPage() {
       </main>
     );
   }
-
 
   if (slug === slugPlano) {
     return (
