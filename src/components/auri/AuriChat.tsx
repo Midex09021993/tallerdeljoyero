@@ -112,14 +112,77 @@ function textoParaVoz(value: string) {
   return value.replace(/\*\*(.*?)\*\*/g, "$1").replace(/^\s*(?:\*|-)\s+/gm, "").replace(/\n{2,}/g, ". ");
 }
 
-export function AuriChat({ onContact, modo = "publico" }: { onContact: () => void; modo?: "publico" | "interno" }) {
+type PublicPageConfig = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  welcome: string;
+  actions: ReadonlyArray<{ label: string; prompt: string; icon: typeof Gem }>;
+  focus: string;
+};
+
+function getPublicPageConfig(pathname = ""): PublicPageConfig {
+  if (pathname.startsWith("/herramientas-publicas")) {
+    const tool = pathname.split("/").filter(Boolean)[1];
+    const tools = [
+      { label: "Yeso y agua", prompt: "Quiero calcular el revestimiento y el agua para mi cilindro de fundición.", icon: Activity },
+      { label: "Aleación de oro", prompt: "Ayúdame a calcular una aleación de oro y alcanzar los quilates deseados.", icon: Gem },
+      { label: "Peso de joya 3D", prompt: "Quiero calcular el peso de una joya a partir de un modelo 3D.", icon: PackageSearch },
+      { label: "Peso de gemas", prompt: "Quiero calcular o convertir el peso de mis gemas.", icon: Gem },
+      { label: "Tallas de anillos", prompt: "Necesito convertir o identificar una talla de anillo.", icon: MessageCircle },
+    ] as const;
+    const current = tools.find((item) => item.label.toLowerCase().replace(/ /g, "-") === tool);
+    const toolTitles: Record<string, string> = {
+      "yeso-agua": "Calculadora de yeso y agua",
+      "aleacion-oro": "Calculadora de aleaciones de oro",
+      "peso-joya-3d": "Calculadora de peso de joya 3D",
+      "peso-gemas": "Calculadora de peso de gemas",
+      "tallas-anillos": "Conversor de tallas de anillos",
+    };
+    const title = toolTitles[tool ?? ""] ?? "Herramientas técnicas para joyería";
+    return {
+      eyebrow: "ASISTENCIA DE HERRAMIENTAS",
+      title: toolTitles[tool ?? ""] ? `¿Qué necesitas saber sobre ${title}?` : "¿Qué herramienta necesitas utilizar?",
+      description: toolTitles[tool ?? ""] ? "Estoy aquí para ayudarte con esta calculadora y orientarte paso a paso." : "Te ayudo a elegir y utilizar las calculadoras de joyería y fundición disponibles en esta sección.",
+      welcome: toolTitles[tool ?? ""] ? `¡Hola! Estás en ${title}. Puedo explicarte cómo utilizar esta herramienta y qué datos necesitas.` : "¡Hola! Estás en Herramientas Públicas. Puedo ayudarte con yeso y agua, aleaciones, peso de joyas 3D, peso de gemas y tallas de anillos. ¿Qué cálculo necesitas realizar?",
+      actions: toolTitles[tool ?? ""] ? tools.filter((item) => item.label.toLowerCase().replace(/ /g, "-") === tool) : tools,
+      focus: toolTitles[tool ?? ""] ? `La persona está en la página ${title}. Responde exclusivamente sobre esta calculadora: su propósito, datos de entrada, interpretación y uso. No promociones otras secciones ni herramientas, salvo que la persona lo solicite expresamente.` : "La persona está en la sección Herramientas Públicas. Prioriza exclusivamente las cinco calculadoras de esta sección: yeso y agua para fundición, aleación de oro, peso de joya desde modelo 3D, peso de gemas y tallas de anillos. No muestres promociones generales de AURUM LAB, planes, render o cursos salvo que la persona lo solicite expresamente.",
+    };
+  }
+  if (pathname === "/cursos-diseno-3d") {
+    return {
+      eyebrow: "ASESORÍA DE FORMACIÓN",
+      title: "¿Qué quieres conocer del curso?",
+      description: "Te oriento sobre el programa, sus sesiones, laboratorios y modalidad.",
+      welcome: "¡Hola! Estás en la página del curso de Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1. Puedo explicarte el contenido, las sesiones, los laboratorios y cómo participar.",
+      actions: [
+        { label: "Contenido del curso", prompt: "¿Qué aprenderé en este curso y cuáles son sus objetivos?", icon: MessageCircle },
+        { label: "Sesiones y duración", prompt: "Explícame cómo se organizan las sesiones y cuánto dura el curso.", icon: Activity },
+        { label: "Laboratorios", prompt: "¿Qué laboratorios y prácticas incluye el curso?", icon: PackageSearch },
+        { label: "Inscripción", prompt: "¿Cómo puedo solicitar información para inscribirme?", icon: Gem },
+      ],
+      focus: "La persona está en la página pública del curso CAD 3D Nivel 1. Responde sobre el programa, objetivos, sesiones, duración, laboratorios, modalidad e inscripción. No promociones herramientas, planes ni otras secciones salvo que lo solicite.",
+    };
+  }
+  return {
+    eyebrow: "GUÍA VIRTUAL DE TALLER DEL JOYERO",
+    title: "¿Qué te gustaría conocer de AURUM LAB?",
+    description: "Te explico nuestras herramientas, render 3D, recursos de formación y planes.",
+    welcome: WELCOME.text,
+    actions: PUBLIC_QUICK_ACTIONS,
+    focus: "La persona está explorando el sitio público de AURUM LAB. Responde de forma general y ofrece solo las secciones relevantes a su consulta.",
+  };
+}
+
+export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onContact: () => void; modo?: "publico" | "interno"; rutaActual?: string }) {
   const interno = modo === "interno";
+  const publicPage = !interno ? getPublicPageConfig(rutaActual) : null;
   const llamarInterno = useServerFn(auriInterno);
   const llamarDirecto = useServerFn(auriDirecto);
   const [modoDirecto, setModoDirecto] = useState(false);
   const [vista, setVista] = useState<"texto" | "voz">("texto");
   const [autorizado, setAutorizado] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([interno ? WELCOME_INTERNO : WELCOME]);
+  const [messages, setMessages] = useState<Message[]>([interno ? WELCOME_INTERNO : { role: "model", text: publicPage?.welcome ?? WELCOME.text }]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -135,6 +198,14 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
   useEffect(() => {
     if (interno) setAutorizado(window.localStorage.getItem(CONSENT_KEY) === "1");
   }, [interno]);
+
+  useEffect(() => {
+    if (interno) return;
+    setMessages([{ role: "model", text: publicPage?.welcome ?? WELCOME.text }]);
+    setDraft("");
+    setError("");
+    setVista("texto");
+  }, [interno, rutaActual]);
 
   useEffect(() => {
     const speechWindow = window as SpeechWindow;
@@ -196,6 +267,9 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
     event?.preventDefault();
     const question = (messageOverride ?? draft).trim();
     if (!question || loading) return;
+    const questionForAssistant = !interno && publicPage
+      ? `[CONTEXTO DE NAVEGACIÓN ACTUAL: ${publicPage.focus}]\\nConsulta del visitante: ${question}`
+      : question;
     const nextMessages: Message[] = [...messages, { role: "user", text: question }];
     setMessages(nextMessages);
     setDraft("");
@@ -212,7 +286,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         return;
       }
       const { data, error: invokeError } = await supabase.functions.invoke("auri-chat", {
-        body: { message: question, history: nextMessages.slice(-9, -1).map(({ role, text }) => ({ role, text })) },
+        body: { message: questionForAssistant, history: nextMessages.slice(-9, -1).map(({ role, text }) => ({ role, text })) },
       });
       if (invokeError) throw invokeError;
       if (!data?.reply || typeof data.reply !== "string") throw new Error(data?.error || "AURI no pudo responder en este momento.");
@@ -344,11 +418,11 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#fffefa] px-4 py-4 sm:px-5">
             {messages.length === 1 && (
               <div className="mb-5 mt-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">{interno ? "CENTRO DE ASISTENCIA" : "GUÍA VIRTUAL DE TALLER DEL JOYERO"}</p>
-                <h2 className="mt-2 font-display text-2xl leading-tight text-[#263746] sm:text-[27px]">{interno ? "¿Qué necesitas resolver hoy?" : "¿Qué te gustaría conocer de AURUM LAB?"}</h2>
-                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">{interno ? "Consulta la información de tu taller en lenguaje natural." : "Te explico nuestras herramientas, render 3D, recursos de formación y planes. También puedo guiarte a cada sección de la web."}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">{interno ? "CENTRO DE ASISTENCIA" : publicPage?.eyebrow ?? "GUÍA VIRTUAL DE TALLER DEL JOYERO"}</p>
+                <h2 className="mt-2 font-display text-2xl leading-tight text-[#263746] sm:text-[27px]">{interno ? "¿Qué necesitas resolver hoy?" : publicPage?.title ?? "¿Qué te gustaría conocer de AURUM LAB?"}</h2>
+                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">{interno ? "Consulta la información de tu taller en lenguaje natural." : publicPage?.description ?? "Te explico nuestras herramientas, render 3D, recursos de formación y planes."}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {(interno ? QUICK_ACTIONS : PUBLIC_QUICK_ACTIONS).map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void sendMessage(undefined, prompt)} disabled={loading} className="group flex min-h-[66px] items-center gap-2.5 rounded-xl border border-[#e9e2d3] bg-white px-3 py-3 text-left shadow-[0_2px_8px_rgba(38,55,70,.025)] transition hover:-translate-y-0.5 hover:border-[#d5bf87] hover:shadow-md disabled:opacity-50"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#f8f3e7] text-[#a98535] transition group-hover:bg-[#f1e6c9]"><Icon className="size-4" /></span><span className="text-[11px] font-semibold leading-4 text-[#475663]">{label}</span></button>)}
+                  {(interno ? QUICK_ACTIONS : publicPage?.actions ?? PUBLIC_QUICK_ACTIONS).map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void sendMessage(undefined, prompt)} disabled={loading} className="group flex min-h-[66px] items-center gap-2.5 rounded-xl border border-[#e9e2d3] bg-white px-3 py-3 text-left shadow-[0_2px_8px_rgba(38,55,70,.025)] transition hover:-translate-y-0.5 hover:border-[#d5bf87] hover:shadow-md disabled:opacity-50"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#f8f3e7] text-[#a98535] transition group-hover:bg-[#f1e6c9]"><Icon className="size-4" /></span><span className="text-[11px] font-semibold leading-4 text-[#475663]">{label}</span></button>)}
                 </div>
               </div>
             )}
