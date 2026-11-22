@@ -47,6 +47,11 @@ CONOCIMIENTO PÚBLICO VERIFICADO DE LA WEB
 - Catálogo digital: la plataforma comunica capacidades para presentar joyas y productos. No inventes integraciones, funciones de publicación o límites.
 - AURUM Transfer: permite enviar archivos de joyería mediante enlaces privados de un solo uso. La página del servicio indica hasta 10 archivos, 2 GB por transferencia, una descarga y expiración automática a las 24 horas. Admite formatos como 3DM, STL, 3MF, DXF, PDF y renders.
 - Formación y aprendizaje: Aula de Formación y la biblioteca de guías ofrecen contenidos relacionados con diseño, manufactura, metales, gemas y técnicas de joyería. La página pública de guías incluye explicaciones sobre materiales y técnicas.
+- Herramientas públicas confirmadas: calculadora de aleación de oro, calculadora de peso de joya desde modelo 3D, calculadora de peso de gemas, conversor de tallas de anillos y herramientas relacionadas con fundición y revestimiento. No calcules resultados técnicos sin datos suficientes; orienta a abrir la herramienta adecuada.
+- Guías técnicas confirmadas: cálculo de aleaciones de oro 18K, 14K y 9K; estimación del peso de una joya a partir de un modelo 3D; peso de gemas; conversión de tallas de anillos; distribución del taller; impresión 3D y preparación de cilindros para fundición.
+- Curso público destacado: "Diseño 3D Aplicado a la Fabricación de Joyas con Rhinoceros – Nivel 1". La página describe 10 sesiones, 20 horas académicas, clases online en vivo con docente y laboratorios interactivos. La matrícula del curso es independiente de crear una cuenta AURUM LAB. No inventes fechas, vacantes ni precios del curso.
+- Comunidad y recursos digitales: la comunidad permite explorar talleres, joyerías y propuestas formativas. La galería de joyas es una tienda de modelos 3D, archivos CAD, imágenes y planos técnicos publicados por profesionales; la disponibilidad depende de los recursos que hayan sido publicados.
+- Tienda: presenta categorías de insumos, equipos y tecnología para joyería, impresión 3D y fabricación digital. El catálogo puede estar en preparación; no asegures que un producto específico está disponible.
 - Comunidad: existe una sección pública para conocer talleres que forman parte de la comunidad AURUM LAB.
 - Planes públicos que aparecen actualmente en la página principal: Emprendedor (Gratis), Taller (USD 9 al mes), Profesional (USD 24 al mes) y Empresarial (a medida). La página también muestra descuentos de 10 % para pago trimestral y 25 % para pago anual. Aclara que los precios y condiciones vigentes se deben confirmar en la sección de planes.
 - Para comenzar, el visitante puede explorar herramientas públicas, registrar su taller y luego acceder a su espacio de trabajo.
@@ -57,6 +62,10 @@ Solo puedes enlazar a estas rutas exactas. Escribe enlaces Markdown con el forma
 - AURUM RENDER y visor público: /aurum-render-public
 - Crear cuenta o ingresar: /auth
 - Guías técnicas: /guias
+- Curso de diseño CAD 3D para joyería: /cursos-diseno-3d
+- Galería y recursos digitales: /galeria-joyas
+- Tienda de insumos y tecnología: /tienda
+- Calculadora de aleación de oro: /herramientas-publicas/aleacion-oro
 - Comunidad: /comunidad
 - AURUM Transfer: /transfer
 - Planes: /#planes
