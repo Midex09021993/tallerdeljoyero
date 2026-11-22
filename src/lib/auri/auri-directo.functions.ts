@@ -38,7 +38,7 @@ function extraerEstado(message: string): typeof ESTADOS[number] | undefined {
 }
 
 function referenciaEn(message: string): string | undefined {
-  const match = message.match(/\b(?:PED(?:IDO)?[-\s]?)\d{1,10}\b/i);
+  const match = message.match(/\b[A-ZÁÉÍÓÚÑ]{1,8}[-\s]\d{1,10}\b/i) ?? message.match(/\bPED(?:IDO)?[-\s]?\d{1,10}\b/i);
   return match?.[0]?.replace(/\s+/g, "").toUpperCase();
 }
 
@@ -68,7 +68,7 @@ function formatearPedidos(data: unknown): string {
   if (!pedidos.length) return "No encontré pedidos con esos filtros o no tienes acceso a ellos.";
   const lineas = pedidos.slice(0, 25).map((item) => {
     const p = objeto(item);
-    const referencia = `Pedido ${pedidos.indexOf(item) + 1}`;
+    const referencia = textoSeguro(p.referencia) || "Referencia no registrada";
     const estado = textoSeguro(p.estado) || "Estado no registrado";
     const pieza = textoSeguro(p.pieza) || "Pieza no especificada";
     const entrega = textoSeguro(p.fecha_entrega) || "Sin fecha";
@@ -164,7 +164,7 @@ export const auriDirecto = createServerFn({ method: "POST" })
       format = formatearPedidos;
     } else {
       return {
-        reply: "Estoy en **AURI Directo**, sin inteligencia artificial. Por ahora puedo:\n- Consultar el resumen de producción y pedidos atrasados.\n- Listar pedidos activos o filtrarlos por estado.\n- Mostrar la ficha de un pedido si escribes su referencia, por ejemplo **PED-0001**.\n\nNo interpreto preguntas abiertas; necesito una de esas consultas concretas.",
+        reply: "Estoy en **AURI Directo**, sin inteligencia artificial. Por ahora puedo:\n- Consultar el resumen de producción y pedidos atrasados.\n- Listar pedidos activos o filtrarlos por estado.\n- Mostrar la ficha de un pedido si escribes su referencia, por ejemplo **SI-0001** (o la referencia exacta de tu pedido).\n\nNo interpreto preguntas abiertas; necesito una de esas consultas concretas.",
         herramientas: [],
       };
     }
