@@ -337,7 +337,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
   }
 
   const voiceStatus = listening ? "Te estoy escuchando" : loading ? "Estoy preparando tu respuesta" : speaking ? "AURI está hablando" : "Tu espacio de conversación";
-  const voiceHint = listening ? "Habla con naturalidad. Suelta el botón para enviar." : loading ? "Estoy consultando la información para darte una respuesta." : speaking ? "Puedes interrumpir la respuesta cuando quieras." : "Mantén presionado el micrófono y conversa conmigo.";
+  const voiceHint = listening ? "Te escucho. Cuando termines, toca el botón para enviar tu consulta." : loading ? "Estoy consultando la información para darte una respuesta." : speaking ? "AURI está respondiendo. Toca el micrófono para interrumpir y hablar." : "Toca el micrófono una vez para empezar a hablar.";
   const latestAssistantMessage = [...messages].reverse().find((message) => message.role === "model");
 
   return (
