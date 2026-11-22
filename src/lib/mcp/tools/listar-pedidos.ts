@@ -5,10 +5,10 @@ import { ESTADOS_PEDIDO, supabaseForUser, textoBusqueda } from "../supabase";
 export default defineTool({
   name: "listar_pedidos",
   title: "Listar pedidos",
-  description: "Lista los pedidos del taller que el usuario puede ver, por defecto solo los activos (no entregados).",
+  description: "Busca pedidos por número de referencia, nombre del cliente, nombre de pieza o descripción del trabajo. Usa busqueda para el número o nombre que indique el usuario. Devuelve referencia y cliente para identificar el resultado. Por defecto excluye entregados; usa incluir_entregados=true si piden buscar en todo el historial o no aparece el pedido entre los activos.",
   inputSchema: {
     estado: z.enum(ESTADOS_PEDIDO).optional().describe("Filtra por estado oficial del pedido."),
-    busqueda: z.string().max(80).optional().describe("Texto a buscar en referencia, cliente, pieza o trabajo."),
+    busqueda: z.string().min(1).max(80).optional().describe("Número completo o parcial de referencia, nombre completo o parcial del cliente, pieza o trabajo. Ejemplos: SI-001, 001, Juan Pérez."),
     incluir_entregados: z.boolean().optional().describe("Incluye pedidos ya entregados (histórico). Por defecto false."),
     limite: z.number().int().min(1).max(100).optional().describe("Máximo de pedidos a devolver (1-100, por defecto 25)."),
   },

@@ -19,7 +19,7 @@ export default defineTool({
       .from("pedidos")
       .select("id, referencia, cliente, pieza, trabajo, estado, area_actual, material, piedras, talla, peso_estimado, cantidad_piezas, ruta, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, contrato, fecha_ingreso, fecha_entrega, fecha_listo_entrega, fecha_envio, fecha_entregado, medio_envio, guia_envio, updated_at")
       .limit(2);
-    query = id ? query.eq("id", id) : query.eq("referencia", referencia!.trim());
+    query = id ? query.eq("id", id) : query.ilike("referencia", referencia!.trim());
     const { data, error } = await query;
     if (error) throw new ToolError(`No se pudo leer el pedido: ${error.message}`);
     if (!data || data.length === 0) throw new ToolError("Pedido no encontrado o sin acceso.");
@@ -59,7 +59,7 @@ export default defineTool({
       `Pieza: ${pedido.pieza || "—"} · Trabajo: ${pedido.trabajo || "—"}`,
       `Material: ${pedido.material || "No registrado"} · Piedras: ${pedido.piedras || "No registrado"} · Talla: ${pedido.talla || "No registrada"} · Peso estimado: ${pedido.peso_estimado ?? "No registrado"} · Cantidad: ${pedido.cantidad_piezas ?? "No registrada"}`,
       `Ruta de fabricación: ${pedido.ruta.join(" → ") || "sin definir"}`,
-      `Corte Láser: texto ${pedido.corte_texto || "No registrado"} · tipografía ${pedido.corte_tipografia || "No registrada"} · ubicación ${pedido.corte_ubicacion || "No registrada"} · observaciones ${pedido.corte_observaciones || "No registradas"}`
+      `Corte Láser: texto ${pedido.corte_texto || "No registrado"} · tipografía ${pedido.corte_tipografia || "No registrada"} · ubicación ${pedido.corte_ubicacion || "No registrada"} · observaciones ${pedido.corte_observaciones || "No registradas"}`,
       `Ingreso: ${pedido.fecha_ingreso} · Entrega prevista: ${pedido.fecha_entrega ?? "sin fecha"}`,
     ].join("\n");
     return { content: [{ type: "text", text: texto }], structuredContent: { pedido } };

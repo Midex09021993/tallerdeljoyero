@@ -20,10 +20,10 @@ export const AURI_TOOLS: readonly AnyTool[] = [
   listarPedidos, verPedido, resumenProduccion, listarContratos, buscarClientes, crearCliente,
 ] as unknown as AnyTool[];
 
-// Lista positiva: ningún identificador, nombre, referencia, dato de contacto o campo financiero
-// puede salir hacia Gemini. Los valores operativos se conservan para resumir el trabajo.
+// Lista positiva: se permiten referencia visible y nombre del cliente únicamente para localizar pedidos
+// dentro del ámbito RLS del usuario. Se siguen excluyendo UUID, teléfonos, correos y campos financieros.
 const CAMPOS_PERMITIDOS = new Set([
-  "estado", "area_produccion", "pieza", "trabajo", "material", "piedras", "talla",
+  "referencia", "cliente", "estado", "area_produccion", "pieza", "trabajo", "material", "piedras", "talla",
   "peso_estimado", "cantidad_piezas", "ruta", "corte_texto", "corte_tipografia", "corte_ubicacion", "corte_observaciones", "fecha_ingreso", "fecha_entrega",
   "fecha_listo_entrega", "fecha_envio", "fecha_entregado", "medio_envio",
   "actualizado", "pedido", "pedidos", "activos", "atrasados", "por_estado", "por_area",
