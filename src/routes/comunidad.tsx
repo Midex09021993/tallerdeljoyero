@@ -17,8 +17,8 @@ export const Route = createFileRoute("/comunidad")({
 
 const destinos = [
   {
-    titulo: "Diseño 3D Aplicado a la Fabricación de Joyas con Rhinoceros – Nivel 1",
-    descripcion: "Aprende modelado 3D para joyería con un programa práctico de 20 horas académicas, organizado en 10 sesiones. Nivel inicial.",
+    titulo: "Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1",
+    descripcion: "Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada. Programa de 20 horas académicas, organizado en 10 sesiones.",
     etiqueta: "Curso destacado · 20 horas académicas",
     href: "/cursos-diseno-3d" as const,
     accion: "Conocer el curso",
