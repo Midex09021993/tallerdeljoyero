@@ -144,9 +144,8 @@ Deno.serve(async (req: Request) => {
     }) : [];
 
     const apiModels = [
-      Deno.env.get("GEMINI_AURI_MODEL") || "gemini-3.8-flash",
-      "gemini-3.7-flash",
-      "gemini-2.5-flash-lite",
+      Deno.env.get("GEMINI_AURI_MODEL") || "gemini-flash-lite-latest",
+      "gemini-flash-latest",
     ].filter((model, index, all) => all.indexOf(model) === index);
 
     let lastStatus = 503;
