@@ -19,7 +19,7 @@
       {
         "name": "listar_pedidos",
         "title": "Listar pedidos",
-        "description": "Lista los pedidos del taller que el usuario puede ver, por defecto solo los activos (no entregados).",
+        "description": "Busca pedidos por número de referencia, nombre del cliente, nombre de pieza o descripción del trabajo. Usa busqueda para el número o nombre que indique el usuario. Devuelve referencia y cliente para identificar el resultado. Por defecto excluye entregados; usa incluir_entregados=true si piden buscar en todo el historial o no aparece el pedido entre los activos.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -41,8 +41,9 @@
               ]
             },
             "busqueda": {
-              "description": "Texto a buscar en referencia, cliente, pieza o trabajo.",
+              "description": "Número completo o parcial de referencia, nombre completo o parcial del cliente, pieza o trabajo. Ejemplos: SI-001, 001, Juan Pérez.",
               "type": "string",
+              "minLength": 1,
               "maxLength": 80
             },
             "incluir_entregados": {
@@ -63,7 +64,7 @@
       {
         "name": "ver_pedido",
         "title": "Ver pedido",
-        "description": "Muestra el detalle de un pedido por su id o su referencia (sin costes ni notas internas).",
+        "description": "Consulta la ficha técnica completa de un pedido por id o referencia. Devuelve expresamente trabajo, material, piedras, talla, peso_estimado, cantidad_piezas, ruta de fabricación y datos de Corte Láser. Usa esta herramienta siempre que pregunten por la ficha técnica o qué información falta para fabricar. No incluye costes ni notas internas.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
