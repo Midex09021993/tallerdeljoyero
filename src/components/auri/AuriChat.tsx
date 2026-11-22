@@ -332,7 +332,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
     return (
       <div className="flex min-h-[320px] h-full flex-col justify-center gap-4 bg-white p-6 text-[#394653] sm:rounded-2xl">
         <div className="mx-auto grid size-16 place-items-center rounded-2xl border border-[#dfc98e] bg-[#fbf8ef] text-[#ad8a3d]"><Bot className="size-8" /></div>
-        <div className="text-center"><p className="font-display text-xl text-[#263746]">Activa tu espacio AURI</p><p className="mt-2 text-sm leading-6 text-[#687580]">AURI consultará únicamente la información que tu cuenta ya puede ver. Gemini usa el proveedor de IA; AURI Directo ejecuta consultas predeterminadas sin IA. Ambos modos son de solo lectura.</p></div>
+        <div className="text-center"><p className="font-display text-xl text-[#263746]">Activa tu espacio AURI</p><p className="mt-2 text-sm leading-6 text-[#687580]">AURI solo consulta información que tu cuenta ya puede ver. En Gemini, tu consulta y los campos mínimos necesarios para responder se envían al proveedor de IA; si buscas clientes, puede incluir sus nombres, pero nunca teléfonos, correos, documentos ni direcciones. AURI Directo realiza consultas predeterminadas sin IA. Ambos modos son de solo lectura.</p></div>
         <button type="button" onClick={() => { window.localStorage.setItem(CONSENT_KEY, "1"); setAutorizado(true); }} className="mx-auto min-h-11 rounded-xl bg-[#263746] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-[#344d62]">Autorizar acceso</button>
       </div>
     );
