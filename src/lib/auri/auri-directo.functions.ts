@@ -46,7 +46,7 @@ function referenciaEn(message: string): string | undefined {
   return match?.[0]?.replace(/\s+/g, "").toUpperCase();
 }
 
-function extraerBusqueda(message: string, tipo: "cliente" | "contrato" | "pedido"): string | undefined {
+export function extraerBusqueda(message: string, tipo: "cliente" | "contrato" | "pedido"): string | undefined {
   const clean = message.trim().replace(/[¿?¡!.,;:]+$/g, "");
   const patterns = tipo === "cliente"
     ? [
