@@ -219,10 +219,12 @@ function ContactoFlotante() {
     pathname.startsWith("/herramientas-publicas/");
   const esPaginaPublica = pathname === "/" || pathname === "/cursos-diseno-3d" ||
     /^\/formacion\/[^/]+\/?$/.test(pathname) || esCatalogoPublico;
-  // Las herramientas públicas usan AURI como único acceso flotante; no mostrar el CTA antiguo «Hablemos».
-  const mostrarAuri = !sesionCargando && !sesion && esHerramientasPublicas;
+  // AURI es el acceso flotante en herramientas públicas y en la landing del curso.
+  // En esas rutas no mostrar el CTA comercial antiguo «Hablemos».
+  const esLandingCurso = pathname === "/cursos-diseno-3d";
+  const mostrarAuri = !sesionCargando && !sesion && (esHerramientasPublicas || esLandingCurso);
   const mostrarContacto = !sesionCargando && !sesion && esPaginaPublica &&
-    pathname !== "/" && !esHerramientasPublicas;
+    pathname !== "/" && !esHerramientasPublicas && !esLandingCurso;
   if (!mostrarAuri && !mostrarContacto) return null;
   return (
     <>
