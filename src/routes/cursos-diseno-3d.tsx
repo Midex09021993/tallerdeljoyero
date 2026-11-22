@@ -103,7 +103,7 @@ function CursosDiseno3DPage() {
       <section className="relative overflow-hidden border-b border-[#e8e1d4] bg-white">
         <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-0 size-[28rem] rounded-full bg-[#fff2c5]/70 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 bottom-0 size-[26rem] rounded-full bg-[#e6edf4]/80 blur-3xl" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-9 sm:px-7 sm:py-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-9 lg:px-10 lg:py-10 xl:gap-12">
+        <div className="relative mx-auto grid max-w-7xl items-start gap-8 px-4 py-9 sm:px-7 sm:py-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-9 lg:px-10 lg:py-10 xl:gap-12">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
             <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– Nivel 1</span></h1>
@@ -126,7 +126,7 @@ function CursosDiseno3DPage() {
               />
             </div>
           </div>
-          <div className="relative">
+          <div className="relative lg:mt-[3.35rem]">
             <div className="absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-[#f8e8b5] via-white to-[#dfe8f0] blur-xl" />
             <div className="relative overflow-hidden rounded-[1.75rem] border border-[#e5dfd3] bg-white p-4 shadow-[0_20px_55px_rgba(31,45,58,.11)] sm:p-5 lg:p-6">
               <div className="flex items-center justify-between border-b border-[#edf0f2] pb-4">
