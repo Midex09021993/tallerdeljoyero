@@ -32,14 +32,42 @@ function numero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+function normalizar(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 function extraerEstado(message: string): typeof ESTADOS[number] | undefined {
-  const normalized = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return ESTADOS.find((estado) => normalized.includes(estado.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()));
+  const normalized = normalizar(message);
+  return ESTADOS.find((estado) => normalized.includes(normalizar(estado)));
 }
 
 function referenciaEn(message: string): string | undefined {
   const match = message.match(/\b[A-ZÁÉÍÓÚÑ]{1,8}[-\s]\d{1,10}\b/i) ?? message.match(/\bPED(?:IDO)?[-\s]?\d{1,10}\b/i);
   return match?.[0]?.replace(/\s+/g, "").toUpperCase();
+}
+
+function extraerBusqueda(message: string, tipo: "cliente" | "contrato" | "pedido"): string | undefined {
+  const clean = message.trim().replace(/[¿?¡!.,;:]+$/g, "");
+  const patterns = tipo === "cliente"
+    ? [
+        /\b(?:buscar|buscame|encuentra|localiza)\s+(?:un\s+)?cliente(?:s)?(?:\s+(?:llamado|llamada|de nombre|por nombre))?\s+(.+)$/i,
+        /\bcliente(?:s)?\s+(?:llamado|llamada|de nombre)?\s+(.+)$/i,
+      ]
+    : tipo === "contrato"
+      ? [
+          /\b(?:buscar|muestra|mostrar|listar|consulta|consultar)\s+(?:los\s+)?contratos?\s+(?:de|del|numero|número)?\s*(.+)$/i,
+          /\bcontrato\s+(?:numero|número)?\s*(.+)$/i,
+        ]
+      : [
+          /\b(?:pedidos?|ordenes?)\s+(?:de|del|para)\s+(.+)$/i,
+          /\b(?:buscar|buscame|encuentra)\s+(?:el\s+)?pedido\s+(?:de|del|para)?\s*(.+)$/i,
+        ];
+  for (const pattern of patterns) {
+    const match = clean.match(pattern);
+    const value = match?.[1]?.trim().replace(/^(?:mi taller|mi empresa)$/i, "");
+    if (value && value.length >= 2) return value.slice(0, 80);
+  }
+  return undefined;
 }
 
 function formatearResumen(data: unknown): string {
@@ -77,54 +105,60 @@ function formatearPedidos(data: unknown): string {
   return `Encontré ${pedidos.length} pedido(s):\n${lineas.join("\n")}`;
 }
 
+function formatearClientes(data: unknown): string {
+  const root = objeto(data);
+  const clientes = Array.isArray(root["clientes"]) ? root["clientes"] : [];
+  if (!clientes.length) return "No encontré clientes con ese nombre o no tienes acceso a ellos.";
+  const lineas = clientes.slice(0, 20).map((item) => {
+    const c = objeto(item);
+    const nombre = textoSeguro(c["nombre"]) || "Nombre no registrado";
+    const tipo = textoSeguro(c["tipo"]);
+    const ciudad = textoSeguro(c["ciudad"]);
+    const estado = textoSeguro(c["estado"]);
+    return `- **${nombre}**${tipo ? ` · ${tipo}` : ""}${ciudad ? ` · ${ciudad}` : ""}${estado ? ` · ${estado}` : ""}`;
+  });
+  return `Encontré ${clientes.length} cliente(s):\n${lineas.join("\n")}\n\nPor privacidad, AURI no muestra teléfonos, correos ni documentos en este resumen.`;
+}
+
+function formatearContratos(data: unknown): string {
+  const root = objeto(data);
+  const contratos = Array.isArray(root["contratos"]) ? root["contratos"] : [];
+  if (!contratos.length) return "No encontré contratos con esos filtros o no tienes acceso a ellos.";
+  const lineas = contratos.slice(0, 20).map((item) => {
+    const c = objeto(item);
+    return `- **${textoSeguro(c["numero"]) || "Sin número"}** · ${textoSeguro(c["cliente"]) || "Sin cliente"} · ${numero(c["pedidos"])} pedido(s) · ${textoSeguro(c["creado"]).slice(0, 10) || "Sin fecha"}`;
+  });
+  return `Encontré ${contratos.length} contrato(s):\n${lineas.join("\n")}`;
+}
+
 function formatearPedido(data: unknown, referenciaSolicitada?: string): string {
   const root = objeto(data);
   const p = objeto(root["pedido"]);
   if (!Object.keys(p).length) return "No encontré ese pedido o no tienes permiso para consultarlo.";
   const fields: Array<[string, unknown]> = [
-    ["Referencia", referenciaSolicitada],
-    ["Pieza", p["pieza"]],
-    ["Trabajo", p["trabajo"]],
-    ["Estado", p["estado"]],
-    ["Área", p["area_produccion"]],
-    ["Material", p["material"]],
-    ["Piedras", p["piedras"]],
-    ["Talla", p["talla"]],
-    ["Peso estimado", p["peso_estimado"]],
+    ["Referencia", referenciaSolicitada], ["Pieza", p["pieza"]], ["Trabajo", p["trabajo"]],
+    ["Estado", p["estado"]], ["Área", p["area_produccion"]], ["Material", p["material"]],
+    ["Piedras", p["piedras"]], ["Talla", p["talla"]], ["Peso estimado", p["peso_estimado"]],
     ["Cantidad", p["cantidad_piezas"]],
     ["Ruta de fabricación", Array.isArray(p["ruta"]) ? p["ruta"].join(" → ") : ""],
-    ["Fecha de ingreso", p["fecha_ingreso"]],
-    ["Fecha de entrega", p["fecha_entrega"]],
+    ["Fecha de ingreso", p["fecha_ingreso"]], ["Fecha de entrega", p["fecha_entrega"]],
   ];
-  const valueFor = (key: string) => p[key];
-  const required = [
-    ["Trabajo / descripción", "trabajo"],
-    ["Material", "material"],
-    ["Cantidad de piezas", "cantidad_piezas"],
-  ] as const;
-  const sinRegistrar = required.filter(([, key]) => valueFor(key) === null || valueFor(key) === undefined || valueFor(key) === "").map(([label]) => label);
+  const required = [["Trabajo / descripción", "trabajo"], ["Material", "material"], ["Cantidad de piezas", "cantidad_piezas"]] as const;
+  const sinRegistrar = required.filter(([, key]) => p[key] === null || p[key] === undefined || p[key] === "").map(([label]) => label);
   const ruta = Array.isArray(p["ruta"]) ? p["ruta"].map((item) => textoSeguro(item)).filter(Boolean) : [];
-  const esCorteLaser = ruta.some((area) => area.toLowerCase().includes("corte láser") || area.toLowerCase().includes("corte laser"));
+  const esCorteLaser = ruta.some((area) => normalizar(area).includes("corte laser"));
   const laserFields: Array<[string, string]> = [
-    ["Texto a grabar o cortar", "corte_texto"],
-    ["Ubicación", "corte_ubicacion"],
-    ["Tipografía", "corte_tipografia"],
-    ["Observaciones de corte", "corte_observaciones"],
+    ["Texto a grabar o cortar", "corte_texto"], ["Ubicación", "corte_ubicacion"],
+    ["Tipografía", "corte_tipografia"], ["Observaciones de corte", "corte_observaciones"],
   ];
-  const laserPendientes = esCorteLaser
-    ? laserFields.filter(([, key]) => !textoSeguro(p[key])).map(([label]) => label)
-    : [];
+  const laserPendientes = esCorteLaser ? laserFields.filter(([, key]) => !textoSeguro(p[key])).map(([label]) => label) : [];
   return [
     "**Ficha técnica del pedido**",
     ...fields.map(([label, value]) => `- **${label}:** ${value === null || value === undefined || value === "" ? "No registrado" : textoSeguro(value)}`),
     "",
     "**Revisión de información**",
-    sinRegistrar.length
-      ? `- Datos básicos sin registrar: ${sinRegistrar.join(", ")}.`
-      : "- Los campos básicos de trabajo, material y cantidad están registrados.",
-    esCorteLaser
-      ? (laserPendientes.length ? `- Detalles de Corte Láser sin registrar: ${laserPendientes.join(", ")}.` : "- Los campos específicos de Corte Láser están registrados.")
-      : "- No se detecta una ruta de Corte Láser en este pedido.",
+    sinRegistrar.length ? `- Datos básicos sin registrar: ${sinRegistrar.join(", ")}.` : "- Los campos básicos de trabajo, material y cantidad están registrados.",
+    esCorteLaser ? (laserPendientes.length ? `- Detalles de Corte Láser sin registrar: ${laserPendientes.join(", ")}.` : "- Los campos específicos de Corte Láser están registrados.") : "- No se detecta una ruta de Corte Láser en este pedido.",
     "",
     "Los campos no registrados son puntos para revisar con el taller; no significan automáticamente que sean obligatorios para toda pieza.",
   ].join("\n");
@@ -143,7 +177,7 @@ export const auriDirecto = createServerFn({ method: "POST" })
     const token = authorization.toLowerCase().startsWith("bearer ") ? authorization.slice(7).trim() : "";
     if (!token) return { reply: "", herramientas: [], error: "Tu sesión expiró. Vuelve a iniciar sesión." };
 
-    const normalized = data.message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const normalized = normalizar(data.message);
     const refPedido = referenciaEn(data.message);
     let toolName: string;
     let args: Record<string, unknown>;
@@ -153,18 +187,32 @@ export const auriDirecto = createServerFn({ method: "POST" })
       toolName = "ver_pedido";
       args = { referencia: refPedido };
       format = formatearPedido;
-    } else if (/\b(resumen|produccion|producción|atrasad|por area|por área|cuantos pedidos activos|cuantos pedidos pendientes)\b/.test(normalized)) {
+    } else if (/\b(ficha tecnica|ficha del pedido|detalle tecnico|datos para fabricar)\b/.test(normalized)) {
+      return { reply: "Claro. Escríbeme la referencia exacta del pedido para abrir su ficha técnica, por ejemplo **SI-0001**.", herramientas: [] };
+    } else if (/\b(cliente|clientes)\b/.test(normalized)) {
+      const busqueda = extraerBusqueda(data.message, "cliente");
+      if (!busqueda) return { reply: "¿Qué nombre o apellido debo buscar? Por ejemplo: **Buscar cliente Juan Pérez**.", herramientas: [] };
+      toolName = "buscar_clientes";
+      args = { busqueda, limite: 20 };
+      format = formatearClientes;
+    } else if (/\b(contrato|contratos)\b/.test(normalized)) {
+      const busqueda = extraerBusqueda(data.message, "contrato");
+      toolName = "listar_contratos";
+      args = { ...(busqueda ? { busqueda } : {}), limite: 20 };
+      format = formatearContratos;
+    } else if (/\b(resumen|produccion|atrasad|por area|cuantos pedidos activos|cuantos pedidos pendientes)\b/.test(normalized)) {
       toolName = "resumen_produccion";
       args = {};
       format = formatearResumen;
     } else if (/\b(pedido|pedidos|pendiente|pendientes|recibido|en produccion|listo para entrega|en camino|entregado|listar|mostrar)\b/.test(normalized)) {
-      toolName = "listar_pedidos";
       const estado = extraerEstado(data.message);
-      args = { limite: 25, ...(estado ? { estado } : {}) };
+      const busqueda = extraerBusqueda(data.message, "pedido");
+      toolName = "listar_pedidos";
+      args = { limite: 25, ...(estado ? { estado } : {}), ...(busqueda ? { busqueda } : {}) };
       format = formatearPedidos;
     } else {
       return {
-        reply: "Estoy en **AURI Directo**, sin inteligencia artificial. Por ahora puedo:\n- Consultar el resumen de producción y pedidos atrasados.\n- Listar pedidos activos o filtrarlos por estado.\n- Mostrar la ficha de un pedido si escribes su referencia, por ejemplo **SI-0001** (o la referencia exacta de tu pedido).\n\nNo interpreto preguntas abiertas; necesito una de esas consultas concretas.",
+        reply: "Estoy en **AURI Directo**, sin inteligencia artificial. Puedo consultar:\n- Resumen de producción y pedidos atrasados.\n- Pedidos por estado, referencia, cliente o pieza.\n- Clientes por nombre o apellido.\n- Contratos por número o cliente.\n- Fichas técnicas usando la referencia exacta del pedido.\n\nDime qué necesitas consultar y aplicaré un filtro concreto.",
         herramientas: [],
       };
     }
@@ -173,7 +221,6 @@ export const auriDirecto = createServerFn({ method: "POST" })
     if (!tool || tool.annotations?.readOnlyHint !== true) {
       return { reply: "", herramientas: [], error: "La consulta solicitada no está habilitada en modo de solo lectura." };
     }
-
     const result = await ejecutarHerramienta(toolName, args, { token });
     if (!result.ok) return { reply: "", herramientas: [toolName], error: result.error };
     return { reply: format(result.datos, refPedido), herramientas: [toolName] };
