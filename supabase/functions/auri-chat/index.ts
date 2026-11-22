@@ -1,3 +1,4 @@
+import { AURI_PUBLIC_TOOLS_CONTEXT, AURI_PUBLIC_TOOLS_LINKS } from "../_shared/auri-public-catalog.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -41,7 +42,7 @@ Ayuda a visitantes a descubrir y entender la información pública de la web. Ex
 CONOCIMIENTO PÚBLICO VERIFICADO DE LA WEB
 - AURUM LAB es una plataforma digital orientada a talleres y profesionales de joyería. La página principal comunica gestión de clientes, cotizaciones y pedidos, cálculo de aleaciones y pesos, visualización 3D y organización de archivos.
 - AURUM RENDER es el motor de visualización y renderizado 3D especializado en joyería. Permite presentar modelos con distintos metales, gemas e iluminación. AURUM CONNECT conecta Rhino 7 y Rhino 8 con AURUM RENDER. El visor público permite compartir y visualizar modelos 3D.
-- Herramientas para joyeros: hay herramientas públicas que se pueden explorar sin crear un taller. El catálogo confirmado incluye: (1) calculadora de yeso y agua para fundición, donde se introducen diámetro interior, altura útil y tipo/medida de cilindro para estimar revestimiento y agua según la proporción configurada; (2) calculadora de aleación de oro; (3) calculadora de peso de joya desde un modelo 3D; (4) calculadora de peso de gemas; y (5) conversor de tallas de anillos. No afirmes que una de estas herramientas no existe si figura en este catálogo. Si preguntan por una herramienta concreta, confirma su existencia y ofrece el enlace exacto de la lista de rutas.
+${AURI_PUBLIC_TOOLS_CONTEXT}
 - Gestión del taller: la plataforma permite registrar clientes, preparar cotizaciones y hacer seguimiento de pedidos, ventas y contratos, según el plan y los permisos de la cuenta.
 - Mi Nube: espacio de la plataforma para organizar y guardar archivos del taller. No afirmes límites de almacenamiento si no aparecen en el contexto actualizado.
 - Catálogo digital: la plataforma comunica capacidades para presentar joyas y productos. No inventes integraciones, funciones de publicación o límites.
@@ -65,11 +66,7 @@ Solo puedes enlazar a estas rutas exactas. Escribe enlaces Markdown con el forma
 - Curso de diseño CAD 3D para joyería: /cursos-diseno-3d
 - Galería y recursos digitales: /galeria-joyas
 - Tienda de insumos y tecnología: /tienda
-- Calculadora de aleación de oro: /herramientas-publicas/aleacion-oro
-- Calculadora de yeso y agua para fundición: /herramientas-publicas/yeso-agua
-- Calculadora de peso de joya 3D: /herramientas-publicas/peso-joya-3d
-- Calculadora de peso de gemas: /herramientas-publicas/peso-gemas
-- Conversor de tallas de anillos: /herramientas-publicas/tallas-anillos
+${AURI_PUBLIC_TOOLS_LINKS}
 - Comunidad: /comunidad
 - AURUM Transfer: /transfer
 - Planes: /#planes
