@@ -9,12 +9,12 @@ import {
 export const Route = createFileRoute("/cursos-diseno-3d")({
   head: () => ({
     meta: [
-      { title: "Curso CAD 3D para Joyería | AURUM LAB" },
+      { title: "Diseño CAD 3D para Joyería con IA – Nivel 1 | AURUM LAB" },
       {
         name: "description",
-        content: "Aprende CAD 3D para joyería con Rhinoceros. Curso online en vivo con docente, 10 sesiones guiadas, laboratorios prácticos e introducción a la manufactura aditiva.",
+        content: "Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada. Curso con 10 sesiones, laboratorios prácticos y nivel inicial.",
       },
-      { property: "og:title", content: "Curso CAD 3D para Joyería y Manufactura Aditiva | AURUM LAB" },
+      { property: "og:title", content: "Diseño CAD 3D para Joyería y Manufactura Aditiva con IA – Nivel 1 | AURUM LAB" },
       { property: "og:description", content: "Curso online en vivo de Rhinoceros para joyería, con docente, 10 sesiones y laboratorios interactivos." },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/cursos-diseno-3d" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/cursos-diseno-3d")({
 const courseStructuredData = {
   "@context": "https://schema.org",
   "@type": "Course",
-  "name": "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1",
+  "name": "Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1",
   "description": "Curso online en vivo con docente para aprender CAD 3D para joyería con Rhinoceros. Incluye 10 sesiones guiadas, 20 horas académicas, laboratorios interactivos e introducción a la manufactura aditiva.",
   "inLanguage": "es-PE",
   "educationalLevel": "Nivel 1",
@@ -106,8 +106,8 @@ function CursosDiseno3DPage() {
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-7 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:py-24">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
-            <h1 className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-6xl">Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva <span className="text-[#b58b37]">Nivel 1</span></h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-[#52677b] sm:text-lg">Aprende CAD 3D desde cero en clases online en vivo con un docente que te guiará paso a paso. Diseña modelos de joyería en Rhinoceros y practica cada tema en los laboratorios del curso.</p>
+            <h1 className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-6xl">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– Nivel 1</span></h1>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-[#52677b] sm:text-lg">Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada.</p>
             <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</div>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
