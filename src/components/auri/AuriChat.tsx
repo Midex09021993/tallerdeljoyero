@@ -76,7 +76,7 @@ export function AuriMascota({ estado = "idle", compact = false }: { estado?: "id
 }
 
 const AURI_PUBLIC_LINKS = new Set([
-  "/herramientas-publicas", "/aurum-render-public", "/auth", "/guias",
+  "/herramientas-publicas", "/aurum-render-public", "/auth", "/guias", "/transfer",
   "/comunidad", "/#planes", "/#como-funciona", "/#aurum-render", "/#contacto",
 ]);
 
@@ -245,7 +245,7 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
         <div className="auri-header__row flex min-w-0 items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative grid size-11 shrink-0 place-items-center rounded-2xl border border-[#e4d3a5] bg-gradient-to-br from-[#fffdf7] to-[#f5edd9] shadow-sm">
-              <Bot className="size-6 text-[#a98535]" />
+              <AuriMascota compact />
               <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-[#4b9b79]" />
             </div>
             <div className="min-w-0">
