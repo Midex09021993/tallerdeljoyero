@@ -225,14 +225,14 @@ export function AuriChat({ onContact, modo = "publico" }: { onContact: () => voi
               <span className="absolute right-7 top-8 size-2 rounded-full bg-[#8bd4e8] shadow-[0_0_12px_#8bd4e8]" />
             </div>
             <p className="mt-7 text-lg font-semibold tracking-wide">{listening ? "Te estoy escuchando…" : loading ? "Estoy procesando…" : "Hola, soy AURI"}</p>
-            <p className="mt-2 max-w-xs text-center text-sm leading-6 text-slate-300">{listening ? "Habla con claridad. Cuando termines, detén el micrófono." : loading ? "Estoy preparando tu respuesta." : "Toca el núcleo para hablar conmigo."}</p>
-            <button type="button" onClick={listening ? () => recognition.current?.stop() : startListening} disabled={!voiceSupported || loading} aria-label={listening ? "Detener escucha" : "Hablar con AURI"} className={`mt-7 grid size-16 place-items-center rounded-full border shadow-[0_0_30px_rgba(199,166,91,0.25)] transition ${listening ? "border-red-300 bg-red-500 text-white" : "border-[#e2ca8b] bg-[#c7a65b] text-[#182838] hover:scale-105"} disabled:cursor-not-allowed disabled:opacity-40`}>
+            <p className="mt-2 max-w-xs text-center text-sm leading-6 text-slate-300">{listening ? "Habla con claridad. Cuando termines, detén el micrófono." : loading ? "Estoy preparando tu respuesta." : "Mantén presionado el micrófono para hablar."}</p>
+            <button type="button" onPointerDown={(event) => { event.preventDefault(); if (!voiceSupported || loading || listening) return; event.currentTarget.setPointerCapture(event.pointerId); startListening(); }} onPointerUp={(event) => { event.preventDefault(); if (listening) recognition.current?.stop(); }} onPointerCancel={() => { if (listening) recognition.current?.stop(); }} onContextMenu={(event) => event.preventDefault()} disabled={!voiceSupported || loading} aria-label="Mantén presionado para hablar con AURI" aria-pressed={listening} className={`mt-7 grid size-16 touch-none select-none place-items-center rounded-full border shadow-[0_0_30px_rgba(199,166,91,0.25)] transition ${listening ? "scale-105 border-red-300 bg-red-500 text-white" : "border-[#e2ca8b] bg-[#c7a65b] text-[#182838] hover:scale-105"} disabled:cursor-not-allowed disabled:opacity-40`}>
               {listening ? <MicOff className="size-7" /> : <Mic className="size-7" />}
             </button>
             {!voiceSupported && <p className="mt-3 text-xs text-amber-200">Este navegador no admite dictado por voz. Puedes usar la vista de texto.</p>}
           </div>
           <div className="relative z-10 w-full max-w-md text-center">
-            <p className="text-xs text-slate-400">{listening ? "Escuchando tu consulta" : loading ? "Preparando respuesta de voz" : "Pulsa el micrófono y habla"}</p>
+            <p className="text-xs text-slate-400">{listening ? "Escuchando tu consulta" : loading ? "Preparando respuesta de voz" : "Mantén presionado para hablar · Suelta para enviar"}</p>
             {error && <p role="alert" className="mt-3 rounded-xl border border-red-300/20 bg-red-500/10 px-3 py-2 text-xs text-red-100">{error}</p>}
           </div>
         </div>
