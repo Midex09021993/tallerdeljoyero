@@ -56,7 +56,7 @@ export function extraerBusqueda(message: string, tipo: "cliente" | "contrato" | 
     : tipo === "contrato"
       ? [
           /\b(?:buscar|muestra|mostrar|listar|consulta|consultar)\s+(?:los\s+)?contratos?\s+(?:de|del|numero|número)?\s*(.+)$/i,
-          /\bcontrato\s+(?:numero|número)?\s*(.+)$/i,
+          /\bcontratos?\s+(?:de|del|numero|número)?\s*(.+)$/i,
         ]
       : [
           /\b(?:pedidos?|ordenes?)\s+(?:de|del|para)\s+(.+)$/i,
