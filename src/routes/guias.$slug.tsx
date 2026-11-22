@@ -208,59 +208,155 @@ function GuiaTecnicaPage() {
   }
 
   if (slug === slugTallas) {
+    const capitulos = [
+      ["#medidas", "1. Diámetro y circunferencia"],
+      ["#sistemas", "2. España, Europa ISO y USA"],
+      ["#relacion", "3. Cómo se relacionan las medidas"],
+      ["#medir-anillo", "4. Medir un anillo existente"],
+      ["#medir-dedo", "5. Medir directamente el dedo"],
+      ["#pantalla", "6. Medición visual en pantalla"],
+      ["#fabricacion", "7. Criterios para fabricación"],
+      ["#errores", "8. Errores frecuentes y control final"],
+    ] as const;
     return (
       <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
             <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
-            <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "tallas-anillos" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Conversor de tallas</Link>
+            <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "tallas-anillos" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Abrir conversor</Link>
           </div>
         </header>
         <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
           <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Medidas y tallas</span></nav>
           <header className="mt-6 border-b border-slate-200 pb-8">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Medidas y tallas · Guía técnica</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Medidas y tallas · Manual técnico AURUM LAB</p>
             <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo convertir tallas de anillos entre España, Europa y USA</h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Las tallas de anillos utilizan sistemas de numeración distintos según el país o la referencia comercial. Para convertir una medida correctamente, primero identifica el sistema de origen y confirma el diámetro interior o la circunferencia del aro.</p>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Una talla no es un número universal. Para convertirla sin confusiones, identifica el sistema de origen, mide correctamente el diámetro interior y contrasta la equivalencia con la circunferencia correspondiente.</p>
+            <div className="mt-6 flex flex-wrap gap-2 text-[11px] font-medium text-slate-600"><span className="rounded-full border border-slate-200 px-3 py-1.5">Diámetro en mm</span><span className="rounded-full border border-slate-200 px-3 py-1.5">España · Europa ISO · USA</span><span className="rounded-full border border-slate-200 px-3 py-1.5">Control para taller</span></div>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
-            <h2>1. Diferencia entre diámetro interior y circunferencia</h2>
-            <p>El diámetro interior es la distancia recta entre dos puntos opuestos de la parte interna del anillo. La circunferencia interior es la longitud del contorno. Ambos valores describen el tamaño interior, pero no son la misma medida.</p>
-            <p>Si mides el diámetro, hazlo en milímetros y evita incluir el grosor del metal. Una medición inclinada o tomada sobre el exterior del aro puede producir una talla incorrecta.</p>
-            <h2>2. Identifica el sistema de tallaje</h2>
-            <p>España, Europa ISO y Estados Unidos utilizan referencias numéricas diferentes. Antes de interpretar una talla, confirma si el dato corresponde al sistema español, europeo ISO o americano (USA). No compares números de sistemas distintos como si fueran equivalentes.</p>
-            <p>El conversor de Taller del Joyero permite buscar por diámetro interno, talla española, talla europea ISO o talla americana y muestra las equivalencias que contiene su tabla de referencia.</p>
-            <h2>3. Cómo medir un anillo que ya tienes</h2>
-            <ol>
-              <li>Elige un anillo que ajuste correctamente en el dedo correspondiente.</li>
-              <li>Colócalo sobre una superficie plana y mide el diámetro interior en milímetros.</li>
-              <li>Evita medir el borde exterior o incluir el grosor del aro.</li>
-              <li>Introduce el diámetro en el conversor y revisa las equivalencias disponibles.</li>
-              <li>Si el resultado queda entre dos referencias, confirma con un anillero físico antes de fabricar.</li>
+          <nav aria-label="Contenido de la guía" className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Contenido de la guía</p>
+            <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+              {capitulos.map(([href, label]) => <li key={href}><a className="text-slate-600 underline-offset-4 hover:text-[#876500] hover:underline" href={href}>{label}</a></li>)}
             </ol>
-            <h2>4. Medición visual en pantalla: calibra antes de usar</h2>
-            <p>La herramienta también permite ajustar una referencia física para calibrar la escala de la pantalla y comparar visualmente un anillo. Esta medición depende del tamaño de pantalla, el zoom del navegador y la precisión de la calibración.</p>
-            <p>Utiliza la medición en pantalla como orientación, no como patrón metrológico. Para producción, venta o ajuste final, utiliza un anillero o instrumento físico adecuado.</p>
-            <h2>5. Recomendaciones para evitar errores de talla</h2>
-            <ul>
-              <li>Confirma el país o sistema de la talla que te proporciona el cliente.</li>
-              <li>Mide el diámetro interior, no el diámetro exterior.</li>
-              <li>Comprueba que el anillo no esté deformado.</li>
-              <li>Ten en cuenta que el ancho del diseño y la comodidad de uso pueden influir en el ajuste percibido.</li>
-              <li>Verifica la talla final con herramientas físicas antes de fabricar una pieza a medida.</li>
-            </ul>
-            <h2>Preguntas frecuentes sobre tallas de anillos</h2>
-            <h3>¿Cómo convierto una talla de España a USA?</h3>
-            <p>Introduce la talla española en el modo correspondiente del conversor y consulta la equivalencia USA que devuelve la tabla. Comprueba siempre que el proveedor utilice el mismo estándar de referencia.</p>
-            <h3>¿Cómo sé mi talla de anillo midiendo el diámetro?</h3>
-            <p>Mide el diámetro interior de un anillo que ajuste bien y registra el valor en milímetros. Después, introdúcelo en el modo de diámetro interno para consultar la talla más cercana de la tabla.</p>
-            <h3>¿El conversor de tallas ofrece una medida exacta?</h3>
-            <p>Ofrece una equivalencia basada en su tabla. Las diferencias entre estándares y la precisión de la medición pueden afectar el resultado; confirma la medida con un anillero físico para fabricar.</p>
+          </nav>
+          <div className="prose prose-slate mt-9 max-w-none prose-headings:tracking-tight prose-a:text-[#876500] [&_p]:text-justify [&_li]:text-justify">
+            <section id="medidas" className="scroll-mt-8">
+              <h2>1. Diámetro interior y circunferencia: dos medidas diferentes</h2>
+              <p>El diámetro interior (D) es la distancia recta entre dos puntos opuestos de la abertura del anillo, pasando por el centro. La circunferencia interior (C) es la longitud del contorno de esa abertura. Se expresan en milímetros, pero no son intercambiables.</p>
+              <p>La relación geométrica es <strong>C = π × D</strong>, donde π ≈ 3,1416. Por ejemplo, un diámetro interior de 19,6 mm corresponde a una circunferencia geométrica aproximada de 61,6 mm. La medida real de tallaje puede depender del método y del instrumento normalizado utilizado.</p>
+              <p>La norma ISO 8653:2016 define la talla mediante la circunferencia del mayor cilindro que puede introducirse en el anillo y establece un método de control con mandril o palo medidor de anillos. Por eso, para control de fabricación conviene medir con instrumental apropiado y no depender únicamente de una conversión matemática.</p>
+            </section>
+            <section id="sistemas" className="scroll-mt-8">
+              <h2>2. Diferencias entre España, Europa ISO y Estados Unidos</h2>
+              <h3>España</h3>
+              <p>La numeración española utilizada por muchas tablas comerciales es distinta de la numeración europea ISO. En la tabla de referencia integrada en el conversor de AURUM LAB, por ejemplo, el diámetro de 19,6 mm aparece asociado a talla española 22.</p>
+              <h3>Europa ISO</h3>
+              <p>La designación ISO se basa en la circunferencia interior expresada en milímetros. En la tabla de referencia del conversor, el mismo ejemplo de 19,6 mm se relaciona con la referencia europea ISO 62. No confundas este valor con el diámetro en milímetros.</p>
+              <h3>Estados Unidos (USA)</h3>
+              <p>El sistema estadounidense utiliza números y, en algunas tablas, fracciones de talla. La equivalencia puede variar ligeramente entre tablas comerciales y fabricantes. El conversor presenta la referencia USA que corresponde a su tabla configurada; si el proveedor trabaja con otra tabla, confirma su estándar antes de emitir una orden.</p>
+              <p><strong>Importante:</strong> no existe una conversión fiable por simple sustitución del número. Selecciona el sistema correcto en la herramienta y consulta la fila equivalente.</p>
+            </section>
+            <section id="relacion" className="scroll-mt-8">
+              <h2>3. Cómo se relacionan las medidas</h2>
+              <p>Para entender la relación entre los sistemas, utiliza el diámetro como medida física de partida y la circunferencia como referencia geométrica. El conversor busca una fila de su tabla y devuelve las tallas española, europea ISO y USA disponibles.</p>
+              <div className="not-prose my-5 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                <table className="w-full min-w-[520px] text-left text-sm">
+                  <thead className="bg-slate-50 text-xs text-slate-600"><tr><th className="px-4 py-3">Diámetro interior</th><th className="px-4 py-3">España</th><th className="px-4 py-3">Europa ISO</th><th className="px-4 py-3">USA</th></tr></thead>
+                  <tbody><tr className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">19,6 mm</td><td className="px-4 py-3">22</td><td className="px-4 py-3">62</td><td className="px-4 py-3">9 3/4</td></tr></tbody>
+                </table>
+                <p className="px-4 pb-3 text-[11px] text-slate-500">Ejemplo tomado de la tabla predeterminada del conversor. La configuración de tallas puede actualizarse; consulta siempre el resultado vigente en la herramienta.</p>
+              </div>
+              <p>La tabla del conversor es una herramienta de equivalencia, no una certificación metrológica. Si una talla queda entre dos referencias o no aparece en la tabla, mide con un anillero y confirma el criterio del fabricante.</p>
+            </section>
+            <section id="medir-anillo" className="scroll-mt-8">
+              <h2>4. Cómo medir un anillo que ya tienes</h2>
+              <ol>
+                <li>Escoge un anillo que ajuste correctamente en el dedo y la mano donde se utilizará.</li>
+                <li>Comprueba que el aro no esté ovalado, golpeado ni deformado.</li>
+                <li>Coloca el anillo sobre una superficie plana y mide la abertura interior, de borde interno a borde interno.</li>
+                <li>Mide pasando por el centro; no incluyas el espesor del metal ni midas el diámetro exterior.</li>
+                <li>Repite la lectura en dos direcciones perpendiculares. Si los valores difieren, revisa la circularidad del aro.</li>
+                <li>Introduce el diámetro en milímetros en el modo «Diámetro interno» y compara la equivalencia devuelta.</li>
+              </ol>
+              <p>Un calibre puede ayudar a leer el diámetro, pero la presión de las puntas y la inclinación afectan el resultado. Para una inspección de taller, contrasta con un mandril de anillos calibrado.</p>
+            </section>
+            <section id="medir-dedo" className="scroll-mt-8">
+              <h2>5. Cómo medir directamente el dedo</h2>
+              <p>Cuando no existe un anillo de referencia, utiliza un juego de anilleros o calibres de dedo del sistema que emplea tu taller. La pieza de prueba debe pasar por el nudillo sin forzar y quedar asentada de forma cómoda en la base del dedo.</p>
+              <ul>
+                <li>Realiza más de una prueba y confirma que el anillero no quede demasiado ajustado ni gire con excesiva holgura.</li>
+                <li>Evita tomar una decisión con las manos muy frías o inmediatamente después de una actividad que las haya calentado.</li>
+                <li>Si el nudillo es notablemente más ancho que la base del dedo, evalúa el paso y la retención, no solo la medida de la base.</li>
+                <li>En anillos anchos, prueba un ancho similar al diseño final, porque la sensación de ajuste puede cambiar.</li>
+              </ul>
+              <p>La medida del dedo y la medida interior de un anillo existente son procedimientos distintos. No conviertas una circunferencia tomada con cinta flexible en una talla de producción sin validarla con un anillero.</p>
+            </section>
+            <section id="pantalla" className="scroll-mt-8">
+              <h2>6. Medición visual en pantalla: calibra antes de usar</h2>
+              <p>El modo «Medir anillo» del conversor permite ajustar una referencia visual y después comparar el diámetro del aro con un círculo mostrado en pantalla. Antes de usarlo, selecciona una referencia física admitida y ajusta su representación hasta que coincida con la medida real.</p>
+              <ol>
+                <li>Selecciona la moneda peruana de S/1 (25,5 mm) o una tarjeta bancaria (85,6 mm) si el tamaño de pantalla lo permite.</li>
+                <li>Coloca la referencia física sobre la guía y ajusta el control de calibración hasta igualar sus dimensiones.</li>
+                <li>Confirma la calibración; no cambies el zoom del navegador ni la escala de pantalla durante la medición.</li>
+                <li>Coloca el anillo sobre el círculo y ajusta su diámetro hasta que coincida con el borde interior.</li>
+                <li>Lee la equivalencia y verifica el resultado con un instrumento físico.</li>
+              </ol>
+              <p>La medición en pantalla depende de la calibración, del dispositivo, del zoom y del ajuste visual de quien la utiliza. Es orientativa: no debe ser el único control para fabricar, vender o modificar una joya.</p>
+            </section>
+            <section id="fabricacion" className="scroll-mt-8">
+              <h2>7. Criterios de talla para fabricación y control de calidad</h2>
+              <p>Antes de fabricar, registra el sistema solicitado y la medida física de referencia. En una ficha técnica conviene anotar el diámetro interior, la circunferencia o designación ISO cuando corresponda, el ancho del aro y el instrumento utilizado.</p>
+              <ul>
+                <li><strong>Perfil interior:</strong> los perfiles planos y redondeados no siempre se sienten igual aunque la dimensión nominal sea similar.</li>
+                <li><strong>Ancho del aro:</strong> un anillo ancho puede sentirse más ajustado que uno estrecho de la misma talla nominal.</li>
+                <li><strong>Forma:</strong> diseños cuadrados, anillos tipo sello, aros entrelazados o deformados requieren atención especial durante la medición.</li>
+                <li><strong>Tolerancia:</strong> acuerda con el cliente o proveedor el método de aceptación y la tolerancia de fabricación; no la deduzcas de una tabla de conversión.</li>
+                <li><strong>Verificación:</strong> utiliza mandril y anilleros adecuados, revisados y compatibles con el sistema de designación requerido.</li>
+              </ul>
+              <p>ISO 8653:2016 está orientada al método de medición y designación del tamaño del anillo para control y fabricación. La norma también contempla el uso de juegos de anilleros para determinar la talla en la relación joyero-cliente.</p>
+            </section>
+            <section id="errores" className="scroll-mt-8">
+              <h2>8. Errores frecuentes y control final</h2>
+              <ul>
+                <li>Confundir diámetro con circunferencia o escribir una medida sin unidad.</li>
+                <li>Usar una talla USA como si fuera una talla española o europea.</li>
+                <li>Medir el exterior del anillo en lugar de su abertura interior.</li>
+                <li>Medir un aro ovalado en una sola dirección.</li>
+                <li>Usar la medición en pantalla sin calibrar o cambiar el zoom después de calibrar.</li>
+                <li>Fabricar con una equivalencia aproximada sin validar el anillero y el sistema del proveedor.</li>
+              </ul>
+              <h3>Lista de comprobación antes de fabricar</h3>
+              <ol>
+                <li>¿Está identificado el sistema de talla solicitado?</li>
+                <li>¿La medida está expresada en milímetros y corresponde al interior?</li>
+                <li>¿El aro o el anillero están en buen estado y correctamente calibrados?</li>
+                <li>¿Se consideraron el ancho y el perfil interior del diseño?</li>
+                <li>¿Se confirmó la talla final con el cliente o responsable de producción?</li>
+              </ol>
+              <h3>Preguntas frecuentes</h3>
+              <h4>¿Cómo convierto una talla española a USA?</h4>
+              <p>Selecciona «Talla España», introduce el número y consulta el valor USA que devuelve la tabla configurada. Comprueba que el proveedor utiliza el mismo sistema de referencia.</p>
+              <h4>¿La talla europea ISO es el diámetro interior?</h4>
+              <p>No. La designación ISO se relaciona con la circunferencia interior en milímetros; el diámetro es otra magnitud. Por eso una talla ISO 62 no significa que el anillo tenga 62 mm de diámetro.</p>
+              <h4>¿El conversor garantiza la talla exacta?</h4>
+              <p>No. Devuelve la equivalencia disponible en su tabla y puede aproximar al valor más cercano cuando se introduce un diámetro intermedio. Para producción, venta o ajuste final, confirma con instrumental físico.</p>
+              <h4>¿Puedo utilizar una medición de pantalla para fabricar?</h4>
+              <p>Úsala solo como orientación. La escala puede variar según el dispositivo, la calibración y el zoom; valida siempre con un anillero o mandril adecuado.</p>
+            </section>
+            <section className="not-prose mt-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Referencias técnicas</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <li><a href="https://www.iso.org/standard/65408.html" target="_blank" rel="noreferrer" className="underline underline-offset-4">ISO 8653:2016 — Jewellery: Ring-sizes, definition, measurement and designation</a></li>
+                <li><a href="https://preview.sist.si/sist-preview/65408/3a0e7031aeea462e8e3157757e89edcf/ISO-8653-2016.pdf" target="_blank" rel="noreferrer" className="underline underline-offset-4">Vista previa del texto ISO 8653:2016</a></li>
+              </ul>
+              <p className="mt-3 text-xs leading-5 text-slate-500">La norma ISO establece un método de medición y designación. Las equivalencias España y USA mostradas por el conversor corresponden a su tabla comercial configurada y no deben interpretarse como una tabla oficial publicada por ISO.</p>
+            </section>
           </div>
           <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
-            <h2 className="mt-2 text-xl font-bold">Consulta equivalencias de tallas de anillos</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Busca por diámetro interior o por el sistema de tallaje que ya conoces.</p>
+            <h2 className="mt-2 text-xl font-bold">Consulta las equivalencias de tallas</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Busca por diámetro interior, talla española, referencia europea ISO o talla americana. También puedes calibrar la medición visual de pantalla.</p>
             <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "tallas-anillos" }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Abrir conversor de tallas</Link>
           </section>
           <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
