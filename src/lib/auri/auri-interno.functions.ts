@@ -58,7 +58,7 @@ async function generarConRespaldo(
   let ultimoDetalle = "Sin respuesta de Gemini";
 
   for (let index = 0; index < MODELOS_GEMINI_AURI.length; index += 1) {
-    const modelo = MODELOS_GEMINI_AURI[index];
+    const modelo = MODELOS_GEMINI_AURI[index]!;
     try {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,

@@ -18,7 +18,7 @@ function telefonoInternacional(value: string | undefined, pais: string): string 
     if (digits.length < 7 || digits.length > 15) throw new ToolError("Revisa el teléfono: debe incluir un prefijo internacional válido.");
     return `+${digits}`;
   }
-  const prefix = PREFIJOS[pais] ?? PREFIJOS.PE!;
+  const prefix = PREFIJOS[pais] ?? PREFIJOS["PE"]!;
   const national = digits.startsWith(prefix) && digits.length > prefix.length + 4 ? digits.slice(prefix.length) : digits;
   if (national.length < 4 || national.length + prefix.length > 15) throw new ToolError("Revisa el teléfono: el número nacional no es válido.");
   return `+${prefix}${national}`;

@@ -67,7 +67,7 @@ export function adaptarEsquemaGemini(value: unknown): unknown {
   for (const [key, item] of Object.entries(source)) {
     if (!GEMINI_SCHEMA_KEYS.has(key)) continue;
     if (key === "properties" && item && typeof item === "object" && !Array.isArray(item)) {
-      out.properties = Object.fromEntries(
+      out["properties"] = Object.fromEntries(
         Object.entries(item as Record<string, unknown>).map(([name, schema]) => [name, adaptarEsquemaGemini(schema)]),
       );
     } else {
