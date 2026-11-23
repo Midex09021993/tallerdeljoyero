@@ -12,8 +12,8 @@ const slugTallas = "convertir-tallas-anillos-espana-europa-usa";
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
     const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas].includes(params.slug);
-    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya desde un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo estimar el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
-    const descripcion = params.slug === slugPeso ? "Guía técnica para validar el volumen de un modelo 3D, controlar unidades y estimar la masa de una joya según la densidad de su aleación." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Guía gemológica para estimar el peso en quilates mediante dimensiones, gravedad específica, forma de talla y proporciones de la piedra." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
+    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya desde un modelo 3D" : params.slug === slugPlano ? "Distribución de un taller de joyería: zonas, flujo y seguridad" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo estimar el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
+    const descripcion = params.slug === slugPeso ? "Guía técnica para validar el volumen de un modelo 3D, controlar unidades y estimar la masa de una joya según la densidad de su aleación." : params.slug === slugPlano ? "Guía para organizar zonas de diseño CAD, impresión 3D, posprocesado, fundición y acabado, con criterios de circulación, ventilación y seguridad." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Guía gemológica para estimar el peso en quilates mediante dimensiones, gravedad específica, forma de talla y proporciones de la piedra." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
     return {
       meta: [
         { title: valida ? `${titulo} | Guías técnicas AURUM LAB` : "Guía no encontrada | AURUM LAB" },
@@ -644,56 +644,216 @@ function GuiaTecnicaPage() {
     return (
       <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+          <div className="mx-auto flex min-h-[68px] max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
             <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
-            <Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white">Acceder a AURUM LAB</Link>
+            <Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Acceder a AURUM LAB</Link>
           </div>
         </header>
-        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
-          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Diseño del taller</span></nav>
-          <header className="mt-6 border-b border-slate-200 pb-8">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Diseño del taller · Guía técnica</p>
-            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo organizar la distribución de un taller de joyería</h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Una distribución clara ayuda a trabajar con orden, reduce recorridos innecesarios y permite separar tareas que requieren condiciones distintas. Adapta cualquier plano a las dimensiones reales del local y de tus equipos.</p>
+        <article className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
+          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Diseño del taller</span></nav>
+          <header className="relative mt-6 overflow-hidden rounded-[1.75rem] border border-[#eadca7] bg-gradient-to-br from-[#fff9e8] via-white to-[#f3f6fa] p-6 pb-8 sm:p-10">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 size-64 rounded-full border-[28px] border-[#f5e8bd]/45" />
+            <div className="relative">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-[#e8d7a4] bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Diseño del taller</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Manual técnico · AURUM LAB</span>
+              </div>
+              <h1 className="mt-5 max-w-3xl text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">Distribución de un taller de joyería: zonas, flujo de trabajo y seguridad</h1>
+              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Diseña un espacio donde el trabajo avance desde el diseño hasta el acabado sin cruces innecesarios. Aprende a separar procesos limpios, producción digital, operaciones con polvo y trabajos térmicos, tomando como referencia las dimensiones reales de tu local y tus equipos.</p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Nivel: básico–intermedio</span>
+                <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Lectura: 10–12 min</span>
+                <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Aplicación: taller pequeño o mediano</span>
+              </div>
+            </div>
           </header>
-          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight [&_p]:text-justify [&_li]:text-justify">
-            <h2>1. Define las zonas según el flujo de trabajo</h2>
-            <p>Antes de mover máquinas, dibuja el recorrido de una pieza desde el diseño hasta el acabado. Considera zonas diferenciadas para:</p>
-            <ul>
-              <li><strong>Diseño digital:</strong> computadora, modelado CAD y revisión de archivos.</li>
-              <li><strong>Producción digital:</strong> impresora 3D y el espacio necesario para retirar las piezas.</li>
-              <li><strong>Posprocesado:</strong> lavado, secado y curado, según las instrucciones de la resina y del fabricante.</li>
-              <li><strong>Fundición:</strong> equipos térmicos y auxiliares instalados de acuerdo con sus requisitos técnicos.</li>
-              <li><strong>Acabado:</strong> limado, pulido y otras operaciones que pueden generar polvo o residuos.</li>
-            </ul>
-            <h2>2. Planifica con las dimensiones reales</h2>
-            <p>Mide el local, las puertas y los pasillos. Para cada equipo registra ancho, fondo, altura, apertura de tapas, acceso para mantenimiento y espacio de trabajo del operario. No tomes las dimensiones de un esquema orientativo como medidas universales: varían según el modelo de máquina y el fabricante.</p>
-            <h2>3. Separa procesos incompatibles</h2>
-            <p>Evita ubicar fuentes de calor junto a resinas, disolventes o materiales combustibles. Las operaciones que generan polvo, vapores o partículas pueden necesitar extracción específica. Consulta las fichas de seguridad de cada producto y las instrucciones de instalación de cada equipo.</p>
-            <h2>4. Mantén libres la circulación y las salidas</h2>
-            <ul>
-              <li>No bloquees puertas, pasillos ni accesos a equipos de emergencia.</li>
-              <li>Deja espacio para cargar y descargar equipos, limpiar y hacer mantenimiento.</li>
-              <li>Organiza herramientas y consumibles cerca de su zona de uso sin invadir las rutas de circulación.</li>
-              <li>Verifica ventilación, extracción eléctrica y requisitos de seguridad con profesionales competentes.</li>
-            </ul>
-            <h2>5. Lista de comprobación antes de instalar</h2>
-            <ul>
-              <li>¿El plano incluye las medidas reales del local y de los equipos?</li>
-              <li>¿Se ha previsto espacio para operar y mantener cada máquina?</li>
-              <li>¿Están separadas las fuentes de calor de los materiales sensibles?</li>
-              <li>¿La ventilación y la extracción corresponden a los procesos que se realizarán?</li>
-              <li>¿Se mantienen libres las salidas y los accesos de emergencia?</li>
-            </ul>
-            <p>Esta guía ofrece criterios de planificación general; no sustituye un plano de instalación aprobado ni las indicaciones del fabricante o la normativa local.</p>
-          </div>
-          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
-            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
-            <h2 className="mt-2 text-xl font-bold">Organiza el flujo de tu taller</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Usa esta lista como punto de partida y contrasta el plano con las dimensiones de tus equipos.</p>
-            <Link to="/herramientas-publicas" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><ArrowRight className="size-4" /> Ver herramientas técnicas</Link>
+
+          <section className="mt-7 grid gap-3 sm:grid-cols-3" aria-label="Principios de distribución">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">01 · Flujo</p><p className="mt-2 text-base font-bold">Una ruta lógica</p><p className="mt-1 text-sm leading-5 text-slate-600">Evita retrocesos, cruces y traslados de piezas entre zonas incompatibles.</p></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">02 · Separación</p><p className="mt-2 text-base font-bold">Procesos diferenciados</p><p className="mt-1 text-sm leading-5 text-slate-600">Controla polvo, vapores, resinas, productos químicos y fuentes de calor.</p></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">03 · Seguridad</p><p className="mt-2 text-base font-bold">Instalaciones adecuadas</p><p className="mt-1 text-sm leading-5 text-slate-600">Dimensiona ventilación, electricidad, almacenamiento y evacuación según el riesgo.</p></div>
           </section>
-          <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
+
+          <aside className="mt-7 rounded-2xl border border-slate-200 bg-[#f7f8fa] p-5 sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Contenido de la guía</p>
+            <div className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#flujo">01 · Diseñar el flujo de trabajo</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#zonas">02 · Definir las zonas del taller</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#esquema">03 · Leer un esquema de distribución</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#medidas">04 · Medir el local y los equipos</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#instalaciones">05 · Planificar instalaciones</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#seguridad">06 · Separación, ventilación y seguridad</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#errores">07 · Errores frecuentes</a>
+              <a className="font-medium text-slate-700 hover:text-[#876500]" href="#checklist">08 · Lista de verificación</a>
+            </div>
+          </aside>
+
+          <div className="prose prose-slate mt-9 max-w-none prose-headings:tracking-tight [&_p]:text-justify [&_li]:text-justify">
+            <section>
+              <h2 id="flujo">01. Diseña primero el flujo de trabajo</h2>
+              <p>Antes de comprar mobiliario o instalar máquinas, representa el recorrido habitual de una pieza. En un taller que combina diseño CAD, impresión 3D, fundición y acabado, el flujo general puede ser:</p>
+              <ol>
+                <li><strong>Diseño y preparación:</strong> modelado, revisión del archivo y planificación de fabricación.</li>
+                <li><strong>Producción digital:</strong> preparación e impresión del patrón, cuando el proceso lo requiera.</li>
+                <li><strong>Posprocesado:</strong> lavado, secado, curado y revisión de la pieza impresa, de acuerdo con la ficha técnica de la resina.</li>
+                <li><strong>Preparación de fundición:</strong> montaje del árbol, revestimiento y acondicionamiento del cilindro.</li>
+                <li><strong>Fundición y recuperación:</strong> operación térmica, enfriamiento y extracción siguiendo el procedimiento validado.</li>
+                <li><strong>Acabado y control:</strong> corte de bebederos, limado, lijado, pulido, limpieza e inspección final.</li>
+              </ol>
+              <p>No todos los talleres realizan todas estas etapas en el mismo local. Si una operación se terceriza, diseña el flujo para recibir y entregar piezas sin mezclar materiales limpios con residuos de producción.</p>
+            </section>
+
+            <section>
+              <h2 id="zonas">02. Define las zonas funcionales</h2>
+              <p>Piensa en zonas por tipo de proceso, no solamente por máquina. Una misma mesa puede cumplir varias funciones si las tareas son compatibles y se mantiene un procedimiento claro de limpieza y almacenamiento.</p>
+              <div className="not-prose my-5 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                <table className="w-full min-w-[620px] border-collapse text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-600"><tr><th className="border-b border-slate-200 px-4 py-3">Zona</th><th className="border-b border-slate-200 px-4 py-3">Actividades y equipos</th><th className="border-b border-slate-200 px-4 py-3">Criterio de ubicación</th></tr></thead>
+                  <tbody>
+                    <tr><td className="border-b border-slate-100 px-4 py-3 font-semibold">Diseño y administración</td><td className="border-b border-slate-100 px-4 py-3">CAD, computadora, revisión de modelos, documentación y atención.</td><td className="border-b border-slate-100 px-4 py-3">Área limpia, seca, iluminada y alejada de polvo y calor.</td></tr>
+                    <tr><td className="border-b border-slate-100 px-4 py-3 font-semibold">Impresión 3D</td><td className="border-b border-slate-100 px-4 py-3">Impresora, estación de materiales y accesorios compatibles.</td><td className="border-b border-slate-100 px-4 py-3">Superficie estable; condiciones ambientales y eléctricas del fabricante.</td></tr>
+                    <tr><td className="border-b border-slate-100 px-4 py-3 font-semibold">Posprocesado</td><td className="border-b border-slate-100 px-4 py-3">Lavado, secado, curado y gestión de residuos de resina.</td><td className="border-b border-slate-100 px-4 py-3">Separación de alimentos y puestos limpios; ventilación y almacenamiento según SDS.</td></tr>
+                    <tr><td className="border-b border-slate-100 px-4 py-3 font-semibold">Fundición</td><td className="border-b border-slate-100 px-4 py-3">Horno, equipo de colada, cilindros y herramientas térmicas.</td><td className="border-b border-slate-100 px-4 py-3">Sector específico, materiales combustibles apartados y extracción diseñada para el proceso.</td></tr>
+                    <tr><td className="border-b border-slate-100 px-4 py-3 font-semibold">Acabado y pulido</td><td className="border-b border-slate-100 px-4 py-3">Corte, limado, lijado, pulido y recuperación de partículas metálicas.</td><td className="border-b border-slate-100 px-4 py-3">Captación localizada de polvo; recuperación de metales y limpieza controlada.</td></tr>
+                    <tr><td className="px-4 py-3 font-semibold">Almacén y despacho</td><td className="px-4 py-3">Materias primas, consumibles identificados, piezas terminadas y embalaje.</td><td className="px-4 py-3">Estanterías estables, inventario separado y acceso sin bloquear rutas de salida.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>En locales pequeños, algunas zonas pueden compartir un mismo ambiente, pero no deben compartir indiscriminadamente el aire, las superficies ni los recipientes. Separa físicamente las tareas que generen polvo, vapores, salpicaduras o calor.</p>
+            </section>
+
+            <section>
+              <h2 id="esquema">03. Esquema orientativo de distribución</h2>
+              <p>El siguiente esquema muestra relaciones entre áreas, no un plano arquitectónico ni una propuesta a escala. La posición real depende de puertas, ventanas, columnas, instalaciones, equipos y rutas de evacuación.</p>
+              <div className="not-prose my-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-600">Ejemplo conceptual · no a escala</p>
+                  <span className="rounded-full bg-[#fff4c4] px-3 py-1 text-[10px] font-bold text-[#876500]">Flujo por etapas</span>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-blue-800">Área limpia</p><p className="mt-2 font-bold text-slate-800">Diseño CAD y administración</p><p className="mt-1 text-xs leading-5 text-slate-600">Modelado, revisión, documentación y recepción.</p></div>
+                  <div className="rounded-xl border border-violet-200 bg-violet-50 p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-violet-800">Producción digital</p><p className="mt-2 font-bold text-slate-800">Impresión 3D y posprocesado</p><p className="mt-1 text-xs leading-5 text-slate-600">Impresión, lavado, secado y curado en puestos diferenciados.</p></div>
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Zona térmica</p><p className="mt-2 font-bold text-slate-800">Preparación y fundición</p><p className="mt-1 text-xs leading-5 text-slate-600">Cilindros, hornos y colada con controles propios.</p></div>
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Acabado</p><p className="mt-2 font-bold text-slate-800">Lijado, pulido y control final</p><p className="mt-1 text-xs leading-5 text-slate-600">Captación de partículas, recuperación de metal e inspección.</p></div>
+                </div>
+                <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Secuencia de referencia</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">Diseño → Impresión → Posprocesado → Preparación → Fundición → Acabado → Inspección</p>
+                </div>
+                <p className="mt-3 text-[11px] leading-5 text-slate-500">La secuencia no significa que todas las áreas deban estar contiguas. Mantén separadas las fuentes de polvo, vapores y calor, y valida el sentido de ventilación con un profesional competente.</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 id="medidas">04. Mide el local y cada equipo antes de distribuir</h2>
+              <p>Levanta un plano sencillo con las dimensiones interiores reales. Registra también los elementos que condicionan el montaje: columnas, desniveles, puertas, ventanas, tableros eléctricos, puntos de agua, desagües y recorridos de ventilación.</p>
+              <ul>
+                <li><strong>Huella del equipo:</strong> ancho, fondo y altura indicados por el fabricante.</li>
+                <li><strong>Área de operación:</strong> espacio para abrir tapas, cargar materiales, retirar piezas y trabajar sin posturas forzadas.</li>
+                <li><strong>Mantenimiento:</strong> acceso a filtros, conexiones, paneles, motores y componentes que deban revisarse.</li>
+                <li><strong>Circulación:</strong> paso de personas y traslado de cilindros, bandejas y piezas sin invadir salidas ni zonas calientes.</li>
+                <li><strong>Almacenamiento:</strong> espacio separado y señalizado para materias primas, químicos, residuos y piezas terminadas.</li>
+              </ul>
+              <p>No existe una medida única de pasillo o separación que sirva para cualquier taller. Las dimensiones exigibles dependen del uso del local, aforo, equipos, riesgo y normativa aplicable. Verifica el proyecto con un profesional y con las autoridades competentes antes de ejecutar obras.</p>
+            </section>
+
+            <section>
+              <h2 id="instalaciones">05. Planifica las instalaciones desde el plano</h2>
+              <h3>Electricidad</h3>
+              <p>Identifica la potencia y tensión requeridas por cada equipo, la puesta a tierra, protecciones, circuitos y condiciones de instalación indicadas por el fabricante. No conectes hornos, compresores o máquinas de alta demanda a extensiones improvisadas. La evaluación y ejecución deben quedar a cargo de personal electricista calificado.</p>
+              <h3>Agua y desagüe</h3>
+              <p>Ubica lavaderos y puntos de limpieza donde puedan gestionarse residuos sin contaminar drenajes. No viertas resinas, solventes, lodos de pulido, revestimiento ni soluciones químicas al desagüe; consulta sus fichas de seguridad y el sistema local de gestión de residuos.</p>
+              <h3>Ventilación y extracción</h3>
+              <p>La ventilación general del ambiente no reemplaza la captación localizada en el punto donde se produce polvo, humo o vapor. El diseño debe considerar el contaminante, el caudal, la campana, los ductos, la descarga segura, el aire de reposición y el mantenimiento de filtros. No improvises extractores domésticos para procesos de fundición, pulido o manipulación de químicos.</p>
+              <h3>Iluminación y ergonomía</h3>
+              <p>Combina iluminación general uniforme con luz de tarea en bancos de engaste, limado e inspección. Ajusta altura de mesas, asiento, apoyos y ubicación de herramientas al trabajo y a la persona que lo realiza.</p>
+            </section>
+
+            <section>
+              <h2 id="seguridad">06. Separa riesgos y controla la exposición</h2>
+              <ul>
+                <li><strong>Calor y combustibles:</strong> mantén hornos y operaciones de colada en un sector definido, con superficies y distancias compatibles con el equipo y sin almacenamiento improvisado de materiales combustibles.</li>
+                <li><strong>Polvo de pulido:</strong> utiliza sistemas de captación diseñados para la operación. El polvo puede contener partículas metálicas y compuestos abrasivos; evita dispersarlo con aire comprimido o barrido en seco.</li>
+                <li><strong>Revestimientos:</strong> la manipulación y retirada de revestimiento puede generar polvo respirable. Sigue la ficha de seguridad, controla el polvo en origen y define el equipo de protección con una evaluación de riesgos.</li>
+                <li><strong>Resinas y solventes:</strong> consulta la SDS de cada producto, conserva envases identificados y cerrados, separa materiales incompatibles y aplica las condiciones de ventilación y almacenamiento indicadas por el fabricante.</li>
+                <li><strong>Emergencias:</strong> mantén salidas, tableros, extintores y botiquín accesibles; señaliza rutas y capacita al personal según los riesgos reales del taller.</li>
+              </ul>
+              <p>En Perú, la planificación de seguridad y salud debe considerar la Ley N.º 29783 y su reglamento, además de las disposiciones sectoriales y municipales que correspondan. La evaluación de peligros y riesgos debe realizarse para las actividades y puestos concretos del taller.</p>
+            </section>
+
+            <section>
+              <h2 id="errores">07. Errores frecuentes al organizar el taller</h2>
+              <ul>
+                <li>Comprar equipos antes de medir accesos, espacio de operación y necesidades de mantenimiento.</li>
+                <li>Colocar la computadora o los modelos terminados junto a polvo de pulido, vapores o salpicaduras.</li>
+                <li>Ubicar resinas, solventes o embalajes combustibles junto a hornos y fuentes de calor.</li>
+                <li>Confiar únicamente en ventanas o ventiladores para controlar emisiones generadas por una máquina.</li>
+                <li>Mezclar polvo de metales preciosos con basura común y perder material recuperable.</li>
+                <li>Usar pasillos como almacenamiento temporal y bloquear rutas de evacuación.</li>
+                <li>No reservar espacio para limpieza, filtros, mantenimiento y crecimiento del taller.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 id="checklist">08. Lista de verificación antes de instalar</h2>
+              <div className="not-prose my-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Checklist de planificación</p>
+                <ul className="mt-4 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Plano del local con medidas verificadas.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Inventario de equipos y fichas técnicas.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Flujo de trabajo y zonas definidos.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Accesos, pasillos y salidas despejados.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Circuitos eléctricos y puesta a tierra evaluados.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Ventilación y extracción dimensionadas.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Almacenamiento y residuos organizados.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Equipos de emergencia y señalización previstos.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Espacio de mantenimiento y limpieza reservado.</li>
+                  <li className="flex gap-2"><span className="font-bold text-[#987400]">□</span> Instalación revisada por personal competente.</li>
+                </ul>
+              </div>
+              <p>Haz una prueba de recorrido antes de fijar los equipos: simula el traslado de una pieza, una bandeja y un cilindro, y comprueba que las tareas se puedan realizar sin cruzar zonas de riesgo ni bloquear accesos.</p>
+            </section>
+
+            <section className="not-prose mt-10 rounded-2xl border border-slate-200 bg-[#f7f8fa] p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Referencias técnicas</p>
+              <h2 className="mt-2 text-xl font-bold text-[#17232d]">Documentación para profundizar</h2>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+                <li><strong>Perú · Ley N.º 29783, Ley de Seguridad y Salud en el Trabajo.</strong> Marco nacional para la prevención de riesgos laborales. <a className="font-semibold text-[#876500] underline" href="https://www.gob.pe/institucion/congreso-de-la-republica/normas-legales/462576-29783" target="_blank" rel="noreferrer">Consultar texto oficial</a>.</li>
+                <li><strong>Perú · D.S. N.º 005-2012-TR.</strong> Reglamento de la Ley de Seguridad y Salud en el Trabajo. <a className="font-semibold text-[#876500] underline" href="https://www.gob.pe/institucion/presidencia/normas-legales/462577" target="_blank" rel="noreferrer">Consultar reglamento</a>.</li>
+                <li><strong>OSHA · 29 CFR 1910.94, Ventilation.</strong> Referencia técnica estadounidense sobre sistemas de extracción para operaciones de esmerilado, pulido y abrillantado de metales; no sustituye la normativa peruana. <a className="font-semibold text-[#876500] underline" href="https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.94" target="_blank" rel="noreferrer">Consultar estándar</a>.</li>
+                <li><strong>California DTSC · Jewelry Manufacturing Pollution Prevention.</strong> Recomendaciones de prevención de contaminación para fundición, manipulación de revestimientos, esmerilado y pulido en joyería. <a className="font-semibold text-[#876500] underline" href="https://dtsc.ca.gov/jewelry-manufacturing-pollution-prevention-recommendations-fact-sheet/" target="_blank" rel="noreferrer">Consultar recomendaciones</a>.</li>
+              </ul>
+              <p className="mt-5 border-t border-slate-200 pt-4 text-xs leading-5 text-slate-500">Esta guía ofrece criterios de organización general. No es un plano de ingeniería, una memoria de cálculo ni una certificación de seguridad. Las instalaciones, dimensiones exigibles y controles deben validarse para el inmueble, los equipos, los materiales y la normativa vigente.</p>
+            </section>
+
+            <section>
+              <h2>Preguntas frecuentes</h2>
+              <h3>¿Qué zona debo planificar primero?</h3>
+              <p>Empieza por las operaciones con mayores requisitos de instalación y control, como fundición, extracción de polvo y posprocesado químico. Después ubica las áreas limpias y el almacenamiento, manteniendo un flujo claro entre etapas.</p>
+              <h3>¿Puedo tener impresión 3D y fundición en el mismo ambiente?</h3>
+              <p>Depende de los equipos, materiales, ventilación y evaluación de riesgos. No coloques impresoras, resinas ni solventes junto a fuentes de calor. Si comparten local, la separación física y los controles de ventilación deben ser diseñados y validados por personal competente.</p>
+              <h3>¿La ventilación general es suficiente para pulir?</h3>
+              <p>No debe asumirse. El pulido puede liberar polvo metálico y partículas de compuestos abrasivos; se requiere evaluar la captación en el punto de generación y el sistema de recuperación correspondiente.</p>
+              <h3>¿Qué medidas exactas debe tener cada zona?</h3>
+              <p>No hay una medida universal. Depende de las dimensiones del equipo, el espacio para operarlo y mantenerlo, la circulación, el aforo y los requisitos normativos del inmueble. Mide y valida el plano antes de instalar.</p>
+            </section>
+          </div>
+
+          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
+                <h2 className="mt-2 text-xl font-bold">Prepara tu flujo de fabricación digital</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Conecta el área de diseño con la preparación de modelos y revisa la geometría antes de imprimir. El asistente ayuda a detectar incidencias del archivo, pero no sustituye su reparación ni la validación de la impresión.</p>
+              </div>
+              <Link to="/herramientas-publicas" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Ver herramientas técnicas</Link>
+            </div>
+          </section>
+
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-6">
+            <Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900]"><ArrowLeft className="size-4" /> Más guías técnicas</Link>
+            <Link to="/auth" className="inline-flex items-center gap-2 text-sm font-semibold text-[#17232d] hover:text-[#876500]">Explorar AURUM LAB <ArrowRight className="size-4" /></Link>
+          </div>
         </article>
       </main>
     );
