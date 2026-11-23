@@ -366,6 +366,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   // Referencias calibradas que sustituyen los presets de cámara durante la sesión del modelo actual.
   const calibratedCameraViewsRef = useRef<Partial<Record<VistaId, any>>>({});
   const [materialAplicarTodos, setMaterialAplicarTodos] = useState(false);
+  const [blueCastWashStage, setBlueCastWashStage] = useState<"before"|"after">("before");
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
   const pendingGemApplicationRef = useRef<GemaConfig | null>(null);
@@ -5959,7 +5960,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
-                    onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m,materialAplicarTodos)}}
+                    onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);setBlueCastWashStage("before");apiRef.current?.material(m,materialAplicarTodos)}}
                     className={"group relative flex flex-col items-center rounded-2xl border p-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/45 "+(materialId===m.id?"border-[#b99642]/60 bg-white shadow-[0_4px_14px_rgba(50,42,20,.10)]":"border-transparent bg-white/25 hover:border-[#d8d1c2] hover:bg-white/85")}>
                     <span className={"relative grid size-14 place-items-center rounded-full border transition "+(materialId===m.id?"border-[#b99642] shadow-[0_0_0_3px_rgba(185,150,66,.10)]":"border-black/10 group-hover:border-black/20")}>
                       <span className={"size-12 rounded-full "+(m.metalness<.5?"shadow-[inset_-3px_-4px_7px_rgba(70,0,0,.20),inset_3px_3px_7px_rgba(255,255,255,.24),0_2px_5px_rgba(0,0,0,.18)]":"shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]")}
@@ -5973,6 +5974,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
                   <p className="truncate text-[10px] text-[#55534d]">{materialActivo.nombre}</p>
                 </div>
+                {materialId==="blue_cast_v2"&&<div className="mt-3 rounded-xl border border-[#d8d1c2] bg-white p-3 shadow-[0_2px_8px_rgba(50,42,20,.04)]">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Proceso de manufactura</div>
+                    <span className="rounded-full bg-[#f4efe5] px-2 py-1 text-[9px] font-semibold text-[#6d5523]">BlueCast X-One V2</span>
+                  </div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="size-7 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:blueCastWashStage==="before"?"#343a3b":"#d9dcdd"}}/>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-[#45433e]">Simulador de lavado</p>
+                      <p className="text-[9px] text-[#8a857b]">{blueCastWashStage==="before"?"Antes del lavado · gris oscuro":"Después del lavado · gris claro"}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button type="button" aria-pressed={blueCastWashStage==="before"} onClick={()=>{setBlueCastWashStage("before");apiRef.current?.material(materialActivo,materialAplicarTodos);}} className={"rounded-lg border px-2 py-2 text-[10px] font-semibold transition "+(blueCastWashStage==="before"?"border-[#b99642]/60 bg-[#f4efe5] text-[#6d5523]":"border-black/[.08] bg-white text-[#77756f] hover:bg-[#f8f6f0]")}>Antes del lavado</button>
+                    <button type="button" aria-pressed={blueCastWashStage==="after"} onClick={()=>{setBlueCastWashStage("after");apiRef.current?.material({...materialActivo,color:0xd9dcdd,roughness:.48,clearcoat:.06,metalness:0},materialAplicarTodos);}} className={"rounded-lg border px-2 py-2 text-[10px] font-semibold transition "+(blueCastWashStage==="after"?"border-[#b99642]/60 bg-[#f4efe5] text-[#6d5523]":"border-black/[.08] bg-white text-[#77756f] hover:bg-[#f8f6f0]")}>Después del lavado</button>
+                  </div>
+                  <p className="mt-2 text-[9px] leading-relaxed text-[#8a857b]">Comparación visual educativa. No modifica la geometría ni representa un tiempo o resultado físico certificado de lavado.</p>
+                </div>}
               </div>}
               {uxSection==="gemas"&&<div className="pt-3 pb-5">
                 <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><Gem className="size-3.5 shrink-0"/><input value={busquedaGemas} onChange={e=>{setBusquedaGemas(e.target.value);if(e.target.value.trim())setMostrarTodasGemas(true);}} placeholder="Buscar gema por nombre…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
