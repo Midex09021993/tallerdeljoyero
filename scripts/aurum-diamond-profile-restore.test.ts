@@ -28,15 +28,15 @@ const blanco2CatalogProfile = {
     dispersion: 0,
     gammaFactor: 1,
     reflectivity: 0.5,
-    geometryFactor: 0.72,
-    squashFactor: 0.91,
-    absorptionFactor: 1.35,
-    transmission: 0.12,
+    geometryFactor: 0.5,
+    squashFactor: 0.98,
+    absorptionFactor: 1,
+    transmission: 0,
     boostFactors: { x: 1, y: 1, z: 1 },
   },
 };
 
-test("restores all startup optics and four DiamondMaterial controls after Blanco 1 -> Blanco 2 -> Blanco 1", () => {
+test("Blanco 2 shares Blanco 1 optical controls while preserving its own dispersion", () => {
   const startupBaseline = {
     profileId: "diamante_natural",
     dispersion: 0.01,
@@ -64,12 +64,9 @@ test("restores all startup optics and four DiamondMaterial controls after Blanco
   });
 
   const blanco2 = resolveAurumDiamondProfileOptics(blanco2CatalogProfile, startupBaseline);
-  expect(blanco2).not.toEqual(initialBlanco1);
-  expect(blanco2).toMatchObject({
-    geometryFactor: 0.72,
-    squashFactor: 0.91,
-    absorptionFactor: 1.35,
-    transmission: 0.12,
+  expect(blanco2).toEqual({
+    ...initialBlanco1,
+    dispersion: 0,
   });
 
   const restoredBlanco1 = resolveAurumDiamondProfileOptics(blanco1CatalogProfile, startupBaseline);
