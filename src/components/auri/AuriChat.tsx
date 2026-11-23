@@ -129,42 +129,49 @@ function horaConsulta(value: string) {
 
 function buscarEnBibliotecaRhino(pregunta: string) {
   const q = NORMALIZAR_COMANDO_RHINO(pregunta);
-  const stopwords = new Set(["que","como","para","con","una","uno","del","las","los","por","quiero","puedo","rhino","rhinoceros","comando","comandos","explica","explicame","usar","uso","hacer","crear","necesito"]);
-  const tokens = q.split(" ").filter((word) => word.length > 2 && !stopwords.has(word));
-  const consultaRhino = /\b(rhino|rhinoceros|comando|comandos|biblioteca|inventario|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\b/.test(q)
-    || INVENTARIO_RHINO7.some((name) => {
-      const normalizado = NORMALIZAR_COMANDO_RHINO(name);
-      return normalizado.length > 2 && (q === normalizado || q.includes(normalizado));
-    });
+  const nombresFichas = COMANDOS.map((item) => item.nombre);
+  const mencionaFichas = /\\b(ficha|fichas|explicacion|explicaciones|documentacion|documentado)\\b/.test(q);
+  const comandoSolicitado = INVENTARIO_RHINO7.find((nombre) => {
+    const clave = NORMALIZAR_COMANDO_RHINO(nombre);
+    return clave.length > 2 && (q === clave || q.includes(` ${clave} `) || q.startsWith(`${clave} `) || q.endsWith(` ${clave}`));
+  });
+
+  if (mencionaFichas && !comandoSolicitado) {
+    const porCategoria = [...new Set(COMANDOS.map((item) => item.categoria))];
+    const listado = porCategoria.map((categoria) => {
+      const items = COMANDOS.filter((item) => item.categoria === categoria).map((item) => item.nombre);
+      return `**${categoria}:** ${items.join(", ")}`;
+    }).join("\\n");
+    return `Estas son las fichas que AURI puede explicar con contenido didáctico:\\n\\n${listado}\\n\\nIndícame el nombre de un comando y te daré su función y los pasos de uso. Para los demás nombres del inventario Rhino 7, puedo confirmar que existen, pero no dispongo todavía de una ficha explicativa.`;
+  }
+
+  const consultaRhino = Boolean(comandoSolicitado)
+    || /\\b(rhino|rhinoceros|comando|comandos|biblioteca|inventario|extruir|curva|superficie|solido|anillo|aro|perfil|poligono|circulo|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\\b/.test(q);
   if (!consultaRhino) return null;
 
-  const resultados = INVENTARIO_RHINO7.map((nombre) => {
-    const normalizado = NORMALIZAR_COMANDO_RHINO(nombre);
-    const exacto = q === normalizado ? 100 : q.includes(normalizado) && normalizado.length > 2 ? 80 : normalizado.includes(q) && q.length >= 4 ? 55 : 0;
-    const coincidencias = tokens.reduce((total, token) => total + (normalizado.split(" ").some((parte) => parte.includes(token)) ? 8 : 0), 0);
-    return { nombre, score: exacto + coincidencias };
-  }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || a.nombre.localeCompare(b.nombre, "es")).slice(0, 6);
+  const tokens = q.split(" ").filter((word) => word.length >= 4 && !["rhino","rhinoceros","comando","comandos","biblioteca","inventario","explica","explicame","quiero","puedo","hacer","crear","buscar","busca","dime","muestrame","fichas","didacticas","tienen","tiene","explicacion"].includes(word));
+  const resultados = comandoSolicitado
+    ? [{ nombre: comandoSolicitado, score: 100 }]
+    : INVENTARIO_RHINO7.map((nombre) => {
+        const normalizado = NORMALIZAR_COMANDO_RHINO(nombre);
+        const partes = normalizado.split(" ");
+        const coincidencias = tokens.reduce((total, token) => total + (partes.some((parte) => parte === token || (token.length >= 5 && parte.startsWith(token))) ? 1 : 0), 0);
+        return { nombre, score: coincidencias };
+      }).filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score || a.nombre.localeCompare(b.nombre, "es"))
+        .slice(0, 3);
 
   if (!resultados.length) {
-    return "Puedo consultar el inventario maestro de Rhino 7, que contiene 1.536 nombres de comandos. Dime el nombre del comando o qué operación quieres realizar y buscaré coincidencias. Ten en cuenta que el inventario registra nombres; las explicaciones paso a paso solo están disponibles para las fichas didácticas desarrolladas.";
+    return "Dime el nombre exacto del comando Rhino que quieres consultar. Buscaré primero en el inventario Rhino 7 y comprobaré si tiene una ficha didáctica con instrucciones.";
   }
 
-  const fichas = resultados.map(({ nombre }) => {
-    const clave = NORMALIZAR_COMANDO_RHINO(nombre);
-    return COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre) === clave)
-      ?? COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre).includes(clave) || clave.includes(NORMALIZAR_COMANDO_RHINO(item.nombre)));
-  }).filter((item): item is (typeof COMANDOS)[number] => Boolean(item));
-
-  const fichasUnicas = [...new Map(fichas.map((item) => [item.nombre, item])).values()];
-  const nombres = resultados.map(({ nombre }) => nombre);
-  const listado = `**Coincidencias en el inventario Rhino 7:** ${nombres.join(" · ")}.`;
-
-  if (!fichasUnicas.length) {
-    return `He encontrado coincidencias en el inventario maestro de Rhino 7.\n\n${listado}\n\n**Alcance de la fuente:** el inventario confirma los nombres, pero no incluye la descripción ni el procedimiento de estos comandos. Para evitar darte instrucciones no verificadas, no voy a inventar sus pasos. Si me compartes la ayuda oficial o una ficha del comando, puedo explicártelo aplicado a joyería.`;
+  const nombre = resultados[0].nombre;
+  const ficha = COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre) === NORMALIZAR_COMANDO_RHINO(nombre));
+  if (!ficha) {
+    return `**${nombre}**\\n\\nEstá registrado en el inventario de Rhino 7, pero todavía no tiene una ficha didáctica en FADILAB. Por eso puedo confirmar su presencia en el catálogo, pero no darte pasos de uso sin documentación.`;
   }
 
-  const detalle = fichasUnicas.slice(0, 3).map((item) => `**${item.nombre}** · ${item.categoria}\n${item.resumen}\n**Cuándo utilizarlo:** ${item.uso}\n**Procedimiento:** ${item.pasos.join(" ")}\n**Ejemplo en joyería:** ${item.joyeria}\n**Precaución:** ${item.cuidado}`).join("\n\n");
-  return `He consultado el inventario maestro Rhino 7 y las fichas didácticas disponibles de FADILAB.\n\n${listado}\n\n**Fichas con explicación disponible:**\n\n${detalle}\n\nLos pasos corresponden a las fichas formativas existentes; pueden variar según la versión y las opciones del comando.`;
+  return `**${ficha.nombre} · ${ficha.categoria}**\\n${ficha.resumen}\\n\\n**Uso:** ${ficha.uso}\\n**Pasos:** ${ficha.pasos.join(" ")}\\n**Ejemplo en joyería:** ${ficha.joyeria}\\n**Precaución:** ${ficha.cuidado}`;
 }
 
 function generarRespuestaTutorLocal(pregunta: string, contexto: string) {
