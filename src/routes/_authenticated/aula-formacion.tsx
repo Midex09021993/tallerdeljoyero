@@ -7,6 +7,8 @@ import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, Shield
 import { AppShell, Panel } from "@/components/AppShell";
 import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
 import LaboratorioSolidos from "@/components/aula/LaboratorioSolidos";
+import LaboratorioSuperficies from "@/components/aula/LaboratorioSuperficies";
+import LaboratorioValidacionModelo from "@/components/aula/LaboratorioValidacionModelo";
 import LaboratorioCurveEditor from "@/components/aula/LaboratorioCurveEditor";
 import LaboratorioCurvasBasicas from "@/components/aula/LaboratorioCurvasBasicas";
 import RhinoObjectExplorer from "@/components/aula/RhinoObjectExplorer";
@@ -2737,6 +2739,8 @@ function AulaFormacionPage() {
                 {lecturaAbierta?.numero === 6 && paginaLectura === 2 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="revolution" /></div>}
                 {lecturaAbierta?.numero === 6 && paginaLectura === 3 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="ring" /></div>}
                 {lecturaAbierta?.numero === 6 && paginaLectura === 4 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="inspector" /></div>}
+                {lecturaAbierta?.numero === 7 && paginaLectura === 5 && <LaboratorioSuperficies />}
+                {lecturaAbierta?.numero === 8 && paginaLectura === 5 && <LaboratorioValidacionModelo />}
 
                   </section>
                   {lecturaAbierta?.numero === 5 && <section className="min-w-0">{renderLaboratorioSesion5()}</section>}
@@ -3546,6 +3550,8 @@ function AulaFormacionPage() {
                 {lecturaAbierta?.numero === 6 && paginaLectura === 2 && <div className="mt-7"><LaboratorioSolidos onlyLab="revolution" /></div>}
                 {lecturaAbierta?.numero === 6 && paginaLectura === 3 && <div className="mt-7"><LaboratorioSolidos onlyLab="ring" /></div>}
                 {lecturaAbierta?.numero === 6 && paginaLectura === 4 && <div className="mt-7"><LaboratorioSolidos onlyLab="inspector" /></div>}
+                {lecturaAbierta?.numero === 7 && paginaLectura === 5 && <LaboratorioSuperficies />}
+                {lecturaAbierta?.numero === 8 && paginaLectura === 5 && <LaboratorioValidacionModelo />}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
                 </section>
               </main>
