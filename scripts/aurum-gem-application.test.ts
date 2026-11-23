@@ -933,7 +933,7 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
 
   expect(catalog).toContain('diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0.01');
-  expect(catalog).toContain('diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0,');
+  expect(catalog).toContain('diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0.01,');
   expect(application).toContain('...(g.diamondMaterialParameters ? { diamondMaterialParameters:g.diamondMaterialParameters } : {})');
   expect(activation).toContain('const source = preset?.diamondMaterialParameters ?? {};');
   expect(activation).toContain('refractiveIndex: Number(source.refractiveIndex');
