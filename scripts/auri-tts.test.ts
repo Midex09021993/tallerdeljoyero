@@ -14,6 +14,7 @@ describe("AURI voz Sulafat", () => {
   test("modelo y voz fijos en servidor", () => {
     expect(AURI_TTS_MODEL).toBe("gemini-3.8-flash-lite-tts");
     const payload = construirPayloadTts("Hola", "es-419");
+    expect(payload.contents[0].parts[0].text).toBe("Hola");
     expect(payload.generationConfig.responseModalities).toEqual(["AUDIO"]);
     expect(payload.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName).toBe(AURI_TTS_VOICE);
     expect(AURI_TTS_VOICE).toBe("Sulafat");
