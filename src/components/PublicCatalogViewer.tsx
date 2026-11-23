@@ -37,6 +37,36 @@ export const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   return "otro";
 };
 
+const applyPublicDiamondCatalogOptics = (material: any, gem: any) => {
+  if (!material || String(gem?.familia ?? "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase() !== "diamante") return;
+  const source = gem?.diamondMaterialParameters ?? {};
+  const isWhiteDiamond = ["diamante_natural", "diamante_vs", "diamante_inclusiones"].includes(String(gem?.id ?? ""));
+  if (!isWhiteDiamond) return;
+  const dispersion = Math.max(0, Number(gem?.dispersion ?? source.dispersion ?? 0));
+  material.envMapIntensity = Math.max(0, Number(gem?.envMapIntensity ?? 1.3));
+  material.ior = Math.max(1, Number(source.refractiveIndex ?? gem?.ior ?? 2.6));
+  material.dispersion = dispersion;
+  material.userData = {
+    ...(material.userData ?? {}),
+    aurumGemFamily: "Diamante",
+    aurumDiamondCatalogProfile: String(gem?.id ?? ""),
+    aurumIJEWELParameters: {
+      ...(material.userData?.aurumIJEWELParameters ?? {}),
+      ...source,
+      color: Number(gem?.color ?? 0xffffff),
+      dispersion,
+      gammaFactor: Number(source.gammaFactor ?? 1),
+      reflectivity: Number(source.reflectivity ?? 0.5),
+      geometryFactor: Number(source.geometryFactor ?? 0.5),
+      squashFactor: Number(source.squashFactor ?? 0.98),
+      absorptionFactor: Number(source.absorptionFactor ?? 1),
+      refractiveIndex: Number(source.refractiveIndex ?? gem?.ior ?? 2.6),
+      rayBounces: Number(source.rayBounces ?? 5),
+      boostFactors: source.boostFactors ?? { x: 1, y: 1, z: 1 },
+    },
+  };
+};
+
 const ensurePhysicalGemMaterial = (material: any): THREE.MeshPhysicalMaterial => {
   if (material?.isMeshPhysicalMaterial) return material as THREE.MeshPhysicalMaterial;
 
@@ -213,6 +243,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             material.envMap = environment;
           } else if (family === "gema") {
             applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+            applyPublicDiamondCatalogOptics(material, gem);
             material.envMap = gemEnvironment ?? environment;
             // Match the approved AURUM Render gem EXR orientation: 0° base
             // plus the same per-family correction used by its gem controller.
@@ -745,6 +776,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       if (family !== "gema") return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       if (materials.length !== 1) return;
+      applyPublicDiamondCatalogOptics(materials[0], selectedGem);
       materials[0].userData = { ...(materials[0].userData ?? {}), aurumGemFamily: selectedFamily };
       object.userData = {
         ...(object.userData ?? {}),
@@ -848,6 +880,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         if (family === "metal") applyAurumMetal(material, metalPresetFromConfig(metal));
         if (family === "gema") {
           applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+          applyPublicDiamondCatalogOptics(material, gem);
           material.userData = {
             ...(material.userData ?? {}),
             aurumOpticalProfile: gemPresetFromConfig(gem),
