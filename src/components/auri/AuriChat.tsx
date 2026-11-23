@@ -231,13 +231,13 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
   const interno = modo === "interno";
   const tutorCurso = Boolean(contextoCurso.trim());
   const publicPage = !interno ? getPublicPageConfig(rutaActual) : null;
-  const bienvenida = tutorCurso ? "¡Hola! Soy AURI Tutor. Estoy aquí para acompañarte en este apartado del curso. Puedo aclarar conceptos, relacionarlos con la práctica de joyería y darte pistas paso a paso." : publicPage?.welcome ?? WELCOME.text;
+  const bienvenida = tutorCurso ? "¡Hola! Soy AURI Tutor. Estoy aquí para acompañarte en este apartado del curso. Puedo aclarar conceptos, relacionarlos con la práctica de joyería y ayudarte a consultar comandos de Rhino con apoyo de Gemini y la biblioteca FADILAB." : publicPage?.welcome ?? WELCOME.text;
   const accionesTutor = [
     { label: "Explícame este tema", prompt: "Explícame este apartado con palabras sencillas y un ejemplo aplicado a joyería.", icon: MessageCircle },
     { label: "Guíame paso a paso", prompt: "Guíame paso a paso para comprender y aplicar este contenido.", icon: Activity },
     { label: "Dame una pista", prompt: "Dame una pista progresiva para resolver la práctica, sin darme la solución completa.", icon: Sparkles },
     { label: "Comprueba lo aprendido", prompt: "Hazme tres preguntas breves para comprobar si comprendí este apartado.", icon: Gem },
-    { label: "Biblioteca de comandos Rhino", prompt: "Consulta el inventario maestro de comandos de Rhino 7. Muéstrame cómo buscar un comando y dime qué fichas didácticas tienen explicación.", icon: BookOpen },
+    { label: "Consultar comandos Rhino", prompt: "Consulta el inventario maestro de comandos de Rhino 7. Muéstrame cómo buscar un comando y dime qué fichas didácticas tienen explicación.", icon: BookOpen },
   ];
   const llamarInterno = useServerFn(auriInterno);
   const llamarDirecto = useServerFn(auriDirecto);
@@ -437,7 +437,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2"><p className="font-semibold tracking-tight text-[#263746]">AURI</p><span className="auri-brand-tag rounded-full border border-[#e9dfc7] bg-[#fbf8ef] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#9b7936]">AURUM LAB</span></div>
-              <p className="mt-0.5 truncate text-[11px] text-[#87919a]">{interno ? "Tu asistente de gestión" : tutorCurso ? "Tutor guiado local del curso CAD 3D" : "Asistente virtual de AURUM LAB"}</p>
+              <p className="mt-0.5 truncate text-[11px] text-[#87919a]">{interno ? "Tu asistente de gestión" : tutorCurso ? "Tutor CAD 3D · FADILAB + Gemini" : "Asistente virtual de AURUM LAB"}</p>
             </div>
           </div>
           <div className="auri-header__controls flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -523,7 +523,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
               <div className="mb-5 mt-2">
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">{interno ? "CENTRO DE ASISTENCIA" : tutorCurso ? "AURI TUTOR · FORMACIÓN FADILAB" : publicPage?.eyebrow ?? "GUÍA VIRTUAL DE TALLER DEL JOYERO"}</p>
                 <h2 className="mt-2 font-display text-2xl leading-tight text-[#263746] sm:text-[27px]">{interno ? "¿Qué necesitas resolver hoy?" : tutorCurso ? "Aprendamos este módulo juntos" : publicPage?.title ?? "¿Qué te gustaría conocer de AURUM LAB?"}</h2>
-                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">{interno ? "Consulta la información de tu taller en lenguaje natural." : tutorCurso ? "Puedo explicar conceptos, conectar la teoría con el taller y acompañarte en los ejercicios de esta sesión." : publicPage?.description ?? "Te explico nuestras herramientas, render 3D, recursos de formación y planes."}</p>
+                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">{interno ? "Consulta la información de tu taller en lenguaje natural." : tutorCurso ? "Te acompaño con el contenido del módulo y consulto Gemini para explicar comandos de Rhino, apoyándome en el inventario y las fichas de FADILAB." : publicPage?.description ?? "Te explico nuestras herramientas, render 3D, recursos de formación y planes."}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {(interno ? QUICK_ACTIONS : tutorCurso ? accionesTutor : publicPage?.actions ?? PUBLIC_QUICK_ACTIONS).map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void sendMessage(undefined, prompt)} disabled={loading} className="group flex min-h-[66px] items-center gap-2.5 rounded-xl border border-[#e9e2d3] bg-white px-3 py-3 text-left shadow-[0_2px_8px_rgba(38,55,70,.025)] transition hover:-translate-y-0.5 hover:border-[#d5bf87] hover:shadow-md disabled:opacity-50"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#f8f3e7] text-[#a98535] transition group-hover:bg-[#f1e6c9]"><Icon className="size-4" /></span><span className="text-[11px] font-semibold leading-4 text-[#475663]">{label}</span></button>)}
                 </div>
