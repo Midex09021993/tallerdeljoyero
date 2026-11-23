@@ -62,6 +62,4 @@ export const CAPITULOS = [
   { numero: 16, titulo: "Booleanas, acabado y documentación", objetivo: "Combinar o restar volúmenes, suavizar aristas y documentar o exportar el diseño.", comandos: ["BooleanUnion", "BooleanDifference", "FilletEdge", "Dim", "Export"] },
 ];
 
-const CATEGORIAS = ["Todas", ...Array.from(new Set(COMANDOS.map((item) => item.categoria)))];
-
 export const CATEGORIAS = ["Todas", ...Array.from(new Set(COMANDOS.map((item) => item.categoria)))];
