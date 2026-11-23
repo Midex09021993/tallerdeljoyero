@@ -13,9 +13,9 @@ export default function AuriTutorCurso({ contexto }: Props) {
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#e4d3a5] bg-white shadow-sm"><AuriMascota compact /></span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#9b7936]">AURI TUTOR · ACOMPAÑAMIENTO DEL MÓDULO</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#9b7936]">AURI TUTOR · GUÍA CONTEXTUAL DEL MÓDULO</p>
             <h4 className="mt-1 text-sm font-semibold text-[#263746]">¿Necesitas ayuda con este apartado?</h4>
-            <p className="mt-1 text-xs leading-5 text-[#718096]">Pregunta sobre el contenido, pide una explicación paso a paso o solicita una pista para practicar.</p>
+            <p className="mt-1 text-xs leading-5 text-[#718096]">Guía local basada en el contenido de este apartado. Tus consultas no se envían a Gemini.</p>
           </div>
         </div>
         <button type="button" onClick={() => setAbierto(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#c4a15a] px-4 py-2.5 text-sm font-semibold text-[#21180a] shadow-sm transition hover:bg-[#b99552] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c4a15a]">
