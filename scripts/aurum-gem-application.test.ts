@@ -1112,3 +1112,24 @@ test("White 2 applies the White 1 catalog calibration after source .dmat metadat
   expect(white2Block).toContain('dispersion:Number(catalogParameters.dispersion??currentDiamondParameters.dispersion??preset.dispersion??0)');
   expect(white2Block).toContain('next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3))');
 });
+
+
+test("public viewer applies the complete White 1 optical calibration to White 2 before BVH refresh", () => {
+  const viewer = readFileSync("src/components/PublicCatalogViewer.tsx", "utf8");
+  const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
+  const helper = viewer.slice(
+    viewer.indexOf("const applyPublicDiamondCatalogOptics"),
+    viewer.indexOf("const ensurePhysicalGemMaterial")
+  );
+  expect(viewer).toContain("applyPublicDiamondCatalogOptics(materials[0], selectedGem)");
+  expect(viewer).toContain("applyPublicDiamondCatalogOptics(material, gem)");
+  expect(helper).toContain('["diamante_natural", "diamante_vs", "diamante_inclusiones"]');
+  expect(helper).toContain("gammaFactor: Number(source.gammaFactor ?? 1)");
+  expect(helper).toContain("reflectivity: Number(source.reflectivity ?? 0.5)");
+  expect(helper).toContain("geometryFactor: Number(source.geometryFactor ?? 0.5)");
+  expect(helper).toContain("squashFactor: Number(source.squashFactor ?? 0.98)");
+  expect(helper).toContain("absorptionFactor: Number(source.absorptionFactor ?? 1)");
+  expect(helper).toContain("rayBounces: Number(source.rayBounces ?? 5)");
+  expect(catalog).toContain('id:"diamante_vs", familia:"Diamante", nombre:"Diamante blanco 2"');
+  expect(catalog).toContain('dispersion:.01, iridescence:0, inclusionStyle:"ninguna", inclusionStrength:0, diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0.01');
+});
