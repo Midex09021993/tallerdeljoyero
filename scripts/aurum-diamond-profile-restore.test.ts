@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolveAurumDiamondProfileOptics } from "../src/lib/aurum/aurum-diamond-bvh-runtime";
+import { resolveAurumDiamondCatalogParameters } from "../src/lib/aurum/aurum-diamond-material";
 
 const blanco1CatalogProfile = {
   id: "diamante_natural",
@@ -26,8 +27,8 @@ const blanco2CatalogProfile = {
   dispersion: 0.01,
   diamondMaterialParameters: {
     dispersion: 0.01,
-    gammaFactor: 1,
-    reflectivity: 0.5,
+    gammaFactor: 1.09,
+    reflectivity: 0.46,
     geometryFactor: 0.5,
     squashFactor: 0.98,
     absorptionFactor: 1,
@@ -122,4 +123,18 @@ test("white diamond BVH keeps catalog reflectivity 0.50 and gamma 1.00 at every 
   expect(runtime).toContain("const nextGamma = isWhiteDiamondProfile ? 1 : resolvedOptics.gamma;");
   expect(runtime).toContain("const reflectivity = baseDiamondReflectivity;");
   expect(runtime).toContain("const gamma = baseDiamondGamma;");
+});
+
+
+test("white catalog resolver keeps raw source values out of active material metadata", () => {
+  const sourceProfile = {
+    id: "diamante_vs",
+    diamondMaterialParameters: { gammaFactor: 1.09, reflectivity: 0.46, dispersion: 0.01 },
+  };
+  expect(sourceProfile.diamondMaterialParameters).toEqual({
+    gammaFactor: 1.09, reflectivity: 0.46, dispersion: 0.01,
+  });
+  expect(resolveAurumDiamondCatalogParameters(sourceProfile)).toEqual({
+    gammaFactor: 1, reflectivity: 0.5, dispersion: 0.01,
+  });
 });
