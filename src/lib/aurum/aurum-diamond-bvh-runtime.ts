@@ -1,5 +1,6 @@
 // @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import * as THREE from "three";
+import { resolveAurumDiamondCatalogParameters } from "./aurum-diamond-material";
 import { classifyAurumDiamondMeshTiers, getAurumDiamondProjectedDiameterPx, getAurumDiamondMicroOpticalProfile } from "./diamond-micro-pipeline";
 import { resolveAurumCatalogGemBvhColor, resolveAurumEmeraldBvhProfile, resolveAurumRubyBvhProfile, resolveAurumSapphireBvhProfile } from "./aurum-gem-bvh-profiles";
 import {
@@ -125,7 +126,7 @@ export function resolveAurumDiamondProfileOptics(
   profile: any,
   baseline: AurumDiamondOpticalProfileBaseline,
 ) {
-  const parameters = profile?.diamondMaterialParameters ?? {};
+  const parameters = resolveAurumDiamondCatalogParameters(profile);
   const profileId = String(profile?.id ?? "");
   const restoringInitialProfile = profileId !== "" && profileId === baseline.profileId;
   if (restoringInitialProfile) {
