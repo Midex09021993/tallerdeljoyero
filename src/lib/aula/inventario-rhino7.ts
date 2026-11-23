@@ -1542,4 +1542,4 @@ export const INVENTARIO_RHINO7: string[] = [
   "ÁreaDeCota"
 ];
 
-export const NORMALIZAR_COMANDO_RHINO = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es").replace(/[^a-z0-9]+/g, " ").trim();
+export const NORMALIZAR_COMANDO_RHINO = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es").replace(/[^a-z0-9]+/g, " ").trim();
