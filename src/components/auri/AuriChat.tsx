@@ -198,15 +198,23 @@ function getPublicPageConfig(pathname = ""): PublicPageConfig {
   };
 }
 
-export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onContact: () => void; modo?: "publico" | "interno"; rutaActual?: string }) {
+export function AuriChat({ onContact, modo = "publico", rutaActual = "", contextoCurso = "" }: { onContact: () => void; modo?: "publico" | "interno"; rutaActual?: string; contextoCurso?: string }) {
   const interno = modo === "interno";
+  const tutorCurso = Boolean(contextoCurso.trim());
   const publicPage = !interno ? getPublicPageConfig(rutaActual) : null;
+  const bienvenida = tutorCurso ? "¡Hola! Soy AURI Tutor. Estoy aquí para acompañarte en este apartado del curso. Puedo aclarar conceptos, relacionarlos con la práctica de joyería y darte pistas paso a paso." : publicPage?.welcome ?? WELCOME.text;
+  const accionesTutor = [
+    { label: "Explícame este tema", prompt: "Explícame este apartado con palabras sencillas y un ejemplo aplicado a joyería.", icon: MessageCircle },
+    { label: "Guíame paso a paso", prompt: "Guíame paso a paso para comprender y aplicar este contenido.", icon: Activity },
+    { label: "Dame una pista", prompt: "Dame una pista progresiva para resolver la práctica, sin darme la solución completa.", icon: Sparkles },
+    { label: "Comprueba lo aprendido", prompt: "Hazme tres preguntas breves para comprobar si comprendí este apartado.", icon: Gem },
+  ];
   const llamarInterno = useServerFn(auriInterno);
   const llamarDirecto = useServerFn(auriDirecto);
   const [modoDirecto, setModoDirecto] = useState(false);
   const [vista, setVista] = useState<"texto" | "voz">("texto");
   const [autorizado, setAutorizado] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([interno ? WELCOME_INTERNO : { role: "model", text: publicPage?.welcome ?? WELCOME.text }]);
+  const [messages, setMessages] = useState<Message[]>([interno ? WELCOME_INTERNO : { role: "model", text: bienvenida }]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -226,11 +234,11 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
 
   useEffect(() => {
     if (interno) return;
-    setMessages([{ role: "model", text: publicPage?.welcome ?? WELCOME.text }]);
+    setMessages([{ role: "model", text: bienvenida }]);
     setDraft("");
     setError("");
     setVista("texto");
-  }, [interno, rutaActual]);
+  }, [interno, rutaActual, contextoCurso]);
 
   useEffect(() => {
     const speechWindow = window as SpeechWindow;
@@ -293,9 +301,11 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
     event?.preventDefault();
     const question = (messageOverride ?? draft).trim();
     if (!question || loading) return;
-    const questionForAssistant = !interno && publicPage
-      ? `[CONTEXTO DE NAVEGACIÓN ACTUAL: ${publicPage.focus}]\nConsulta del visitante: ${question}`
-      : question;
+    const questionForAssistant = tutorCurso
+      ? `[AURI TUTOR DEL AULA — CONTEXTO DEL MÓDULO]\n${contextoCurso.slice(0, 2600)}\nResponde en español claro y didáctico. Enseña con ejemplos de joyería y CAD. Si es una práctica, ofrece pistas progresivas y preguntas orientadoras; no resuelvas por completo ejercicios ni evaluaciones oficiales. Limítate al contenido del módulo y señala cuando algo no esté explicado en el material.\nConsulta del alumno: ${question}`
+      : !interno && publicPage
+        ? `[CONTEXTO DE NAVEGACIÓN ACTUAL: ${publicPage.focus}]\nConsulta del visitante: ${question}`
+        : question;
     const nextMessages: Message[] = [...messages, { role: "user", text: question }];
     setMessages(nextMessages);
     setDraft("");
@@ -369,7 +379,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2"><p className="font-semibold tracking-tight text-[#263746]">AURI</p><span className="auri-brand-tag rounded-full border border-[#e9dfc7] bg-[#fbf8ef] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#9b7936]">AURUM LAB</span></div>
-              <p className="mt-0.5 truncate text-[11px] text-[#87919a]">{interno ? "Tu asistente de gestión" : "Asistente virtual de AURUM LAB"}</p>
+              <p className="mt-0.5 truncate text-[11px] text-[#87919a]">{interno ? "Tu asistente de gestión" : tutorCurso ? "Tutor personal del curso CAD 3D" : "Asistente virtual de AURUM LAB"}</p>
             </div>
           </div>
           <div className="auri-header__controls flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -453,11 +463,11 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#fffefa] px-4 py-4 sm:px-5">
             {messages.length === 1 && (
               <div className="mb-5 mt-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">{interno ? "CENTRO DE ASISTENCIA" : publicPage?.eyebrow ?? "GUÍA VIRTUAL DE TALLER DEL JOYERO"}</p>
-                <h2 className="mt-2 font-display text-2xl leading-tight text-[#263746] sm:text-[27px]">{interno ? "¿Qué necesitas resolver hoy?" : publicPage?.title ?? "¿Qué te gustaría conocer de AURUM LAB?"}</h2>
-                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">{interno ? "Consulta la información de tu taller en lenguaje natural." : publicPage?.description ?? "Te explico nuestras herramientas, render 3D, recursos de formación y planes."}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a98535]">{interno ? "CENTRO DE ASISTENCIA" : tutorCurso ? "AURI TUTOR · FORMACIÓN FADILAB" : publicPage?.eyebrow ?? "GUÍA VIRTUAL DE TALLER DEL JOYERO"}</p>
+                <h2 className="mt-2 font-display text-2xl leading-tight text-[#263746] sm:text-[27px]">{interno ? "¿Qué necesitas resolver hoy?" : tutorCurso ? "Aprendamos este módulo juntos" : publicPage?.title ?? "¿Qué te gustaría conocer de AURUM LAB?"}</h2>
+                <p className="mt-2 max-w-sm text-xs leading-5 text-[#7f8991]">{interno ? "Consulta la información de tu taller en lenguaje natural." : tutorCurso ? "Puedo explicar conceptos, conectar la teoría con el taller y acompañarte en los ejercicios de esta sesión." : publicPage?.description ?? "Te explico nuestras herramientas, render 3D, recursos de formación y planes."}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {(interno ? QUICK_ACTIONS : publicPage?.actions ?? PUBLIC_QUICK_ACTIONS).map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void sendMessage(undefined, prompt)} disabled={loading} className="group flex min-h-[66px] items-center gap-2.5 rounded-xl border border-[#e9e2d3] bg-white px-3 py-3 text-left shadow-[0_2px_8px_rgba(38,55,70,.025)] transition hover:-translate-y-0.5 hover:border-[#d5bf87] hover:shadow-md disabled:opacity-50"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#f8f3e7] text-[#a98535] transition group-hover:bg-[#f1e6c9]"><Icon className="size-4" /></span><span className="text-[11px] font-semibold leading-4 text-[#475663]">{label}</span></button>)}
+                  {(interno ? QUICK_ACTIONS : tutorCurso ? accionesTutor : publicPage?.actions ?? PUBLIC_QUICK_ACTIONS).map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void sendMessage(undefined, prompt)} disabled={loading} className="group flex min-h-[66px] items-center gap-2.5 rounded-xl border border-[#e9e2d3] bg-white px-3 py-3 text-left shadow-[0_2px_8px_rgba(38,55,70,.025)] transition hover:-translate-y-0.5 hover:border-[#d5bf87] hover:shadow-md disabled:opacity-50"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#f8f3e7] text-[#a98535] transition group-hover:bg-[#f1e6c9]"><Icon className="size-4" /></span><span className="text-[11px] font-semibold leading-4 text-[#475663]">{label}</span></button>)}
                 </div>
               </div>
             )}
