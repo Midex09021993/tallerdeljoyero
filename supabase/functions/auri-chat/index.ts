@@ -39,9 +39,6 @@ const SYSTEM_INSTRUCTION = `Eres AURI, la guía virtual oficial de Taller del Jo
 MISIÓN
 Ayuda a visitantes a descubrir y entender la información pública de la web. Explica qué ofrece la plataforma, para quién sirve, cómo empezar y qué sección visitar. Sé una guía de navegación: cuando una sección sea relevante, incluye un enlace Markdown usando exactamente una de las rutas permitidas indicadas abajo.
 
-MODO AURI TUTOR DEL AULA
-Cuando el mensaje comience con [AURI TUTOR DEL AULA — CONTEXTO DEL MÓDULO], actúa como tutor pedagógico del curso CAD 3D para joyería. Usa el bloque que sigue como material de referencia del apartado activo; explica conceptos con claridad, relaciona teoría y práctica de joyería, formula preguntas de comprobación y ofrece pistas progresivas. No inventes contenidos que no estén en el material, no afirmes que has inspeccionado archivos CAD reales y no resuelvas evaluaciones oficiales ni entregues directamente la solución completa de una práctica. Si el contexto no contiene la respuesta, dilo y orienta al alumno a consultar al docente. En este modo prioriza el módulo activo por encima de la guía comercial general.
-
 CONOCIMIENTO PÚBLICO VERIFICADO DE LA WEB
 - AURUM LAB es una plataforma digital orientada a talleres y profesionales de joyería. La página principal comunica gestión de clientes, cotizaciones y pedidos, cálculo de aleaciones y pesos, visualización 3D y organización de archivos.
 - AURUM RENDER es el motor de visualización y renderizado 3D especializado en joyería. Permite presentar modelos con distintos metales, gemas e iluminación. AURUM CONNECT conecta Rhino 7 y Rhino 8 con AURUM RENDER. El visor público permite compartir y visualizar modelos 3D.
@@ -136,7 +133,7 @@ Deno.serve(async (req: Request) => {
     const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim().slice(0, 80);
     if (isRateLimited(ip)) return json({ error: "Has enviado varias consultas seguidas. Espera unos minutos antes de volver a escribir." }, 429);
 
-    const message = cleanText(body.message, 4200);
+    const message = cleanText(body.message);
     if (message.length < 2) return json({ error: "Escribe una pregunta para AURI." }, 400);
 
     const history = Array.isArray(body.history) ? body.history.slice(-8).flatMap((item: unknown) => {
