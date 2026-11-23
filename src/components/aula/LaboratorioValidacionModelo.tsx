@@ -23,7 +23,6 @@ function buildInspectionModel(escenario: Escenario, modo: ModoVista, espesor: nu
   const gold = new THREE.MeshStandardMaterial({ color: "#c99d52", metalness: 0.68, roughness: 0.28, side: THREE.DoubleSide });
   const goldLight = new THREE.MeshStandardMaterial({ color: "#e4c17e", metalness: 0.58, roughness: 0.24, side: THREE.DoubleSide });
   const warning = new THREE.MeshStandardMaterial({ color: "#f08a42", emissive: "#7d3210", emissiveIntensity: 0.35, metalness: 0.25, roughness: 0.38 });
-  const wire = modo !== "sombreado";
   const material = wire ? new THREE.MeshStandardMaterial({ color: modo === "defectos" ? "#e9a06c" : "#9fc5d8", wireframe: true, metalness: 0.1, roughness: 0.65 }) : gold;
   const addEdges = (mesh: THREE.Mesh, color = "#e8c987") => {
     if (modo === "sombreado") {
@@ -134,7 +133,7 @@ export default function LaboratorioValidacionModelo() {
     return () => {
       observer.disconnect();
       canvas.removeEventListener("pointerdown", down); canvas.removeEventListener("pointermove", move); canvas.removeEventListener("pointerup", up); canvas.removeEventListener("pointercancel", up); canvas.removeEventListener("wheel", wheel);
-      scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.LineSegments) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(m => m.dispose()); } });
+      scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Line) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(m => m.dispose()); } });
       renderer.dispose(); sceneRef.current = null; rendererRef.current = null; cameraRef.current = null; modelRef.current = null;
     };
   }, [abierto]);
