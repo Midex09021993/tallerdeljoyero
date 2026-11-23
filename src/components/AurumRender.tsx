@@ -421,10 +421,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSectionState] = useState<"materiales"|"gemas"|"escenas"|"modelstage"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
   const [cadTreeLocked, setCadTreeLocked] = useState(false);
+  const cadTreeLockedRef = useRef(false);
   const setUxSection = useCallback((next: typeof uxSection) => {
-    if (cadTreeLocked && next !== "cad-tree") return;
+    // Ref síncrona: bloquea también eventos disparados antes del siguiente render.
+    if (cadTreeLockedRef.current && next !== "cad-tree") return;
     setUxSectionState(next);
-  }, [cadTreeLocked]);
+  }, []);
+  const toggleCadTreeLock = useCallback(() => {
+    const nextLocked = !cadTreeLockedRef.current;
+    cadTreeLockedRef.current = nextLocked;
+    setCadTreeLocked(nextLocked);
+  }, []);
   const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
   const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
   const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
@@ -5894,7 +5901,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             <span className="px-1 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Árbol CAD</span>
             <button
               type="button"
-              onClick={()=>setCadTreeLocked((locked)=>!locked)}
+              onClick={toggleCadTreeLock}
               aria-pressed={cadTreeLocked}
               aria-label={cadTreeLocked?"Desbloquear panel Árbol CAD":"Bloquear panel Árbol CAD"}
               title={cadTreeLocked?"Panel CAD bloqueado · Clic para desbloquear":"Bloquear panel CAD para mantener esta vista"}
