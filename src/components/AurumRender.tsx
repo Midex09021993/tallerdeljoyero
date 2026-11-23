@@ -58,7 +58,7 @@ import { configureAurumEdgeQuality, getAurumEdgeAaProfile } from "../lib/aurum/e
 import { getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
-import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon, Maximize2, Minimize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, FolderOpen, Cloud, ArrowUpRight } from "lucide-react";
+import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon, Lock, LockOpen, Maximize2, Minimize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, FolderOpen, Cloud, ArrowUpRight } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
@@ -418,7 +418,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
   }, []);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escenas"|"modelstage"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
+  const [uxSection, setUxSectionState] = useState<"materiales"|"gemas"|"escenas"|"modelstage"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
+  const [cadTreeLocked, setCadTreeLocked] = useState(false);
+  const setUxSection = useCallback((next: typeof uxSection) => {
+    if (cadTreeLocked && next !== "cad-tree") return;
+    setUxSectionState(next);
+  }, [cadTreeLocked]);
   const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
   const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
   const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
@@ -5886,7 +5891,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </div>}
           {uxSection==="cad-tree"&&<div className="flex shrink-0 items-center justify-between gap-2 border-b border-black/[.06] bg-white/70 px-3 py-2">
             <span className="px-1 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Árbol CAD</span>
-            <button type="button" onClick={()=>setUxSection("hdrMetales")} className="rounded-lg border border-black/[.08] bg-white px-2.5 py-2 text-[10px] font-semibold text-[#77756f] hover:bg-[#f8f6f0]">Biblioteca</button>
+            <button
+              type="button"
+              onClick={()=>setCadTreeLocked((locked)=>!locked)}
+              aria-pressed={cadTreeLocked}
+              aria-label={cadTreeLocked?"Desbloquear panel Árbol CAD":"Bloquear panel Árbol CAD"}
+              title={cadTreeLocked?"Panel CAD bloqueado · Clic para desbloquear":"Bloquear panel CAD para mantener esta vista"}
+              className={"grid size-9 place-items-center rounded-lg border transition "+(cadTreeLocked?"border-[#b99642]/50 bg-[#f5edda] text-[#80601f]":"border-black/[.08] bg-white text-[#77756f] hover:bg-[#f8f6f0]")}
+            >
+              {cadTreeLocked?<Lock className="size-4"/>:<LockOpen className="size-4"/>}
+            </button>
           </div>}
           {uxSection==="cad-tree"&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-width:thin] bg-[#f9f8f5] px-3 py-3">
             <div className="mb-3 flex items-start justify-between gap-2"><div><div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">AURUM CAD</div><h2 className="mt-1 text-base font-semibold">Estructura del modelo</h2><p className="mt-1 text-[10px] text-[#77756f]">{archivo?.name??"Sin modelo cargado"}</p></div><button type="button" onClick={refreshCadTree} disabled={!archivo} className="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-[10px] font-semibold text-[#6d5523] disabled:opacity-40">Actualizar</button></div>
