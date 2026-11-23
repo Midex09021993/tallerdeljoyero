@@ -89,10 +89,10 @@ const guias = [
   {
     slug: "distribucion-taller-joyeria",
     categoria: "Diseño del taller",
-    titulo: "Cómo organizar la distribución de un taller de joyería",
-    descripcion: "Planifica las zonas de diseño, producción digital, fundición y acabado con criterios de circulación, instalación y seguridad.",
+    titulo: "Distribución de un taller de joyería: zonas, flujo y seguridad",
+    descripcion: "Aprende a organizar las zonas de diseño CAD, impresión 3D, posprocesado, fundición y acabado con criterios de flujo, ventilación y seguridad.",
     icon: Gem,
-    lectura: "7 min de lectura",
+    lectura: "10–12 min de lectura",
     herramienta: "Guía de distribución del taller",
   },
   {
