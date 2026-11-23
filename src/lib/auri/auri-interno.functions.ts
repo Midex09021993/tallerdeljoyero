@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { declaracionesParaModelo, ejecutarHerramienta, esConfirmacionExplicita } from "./tool-registry";
 
 type Turno = { role: "user" | "model"; text: string };
-export type AuriInternoRespuesta = { reply: string; herramientas: string[]; error?: string };
+export type AuriInternoRespuesta = { reply: string; herramientas: string[]; motor?: "gemini"; modelo?: string; consultadoEn?: string; error?: string };
 
 const SISTEMA = `Eres AURI, asistente de AURUM LAB para el personal del taller. Respondes en español claro, amable y breve.
 Usa las herramientas para consultar pedidos, producción, contratos o clientes cuando sea necesario. Nunca inventes resultados. REGLA DE BÚSQUEDA DE PEDIDOS: si el usuario proporciona un número, código o fragmento de referencia, llama a listar_pedidos con busqueda igual a ese texto. Si proporciona un nombre o apellido de cliente, llama a listar_pedidos con busqueda igual al nombre. No respondas con una lista genérica sin aplicar el filtro solicitado. Si no hay resultados activos y el usuario pide buscar en todos los pedidos, repite con incluir_entregados=true. Como los resultados incluyen referencia y cliente, usa la referencia exacta devuelta para llamar a ver_pedido cuando soliciten el detalle o ficha técnica. Si hay varios resultados, muestra las referencias y pide que el usuario elija. REGLA OBLIGATORIA PARA FICHAS TÉCNICAS: cuando el usuario solicite la ficha técnica de un pedido, pregunte qué datos tiene o qué falta para fabricarlo, llama siempre a ver_pedido con la referencia o id exactos; no respondas usando listar_pedidos como sustituto. En la respuesta incluye explícitamente trabajo, material, piedras, talla, peso estimado, cantidad de piezas y ruta de fabricación. Incluye también los campos específicos de Corte Láser si aparecen en la ruta. Si un campo viene vacío o null, indícalo como «No registrado»; nunca omitas talla ni peso estimado aunque estén vacíos.
@@ -144,20 +144,22 @@ export const auriInterno = createServerFn({ method: "POST" })
     ];
     const declarations = declaracionesParaModelo();
     const usadas: string[] = [];
+    let ultimoModelo = "";
     try {
       for (let step = 0; step < 4; step += 1) {
         const { response, modelo } = await generarConRespaldo(apiKey, contents, declarations);
+        ultimoModelo = modelo;
         const payload = await response.json() as {
           candidates?: Array<{ content?: { role?: string; parts?: GeminiPart[] }; finishReason?: string }>;
         };
         const candidate = payload.candidates?.[0];
         const parts = candidate?.content?.parts ?? [];
-        if (candidate?.finishReason === "SAFETY") return { reply: "No puedo responder esa solicitud. Reformula la pregunta.", herramientas: usadas };
+        if (candidate?.finishReason === "SAFETY") return { reply: "No puedo responder esa solicitud. Reformula la pregunta.", herramientas: usadas, motor: "gemini", modelo: ultimoModelo, consultadoEn: new Date().toISOString() };
         const calls = parts.flatMap((part) => part.functionCall?.name ? [{ id: part.functionCall.id, name: part.functionCall.name, args: part.functionCall.args ?? {} }] : []);
 
         if (calls.length === 0) {
           const reply = limpiar(extraerTexto(parts), 3000);
-          return { reply: reply || "No pude preparar una respuesta. Inténtalo nuevamente.", herramientas: usadas };
+          return { reply: reply || "No pude preparar una respuesta. Inténtalo nuevamente.", herramientas: usadas, motor: "gemini", modelo: ultimoModelo, consultadoEn: new Date().toISOString() };
         }
 
         console.info("AURI Gemini selected model", { modelo, step: step + 1 });
@@ -177,7 +179,7 @@ export const auriInterno = createServerFn({ method: "POST" })
           });
         }
       }
-      return { reply: "No pude completar la consulta. Prueba con una pregunta más concreta.", herramientas: usadas };
+      return { reply: "No pude completar la consulta. Prueba con una pregunta más concreta.", herramientas: usadas, motor: "gemini", modelo: ultimoModelo, consultadoEn: new Date().toISOString() };
     } catch (error) {
       const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
       console.error("auri-interno request failed", { name: error instanceof Error ? error.message : "unknown", status });
