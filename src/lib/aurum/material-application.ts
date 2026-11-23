@@ -729,13 +729,36 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       const sourceDiamondParameters=gemConfig?.diamondMaterialParameters??preset.diamondMaterialParameters;
       if(sourceDiamondParameters){
         const currentDiamondParameters=next.userData?.["aurumIJEWELParameters"]??{};
+        const isWhiteDiamond2=String(gemConfig?.id??preset.id??"")==="diamante_vs";
+        // White 2 follows the same calibrated application route as White 1.
+        // Its catalog controls are authoritative after the source .dmat is read;
+        // dispersion remains the one intentional difference (0.000 vs 0.010).
+        const catalogParameters=isWhiteDiamond2 ? {
+          ...sourceDiamondParameters,
+          dispersion:Number(sourceDiamondParameters.dispersion??gemConfig?.dispersion??0),
+        } : sourceDiamondParameters;
+        if(isWhiteDiamond2){
+          next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3));
+          next.ior=Math.max(1,Number(catalogParameters.refractiveIndex??gemConfig?.ior??2.6));
+          next.dispersion=Math.max(0,Number(catalogParameters.dispersion??0));
+        }
         next.userData={
           ...(next.userData??{}),
           aurumIJEWELParameters:{
             ...currentDiamondParameters,
+            ...(isWhiteDiamond2 ? {
+              gammaFactor:catalogParameters.gammaFactor,
+              reflectivity:catalogParameters.reflectivity,
+              geometryFactor:catalogParameters.geometryFactor,
+              squashFactor:catalogParameters.squashFactor,
+              absorptionFactor:catalogParameters.absorptionFactor,
+              refractiveIndex:catalogParameters.refractiveIndex,
+              rayBounces:catalogParameters.rayBounces,
+              boostFactors:catalogParameters.boostFactors,
+            } : {}),
             color:diamondColor,
-            boostFactors:sourceDiamondParameters.boostFactors??currentDiamondParameters.boostFactors,
-            dispersion:Number(sourceDiamondParameters.dispersion??currentDiamondParameters.dispersion??preset.dispersion??0),
+            boostFactors:catalogParameters.boostFactors??currentDiamondParameters.boostFactors,
+            dispersion:Number(catalogParameters.dispersion??currentDiamondParameters.dispersion??preset.dispersion??0),
           },
           aurumDiamondCatalogProfile:String(gemConfig?.id??preset.id??""),
           aurumDiamondCatalogColor:diamondColor,
