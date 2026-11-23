@@ -318,11 +318,9 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     event?.preventDefault();
     const question = (messageOverride ?? draft).trim();
     if (!question || loading) return;
-    const questionForAssistant = tutorCurso
-      ? `[AURI TUTOR DEL AULA — CONTEXTO DEL MÓDULO]\n${contextoCurso.slice(0, 2600)}\nResponde en español claro y didáctico. Enseña con ejemplos de joyería y CAD. Si es una práctica, ofrece pistas progresivas y preguntas orientadoras; no resuelvas por completo ejercicios ni evaluaciones oficiales. Limítate al contenido del módulo y señala cuando algo no esté explicado en el material.\nConsulta del alumno: ${question}`
-      : !interno && publicPage
-        ? `[CONTEXTO DE NAVEGACIÓN ACTUAL: ${publicPage.focus}]\nConsulta del visitante: ${question}`
-        : question;
+    const questionForAssistant = !interno && publicPage
+      ? `[CONTEXTO DE NAVEGACIÓN ACTUAL: ${publicPage.focus}]\nConsulta del visitante: ${question}`
+      : question;
     const nextMessages: Message[] = [...messages, { role: "user", text: question }];
     setMessages(nextMessages);
     setDraft("");
