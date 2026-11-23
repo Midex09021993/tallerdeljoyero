@@ -130,7 +130,7 @@ function buscarEnBibliotecaRhino(pregunta: string) {
   const normalizar = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es");
   const q = normalizar(pregunta);
   const palabras = q.split(/[^a-z0-9]+/).filter((word) => word.length > 2 && !["que","como","para","con","una","uno","del","las","los","por","quiero","puedo","rhino","comando","comandos","explica","explicame"].includes(word));
-  const preguntaSobreRhino = /\\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion)\\b/.test(q);
+  const preguntaSobreRhino = /\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion)\b/.test(q);
   if (!preguntaSobreRhino) return null;
   const scored = COMANDOS.map((item) => {
     const nombre = normalizar(item.nombre);
