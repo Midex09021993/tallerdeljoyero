@@ -1134,3 +1134,15 @@ test("public viewer applies the complete White 1 optical calibration to White 2 
   expect(catalog).toContain('id:"diamante_vs", familia:"Diamante", nombre:"Diamante blanco 2"');
   expect(catalog).toContain('dispersion:.01, iridescence:0, inclusionStyle:"ninguna", inclusionStrength:0, diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0.01');
 });
+
+
+test("White 2 uses experimental gamma 1.09 and reflectivity 0.46 without changing White 1", () => {
+  const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
+  const white1 = catalog.split("\\n").find((line) => line.includes('id:"diamante_natural"'));
+  const white2 = catalog.split("\\n").find((line) => line.includes('id:"diamante_vs"'));
+
+  expect(white1).toContain("gammaFactor:1");
+  expect(white1).toContain("reflectivity:0.5");
+  expect(white2).toContain("gammaFactor:1.09");
+  expect(white2).toContain("reflectivity:0.46");
+});
