@@ -231,7 +231,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
   const interno = modo === "interno";
   const tutorCurso = Boolean(contextoCurso.trim());
   const publicPage = !interno ? getPublicPageConfig(rutaActual) : null;
-  const bienvenida = tutorCurso ? "¡Hola! Soy AURI Tutor. Estoy aquí para acompañarte en este apartado del curso. Puedo aclarar conceptos, relacionarlos con la práctica de joyería y ayudarte a consultar comandos de Rhino con apoyo de Gemini y la biblioteca FADILAB." : publicPage?.welcome ?? WELCOME.text;
+  const bienvenida = tutorCurso ? "¡Hola! Soy AURI Tutor. Estoy aquí para acompañarte en este apartado del curso. Puedo aclarar conceptos, relacionarlos con la práctica de joyería y ayudarte a consultar comandos de Rhino con apoyo de la biblioteca FADILAB." : publicPage?.welcome ?? WELCOME.text;
   const accionesTutor = [
     { label: "Explícame este tema", prompt: "Explícame este apartado con palabras sencillas y un ejemplo aplicado a joyería.", icon: MessageCircle },
     { label: "Guíame paso a paso", prompt: "Guíame paso a paso para comprender y aplicar este contenido.", icon: Activity },
@@ -391,12 +391,12 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
         const context = (err as { context?: unknown }).context;
         if (context instanceof Response) {
           const payload = await context.clone().json().catch(() => null) as { error?: unknown } | null;
-          if (typeof payload?.error === "string" && payload.error.trim()) {
+          if (context.status >= 500) {
+            setError("AURI no está disponible temporalmente. Inténtalo nuevamente en unos minutos.");
+          } else if (typeof payload?.error === "string" && payload.error.trim()) {
             setError(payload.error.trim().slice(0, 240));
           } else if (context.status === 429) {
             setError("AURI recibió demasiadas consultas seguidas. Espera unos minutos e inténtalo nuevamente.");
-          } else if (context.status >= 500) {
-            setError("AURI está temporalmente sin conexión. Inténtalo nuevamente en unos minutos o utiliza Contactar.");
           } else {
             setError("No se pudo procesar tu consulta. Revisa el mensaje e inténtalo nuevamente.");
           }

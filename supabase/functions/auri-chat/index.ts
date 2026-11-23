@@ -163,15 +163,22 @@ Deno.serve(async (req: Request) => {
       const model = queue.shift() as string;
       if (tried.has(model)) continue;
       tried.add(model);
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      const payload = JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+        contents: [...history, { role: "user", parts: [{ text: message }] }],
+        generationConfig: { temperature: 0.45, maxOutputTokens: 450 },
+      });
+      const callModel = () => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-          contents: [...history, { role: "user", parts: [{ text: message }] }],
-          generationConfig: { temperature: 0.45, maxOutputTokens: 450 },
-        }),
+        body: payload,
       });
+      let response = await callModel();
+      // Sobrecarga momentánea del proveedor (5xx): un reintento breve con el mismo modelo.
+      if ([500, 502, 503, 504].includes(response.status)) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        response = await callModel();
+      }
       lastStatus = response.status;
       if (response.ok) {
         const result = await response.json();
@@ -194,9 +201,9 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    console.warn("AURI Gemini models unavailable", { lastStatus });
+    console.warn("AURI Gemini models unavailable", { lastStatus, tried: [...tried] });
     if (lastStatus === 429) return json({ error: "AURI alcanzó temporalmente el límite gratuito de consultas. Espera un momento e inténtalo nuevamente." }, 429);
-    return json({ error: "AURI está temporalmente sin conexión con Gemini. Puedes contactar al equipo." }, 503);
+    return json({ error: "AURI no está disponible temporalmente. Inténtalo nuevamente en unos minutos." }, 503);
   } catch (error) {
     console.error("auri-chat", error);
     return json({ error: "Ocurrió un problema al conectar con AURI. Inténtalo nuevamente." }, 500);
