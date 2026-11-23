@@ -117,6 +117,9 @@ test("white diamond BVH keeps catalog reflectivity 0.50 and gamma 1.00 at every 
   expect(runtime).toContain('activeGemId === "diamante_inclusiones"');
   expect(runtime).toContain('(isWhiteDiamondProfile ? 0.5 : 0.46)');
   expect(runtime).toContain('(isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09)');
+  expect(runtime).toContain('const isWhiteDiamondProfile = ["diamante_natural", "diamante_vs", "diamante_inclusiones"].includes(profileId)');
+  expect(runtime).toContain("const nextReflectivity = isWhiteDiamondProfile ? 0.5 : resolvedOptics.reflectivity;");
+  expect(runtime).toContain("const nextGamma = isWhiteDiamondProfile ? 1 : resolvedOptics.gamma;");
   expect(runtime).toContain("const reflectivity = baseDiamondReflectivity;");
   expect(runtime).toContain("const gamma = baseDiamondGamma;");
 });
