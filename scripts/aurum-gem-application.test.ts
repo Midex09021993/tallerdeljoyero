@@ -1136,8 +1136,9 @@ test("public viewer applies the complete White 1 optical calibration to White 2 
 });
 
 
-test("White 2 uses experimental gamma 1.09 and reflectivity 0.46 without changing White 1", () => {
+test("White 2 preserves source .dmat values while active mapping matches White 1", () => {
   const catalog = readFileSync("src/lib/aurum/catalog.ts", "utf8");
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const white1 = catalog.split("\\n").find((line) => line.includes('id:"diamante_natural"'));
   const white2 = catalog.split("\\n").find((line) => line.includes('id:"diamante_vs"'));
 
@@ -1145,4 +1146,6 @@ test("White 2 uses experimental gamma 1.09 and reflectivity 0.46 without changin
   expect(white1).toContain("reflectivity:0.5");
   expect(white2).toContain("gammaFactor:1.09");
   expect(white2).toContain("reflectivity:0.46");
+  expect(application).toContain("gammaFactor:1");
+  expect(application).toContain("reflectivity:0.5");
 });
