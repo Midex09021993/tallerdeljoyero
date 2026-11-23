@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ArrowRight, BookOpen, CheckCircle2, Clock3, Gem, GraduationCap,
+  ArrowRight, BookOpen, Bot, CheckCircle2, Clock3, Gem, GraduationCap,
   Layers3, Monitor, MousePointer2, PenTool, Ruler, ShieldCheck,
   Sparkles, Target,
 } from "lucide-react";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/cursos-diseno-3d")({
       { title: "Diseño CAD 3D para Joyería con IA – Nivel 1 | AURUM LAB" },
       {
         name: "description",
-        content: "Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada. Curso con 10 sesiones, laboratorios prácticos y nivel inicial.",
+        content: "Aprende diseño CAD 3D para joyería con docente, laboratorios interactivos y AURI Tutor, nuestro asistente de inteligencia artificial integrado en AURUM LAB.",
       },
       { property: "og:title", content: "Diseño CAD 3D para Joyería y Manufactura Aditiva con IA – Nivel 1 | AURUM LAB" },
       { property: "og:description", content: "Curso online en vivo de Rhinoceros para joyería, con docente, 10 sesiones y laboratorios interactivos." },
@@ -28,7 +28,7 @@ const courseStructuredData = {
   "@context": "https://schema.org",
   "@type": "Course",
   "name": "Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1",
-  "description": "Curso online en vivo con docente para aprender CAD 3D para joyería con Rhinoceros. Incluye 10 sesiones guiadas, 20 horas académicas, laboratorios interactivos e introducción a la manufactura aditiva.",
+  "description": "Curso online en vivo de CAD 3D para joyería con 10 sesiones, laboratorios interactivos y acompañamiento de AURI Tutor, el asistente de inteligencia artificial de AURUM LAB.",
   "inLanguage": "es-PE",
   "educationalLevel": "Nivel 1",
   "timeRequired": "PT20H",
@@ -124,6 +124,7 @@ function CursosDiseno3DPage() {
           <nav className="hidden items-center gap-6 text-xs font-medium text-[#586b7e] md:flex">
             <a href="#programa" onClick={(event) => { event.preventDefault(); setProgramaAbierto(true); window.setTimeout(() => document.getElementById("programa")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80); }} className="hover:text-[#a77d32]">Programa</a>
             <a href="#laboratorios" className="hover:text-[#a77d32]">Laboratorios</a>
+            <a href="#auri-tutor" className="hover:text-[#a77d32]">AURI Tutor</a>
             <a href="#inversion" className="hover:text-[#a77d32]">Inversión</a>
           </nav>
           <Link to="/auth" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#e9c65f] px-4 text-xs font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Registro gratuito <ArrowRight className="size-4" /></Link>
@@ -142,6 +143,7 @@ function CursosDiseno3DPage() {
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#ead7a5] bg-[#fff8e6] px-3 py-2 text-xs font-bold text-[#8d6926]"><Clock3 className="size-4" /> Inicio de clases: 30 de noviembre</span>
               <span className="inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</span>
+              <a href="#auri-tutor" className="inline-flex items-center gap-2 rounded-full border border-[#d8e4ed] bg-[#f5f9fc] px-3 py-2 text-xs font-bold text-[#36536b] transition hover:border-[#b58b37]"><Bot className="size-4 text-[#a17a2e]" /> Incluye AURI Tutor · IA propia</a>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
@@ -205,6 +207,26 @@ function CursosDiseno3DPage() {
         </div>
       </section>
 
+      <section id="auri-tutor" className="scroll-mt-24 overflow-hidden border-y border-[#e7dfcd] bg-white">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:px-7 lg:grid-cols-[1.1fr_.9fr] lg:px-10 lg:py-16">
+          <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-0 size-72 rounded-full bg-[#fff0c5]/60 blur-3xl" />
+          <div className="relative order-2 flex items-center justify-center lg:order-1">
+            <div className="absolute size-64 rounded-full bg-gradient-to-br from-[#fff2c9] to-[#e7eef5] blur-2xl" />
+            <img src="/Robot%20futurista%20sonriente%20con%20pulgar%20arriba.png" alt="AURI, asistente de inteligencia artificial de AURUM LAB" width="360" height="420" loading="lazy" decoding="async" className="relative z-10 h-auto max-h-[22rem] w-64 object-contain drop-shadow-[0_18px_24px_rgba(31,45,58,.16)] sm:w-72" />
+          </div>
+          <div className="relative order-1 lg:order-2">
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#e7d6a6] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Bot className="size-3.5" /> Tecnología propia de AURUM LAB</p>
+            <h2 className="mt-4 font-display text-3xl font-semibold leading-tight tracking-tight text-[#1d2b39] sm:text-4xl">Conoce a <span className="text-[#b58b37]">AURI Tutor</span>, tu asistente inteligente durante el aprendizaje</h2>
+            <p className="mt-4 text-sm leading-7 text-[#5e7183] sm:text-base">No aprenderás solo. AURI es nuestro asistente de inteligencia artificial integrado en AURUM LAB y estará disponible como apoyo durante tu formación, dentro del Aula y también fuera de las clases.</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#e6eaf0] bg-[#fbfcfd] p-4"><BookOpen className="size-5 text-[#a17a2e]" /><h3 className="mt-3 text-sm font-bold text-[#26394b]">Aclara tus dudas</h3><p className="mt-1 text-xs leading-5 text-[#6a7c8d]">Consulta conceptos y herramientas de diseño CAD 3D mientras avanzas en el curso.</p></div>
+              <div className="rounded-xl border border-[#e6eaf0] bg-[#fbfcfd] p-4"><Sparkles className="size-5 text-[#a17a2e]" /><h3 className="mt-3 text-sm font-bold text-[#26394b]">Refuerza lo aprendido</h3><p className="mt-1 text-xs leading-5 text-[#6a7c8d]">Pide explicaciones paso a paso y orientación para repasar los temas de clase.</p></div>
+            </div>
+            <p className="mt-5 border-l-2 border-[#d5b45f] pl-4 text-sm font-semibold leading-6 text-[#344b60]">Docente, laboratorios interactivos y un asistente de IA propio: una nueva forma de aprender joyería digital.</p>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-7 lg:px-10 lg:py-20">
         <div className="grid gap-10 lg:grid-cols-[1fr_.8fr]">
           <div>
@@ -238,6 +260,7 @@ function CursosDiseno3DPage() {
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> 10 sesiones guiadas · 20 horas académicas</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Programa de nivel inicial</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Laboratorios interactivos de práctica</li>
+              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> AURI Tutor: asistente de IA propio durante tu formación</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Registro de cuenta AURUM LAB gratuito</li>
             </ul>
             <Link to="/auth" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
