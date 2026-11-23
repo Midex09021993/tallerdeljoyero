@@ -40,7 +40,8 @@ const courseStructuredData = {
   "hasCourseInstance": {
     "@type": "CourseInstance",
     "courseWorkload": "10 sesiones · 20 horas académicas",
-    "courseMode": "Online"
+    "courseMode": "Online",
+    "startDate": "2026-11-30"
   },
   "offers": {
     "@type": "Offer",
@@ -138,7 +139,10 @@ function CursosDiseno3DPage() {
             
             <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– <span className="inline-block min-w-[1ch] whitespace-nowrap border-r-2 border-[#b58b37] pr-[.08em] align-bottom animate-pulse" style={{ borderRightColor: nivelEscrito >= 7 ? "transparent" : "#b58b37" }}>{ "Nivel 1".slice(0, nivelEscrito) }<span className="sr-only">Nivel 1</span></span></span></h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#52677b] sm:text-lg sm:leading-7">Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada.</p>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#ead7a5] bg-[#fff8e6] px-3 py-2 text-xs font-bold text-[#8d6926]"><Clock3 className="size-4" /> Inicio de clases: 30 de noviembre</span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#dce7ef] bg-white px-3 py-2 text-xs font-semibold text-[#40576c]"><Monitor className="size-4 text-[#a17a2e]" /> Clases online en vivo con docente</span>
+            </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
               <button type="button" aria-expanded={programaAbierto} aria-controls="programa" onClick={() => setProgramaAbierto((abierto) => !abierto)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d9e0e6] bg-white px-5 text-sm font-semibold text-[#33485b] transition hover:border-[#c5a45a]">{programaAbierto ? "Ocultar programa" : "Ver las 10 sesiones"} <span aria-hidden="true" className={`transition-transform ${programaAbierto ? "rotate-180" : ""}`}>⌄</span></button>
@@ -219,6 +223,10 @@ function CursosDiseno3DPage() {
           <aside id="inversion" className="scroll-mt-24 rounded-[1.6rem] border border-[#e4d5ad] bg-white p-6 shadow-[0_18px_55px_rgba(31,45,58,.09)] sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#9b762e]">Matrícula · Lanzamiento</p>
             <h2 className="mt-2 text-xl font-bold text-[#24374a]">Invierte en tu formación profesional</h2>
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-4 py-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><Clock3 className="size-5" /></span>
+              <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Próximo inicio</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">30 de noviembre de 2026</span></span>
+            </div>
             <div className="mt-6 rounded-xl bg-[#fff9e9] p-5">
               <p className="text-xs font-semibold text-[#7a8793]">Precio regular</p>
               <p className="mt-1 text-2xl font-semibold text-[#89939d] line-through">US$ 250</p>
@@ -233,7 +241,7 @@ function CursosDiseno3DPage() {
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Registro de cuenta AURUM LAB gratuito</li>
             </ul>
             <Link to="/auth" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
-            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">Crear tu cuenta es gratuito. El precio promocional corresponde a la matrícula del curso. Consulta disponibilidad y condiciones antes de realizar el pago.</p>
+            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">Inicio previsto: 30 de noviembre de 2026. Crear tu cuenta es gratuito. El precio promocional corresponde a la matrícula del curso. Consulta disponibilidad y condiciones antes de realizar el pago.</p>
           </aside>
         </div>
       </section>
