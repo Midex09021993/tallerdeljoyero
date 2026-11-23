@@ -7,7 +7,7 @@ import { createAurumGemAdapter } from "./core/gem-adapter";
 import { createAurumMetalAdapter } from "./core/metal-adapter";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
 import { applyAurumDynamicScintillation } from "./scintillation";
-import { activateAurumDiamondMaterial } from "./aurum-diamond-material";
+import { activateAurumDiamondMaterial, resolveAurumDiamondCatalogParameters } from "./aurum-diamond-material";
 import { applyAurumInternalLightResponse } from "./internal-light-response";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 import { applyAurumLatinGemProfile } from "./latin-gem-catalog";
@@ -529,7 +529,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ?? targetDispersion);
     if(currentMaterials.length){
       const selectedDiamondColor=Number(gemConfig?.color??0xffffff);
-      const selectedDiamondParameters=gemConfig?.diamondMaterialParameters??{};
+      const selectedDiamondParameters=resolveAurumDiamondCatalogParameters(gemConfig);
       const selectedBoost=selectedDiamondParameters.boostFactors??{x:1,y:1,z:1};
       currentMaterials.forEach((material:any)=>{
         if(!material) return;
