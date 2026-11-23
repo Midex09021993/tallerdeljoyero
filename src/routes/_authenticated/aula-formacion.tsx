@@ -3623,6 +3623,12 @@ function AulaFormacionPage() {
             <div><p className="text-sm font-semibold text-[#294760]">Vista previa del alumno</p><p className="mt-0.5 text-xs text-[#718096]">Esta es la misma interfaz que verán los alumnos matriculados. La simulación no guarda actividad académica.</p></div>
             <button type="button" onClick={() => setVistaPreviaAlumno(false)} className="rounded-lg border border-[#cbd9e5] bg-white px-3 py-2 text-sm font-semibold text-[#294760] transition hover:bg-[#f3f7fa]">Salir de vista previa</button>
           </div>}
+          {vistaPreviaAlumno && cursoActivoId && <AuriTutorCurso contexto={[
+            "Curso: " + (cursos.find((curso) => curso.id === cursoActivoId)?.titulo ?? "Diseño CAD 3D para Joyería"),
+            "Modo: vista previa docente de la experiencia del alumno.",
+            "Acompaña al docente y al alumno en la navegación del curso. Cuando se abra una sesión, AURI recibirá el contexto específico de su apartado.",
+            "Orientación general: explica cómo aprovechar las lecturas, laboratorios y prácticas del curso CAD 3D aplicado a joyería. No inventes el contenido de una sesión que todavía no se ha abierto."
+          ].join("\n")} />}
           {!vistaPreviaAlumno && alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-[#718096]">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : !vistaPreviaAlumno && alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesVistaAula.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-[#718096]">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesVistaAula.map(i => <article key={i.id} className="overflow-hidden rounded-3xl border border-[#dce5ee] bg-white shadow-[0_8px_28px_rgba(27,43,59,0.045)]">
             <header className="relative overflow-hidden border-b border-[#e8edf2] bg-gradient-to-br from-[#fbf8f0] via-white to-[#f5f8fb] p-6 sm:p-8">
               <div className="pointer-events-none absolute -right-14 -top-20 size-64 rounded-full border border-[#d8c39b]/20"/>
