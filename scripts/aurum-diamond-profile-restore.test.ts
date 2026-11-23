@@ -23,9 +23,9 @@ const blanco2CatalogProfile = {
   id: "diamante_vs",
   nombre: "Diamante blanco 2",
   envMapIntensity: 1.3,
-  dispersion: 0,
+  dispersion: 0.01,
   diamondMaterialParameters: {
-    dispersion: 0,
+    dispersion: 0.01,
     gammaFactor: 1,
     reflectivity: 0.5,
     geometryFactor: 0.5,
@@ -36,7 +36,7 @@ const blanco2CatalogProfile = {
   },
 };
 
-test("Blanco 2 shares Blanco 1 optical controls while preserving its own dispersion", () => {
+test("Blanco 2 resolves to the same complete optical profile as Blanco 1", () => {
   const startupBaseline = {
     profileId: "diamante_natural",
     dispersion: 0.01,
@@ -64,10 +64,7 @@ test("Blanco 2 shares Blanco 1 optical controls while preserving its own dispers
   });
 
   const blanco2 = resolveAurumDiamondProfileOptics(blanco2CatalogProfile, startupBaseline);
-  expect(blanco2).toEqual({
-    ...initialBlanco1,
-    dispersion: 0,
-  });
+  expect(blanco2).toEqual(initialBlanco1);
 
   const restoredBlanco1 = resolveAurumDiamondProfileOptics(blanco1CatalogProfile, startupBaseline);
   expect(restoredBlanco1).toEqual(initialBlanco1);
