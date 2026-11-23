@@ -8,6 +8,7 @@ import { applyAurumGemToTarget, getAurumGemLayerIdentity, isAurumGemTarget, prep
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 import { setAurumGemShaderQuality } from "../src/lib/aurum/scintillation";
 import { createAurumDiamondMicroPipeline } from "../src/lib/aurum/diamond-micro-pipeline";
+import { activateAurumDiamondMaterial, resolveAurumDiamondCatalogParameters } from "../src/lib/aurum/aurum-diamond-material";
 
 test("diamond micro classifier protects the center from active catalog identity before BVH metadata exists", () => {
   const scene = new THREE.Scene();
@@ -1146,6 +1147,27 @@ test("White 2 preserves source .dmat values while active mapping matches White 1
   expect(white1).toContain("reflectivity:0.5");
   expect(white2).toContain("gammaFactor:1.09");
   expect(white2).toContain("reflectivity:0.46");
-  expect(application).toContain("gammaFactor:1");
-  expect(application).toContain("reflectivity:0.5");
+  const diamondMaterial = readFileSync("src/lib/aurum/aurum-diamond-material.ts", "utf8");
+  expect(application).toContain("resolveAurumDiamondCatalogParameters(gemConfig)");
+  expect(diamondMaterial).toContain("gammaFactor: 1");
+  expect(diamondMaterial).toContain("reflectivity: 0.5");
+  expect(resolveAurumDiamondCatalogParameters({
+    id: "diamante_vs",
+    diamondMaterialParameters: { gammaFactor: 1.09, reflectivity: 0.46, dispersion: 0.01 },
+  })).toEqual({ gammaFactor: 1, reflectivity: 0.5, dispersion: 0.01 });
+  expect(resolveAurumDiamondCatalogParameters({
+    id: "diamante_azul",
+    diamondMaterialParameters: { gammaFactor: 0.9, reflectivity: 0.4 },
+  })).toEqual({ gammaFactor: 0.9, reflectivity: 0.4 });
+  const material = new THREE.MeshPhysicalMaterial();
+  activateAurumDiamondMaterial(material, {
+    id: "diamante_vs",
+    diamondMaterialParameters: { gammaFactor: 1.09, reflectivity: 0.46, dispersion: 0.01 },
+  });
+  expect(material.userData.aurumIJEWELParameters).toMatchObject({
+    gammaFactor: 1,
+    reflectivity: 0.5,
+    dispersion: 0.01,
+  });
+  material.dispose();
 });
