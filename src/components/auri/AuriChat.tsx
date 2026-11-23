@@ -129,7 +129,7 @@ function horaConsulta(value: string) {
 
 function buscarEnBibliotecaRhino(pregunta: string) {
   const q = NORMALIZAR_COMANDO_RHINO(pregunta);
-  const mencionaFichas = /\\b(ficha|fichas|explicacion|explicaciones|documentacion|documentado)\\b/.test(q);
+  const mencionaFichas = /\b(ficha|fichas|explicacion|explicaciones|documentacion|documentado)\b/.test(q);
   const comandoSolicitado = INVENTARIO_RHINO7.find((nombre) => {
     const clave = NORMALIZAR_COMANDO_RHINO(nombre);
     return clave.length > 2 && (q === clave || q.includes(` ${clave} `) || q.startsWith(`${clave} `) || q.endsWith(` ${clave}`));
@@ -140,12 +140,12 @@ function buscarEnBibliotecaRhino(pregunta: string) {
     const listado = porCategoria.map((categoria) => {
       const items = COMANDOS.filter((item) => item.categoria === categoria).map((item) => item.nombre);
       return `**${categoria}:** ${items.join(", ")}`;
-    }).join("\\n");
-    return `Estas son las fichas que AURI puede explicar con contenido didáctico:\\n\\n${listado}\\n\\nIndícame el nombre de un comando y te daré su función y los pasos de uso. Para los demás nombres del inventario Rhino 7, puedo confirmar que existen, pero no dispongo todavía de una ficha explicativa.`;
+    }).join("\n");
+    return `Estas son las fichas que AURI puede explicar con contenido didáctico:\n\n${listado}\n\nIndícame el nombre de un comando y te daré su función y los pasos de uso. Para los demás nombres del inventario Rhino 7, puedo confirmar que existen, pero no dispongo todavía de una ficha explicativa.`;
   }
 
   const consultaRhino = Boolean(comandoSolicitado)
-    || /\\b(rhino|rhinoceros|comando|comandos|biblioteca|inventario|extruir|curva|superficie|solido|anillo|aro|perfil|poligono|circulo|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\\b/.test(q);
+    || /\b(rhino|rhinoceros|comando|comandos|biblioteca|inventario|extruir|curva|superficie|solido|anillo|aro|perfil|poligono|circulo|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\b/.test(q);
   if (!consultaRhino) return null;
 
   const tokens = q.split(" ").filter((word) => word.length >= 4 && !["rhino","rhinoceros","comando","comandos","biblioteca","inventario","explica","explicame","quiero","puedo","hacer","crear","buscar","busca","dime","muestrame","fichas","didacticas","tienen","tiene","explicacion"].includes(word));
@@ -167,10 +167,10 @@ function buscarEnBibliotecaRhino(pregunta: string) {
   const nombre = resultados[0].nombre;
   const ficha = COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre) === NORMALIZAR_COMANDO_RHINO(nombre));
   if (!ficha) {
-    return `**${nombre}**\\n\\nEstá registrado en el inventario de Rhino 7, pero todavía no tiene una ficha didáctica en FADILAB. Por eso puedo confirmar su presencia en el catálogo, pero no darte pasos de uso sin documentación.`;
+    return `**${nombre}**\n\nEstá registrado en el inventario de Rhino 7, pero todavía no tiene una ficha didáctica en FADILAB. Por eso puedo confirmar su presencia en el catálogo, pero no darte pasos de uso sin documentación.`;
   }
 
-  return `**${ficha.nombre} · ${ficha.categoria}**\\n${ficha.resumen}\\n\\n**Uso:** ${ficha.uso}\\n**Pasos:** ${ficha.pasos.join(" ")}\\n**Ejemplo en joyería:** ${ficha.joyeria}\\n**Precaución:** ${ficha.cuidado}`;
+  return `**${ficha.nombre} · ${ficha.categoria}**\n${ficha.resumen}\n\n**Uso:** ${ficha.uso}\n**Pasos:** ${ficha.pasos.join(" ")}\n**Ejemplo en joyería:** ${ficha.joyeria}\n**Precaución:** ${ficha.cuidado}`;
 }
 
 function generarRespuestaTutorLocal(pregunta: string, contexto: string) {
