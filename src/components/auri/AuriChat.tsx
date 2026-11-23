@@ -327,7 +327,25 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     instance.start();
   }
 
-  async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?: string) {
+  function generarRespuestaTutorLocal(pregunta: string, contexto: string) {
+  const normalizada = pregunta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const apartado = contexto.match(/Apartado:\s*([^\n]+)/i)?.[1]?.trim() ?? "este apartado";
+  const contenido = contexto.split("Contenido de referencia:")[1]?.trim() ?? contexto;
+  const extracto = contenido.replace(/\s+/g, " ").slice(0, 900);
+  if (/pista|ayuda|atascad|no entiendo/.test(normalizada)) {
+    return `Vamos paso a paso con **${apartado}**. Primera pista: identifica qué concepto, herramienta o decisión explica el material y para qué se utiliza en el diseño de joyería. Después, intenta relacionarlo con una pieza concreta. ¿Qué parte te está resultando más difícil?`;
+  }
+  if (/pregunta|comprueba|evalu|prueba|quiz/.test(normalizada)) {
+    return `Comprobemos lo aprendido en **${apartado}**.\n1. ¿Cuál es la idea principal de este apartado?\n2. ¿Cómo la aplicarías al diseño o fabricación de una joya?\n3. ¿Qué revisarías antes de dar por terminado el trabajo?\n\nRespóndeme una por una y te ayudaré a revisar tu razonamiento.`;
+  }
+  if (/paso a paso|procedimiento|como hago|cómo hago|aplicar/.test(normalizada)) {
+    return `Te propongo esta ruta para trabajar **${apartado}**:\n1. Lee el objetivo y reconoce los conceptos principales.\n2. Identifica qué herramienta o criterio interviene.\n3. Relaciona cada paso con la geometría de una pieza de joyería.\n4. Realiza la práctica en tu entorno CAD y comprueba el resultado.\n5. Si aparece un error, describe qué hiciste y qué resultado obtuviste; revisaremos la causa sin saltarnos el aprendizaje.`;
+  }
+  return `**${apartado}**\n\nSegún el material de este módulo: ${extracto}\n\nPuedo ayudarte a comprender la idea, relacionarla con un ejemplo de joyería, organizar los pasos o practicar con preguntas. ¿Qué concepto quieres revisar primero?`;
+}
+
+
+async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?: string) {
     event?.preventDefault();
     const question = (messageOverride ?? draft).trim();
     if (!question || loading) return;
@@ -341,6 +359,12 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     setLoading(true);
     try {
       const contextoRhino = construirContextoRhino(question);
+      if (tutorCurso && !contextoRhino) {
+        const reply = generarRespuestaTutorLocal(question, contextoCurso);
+        setMessages((current) => [...current, { role: "model", text: reply }]);
+        speak(textoParaVoz(reply));
+        return;
+      }
       if (interno) {
         const r = modoDirecto
           ? await llamarDirecto({ data: { message: question } })
