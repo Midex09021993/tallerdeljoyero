@@ -736,7 +736,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         // White 1, White 2 and White 3 before the shader/BVH reads the material.
         const catalogParameters=isWhiteDiamondProfile ? {
           ...sourceDiamondParameters,
+          // White 1 is the shared optical reference for all neutral white diamonds.
+          // Preserve source .dmat values in the catalog, but normalize active material
+          // metadata before the BVH reads it.
           dispersion:Math.max(0,Number(gemConfig?.dispersion??sourceDiamondParameters.dispersion??0.01)),
+          gammaFactor:1,
+          reflectivity:0.5,
         } : sourceDiamondParameters;
         if(isWhiteDiamondProfile){
           next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3));
