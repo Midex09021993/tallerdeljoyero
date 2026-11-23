@@ -1097,20 +1097,21 @@ test("BVH diamond profile synchronization always resets RGB boost to catalog or 
 });
 
 
-test("White 2 applies the White 1 catalog calibration after source .dmat metadata including the shared 0.010 dispersion", () => {
+test("all white diamond profiles replace stale .dmat optics with the shared White 1 catalog calibration", () => {
   const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
-  const white2Block = application.slice(
-    application.indexOf('const isWhiteDiamond2='),
-    application.indexOf('// Applying a gem to a MatrixGold layer', application.indexOf('const isWhiteDiamond2='))
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const whiteProfileBlock = application.slice(
+    application.indexOf('const isWhiteDiamondProfile='),
+    application.indexOf('// Applying a gem to a MatrixGold layer', application.indexOf('const isWhiteDiamondProfile='))
   );
-  expect(white2Block).toContain('String(gemConfig?.id??preset.id??"")==="diamante_vs"');
-  expect(white2Block).toContain('gammaFactor:catalogParameters.gammaFactor');
-  expect(white2Block).toContain('reflectivity:catalogParameters.reflectivity');
-  expect(white2Block).toContain('geometryFactor:catalogParameters.geometryFactor');
-  expect(white2Block).toContain('squashFactor:catalogParameters.squashFactor');
-  expect(white2Block).toContain('absorptionFactor:catalogParameters.absorptionFactor');
-  expect(white2Block).toContain('dispersion:Number(catalogParameters.dispersion??currentDiamondParameters.dispersion??preset.dispersion??0)');
-  expect(white2Block).toContain('next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3))');
+  expect(whiteProfileBlock).toContain('["diamante_natural","diamante_vs","diamante_inclusiones"]');
+  expect(whiteProfileBlock).toContain('...(isWhiteDiamondProfile ? catalogParameters : {})');
+  expect(whiteProfileBlock).toContain('gammaFactor:catalogParameters.gammaFactor');
+  expect(whiteProfileBlock).toContain('reflectivity:catalogParameters.reflectivity');
+  expect(whiteProfileBlock).toContain('next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3))');
+  expect(runtime).toContain('|| activeGemId === "diamante_inclusiones")');
+  expect(runtime).not.toContain('activeGemId === "diamante_vs"\n                ? 0');
+  expect(runtime).toContain('|| activeGemId === "diamante_vs"');
 });
 
 
