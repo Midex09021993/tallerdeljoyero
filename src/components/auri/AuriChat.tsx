@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bot, Mic, MicOff, Send, Volume2, VolumeX, Sparkles, Headphones, MessageCircle, PackageSearch, Gem, Activity } from "lucide-react";
+import { Bot, Mic, MicOff, Send, Volume2, VolumeX, Sparkles, Headphones, MessageCircle, PackageSearch, Gem, Activity, BookOpen } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { auriInterno } from "@/lib/auri/auri-interno.functions";
@@ -131,8 +131,11 @@ function buscarEnBibliotecaRhino(pregunta: string) {
   const q = NORMALIZAR_COMANDO_RHINO(pregunta);
   const stopwords = new Set(["que","como","para","con","una","uno","del","las","los","por","quiero","puedo","rhino","rhinoceros","comando","comandos","explica","explicame","usar","uso","hacer","crear","necesito"]);
   const tokens = q.split(" ").filter((word) => word.length > 2 && !stopwords.has(word));
-  const consultaRhino = /\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\b/.test(q)
-    || INVENTARIO_RHINO7.some((name) => NORMALIZAR_COMANDO_RHINO(name) === q && q.length > 2);
+  const consultaRhino = /\b(rhino|rhinoceros|comando|comandos|biblioteca|inventario|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\b/.test(q)
+    || INVENTARIO_RHINO7.some((name) => {
+      const normalizado = NORMALIZAR_COMANDO_RHINO(name);
+      return normalizado.length > 2 && (q === normalizado || q.includes(normalizado));
+    });
   if (!consultaRhino) return null;
 
   const resultados = INVENTARIO_RHINO7.map((nombre) => {
@@ -264,6 +267,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     { label: "Guíame paso a paso", prompt: "Guíame paso a paso para comprender y aplicar este contenido.", icon: Activity },
     { label: "Dame una pista", prompt: "Dame una pista progresiva para resolver la práctica, sin darme la solución completa.", icon: Sparkles },
     { label: "Comprueba lo aprendido", prompt: "Hazme tres preguntas breves para comprobar si comprendí este apartado.", icon: Gem },
+    { label: "Biblioteca de comandos Rhino", prompt: "Consulta el inventario maestro de comandos de Rhino 7. Muéstrame cómo buscar un comando y dime qué fichas didácticas tienen explicación.", icon: BookOpen },
   ];
   const llamarInterno = useServerFn(auriInterno);
   const llamarDirecto = useServerFn(auriDirecto);
