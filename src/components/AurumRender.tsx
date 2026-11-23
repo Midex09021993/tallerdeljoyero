@@ -491,7 +491,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         diamondBvhEnabledRef.current = detail.enabled;
         // One BVH master switch controls every production family currently enabled.
         // Keep both ruby spellings in sync because CAD/material metadata may carry either form.
-        for (const family of ["diamante", "rubí", "rubi"]) {
+        for (const family of ["diamante", "rubí", "rubi", "esmeralda", "moissanita", "zafiro", "sapphire", "aguamarina", "aquamarina", "amatista", "citrino"]) {
           diamondBvhRuntimeRef.current?.setFamilyEnabled?.(family, detail.enabled);
         }
         setDiamondBvhEnabled(detail.enabled);
@@ -1417,7 +1417,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // SMALL and BRILLIANT), plus rubies through their dedicated profile.
             // Screen-space tiers keep secondary melee optics controlled without
             // excluding those meshes from BVH. ?aurumBvhTest=off disables all.
-            targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"],
+            targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi", "Esmeralda", "Moissanita", "Zafiro", "Sapphire", "Aguamarina", "Aquamarina", "Amatista", "Citrino"],
             diamondCenterOnly: false,
             // First-pass optical calibration is editor-only; the public viewer
             // keeps its established center/secondary BVH values unchanged.
@@ -1444,7 +1444,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           diamondMicroPipelineRef.current?.update?.();
           runtime.refresh(modelo);
           if (!diamondBvhEnabledRef.current) {
-            for (const family of ["diamante", "rubí", "rubi"]) runtime.setFamilyEnabled(family, false);
+            for (const family of ["diamante", "rubí", "rubi", "esmeralda", "moissanita", "zafiro", "sapphire", "aguamarina", "aquamarina", "amatista", "citrino"]) runtime.setFamilyEnabled(family, false);
           }
           runtime.update();
           const diagnostics = runtime.diagnostics();
@@ -5834,11 +5834,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             <div className="mb-3">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">AURUM RENDER · ÓPTICA</div>
               <h2 className="mt-1 text-base font-semibold text-[#292824]">Control del diamante</h2>
-              <p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Controla el BVH óptico de diamantes de todos los tamaños y rubíes compatibles. No modifica metales ni el ambiente.</p>
+              <p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Controla el BVH óptico de diamantes, rubíes, esmeraldas, moissanitas, zafiros, aguamarinas, amatistas y citrinos compatibles. No modifica metales ni el ambiente.</p>
             </div>
             <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
-              <div className="mb-2 flex items-center justify-between gap-2"><div><div className="text-xs font-semibold text-[#292824]">BVH óptico</div><p className="mt-0.5 text-[9px] text-[#77756f]">Sustituye el material físico en diamantes centrales y rubíes compatibles.</p></div>
-                <button type="button" role="switch" aria-label="BVH óptico de diamantes y rubíes" aria-checked={diamondBvhEnabled} onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control",{detail:{type:"bvh",enabled:!diamondBvhEnabled}}))} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(diamondBvhEnabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(diamondBvhEnabled?"translate-x-[18px]":"translate-x-1")}/></button>
+              <div className="mb-2 flex items-center justify-between gap-2"><div><div className="text-xs font-semibold text-[#292824]">BVH óptico</div><p className="mt-0.5 text-[9px] text-[#77756f]">Sustituye el material físico únicamente en mallas compatibles de las familias ópticas seleccionadas.</p></div>
+                <button type="button" role="switch" aria-label="BVH óptico de gemas compatibles" aria-checked={diamondBvhEnabled} onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control",{detail:{type:"bvh",enabled:!diamondBvhEnabled}}))} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(diamondBvhEnabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(diamondBvhEnabled?"translate-x-[18px]":"translate-x-1")}/></button>
               </div>
               <div className="mt-2 text-[9px] text-[#77756f]">{diamondBvhEnabled?"Solicitado: activado":"Solicitado: desactivado"} · El material original se restaura al desactivar.</div>
             </section>
