@@ -195,7 +195,7 @@ function getPublicPageConfig(pathname = ""): PublicPageConfig {
       eyebrow: "ASESORÍA DE FORMACIÓN",
       title: "¿Qué quieres conocer del curso?",
       description: "Te oriento sobre el programa, sus sesiones, laboratorios y modalidad.",
-      welcome: "¡Hola! Estás en la página del curso de Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1. Puedo explicarte el contenido, las sesiones, los laboratorios y cómo participar.",
+      welcome: "Bienvenido a AURUM LAB. Soy AURI, tu asistente virtual de formación. Estoy aquí para presentarte nuestro programa de Diseño CAD 3D para Joyería y Manufactura Aditiva, orientarte sobre su metodología y mostrarte las experiencias prácticas de aprendizaje. ¿Te gustaría conocer cómo está estructurado el programa?",
       actions: [
         { label: "Contenido del curso", prompt: "¿Qué aprenderé en este curso y cuáles son sus objetivos?", icon: MessageCircle },
         { label: "Sesiones y duración", prompt: "Explícame cómo se organizan las sesiones y cuánto dura el curso.", icon: Activity },
