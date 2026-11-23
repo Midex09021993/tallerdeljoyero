@@ -2726,8 +2726,8 @@ function AulaFormacionPage() {
                       "Sesión " + lecturaAbierta.numero + ": " + lecturaAbierta.titulo,
                       "Apartado: " + (seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"),
                       "Contenido de referencia:",
-                      (seccionesLecturaActivas[paginaLectura]?.bloques ?? []).join("\\n"),
-                    ].join("\\n")} />
+                      (seccionesLecturaActivas[paginaLectura]?.bloques ?? []).join("\n"),
+                    ].join("\n")} />
                     {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                       if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                       return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-[900px] text-[#3A3A3C]"}`}>{bloque}</p></div>;
@@ -3371,8 +3371,8 @@ function AulaFormacionPage() {
                       "Sesión " + lecturaAbierta.numero + ": " + lecturaAbierta.titulo,
                       "Apartado: " + (seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"),
                       "Contenido de referencia:",
-                      (seccionesLecturaActivas[paginaLectura]?.bloques ?? []).join("\\n"),
-                    ].join("\\n")} />
+                      (seccionesLecturaActivas[paginaLectura]?.bloques ?? []).join("\n"),
+                    ].join("\n")} />
                   {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                     if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                     return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
