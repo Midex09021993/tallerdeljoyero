@@ -3,7 +3,9 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { AURI_TOOLS, ejecutarHerramienta } from "./tool-registry";
 
-export type AuriDirectoRespuesta = { reply: string; herramientas: string[]; error?: string };
+export type AuriDirectoRespuesta = { reply: string; herramientas: string[]; motor?: "directo"; consultadoEn?: string; error?: string };
+
+const metadataDirecto = () => ({ motor: "directo" as const, consultadoEn: new Date().toISOString() });
 
 const ESTADOS = ["Recibido", "En Producción", "Listo para Entrega", "En Camino", "Entregado"] as const;
 const buckets = new Map<string, { n: number; reset: number }>();
@@ -188,10 +190,10 @@ export const auriDirecto = createServerFn({ method: "POST" })
       args = { referencia: refPedido };
       format = formatearPedido;
     } else if (/\b(ficha tecnica|ficha del pedido|detalle tecnico|datos para fabricar)\b/.test(normalized)) {
-      return { reply: "Claro. Escríbeme la referencia exacta del pedido para abrir su ficha técnica, por ejemplo **SI-0001**.", herramientas: [] };
+      return { reply: "Claro. Escríbeme la referencia exacta del pedido para abrir su ficha técnica, por ejemplo **SI-0001**.", herramientas: [], ...metadataDirecto() };
     } else if (/\b(cliente|clientes)\b/.test(normalized)) {
       const busqueda = extraerBusqueda(data.message, "cliente");
-      if (!busqueda) return { reply: "¿Qué nombre o apellido debo buscar? Por ejemplo: **Buscar cliente Juan Pérez**.", herramientas: [] };
+      if (!busqueda) return { reply: "¿Qué nombre o apellido debo buscar? Por ejemplo: **Buscar cliente Juan Pérez**.", herramientas: [], ...metadataDirecto() };
       toolName = "buscar_clientes";
       args = { busqueda, limite: 20 };
       format = formatearClientes;
@@ -214,6 +216,7 @@ export const auriDirecto = createServerFn({ method: "POST" })
       return {
         reply: "Estoy en **AURI Directo**, sin inteligencia artificial. Puedo consultar:\n- Resumen de producción y pedidos atrasados.\n- Pedidos por estado, referencia, cliente o pieza.\n- Clientes por nombre o apellido.\n- Contratos por número o cliente.\n- Fichas técnicas usando la referencia exacta del pedido.\n\nDime qué necesitas consultar y aplicaré un filtro concreto.",
         herramientas: [],
+        ...metadataDirecto(),
       };
     }
 
@@ -223,5 +226,5 @@ export const auriDirecto = createServerFn({ method: "POST" })
     }
     const result = await ejecutarHerramienta(toolName, args, { token });
     if (!result.ok) return { reply: "", herramientas: [toolName], error: result.error };
-    return { reply: format(result.datos, refPedido), herramientas: [toolName] };
+    return { reply: format(result.datos, refPedido), herramientas: [toolName], ...metadataDirecto() };
   });
