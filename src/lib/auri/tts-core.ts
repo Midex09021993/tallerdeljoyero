@@ -29,7 +29,7 @@ export function construirPayloadTts(text: string, languageCode: string) {
   return {
     contents: [{
       role: "user",
-      parts: [{ text: `Lee en voz alta, en español latinoamericano, con un tono cálido, cercano, amable y profesional, el siguiente texto:\n\n${text}` }],
+      parts: [{ text }],
     }],
     generationConfig: {
       responseModalities: ["AUDIO"],
