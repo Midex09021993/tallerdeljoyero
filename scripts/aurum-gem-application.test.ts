@@ -1097,7 +1097,7 @@ test("BVH diamond profile synchronization always resets RGB boost to catalog or 
 });
 
 
-test("White 2 applies the White 1 catalog calibration after source .dmat metadata while retaining zero dispersion", () => {
+test("White 2 applies the White 1 catalog calibration after source .dmat metadata including the shared 0.010 dispersion", () => {
   const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const white2Block = application.slice(
     application.indexOf('const isWhiteDiamond2='),
