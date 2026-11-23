@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { auriInterno } from "@/lib/auri/auri-interno.functions";
 import { auriDirecto } from "@/lib/auri/auri-directo.functions";
 import { COMANDOS } from "@/lib/aula/biblioteca-comandos";
+import { INVENTARIO_RHINO7, NORMALIZAR_COMANDO_RHINO } from "@/lib/aula/inventario-rhino7";
 
 type Message = { role: "user" | "model"; text: string; source?: { motor: "directo" | "gemini"; herramientas: string[]; modelo?: string; consultadoEn: string } };
 type SpeechRecognitionResultLike = { 0: { transcript: string }; isFinal: boolean };
@@ -127,21 +128,40 @@ function horaConsulta(value: string) {
 }
 
 function buscarEnBibliotecaRhino(pregunta: string) {
-  const normalizar = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es");
-  const q = normalizar(pregunta);
-  const palabras = q.split(/[^a-z0-9]+/).filter((word) => word.length > 2 && !["que","como","para","con","una","uno","del","las","los","por","quiero","puedo","rhino","comando","comandos","explica","explicame"].includes(word));
-  const preguntaSobreRhino = /\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion)\b/.test(q);
-  if (!preguntaSobreRhino) return null;
-  const scored = COMANDOS.map((item) => {
-    const nombre = normalizar(item.nombre);
-    const texto = normalizar([item.nombre,item.categoria,item.resumen,item.uso,item.pasos.join(" "),item.ejemplo,item.cuidado,item.joyeria].join(" "));
-    const exact = q.includes(nombre) ? 20 : 0;
-    const score = exact + palabras.reduce((total, word) => total + (texto.includes(word) ? (nombre.includes(word) ? 5 : 1) : 0), 0);
-    return { item, score };
-  }).filter((entry) => entry.score > 0).sort((a,b) => b.score-a.score).slice(0,3);
-  if (!scored.length) return "Puedo consultar las fichas didácticas disponibles en nuestra Biblioteca de comandos Rhino. Dime qué necesitas construir o modificar —por ejemplo, dibujar un perfil, crear una superficie, extruir una curva o generar una simetría— y buscaré las herramientas documentadas para orientarte. La biblioteca contiene fichas formativas, no el inventario completo de Rhino.";
-  const fichas = scored.map(({item}) => `**${item.nombre}** · ${item.categoria}\n${item.resumen}\n**Cuándo utilizarlo:** ${item.uso}\n**Procedimiento:** ${item.pasos.join(" ")}\n**Ejemplo en joyería:** ${item.joyeria}\n**Precaución:** ${item.cuidado}`).join("\n\n");
-  return `He consultado la Biblioteca didáctica de comandos Rhino de FADILAB. Estas fichas corresponden al contenido formativo disponible:\n\n${fichas}\n\nLos pasos pueden variar según las opciones y la versión instalada. Practica primero en un archivo de prueba y revisa las indicaciones de la línea de comandos de Rhino.`;
+  const q = NORMALIZAR_COMANDO_RHINO(pregunta);
+  const stopwords = new Set(["que","como","para","con","una","uno","del","las","los","por","quiero","puedo","rhino","rhinoceros","comando","comandos","explica","explicame","usar","uso","hacer","crear","necesito"]);
+  const tokens = q.split(" ").filter((word) => word.length > 2 && !stopwords.has(word));
+  const consultaRhino = /\\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\\b/.test(q)
+    || INVENTARIO_RHINO7.some((name) => NORMALIZAR_COMANDO_RHINO(name) === q && q.length > 2);
+  if (!consultaRhino) return null;
+
+  const resultados = INVENTARIO_RHINO7.map((nombre) => {
+    const normalizado = NORMALIZAR_COMANDO_RHINO(nombre);
+    const exacto = q === normalizado ? 100 : q.includes(normalizado) && normalizado.length > 2 ? 80 : normalizado.includes(q) && q.length >= 4 ? 55 : 0;
+    const coincidencias = tokens.reduce((total, token) => total + (normalizado.split(" ").some((parte) => parte.includes(token)) ? 8 : 0), 0);
+    return { nombre, score: exacto + coincidencias };
+  }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || a.nombre.localeCompare(b.nombre, "es")).slice(0, 6);
+
+  if (!resultados.length) {
+    return "Puedo consultar el inventario maestro de Rhino 7, que contiene 1.536 nombres de comandos. Dime el nombre del comando o qué operación quieres realizar y buscaré coincidencias. Ten en cuenta que el inventario registra nombres; las explicaciones paso a paso solo están disponibles para las fichas didácticas desarrolladas.";
+  }
+
+  const fichas = resultados.map(({ nombre }) => {
+    const clave = NORMALIZAR_COMANDO_RHINO(nombre);
+    return COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre) === clave)
+      ?? COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre).includes(clave) || clave.includes(NORMALIZAR_COMANDO_RHINO(item.nombre)));
+  }).filter((item): item is (typeof COMANDOS)[number] => Boolean(item));
+
+  const fichasUnicas = [...new Map(fichas.map((item) => [item.nombre, item])).values()];
+  const nombres = resultados.map(({ nombre }) => nombre);
+  const listado = `**Coincidencias en el inventario Rhino 7:** ${nombres.join(" · ")}.`;
+
+  if (!fichasUnicas.length) {
+    return `He encontrado coincidencias en el inventario maestro de Rhino 7.\n\n${listado}\n\n**Alcance de la fuente:** el inventario confirma los nombres, pero no incluye la descripción ni el procedimiento de estos comandos. Para evitar darte instrucciones no verificadas, no voy a inventar sus pasos. Si me compartes la ayuda oficial o una ficha del comando, puedo explicártelo aplicado a joyería.`;
+  }
+
+  const detalle = fichasUnicas.slice(0, 3).map((item) => `**${item.nombre}** · ${item.categoria}\n${item.resumen}\n**Cuándo utilizarlo:** ${item.uso}\n**Procedimiento:** ${item.pasos.join(" ")}\n**Ejemplo en joyería:** ${item.joyeria}\n**Precaución:** ${item.cuidado}`).join("\n\n");
+  return `He consultado el inventario maestro Rhino 7 y las fichas didácticas disponibles de FADILAB.\n\n${listado}\n\n**Fichas con explicación disponible:**\n\n${detalle}\n\nLos pasos corresponden a las fichas formativas existentes; pueden variar según la versión y las opciones del comando.`;
 }
 
 function generarRespuestaTutorLocal(pregunta: string, contexto: string) {
