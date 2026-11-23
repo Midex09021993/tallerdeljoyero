@@ -224,12 +224,12 @@ export function createAurumLightingController(
       // positions immediately after config defaults are applied, otherwise
       // the key spotlight is reset to raw coordinates and can miss the jewel.
       this.scaleToModel(lastRadius, lastTargetY);
-      if (lights.softbox) lights.softbox.visible = config.reflectors?.softbox ?? true;
-      if (lights.strip) lights.strip.visible = config.reflectors?.strip ?? true;
+      if (lights.softbox) lights.softbox.visible = config.reflectors?.softbox ?? false;
+      if (lights.strip) lights.strip.visible = config.reflectors?.strip ?? false;
       if (lights.front) lights.front.visible = config.front?.enabled ?? true;
-      if (lights.kicker) lights.kicker.visible = config.reflectors?.kicker ?? true;
-      if (lights.edgeLeft) lights.edgeLeft.visible = config.reflectors?.edgeLeft ?? true;
-      if (lights.edgeRight) lights.edgeRight.visible = config.reflectors?.edgeRight ?? true;
+      if (lights.kicker) lights.kicker.visible = config.reflectors?.kicker ?? false;
+      if (lights.edgeLeft) lights.edgeLeft.visible = config.reflectors?.edgeLeft ?? false;
+      if (lights.edgeRight) lights.edgeRight.visible = config.reflectors?.edgeRight ?? false;
       syncGemShaderLight();
 
       // Diagnostic mode: isolate the HDR/IBL contribution from every direct
