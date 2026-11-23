@@ -642,9 +642,9 @@ export async function createAurumDiamondBvhRuntime(options: {
       const calibrateSecondaryDiamond = options.calibrateSecondaryDiamonds === true
         && family === "diamante"
         && !explicitlyProtected;
-      // Preserve the source dispersion of the two imported white .dmat profiles.
-      // The protected center deliberately keeps its approved 0.010 baseline;
-      // secondary white 1 uses 0.010 and secondary white 2 uses 0.000.
+      // White diamond profiles share the calibrated White 1 dispersion (0.010).
+      // Catalog metadata is authoritative; the fallback must preserve the same
+      // value even if a material arrives without its attached .dmat parameters.
       // Other secondary diamond profiles retain their existing 0.006 baseline.
       // Secondary stones consume the exact catalog/.dmat parameters attached
       // to their physical material. The protected center normally retains its
@@ -670,11 +670,11 @@ export async function createAurumDiamondBvhRuntime(options: {
           ? Math.max(0, Number(diamondSourceParameters.dispersion ?? 0.006))
           : !calibrateSecondaryDiamond
             ? 0.010
-            : activeGemId === "diamante_natural"
+            : (activeGemId === "diamante_natural"
+              || activeGemId === "diamante_vs"
+              || activeGemId === "diamante_inclusiones")
               ? 0.010
-              : activeGemId === "diamante_vs"
-                ? 0
-                : 0.006;
+              : 0.006;
       // Optional center-only mode limits eligibility, but center identification
       // above remains active in all-size production mode.
       if (family === "diamante" && options.diamondCenterOnly) {
