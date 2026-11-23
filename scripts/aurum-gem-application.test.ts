@@ -1095,3 +1095,20 @@ test("BVH diamond profile synchronization always resets RGB boost to catalog or 
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).not.toContain("...(boost ? { rgbBoost: boost } : {})");
 });
+
+
+test("White 2 applies the White 1 catalog calibration after source .dmat metadata while retaining zero dispersion", () => {
+  const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const white2Block = application.slice(
+    application.indexOf('const isWhiteDiamond2='),
+    application.indexOf('// Applying a gem to a MatrixGold layer', application.indexOf('const isWhiteDiamond2='))
+  );
+  expect(white2Block).toContain('String(gemConfig?.id??preset.id??"")==="diamante_vs"');
+  expect(white2Block).toContain('gammaFactor:catalogParameters.gammaFactor');
+  expect(white2Block).toContain('reflectivity:catalogParameters.reflectivity');
+  expect(white2Block).toContain('geometryFactor:catalogParameters.geometryFactor');
+  expect(white2Block).toContain('squashFactor:catalogParameters.squashFactor');
+  expect(white2Block).toContain('absorptionFactor:catalogParameters.absorptionFactor');
+  expect(white2Block).toContain('dispersion:Number(catalogParameters.dispersion??currentDiamondParameters.dispersion??preset.dispersion??0)');
+  expect(white2Block).toContain('next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3))');
+});
