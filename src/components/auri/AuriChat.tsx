@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { auriInterno } from "@/lib/auri/auri-interno.functions";
 import { auriDirecto } from "@/lib/auri/auri-directo.functions";
+import { auriTts } from "@/lib/auri/auri-tts.functions";
+import { AURI_TTS_MAX_CHARS } from "@/lib/auri/tts-core";
 import { COMANDOS } from "@/lib/aula/biblioteca-comandos";
 import { INVENTARIO_RHINO7, NORMALIZAR_COMANDO_RHINO } from "@/lib/aula/inventario-rhino7";
 
@@ -241,6 +243,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
   ];
   const llamarInterno = useServerFn(auriInterno);
   const llamarDirecto = useServerFn(auriDirecto);
+  const llamarTts = useServerFn(auriTts);
   const [modoDirecto, setModoDirecto] = useState(false);
   const [vista, setVista] = useState<"texto" | "voz">("texto");
   const [autorizado, setAutorizado] = useState(false);
@@ -257,6 +260,11 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
   const recognition = useRef<SpeechRecognitionLike | null>(null);
   const pendingVoiceText = useRef("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+  const beatTimerRef = useRef<number | null>(null);
+  const speakSeqRef = useRef(0);
+  const vistaPreviaRef = useRef(vista);
 
   useEffect(() => {
     if (interno) setAutorizado(window.localStorage.getItem(CONSENT_KEY) === "1");
@@ -275,16 +283,103 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     setVoiceSupported(Boolean(speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition));
     return () => {
       recognition.current?.stop();
-      window.speechSynthesis?.cancel();
+      stopSpeaking();
     };
   }, []);
+
+  useEffect(() => {
+    // Al salir del modo voz se corta cualquier locución en curso.
+    if (vistaPreviaRef.current === "voz" && vista !== "voz") stopSpeaking();
+    vistaPreviaRef.current = vista;
+  }, [vista]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading]);
 
+  function releaseAudio() {
+    if (beatTimerRef.current !== null) {
+      window.clearInterval(beatTimerRef.current);
+      beatTimerRef.current = null;
+    }
+    const audio = audioRef.current;
+    if (audio) {
+      audio.onplaying = null;
+      audio.onended = null;
+      audio.onerror = null;
+      audio.pause();
+      audio.removeAttribute("src");
+      audioRef.current = null;
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+  }
+
+  /** Detiene cualquier voz (Sulafat o navegador) y descarta locuciones pendientes. */
+  function stopSpeaking() {
+    speakSeqRef.current += 1;
+    releaseAudio();
+    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    setVoiceBeat(false);
+  }
+
   function speak(text: string) {
-    if (!voiceEnabled || !("speechSynthesis" in window)) return;
+    if (!voiceEnabled) return;
+    stopSpeaking();
+    const seq = speakSeqRef.current;
+    // AURI interno puede contener datos del taller: se lee solo con la voz local del navegador.
+    if (interno) {
+      speakBrowser(text);
+      return;
+    }
+    void speakSulafat(text.slice(0, AURI_TTS_MAX_CHARS), seq);
+  }
+
+  async function speakSulafat(text: string, seq: number) {
+    const fallback = () => { if (speakSeqRef.current === seq) { releaseAudio(); speakBrowser(text); } };
+    try {
+      const result = await llamarTts({ data: { text } });
+      if (speakSeqRef.current !== seq) return;
+      if (!result.audioBase64 || !result.mimeType) return fallback();
+      const binary = atob(result.audioBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([bytes], { type: result.mimeType }));
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audioUrlRef.current = url;
+      let started = false;
+      audio.onplaying = () => {
+        if (speakSeqRef.current !== seq) return;
+        started = true;
+        setSpeaking(true);
+        setVoiceBeat(true);
+        if (beatTimerRef.current === null) beatTimerRef.current = window.setInterval(() => setVoiceBeat((current) => !current), 190);
+      };
+      audio.onended = () => {
+        if (speakSeqRef.current !== seq) return;
+        releaseAudio();
+        setSpeaking(false);
+        setVoiceBeat(false);
+      };
+      audio.onerror = () => {
+        if (speakSeqRef.current !== seq) return;
+        if (!started) return fallback();
+        releaseAudio();
+        setSpeaking(false);
+        setVoiceBeat(false);
+      };
+      await audio.play().catch(() => { if (!started) fallback(); });
+    } catch {
+      fallback();
+    }
+  }
+
+  function speakBrowser(text: string) {
+    if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "es-PE";
@@ -301,6 +396,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     const Recognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
     if (!Recognition || loading) return;
     recognition.current?.stop();
+    stopSpeaking();
     pendingVoiceText.current = "";
     setVoiceTranscript("");
     const instance = new Recognition();
@@ -492,11 +588,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
                   recognition.current?.stop();
                   return;
                 }
-                if (speaking) {
-                  window.speechSynthesis?.cancel();
-                  setSpeaking(false);
-                  setVoiceBeat(false);
-                }
+                if (speaking) stopSpeaking();
                 startListening();
               }}
               disabled={!voiceSupported || loading}
@@ -507,7 +599,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
             </button>
             <p className="mt-3 text-[10px] font-semibold tracking-[0.16em] text-[#d5c18f]">{listening ? "TOCA PARA ENVIAR" : speaking ? "TOCA PARA INTERRUMPIR Y HABLAR" : "TOCA PARA HABLAR"}</p>
             {!voiceSupported && <p className="mt-3 rounded-lg border border-[#806c42] bg-[#24394b] px-3 py-2 text-xs text-[#f0dcae]">Este navegador no admite dictado por voz. Puedes conversar desde la vista de texto.</p>}
-            {speaking && <button type="button" onClick={() => { window.speechSynthesis?.cancel(); setSpeaking(false); }} className="mt-4 rounded-full border border-[#718394] bg-[#203447] px-4 py-2 text-xs font-semibold text-[#e6d5a9] hover:bg-[#2a4359]">Interrumpir respuesta</button>}
+            {speaking && <button type="button" onClick={stopSpeaking} className="mt-4 rounded-full border border-[#718394] bg-[#203447] px-4 py-2 text-xs font-semibold text-[#e6d5a9] hover:bg-[#2a4359]">Interrumpir respuesta</button>}
           </div>
           <div className="relative z-10 w-full max-w-md text-center">
             {voiceTranscript && <p className="auri-voice__transcript mx-auto mb-3 max-w-sm rounded-xl px-4 py-2.5 text-center text-xs leading-5">“{voiceTranscript}”</p>}
@@ -564,7 +656,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
             <div className="mt-2 flex items-center justify-between gap-2 px-1">
               <p className="min-w-0 truncate text-[9px] text-[#9aa1a5]">{interno ? (modoDirecto ? "AURI Directo · Consultas de solo lectura" : "Gemini · Datos según tus permisos") : "No compartas información privada."}</p>
               <div className="flex shrink-0 items-center gap-3">
-                <button type="button" onClick={() => { setVoiceEnabled((value) => !value); window.speechSynthesis?.cancel(); setSpeaking(false); setVoiceBeat(false); }} aria-label={voiceEnabled ? "Silenciar respuestas" : "Activar voz"} className="text-[#9b7a36] hover:text-[#72551e]">{voiceEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}</button>
+                <button type="button" onClick={() => { setVoiceEnabled((value) => !value); stopSpeaking(); }} aria-label={voiceEnabled ? "Silenciar respuestas" : "Activar voz"} className="text-[#9b7a36] hover:text-[#72551e]">{voiceEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}</button>
                 {interno ? <button type="button" onClick={() => { window.localStorage.removeItem(CONSENT_KEY); setAutorizado(false); }} className="text-[9px] font-semibold text-[#96732e] underline underline-offset-2">Desactivar acceso</button> : <button type="button" onClick={onContact} className="text-[9px] font-semibold text-[#96732e] underline underline-offset-2">Contactar</button>}
               </div>
             </div>
