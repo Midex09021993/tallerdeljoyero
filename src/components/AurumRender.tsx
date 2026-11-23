@@ -306,7 +306,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
   const ptAbortRef = useRef<AbortController|null>(null);
-  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, temperatureK:5500, reflectorPower:2.5, reflectorScale:1.6, largeSoftboxEnabled:false, largeSoftboxPower:1.4, reflectors:{softbox:true,strip:true,kicker:true,edgeLeft:true,edgeRight:true}}));
+  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, temperatureK:5500, reflectorPower:2.5, reflectorScale:1.6, largeSoftboxEnabled:false, largeSoftboxPower:1.4, reflectors:{softbox:false,strip:false,kicker:false,edgeLeft:false,edgeRight:false}}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
   const actualizarLucesAurum = useCallback((patch:any) => {
@@ -810,11 +810,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           largeSoftboxEnabled: lightingStudio.largeSoftboxEnabled === true,
           largeSoftboxPower: lightingStudio.largeSoftboxPower,
           reflectors: {
-            softbox: lightingStudio.reflectors?.softbox !== false,
-            strip: lightingStudio.reflectors?.strip !== false,
-            kicker: lightingStudio.reflectors?.kicker !== false,
-            edgeLeft: lightingStudio.reflectors?.edgeLeft !== false,
-            edgeRight: lightingStudio.reflectors?.edgeRight !== false,
+            softbox: lightingStudio.reflectors?.softbox === true,
+            strip: lightingStudio.reflectors?.strip === true,
+            kicker: lightingStudio.reflectors?.kicker === true,
+            edgeLeft: lightingStudio.reflectors?.edgeLeft === true,
+            edgeRight: lightingStudio.reflectors?.edgeRight === true,
           },
         },
         guardadoEn: new Date().toISOString(),
@@ -5708,7 +5708,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}>
         <div style={{fontSize:12,fontWeight:700,marginBottom:7}}>Reflectores de estudio</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 10px",fontSize:11}}>
-          {([{id:"softbox",label:"Reflector Cenital de Estudio"},{id:"strip",label:"Strip lateral"},{id:"kicker",label:"Reflector trasero"},{id:"edgeLeft",label:"Borde izquierdo"},{id:"edgeRight",label:"Borde derecho"}] as const).map(item=><label key={item.id} style={{display:"flex",alignItems:"center",gap:5}}><input type="checkbox" checked={lightingStudio.reflectors?.[item.id] ?? true} onChange={e=>actualizarLucesAurum({reflectors:{...(lightingStudio.reflectors ?? {}),[item.id]:e.target.checked}})}/>{item.label}</label>)}
+          {([{id:"softbox",label:"Reflector Cenital de Estudio"},{id:"strip",label:"Strip lateral"},{id:"kicker",label:"Reflector trasero"},{id:"edgeLeft",label:"Borde izquierdo"},{id:"edgeRight",label:"Borde derecho"}] as const).map(item=><label key={item.id} style={{display:"flex",alignItems:"center",gap:5}}><input type="checkbox" checked={lightingStudio.reflectors?.[item.id] ?? false} onChange={e=>actualizarLucesAurum({reflectors:{...(lightingStudio.reflectors ?? {}),[item.id]:e.target.checked}})}/>{item.label}</label>)}
         </div>
       </div>
       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}>
