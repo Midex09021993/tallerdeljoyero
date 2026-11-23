@@ -230,7 +230,7 @@ export const MATERIALES: MaterialConfig[] = [
     // Perfil visual de referencia GEMMEX/FFWJ1200; acabado de cera no metálico.
 { id:"cera_microfusion_roja", grupo:"Manufactura", nombre:"Cera roja · Microfusión", color:0xa20d1a, metalness:0, roughness:.48, envMapIntensity:.42, clearcoat:.06, anisotropy:0 },
   // Resinas Siraya Tech: perfiles visuales de resina no metálica; no representan parámetros de impresión ni de calcinación.
-  { id:"siraya_cast_azul", grupo:"Manufactura", nombre:"Siraya Tech Cast · Azul", color:0x2457b8, metalness:0, roughness:.34, envMapIntensity:.62, clearcoat:.22, anisotropy:0 },
+  { id:"siraya_cast_azul", grupo:"Manufactura", nombre:"Siraya Tech Cast · Morado", color:0x68408f, metalness:0, roughness:.34, envMapIntensity:.62, clearcoat:.22, anisotropy:0 },
   { id:"siraya_blu_azul", grupo:"Manufactura", nombre:"Siraya Tech Blu · Azul", color:0x1764cf, metalness:0, roughness:.27, envMapIntensity:.72, clearcoat:.30, anisotropy:0 },
   { id:"blue_cast_v2", grupo:"Manufactura", nombre:"Blue Cast V2", color:0x2879d0, metalness:0, roughness:.32, envMapIntensity:.66, clearcoat:.24, anisotropy:0 },
 ];
