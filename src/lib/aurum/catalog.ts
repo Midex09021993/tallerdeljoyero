@@ -232,7 +232,7 @@ export const MATERIALES: MaterialConfig[] = [
   // Resinas Siraya Tech: perfiles visuales de resina no metálica; no representan parámetros de impresión ni de calcinación.
   { id:"siraya_cast_azul", grupo:"Manufactura", nombre:"Siraya Tech Cast · Morado", color:0x68408f, metalness:0, roughness:.34, envMapIntensity:.62, clearcoat:.22, anisotropy:0 },
   { id:"siraya_blu_azul", grupo:"Manufactura", nombre:"Siraya Tech Blu · Azul", color:0x1764cf, metalness:0, roughness:.27, envMapIntensity:.72, clearcoat:.30, anisotropy:0 },
-  { id:"blue_cast_v2", grupo:"Manufactura", nombre:"Blue Cast V2", color:0x2879d0, metalness:0, roughness:.32, envMapIntensity:.66, clearcoat:.24, anisotropy:0 },
+  { id:"blue_cast_v2", grupo:"Manufactura", nombre:"Blue Cast V2", color:0x343a3b, metalness:0, roughness:.32, envMapIntensity:.66, clearcoat:.24, anisotropy:0 },
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [];
