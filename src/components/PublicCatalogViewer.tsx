@@ -38,7 +38,7 @@ export const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
 };
 
 const applyPublicDiamondCatalogOptics = (material: any, gem: any) => {
-  if (!material || String(gem?.familia ?? "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase() !== "diamante") return;
+  if (!material || String(gem?.familia ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase() !== "diamante") return;
   const source = gem?.diamondMaterialParameters ?? {};
   const isWhiteDiamond = ["diamante_natural", "diamante_vs", "diamante_inclusiones"].includes(String(gem?.id ?? ""));
   if (!isWhiteDiamond) return;
