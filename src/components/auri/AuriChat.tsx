@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { auriInterno } from "@/lib/auri/auri-interno.functions";
 import { auriDirecto } from "@/lib/auri/auri-directo.functions";
 
-type Message = { role: "user" | "model"; text: string };
+type Message = { role: "user" | "model"; text: string; source?: { motor: "directo" | "gemini"; herramientas: string[]; modelo?: string; consultadoEn: string } };
 type SpeechRecognitionResultLike = { 0: { transcript: string }; isFinal: boolean };
 type SpeechRecognitionEventLike = { results: ArrayLike<SpeechRecognitionResultLike> };
 type SpeechRecognitionLike = {
@@ -106,6 +106,23 @@ function renderAuriMessage(value: string) {
       </p>
     );
   });
+}
+
+function etiquetaHerramienta(name: string) {
+  const labels: Record<string, string> = {
+    listar_pedidos: "Pedidos",
+    ver_pedido: "Ficha técnica",
+    resumen_produccion: "Producción",
+    listar_contratos: "Contratos",
+    buscar_clientes: "Clientes",
+  };
+  return labels[name] ?? name.replace(/_/g, " ");
+}
+
+function horaConsulta(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("es-PE", { hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
 function textoParaVoz(value: string) {
@@ -290,7 +307,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
           ? await llamarDirecto({ data: { message: question } })
           : await llamarInterno({ data: { message: question, history: nextMessages.slice(-9, -1) } });
         if (r.error || !r.reply) throw new Error(r.error || "AURI no pudo responder en este momento.");
-        setMessages((current) => [...current, { role: "model", text: r.reply }]);
+        setMessages((current) => [...current, { role: "model", text: r.reply, ...(r.motor ? { source: { motor: r.motor, herramientas: r.herramientas ?? [], consultadoEn: r.consultadoEn ?? new Date().toISOString() } } : {}) }]);
         speak(textoParaVoz(r.reply));
         return;
       }
@@ -451,6 +468,17 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "" }: { onC
                   <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-[13px] leading-[1.7] ${message.role === "user" ? "rounded-br-md bg-[#263746] text-white shadow-sm" : "rounded-bl-md border border-[#eee8dc] bg-white text-[#485560] shadow-[0_2px_10px_rgba(38,55,70,.035)]"}`}>
                     {renderAuriMessage(message.text)}
                     {message.role === "model" && index > 0 && <button type="button" onClick={() => speak(textoParaVoz(message.text))} aria-label="Escuchar respuesta" className="ml-2 inline-flex align-middle text-[#a88742] hover:text-[#72551e]"><Volume2 className="size-3.5" /></button>}
+                    {interno && message.role === "model" && message.source && (
+                      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[#eee8dc] pt-2 text-[9px] leading-4 text-[#87919a]" aria-label="Origen de la respuesta">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[#e8dfca] bg-[#fbf8ef] px-2 py-0.5 font-bold uppercase tracking-[0.1em] text-[#9b7936]">
+                          <span className={`size-1.5 rounded-full ${message.source.motor === "directo" ? "bg-[#4b9b79]" : "bg-[#4b9fc1]"}`} />
+                          {message.source.motor === "directo" ? "AURI Directo · Sin IA" : "Gemini · IA"}
+                        </span>
+                        {message.source.modelo && <span>Modelo: {message.source.modelo}</span>}
+                        <span>{message.source.herramientas.length ? `Consultó: ${message.source.herramientas.map(etiquetaHerramienta).join(", ")}` : "Sin consulta a datos del taller"}</span>
+                        <span>· {horaConsulta(message.source.consultadoEn)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
