@@ -729,38 +729,30 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       const sourceDiamondParameters=gemConfig?.diamondMaterialParameters??preset.diamondMaterialParameters;
       if(sourceDiamondParameters){
         const currentDiamondParameters=next.userData?.["aurumIJEWELParameters"]??{};
-        const isWhiteDiamond2=String(gemConfig?.id??preset.id??"")==="diamante_vs";
-        // White 2 follows the same calibrated application route as White 1.
-        // Its catalog controls are authoritative after the source .dmat is read;
-        // dispersion is normalized to the shared White 1 value (0.010).
-        const catalogParameters=isWhiteDiamond2 ? {
+        const profileId=String(gemConfig?.id??preset.id??"");
+        const isWhiteDiamondProfile=["diamante_natural","diamante_vs","diamante_inclusiones"].includes(profileId);
+        // White diamond profiles share one authoritative optical mapping.
+        // Catalog values replace stale source .dmat metadata consistently for
+        // White 1, White 2 and White 3 before the shader/BVH reads the material.
+        const catalogParameters=isWhiteDiamondProfile ? {
           ...sourceDiamondParameters,
-          dispersion:Math.max(0,Number(gemConfig?.dispersion??sourceDiamondParameters.dispersion??0)),
+          dispersion:Math.max(0,Number(gemConfig?.dispersion??sourceDiamondParameters.dispersion??0.01)),
         } : sourceDiamondParameters;
-        if(isWhiteDiamond2){
+        if(isWhiteDiamondProfile){
           next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3));
           next.ior=Math.max(1,Number(catalogParameters.refractiveIndex??gemConfig?.ior??2.6));
-          next.dispersion=Math.max(0,Number(catalogParameters.dispersion??0));
+          next.dispersion=Math.max(0,Number(catalogParameters.dispersion??0.01));
         }
         next.userData={
           ...(next.userData??{}),
           aurumIJEWELParameters:{
             ...currentDiamondParameters,
-            ...(isWhiteDiamond2 ? {
-              gammaFactor:catalogParameters.gammaFactor,
-              reflectivity:catalogParameters.reflectivity,
-              geometryFactor:catalogParameters.geometryFactor,
-              squashFactor:catalogParameters.squashFactor,
-              absorptionFactor:catalogParameters.absorptionFactor,
-              refractiveIndex:catalogParameters.refractiveIndex,
-              rayBounces:catalogParameters.rayBounces,
-              boostFactors:catalogParameters.boostFactors,
-            } : {}),
+            ...(isWhiteDiamondProfile ? catalogParameters : {}),
             color:diamondColor,
             boostFactors:catalogParameters.boostFactors??currentDiamondParameters.boostFactors,
             dispersion:Number(catalogParameters.dispersion??currentDiamondParameters.dispersion??preset.dispersion??0),
           },
-          aurumDiamondCatalogProfile:String(gemConfig?.id??preset.id??""),
+          aurumDiamondCatalogProfile:profileId,
           aurumDiamondCatalogColor:diamondColor,
         };
       }
