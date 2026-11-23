@@ -722,7 +722,7 @@ test("Aurum Render production BVH includes ruby and all diamond sizes", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const profiles = readFileSync("src/lib/aurum/aurum-gem-bvh-profiles.ts", "utf8");
 
-  expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi", "Esmeralda", "Moissanita", "Zafiro", "Sapphire", "Aguamarina", "Aquamarina", "Amatista", "Citrino"]');
+  expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi", "Esmeralda", "Moissanita", "Zafiro", "Sapphire", "Aguamarina", "Aquamarina", "Amatista", "Citrino", "Topacio", "topacio", "Topacio azul", "Topacio imperial"]');
   expect(render).toContain("diamondCenterOnly: false");
   expect(render).toContain("calibrateSecondaryDiamonds: true");
   expect(runtime).toContain('const isRuby = family === "rubí" || family === "rubi"');
@@ -734,11 +734,11 @@ test("Aurum Render production BVH includes ruby and all diamond sizes", () => {
 
 test("Aurum Render BVH master switch disables and restores diamond and ruby families together", () => {
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(render).toContain('for (const family of ["diamante", "rubí", "rubi", "esmeralda", "moissanita", "zafiro", "sapphire", "aguamarina", "aquamarina", "amatista", "citrino"])');
+  expect(render).toContain('for (const family of ["diamante", "rubí", "rubi", "esmeralda", "moissanita", "zafiro", "sapphire", "aguamarina", "aquamarina", "amatista", "citrino", "topacio", "topacio azul", "topacio_azul", "topacio imperial", "topacio_imperial", "blue topaz", "blue_topaz"])');
   expect(render).toContain('if (!diamondBvhEnabledRef.current) {');
   expect(render).toContain('runtime.setFamilyEnabled(family, false)');
   expect(render).toContain('setFamilyEnabled?.(family, detail.enabled)');
-  expect(render).toContain("diamantes, rubíes, esmeraldas, moissanitas, zafiros, aguamarinas, amatistas y citrinos compatibles");
+  expect(render).toContain("diamantes, rubíes, esmeraldas, moissanitas, zafiros, aguamarinas, amatistas, citrinos y topacios compatibles");
 });
 
 
