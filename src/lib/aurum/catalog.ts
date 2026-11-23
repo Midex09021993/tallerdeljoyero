@@ -29,7 +29,7 @@ export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparen
 export type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 export type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
-export type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino" | "Especiales";
+export type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino" | "Especiales" | "Manufactura";
 export type CategoriaParte = "metal" | "gema" | "otro";
 export type GemaId =
   | "diamante_natural" | "diamante_vs" | "diamante_inclusiones" | "diamante_azul" | "diamante_rosa" | "diamante_rosa_2"
@@ -228,10 +228,10 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"titanio_pulido", grupo:"Especiales", nombre:"Titanio Pulido", color:0x90989f, metalness:.96, roughness:.15, envMapIntensity:1.68, clearcoat:.12 },
   // Material visual no metálico para simular patrones de cera roja de microfusión; no representa parámetros de una impresora específica.
     // Perfil visual de referencia GEMMEX/FFWJ1200; acabado de cera no metálico.
-{ id:"cera_microfusion_roja", grupo:"Especiales", nombre:"Cera roja · Microfusión", color:0xa20d1a, metalness:0, roughness:.48, envMapIntensity:.42, clearcoat:.06, anisotropy:0 },
+{ id:"cera_microfusion_roja", grupo:"Manufactura", nombre:"Cera roja · Microfusión", color:0xa20d1a, metalness:0, roughness:.48, envMapIntensity:.42, clearcoat:.06, anisotropy:0 },
   // Resinas Siraya Tech: perfiles visuales de resina no metálica; no representan parámetros de impresión ni de calcinación.
-  { id:"siraya_cast_azul", grupo:"Especiales", nombre:"Siraya Tech Cast · Azul", color:0x2457b8, metalness:0, roughness:.34, envMapIntensity:.62, clearcoat:.22, anisotropy:0 },
-  { id:"siraya_blu_azul", grupo:"Especiales", nombre:"Siraya Tech Blu · Azul", color:0x1764cf, metalness:0, roughness:.27, envMapIntensity:.72, clearcoat:.30, anisotropy:0 },
+  { id:"siraya_cast_azul", grupo:"Manufactura", nombre:"Siraya Tech Cast · Azul", color:0x2457b8, metalness:0, roughness:.34, envMapIntensity:.62, clearcoat:.22, anisotropy:0 },
+  { id:"siraya_blu_azul", grupo:"Manufactura", nombre:"Siraya Tech Blu · Azul", color:0x1764cf, metalness:0, roughness:.27, envMapIntensity:.72, clearcoat:.30, anisotropy:0 },
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [];
