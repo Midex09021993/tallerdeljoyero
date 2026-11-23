@@ -902,8 +902,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             const resolvedOptics = resolveAurumDiamondProfileOptics(nextProfile, initialDiamondProfileBaseline);
             const nextDispersion = resolvedOptics.dispersion;
             const nextEnvironmentIntensity = resolvedOptics.environmentIntensity;
-            const nextReflectivity = resolvedOptics.reflectivity;
-            const nextGamma = resolvedOptics.gamma;
+            const isWhiteDiamondProfile = ["diamante_natural", "diamante_vs", "diamante_inclusiones"].includes(profileId);
+            const nextReflectivity = isWhiteDiamondProfile ? 0.5 : resolvedOptics.reflectivity;
+            const nextGamma = isWhiteDiamondProfile ? 1 : resolvedOptics.gamma;
             // Preserve the established blue/pink response; all other profiles
             // use their explicit catalog boost or a neutral/profile baseline.
             const boost = profileId === "diamante_azul" ? [2, 2, 2]
