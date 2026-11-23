@@ -24,7 +24,7 @@ export type MaterialId =
   | "platino_pulido" | "platino_mate"
   | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel" | "oro18_verde_blanco_glb"
   | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_purpura" | "oro18_azul" | "oro18_gris" | "oro18_martillado"
-  | "paladio_pulido" | "rodio_negro" | "titanio_pulido" | "cera_microfusion_roja" | "siraya_cast_azul" | "siraya_blu_azul";
+  | "paladio_pulido" | "rodio_negro" | "titanio_pulido" | "cera_microfusion_roja" | "siraya_cast_azul" | "siraya_blu_azul" | "blue_cast_v2";
 export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference" | "ijewelReflectiveReference" | "ijewelEnvironmentReference" | "estudioRosaPremium" | "ijewel01" | "ijewel02" | "ijewel03" | "ijewel04" | "ijewel05" | "ijewel06" | "ijewel07" | "ijewel08" | "ijewel09" | "ijewel10" | "ijewel11" | "ijewel12";
 export type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 export type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
@@ -232,6 +232,7 @@ export const MATERIALES: MaterialConfig[] = [
   // Resinas Siraya Tech: perfiles visuales de resina no metálica; no representan parámetros de impresión ni de calcinación.
   { id:"siraya_cast_azul", grupo:"Manufactura", nombre:"Siraya Tech Cast · Azul", color:0x2457b8, metalness:0, roughness:.34, envMapIntensity:.62, clearcoat:.22, anisotropy:0 },
   { id:"siraya_blu_azul", grupo:"Manufactura", nombre:"Siraya Tech Blu · Azul", color:0x1764cf, metalness:0, roughness:.27, envMapIntensity:.72, clearcoat:.30, anisotropy:0 },
+  { id:"blue_cast_v2", grupo:"Manufactura", nombre:"Blue Cast V2", color:0x2879d0, metalness:0, roughness:.32, envMapIntensity:.66, clearcoat:.24, anisotropy:0 },
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [];
