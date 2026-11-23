@@ -437,7 +437,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2"><p className="font-semibold tracking-tight text-[#263746]">AURI</p><span className="auri-brand-tag rounded-full border border-[#e9dfc7] bg-[#fbf8ef] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#9b7936]">AURUM LAB</span></div>
-              <p className="mt-0.5 truncate text-[11px] text-[#87919a]">{interno ? "Tu asistente de gestión" : tutorCurso ? "Tutor CAD 3D · FADILAB + Gemini" : "Asistente virtual de AURUM LAB"}</p>
+              {(interno || !tutorCurso) && <p className="mt-0.5 truncate text-[11px] text-[#87919a]">{interno ? "Tu asistente de gestión" : "Asistente virtual de AURUM LAB"}</p>}
             </div>
           </div>
           <div className="auri-header__controls flex shrink-0 items-center gap-1.5 sm:gap-2">
