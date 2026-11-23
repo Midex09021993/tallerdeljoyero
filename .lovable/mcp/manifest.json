@@ -140,7 +140,7 @@
       {
         "name": "buscar_clientes",
         "title": "Buscar clientes",
-        "description": "Busca clientes del taller por nombre, ciudad, teléfono o correo.",
+        "description": "Busca clientes del taller por nombre o ciudad. No uses teléfonos, correos ni documentos como filtros desde AURI.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
