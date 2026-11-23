@@ -24,6 +24,30 @@ export const AURUM_DIAMOND_MATERIAL_DEFAULTS = Object.freeze({
   clearcoatRoughness: 0.01,
 });
 
+export const AURUM_WHITE_DIAMOND_PROFILE_IDS = Object.freeze([
+  "diamante_natural",
+  "diamante_vs",
+  "diamante_inclusiones",
+]);
+
+/**
+ * Resolve the active optical parameters for a catalog diamond.
+ * White 1 is the optical reference: White 2/3 retain their source catalog
+ * metadata, but every application path receives the same active gamma/reflection.
+ */
+export function resolveAurumDiamondCatalogParameters(preset?: Record<string, any>): Record<string, any> {
+  const source = preset?.["diamondMaterialParameters"] ?? {};
+  const profileId = String(preset?.["id"] ?? "");
+  if (!AURUM_WHITE_DIAMOND_PROFILE_IDS.includes(profileId as typeof AURUM_WHITE_DIAMOND_PROFILE_IDS[number])) {
+    return { ...source };
+  }
+  return {
+    ...source,
+    gammaFactor: 1,
+    reflectivity: 0.5,
+  };
+}
+
 export function activateAurumDiamondMaterial<T = any>(material: T, preset?: Record<string, any>): T {
   if (!material) return material;
   const target = material as any;
