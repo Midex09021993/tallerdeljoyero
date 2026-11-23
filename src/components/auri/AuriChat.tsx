@@ -126,10 +126,10 @@ function horaConsulta(value: string) {
 }
 
 function generarRespuestaTutorLocal(pregunta: string, contexto: string) {
-  const normalizada = pregunta.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
-  const apartado = contexto.match(/Apartado:\\s*([^\\n]+)/i)?.[1]?.trim() ?? "este apartado";
+  const normalizada = pregunta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const apartado = contexto.match(/Apartado:\s*([^\n]+)/i)?.[1]?.trim() ?? "este apartado";
   const contenido = contexto.split("Contenido de referencia:")[1]?.trim() ?? contexto;
-  const extracto = contenido.replace(/\\s+/g, " ").slice(0, 900);
+  const extracto = contenido.replace(/\s+/g, " ").slice(0, 900);
   if (/pista|ayuda|atascad|no entiendo/.test(normalizada)) {
     return `Vamos paso a paso con **${apartado}**. Primera pista: identifica qué concepto, herramienta o decisión explica el material y para qué se utiliza en el diseño de joyería. Después, intenta relacionarlo con una pieza concreta. ¿Qué parte te está resultando más difícil?`;
   }
