@@ -131,7 +131,7 @@ function buscarEnBibliotecaRhino(pregunta: string) {
   const q = NORMALIZAR_COMANDO_RHINO(pregunta);
   const stopwords = new Set(["que","como","para","con","una","uno","del","las","los","por","quiero","puedo","rhino","rhinoceros","comando","comandos","explica","explicame","usar","uso","hacer","crear","necesito"]);
   const tokens = q.split(" ").filter((word) => word.length > 2 && !stopwords.has(word));
-  const consultaRhino = /\\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\\b/.test(q)
+  const consultaRhino = /\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\b/.test(q)
     || INVENTARIO_RHINO7.some((name) => NORMALIZAR_COMANDO_RHINO(name) === q && q.length > 2);
   if (!consultaRhino) return null;
 
