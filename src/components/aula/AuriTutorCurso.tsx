@@ -15,7 +15,7 @@ export default function AuriTutorCurso({ contexto }: Props) {
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#9b7936]">AURI TUTOR · GUÍA CONTEXTUAL DEL MÓDULO</p>
             <h4 className="mt-1 text-sm font-semibold text-[#263746]">¿Necesitas ayuda con este apartado?</h4>
-            <p className="mt-1 text-xs leading-5 text-[#718096]">Guía local basada en el contenido de este apartado. Tus consultas no se envían a Gemini.</p>
+            <p className="mt-1 text-xs leading-5 text-[#718096]">Guía local basada en el contenido de este apartado. Tus consultas no se envían a servicios externos.</p>
           </div>
         </div>
         <button type="button" onClick={() => setAbierto(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#c4a15a] px-4 py-2.5 text-sm font-semibold text-[#21180a] shadow-sm transition hover:bg-[#b99552] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c4a15a]">
