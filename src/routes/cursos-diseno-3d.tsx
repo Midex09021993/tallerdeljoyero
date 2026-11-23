@@ -149,18 +149,7 @@ function CursosDiseno3DPage() {
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
               <button type="button" aria-expanded={programaAbierto} aria-controls="programa" onClick={() => setProgramaAbierto((abierto) => !abierto)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d9e0e6] bg-white px-5 text-sm font-semibold text-[#33485b] transition hover:border-[#c5a45a]">{programaAbierto ? "Ocultar programa" : "Ver las 10 sesiones"} <span aria-hidden="true" className={`transition-transform ${programaAbierto ? "rotate-180" : ""}`}>⌄</span></button>
             </div>
-            <div className="mt-2 flex items-end justify-between gap-2">
-              <p className="max-w-[19rem] pb-2 text-xs leading-5 text-[#738397]">Crear tu cuenta en AURUM LAB es gratuito. La matrícula del curso es independiente.</p>
-              <img
-                src="/Robot%20futurista%20sonriente%20con%20pulgar%20arriba.png"
-                alt="AURI, asistente virtual de AURUM LAB"
-                width="220"
-                height="260"
-                loading="lazy"
-                decoding="async"
-                className="h-auto w-24 shrink-0 object-contain sm:w-32 lg:w-36"
-              />
-            </div>
+            <p className="mt-5 max-w-[22rem] text-xs leading-5 text-[#738397]">Crear tu cuenta en AURUM LAB es gratuito. La matrícula del curso es independiente.</p>
           </div>
           <div className="relative lg:mt-[3.35rem]">
             <div className="absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-[#f8e8b5] via-white to-[#dfe8f0] blur-xl" />
