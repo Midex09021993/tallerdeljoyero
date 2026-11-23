@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ArrowRight, BookOpen, Bot, CheckCircle2, Clock3, Gem, GraduationCap,
-  Layers3, Monitor, MousePointer2, PenTool, Ruler, ShieldCheck,
+  ArrowRight, BookOpen, Bot, CalendarDays, CheckCircle2, Clock3, Gem, GraduationCap,
+  Layers3, Monitor, MousePointer2, PenTool, Ruler, ShieldCheck, UsersRound,
   Sparkles, Target,
 } from "lucide-react";
 
@@ -234,15 +234,26 @@ function CursosDiseno3DPage() {
           <aside id="inversion" className="scroll-mt-24 rounded-[1.6rem] border border-[#e4d5ad] bg-white p-6 shadow-[0_18px_55px_rgba(31,45,58,.09)] sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#9b762e]">Matrícula · Lanzamiento</p>
             <h2 className="mt-2 text-xl font-bold text-[#24374a]">Invierte en tu formación profesional</h2>
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-4 py-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><Clock3 className="size-5" /></span>
-              <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Próximo inicio</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">30 de noviembre de 2026</span></span>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><CalendarDays className="size-5" /></span>
+                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Próximo inicio</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">30 de noviembre de 2026</span></span>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><UsersRound className="size-5" /></span>
+                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Cupos limitados</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">Quedan <strong className="rounded-md bg-[#f5e4ad] px-1.5 text-[#7d5818]">12</strong> de 15 cupos</span></span>
+              </div>
             </div>
-            <div className="mt-6 rounded-xl bg-[#fff9e9] p-5">
-              <p className="text-xs font-semibold text-[#7a8793]">Precio regular</p>
-              <p className="mt-1 text-2xl font-semibold text-[#89939d] line-through">US$ 250</p>
-              <div className="mt-4 flex items-end gap-2"><span className="text-sm font-bold text-[#9b762e]">Hoy</span><span className="text-5xl font-bold tracking-tight text-[#1e3042]">US$ 230</span></div>
-              <p className="mt-2 inline-flex rounded-full bg-[#e7f3ec] px-3 py-1 text-xs font-bold text-[#26724f]">Ahorras US$ 20 · 8% de descuento</p>
+            <div className="mt-5 rounded-xl bg-[#fff9e9] p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-xs font-semibold text-[#7a8793]">Precio regular</p><p className="mt-1 text-2xl font-semibold text-[#89939d] line-through">US$ 250</p></div>
+                <span className="rounded-xl bg-[#d49b18] px-3 py-2 text-center text-xs font-extrabold uppercase leading-tight text-white shadow-sm">Precio<br />promocional final</span>
+              </div>
+              <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1"><span className="text-sm font-bold text-[#9b762e]">Precio final</span><span className="text-5xl font-bold tracking-tight text-[#1e3042]">US$ 230</span></div>
+              <p className="mt-3 inline-flex rounded-full bg-[#e0f5eb] px-3 py-1.5 text-xs font-bold text-[#176b49]">✓ Ahorro: US$ 20 (8 % de descuento)</p>
+            </div>
+            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="12 de 15 cupos disponibles">
+              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 12 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
             </div>
             <ul className="mt-5 space-y-3 text-sm text-[#5d7183]">
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Clases online en vivo con docente</li>
@@ -252,8 +263,8 @@ function CursosDiseno3DPage() {
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> AURI Tutor: asistente de IA propio durante tu formación</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Registro de cuenta AURUM LAB gratuito</li>
             </ul>
-            <Link to="/auth" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
-            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">Inicio previsto: 30 de noviembre de 2026. Crear tu cuenta es gratuito. El precio promocional corresponde a la matrícula del curso. Consulta disponibilidad y condiciones antes de realizar el pago.</p>
+            <Link to="/auth" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105">Crear cuenta e iniciar matrícula · US$ 230 <ArrowRight className="size-4" /></Link>
+            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">El precio final de matrícula es US$ 230 (ahorro de US$ 20 frente al precio regular). Crear tu cuenta en AURUM LAB es gratuito; después podrás continuar con la gestión de tu matrícula. Inicio previsto: 30 de noviembre de 2026. Cupos limitados: 15 en total.</p>
           </aside>
         </div>
       </section>
