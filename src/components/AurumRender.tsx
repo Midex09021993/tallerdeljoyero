@@ -944,6 +944,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     if (normalizado.includes("plata")) return "Plata";
     if (normalizado.includes("platino")) return "Platino";
     if (normalizado.includes("rodio")) return "Rodio";
+    if (normalizado.includes("manufactura")) return "Manufactura";
     return "Otros";
   };
   const familiasMateriales = useMemo(() => ["Todas", ...Array.from(new Set(MATERIALES.map(m => familiaPrincipalMaterial(m.grupo))))], []);
