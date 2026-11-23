@@ -127,50 +127,31 @@ function horaConsulta(value: string) {
   return new Intl.DateTimeFormat("es-PE", { hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
-function buscarEnBibliotecaRhino(pregunta: string) {
+function construirContextoRhino(pregunta: string) {
   const q = NORMALIZAR_COMANDO_RHINO(pregunta);
-  const mencionaFichas = /\b(ficha|fichas|explicacion|explicaciones|documentacion|documentado)\b/.test(q);
-  const comandoSolicitado = INVENTARIO_RHINO7.find((nombre) => {
+  const palabrasRhino = /\b(rhino|rhinoceros|comando|comandos|biblioteca|inventario|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|simetria|recortar|unir|barrido|revolucion|modelar|modelado|sweep|boolean|fillet|chamfer|offset|trim|loft|revolve|mirror|array|dimension|cota)\b/.test(q);
+  const comando = INVENTARIO_RHINO7.find((nombre) => {
     const clave = NORMALIZAR_COMANDO_RHINO(nombre);
-    return clave.length > 2 && (q === clave || q.includes(` ${clave} `) || q.startsWith(`${clave} `) || q.endsWith(` ${clave}`));
+    return clave.length > 2 && (q === clave || q.includes(" " + clave + " ") || q.startsWith(clave + " ") || q.endsWith(" " + clave));
   });
+  if (!palabrasRhino && !comando) return null;
 
-  if (mencionaFichas && !comandoSolicitado) {
-    const porCategoria = [...new Set(COMANDOS.map((item) => item.categoria))];
-    const listado = porCategoria.map((categoria) => {
-      const items = COMANDOS.filter((item) => item.categoria === categoria).map((item) => item.nombre);
-      return `**${categoria}:** ${items.join(", ")}`;
-    }).join("\n");
-    return `Estas son las fichas que AURI puede explicar con contenido didáctico:\n\n${listado}\n\nIndícame el nombre de un comando y te daré su función y los pasos de uso. Para los demás nombres del inventario Rhino 7, puedo confirmar que existen, pero no dispongo todavía de una ficha explicativa.`;
-  }
+  const tokens = q.split(" ").filter((word) => word.length >= 4 && !["rhino","rhinoceros","comando","comandos","biblioteca","inventario","explica","explicame","quiero","puedo","hacer","crear","buscar","busca","dime","muestrame","para","sirve"].includes(word));
+  const candidatos = comando ? [comando] : INVENTARIO_RHINO7.map((nombre) => {
+    const partes = NORMALIZAR_COMANDO_RHINO(nombre).split(" ");
+    const score = tokens.reduce((total, token) => total + (partes.some((parte) => parte === token || (token.length >= 5 && parte.startsWith(token))) ? 1 : 0), 0);
+    return { nombre, score };
+  }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || a.nombre.localeCompare(b.nombre, "es")).slice(0, 5).map((item) => item.nombre);
 
-  const consultaRhino = Boolean(comandoSolicitado)
-    || /\b(rhino|rhinoceros|comando|comandos|biblioteca|inventario|extruir|curva|superficie|solido|anillo|aro|perfil|poligono|circulo|simetria|recortar|unir|barrido|revolucion|modelar|modelado)\b/.test(q);
-  if (!consultaRhino) return null;
-
-  const tokens = q.split(" ").filter((word) => word.length >= 4 && !["rhino","rhinoceros","comando","comandos","biblioteca","inventario","explica","explicame","quiero","puedo","hacer","crear","buscar","busca","dime","muestrame","fichas","didacticas","tienen","tiene","explicacion"].includes(word));
-  const resultados = comandoSolicitado
-    ? [{ nombre: comandoSolicitado, score: 100 }]
-    : INVENTARIO_RHINO7.map((nombre) => {
-        const normalizado = NORMALIZAR_COMANDO_RHINO(nombre);
-        const partes = normalizado.split(" ");
-        const coincidencias = tokens.reduce((total, token) => total + (partes.some((parte) => parte === token || (token.length >= 5 && parte.startsWith(token))) ? 1 : 0), 0);
-        return { nombre, score: coincidencias };
-      }).filter((item) => item.score > 0)
-        .sort((a, b) => b.score - a.score || a.nombre.localeCompare(b.nombre, "es"))
-        .slice(0, 3);
-
-  if (!resultados.length) {
-    return "Dime el nombre exacto del comando Rhino que quieres consultar. Buscaré primero en el inventario Rhino 7 y comprobaré si tiene una ficha didáctica con instrucciones.";
-  }
-
-  const nombre = resultados[0].nombre;
-  const ficha = COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre) === NORMALIZAR_COMANDO_RHINO(nombre));
-  if (!ficha) {
-    return `**${nombre}**\n\nEstá registrado en el inventario de Rhino 7, pero todavía no tiene una ficha didáctica en FADILAB. Por eso puedo confirmar su presencia en el catálogo, pero no darte pasos de uso sin documentación.`;
-  }
-
-  return `**${ficha.nombre} · ${ficha.categoria}**\n${ficha.resumen}\n\n**Uso:** ${ficha.uso}\n**Pasos:** ${ficha.pasos.join(" ")}\n**Ejemplo en joyería:** ${ficha.joyeria}\n**Precaución:** ${ficha.cuidado}`;
+  const ficha = comando ? COMANDOS.find((item) => NORMALIZAR_COMANDO_RHINO(item.nombre) === NORMALIZAR_COMANDO_RHINO(comando)) : undefined;
+  return [
+    "Eres el tutor de Rhinoceros de FADILAB. Responde en español, de forma concreta y didáctica.",
+    "Explica qué hace el comando, su nombre o equivalente habitual en español (aclara si la traducción es descriptiva y no el nombre oficial localizado), para qué se utiliza, sintaxis u opciones principales y un ejemplo aplicado a joyería cuando sea pertinente.",
+    "Distingue los datos del inventario de las explicaciones técnicas. El inventario confirma nombres, no sus funciones. No inventes alias oficiales, sintaxis ni opciones; si algo depende de la versión o idioma de Rhino, indícalo.",
+    comando ? "Comando identificado en el inventario Rhino 7: " + comando + "." : "",
+    candidatos.length ? "Otros nombres coincidentes del inventario: " + candidatos.join(", ") + "." : "",
+    ficha ? "Ficha didáctica verificada de FADILAB para " + ficha.nombre + ": categoría " + ficha.categoria + "; descripción: " + ficha.resumen + "; uso: " + ficha.uso + "; pasos: " + ficha.pasos.join(" ") + "; aplicación en joyería: " + ficha.joyeria + "; precaución: " + ficha.cuidado + ". Prioriza esta ficha cuando corresponda." : "No hay ficha didáctica propia para el comando identificado. Puedes explicar con tu conocimiento general, pero distingue claramente la información no documentada por FADILAB."
+  ].filter(Boolean).join("\n");
 }
 
 function generarRespuestaTutorLocal(pregunta: string, contexto: string) {
@@ -376,18 +357,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     setError("");
     setLoading(true);
     try {
-      const respuestaBiblioteca = buscarEnBibliotecaRhino(question);
-      if (respuestaBiblioteca) {
-        setMessages((current) => [...current, { role: "model", text: respuestaBiblioteca }]);
-        speak(textoParaVoz(respuestaBiblioteca));
-        return;
-      }
-      if (tutorCurso) {
-        const reply = generarRespuestaTutorLocal(question, contextoCurso);
-        setMessages((current) => [...current, { role: "model", text: reply }]);
-        speak(textoParaVoz(reply));
-        return;
-      }
+      const contextoRhino = construirContextoRhino(question);
       if (interno) {
         const r = modoDirecto
           ? await llamarDirecto({ data: { message: question } })
@@ -397,8 +367,13 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
         speak(textoParaVoz(r.reply));
         return;
       }
+      const mensajeGemini = contextoRhino
+        ? "[CONSULTA TÉCNICA DE RHINOCEROS]\n" + contextoRhino + "\n\nPregunta del alumno: " + question
+        : tutorCurso
+          ? "[CONTEXTO DE FORMACIÓN FADILAB]\n" + contextoCurso.slice(0, 5000) + "\n\nResponde como tutor del módulo.\nPregunta del alumno: " + question
+          : questionForAssistant;
       const { data, error: invokeError } = await supabase.functions.invoke("auri-chat", {
-        body: { message: questionForAssistant, history: nextMessages.slice(-9, -1).map(({ role, text }) => ({ role, text })) },
+        body: { message: mensajeGemini, history: nextMessages.slice(-9, -1).map(({ role, text }) => ({ role, text })) },
       });
       if (invokeError) throw invokeError;
       if (!data?.reply || typeof data.reply !== "string") throw new Error(data?.error || "AURI no pudo responder en este momento.");
