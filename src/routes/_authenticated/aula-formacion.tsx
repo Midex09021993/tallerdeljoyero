@@ -9,6 +9,7 @@ import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
 import LaboratorioSolidos from "@/components/aula/LaboratorioSolidos";
 import LaboratorioSuperficies from "@/components/aula/LaboratorioSuperficies";
 import LaboratorioValidacionModelo from "@/components/aula/LaboratorioValidacionModelo";
+import AuriTutorCurso from "@/components/aula/AuriTutorCurso";
 import LaboratorioCurveEditor from "@/components/aula/LaboratorioCurveEditor";
 import LaboratorioCurvasBasicas from "@/components/aula/LaboratorioCurvasBasicas";
 import RhinoObjectExplorer from "@/components/aula/RhinoObjectExplorer";
@@ -2720,6 +2721,13 @@ function AulaFormacionPage() {
                 <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 2xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]" : ""}>
                   <section className={`min-w-0 ${modoAulaExpandida ? "mx-auto w-full max-w-[1320px]" : ""}`}>
                     <h3 className={`mb-6 font-display text-2xl leading-tight text-[#1D1D1F] sm:text-3xl ${modoAulaExpandida ? "max-w-[1100px] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-[900px]"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+<AuriTutorCurso contexto={[
+                      "Curso: Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1",
+                      "Sesión " + lecturaAbierta.numero + ": " + lecturaAbierta.titulo,
+                      "Apartado: " + (seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"),
+                      "Contenido de referencia:",
+                      (seccionesLecturaActivas[paginaLectura]?.bloques ?? []).join("\\n"),
+                    ].join("\\n")} />
                     {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                       if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                       return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-[900px] text-[#3A3A3C]"}`}>{bloque}</p></div>;
@@ -3358,6 +3366,13 @@ function AulaFormacionPage() {
               <main className={`min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-10 lg:px-14 ${modoAulaExpandida ? "bg-white text-[#334155]" : "bg-white px-5 py-5 sm:px-8 sm:py-6 lg:px-10"}`}>
                 <section className={`mx-auto w-full ${modoAulaExpandida ? "max-w-[1180px]" : "max-w-4xl"}`}>
                   <h3 className="mb-5 max-w-[1080px] font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+<AuriTutorCurso contexto={[
+                      "Curso: Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1",
+                      "Sesión " + lecturaAbierta.numero + ": " + lecturaAbierta.titulo,
+                      "Apartado: " + (seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"),
+                      "Contenido de referencia:",
+                      (seccionesLecturaActivas[paginaLectura]?.bloques ?? []).join("\\n"),
+                    ].join("\\n")} />
                   {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                     if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                     return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
