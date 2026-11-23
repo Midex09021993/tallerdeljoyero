@@ -217,7 +217,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             // Match Aurum Render's production gem EXR orientation: global +90°
             // plus the same small per-family correction used by its gem controller.
             const gemEnvironmentProfile = getAurumGemEnvironmentProfile(gem.familia);
-            const gemEnvironmentRotation = Math.PI / 2 + gemEnvironmentProfile.rotationOffset;
+            const gemEnvironmentRotation = gemEnvironmentProfile.rotationOffset; // El catálogo público usa la orientación aprobada de AURUM Render: 0° base.
             if (material.envMapRotation?.set) material.envMapRotation.set(0, gemEnvironmentRotation, 0);
             else if (material.envMapRotation) material.envMapRotation.y = gemEnvironmentRotation;
             material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(), aurumGemEnvIntensity: gem.envMapIntensity, aurumGemEnvironmentRotation: gemEnvironmentRotation };
@@ -765,7 +765,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // Match Aurum Render's production gem EXR orientation: baseline 0°
         // plus its visually approved +90° diagnostic offset. The BVH runtime
         // then applies the same geometry-derived per-stone optical-frame correction.
-        environmentRotationRadians: Math.PI / 2,
+        environmentRotationRadians: 0, // Misma orientación de EXR que la calibración aprobada de AURUM Render.
         camera,
         getViewportHeight: () => rendererRef.current?.domElement.height ?? hostRef.current?.clientHeight ?? 1,
         quality: "high",
