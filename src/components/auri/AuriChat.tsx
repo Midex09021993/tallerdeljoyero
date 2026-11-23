@@ -129,7 +129,6 @@ function horaConsulta(value: string) {
 
 function buscarEnBibliotecaRhino(pregunta: string) {
   const q = NORMALIZAR_COMANDO_RHINO(pregunta);
-  const nombresFichas = COMANDOS.map((item) => item.nombre);
   const mencionaFichas = /\\b(ficha|fichas|explicacion|explicaciones|documentacion|documentado)\\b/.test(q);
   const comandoSolicitado = INVENTARIO_RHINO7.find((nombre) => {
     const clave = NORMALIZAR_COMANDO_RHINO(nombre);
