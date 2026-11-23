@@ -732,10 +732,10 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         const isWhiteDiamond2=String(gemConfig?.id??preset.id??"")==="diamante_vs";
         // White 2 follows the same calibrated application route as White 1.
         // Its catalog controls are authoritative after the source .dmat is read;
-        // dispersion remains the one intentional difference (0.000 vs 0.010).
+        // dispersion is normalized to the shared White 1 value (0.010).
         const catalogParameters=isWhiteDiamond2 ? {
           ...sourceDiamondParameters,
-          dispersion:Number(sourceDiamondParameters.dispersion??gemConfig?.dispersion??0),
+          dispersion:Math.max(0,Number(gemConfig?.dispersion??sourceDiamondParameters.dispersion??0)),
         } : sourceDiamondParameters;
         if(isWhiteDiamond2){
           next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3));
