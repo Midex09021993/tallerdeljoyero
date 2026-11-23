@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { auriInterno } from "@/lib/auri/auri-interno.functions";
 import { auriDirecto } from "@/lib/auri/auri-directo.functions";
+import { COMANDOS } from "@/lib/aula/biblioteca-comandos";
 
 type Message = { role: "user" | "model"; text: string; source?: { motor: "directo" | "gemini"; herramientas: string[]; modelo?: string; consultadoEn: string } };
 type SpeechRecognitionResultLike = { 0: { transcript: string }; isFinal: boolean };
@@ -123,6 +124,24 @@ function horaConsulta(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
   return new Intl.DateTimeFormat("es-PE", { hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
+function buscarEnBibliotecaRhino(pregunta: string) {
+  const normalizar = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es");
+  const q = normalizar(pregunta);
+  const palabras = q.split(/[^a-z0-9]+/).filter((word) => word.length > 2 && !["que","como","para","con","una","uno","del","las","los","por","quiero","puedo","rhino","comando","comandos","explica","explicame"].includes(word));
+  const preguntaSobreRhino = /\\b(rhino|rhinoceros|comando|comandos|curva|curvas|superficie|superficies|solido|solidos|extruir|anillo|aro|perfil|poligono|circulo|linea|simetria|recortar|unir|barrido|revolucion)\\b/.test(q);
+  if (!preguntaSobreRhino) return null;
+  const scored = COMANDOS.map((item) => {
+    const nombre = normalizar(item.nombre);
+    const texto = normalizar([item.nombre,item.categoria,item.resumen,item.uso,item.pasos.join(" "),item.ejemplo,item.cuidado,item.joyeria].join(" "));
+    const exact = q.includes(nombre) ? 20 : 0;
+    const score = exact + palabras.reduce((total, word) => total + (texto.includes(word) ? (nombre.includes(word) ? 5 : 1) : 0), 0);
+    return { item, score };
+  }).filter((entry) => entry.score > 0).sort((a,b) => b.score-a.score).slice(0,3);
+  if (!scored.length) return "Puedo consultar las fichas didácticas disponibles en nuestra Biblioteca de comandos Rhino. Dime qué necesitas construir o modificar —por ejemplo, dibujar un perfil, crear una superficie, extruir una curva o generar una simetría— y buscaré las herramientas documentadas para orientarte. La biblioteca contiene fichas formativas, no el inventario completo de Rhino.";
+  const fichas = scored.map(({item}) => `**${item.nombre}** · ${item.categoria}\n${item.resumen}\n**Cuándo utilizarlo:** ${item.uso}\n**Procedimiento:** ${item.pasos.join(" ")}\n**Ejemplo en joyería:** ${item.joyeria}\n**Precaución:** ${item.cuidado}`).join("\n\n");
+  return `He consultado la Biblioteca didáctica de comandos Rhino de FADILAB. Estas fichas corresponden al contenido formativo disponible:\n\n${fichas}\n\nLos pasos pueden variar según las opciones y la versión instalada. Practica primero en un archivo de prueba y revisa las indicaciones de la línea de comandos de Rhino.`;
 }
 
 function generarRespuestaTutorLocal(pregunta: string, contexto: string) {
@@ -327,6 +346,12 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     setError("");
     setLoading(true);
     try {
+      const respuestaBiblioteca = buscarEnBibliotecaRhino(question);
+      if (respuestaBiblioteca) {
+        setMessages((current) => [...current, { role: "model", text: respuestaBiblioteca }]);
+        speak(textoParaVoz(respuestaBiblioteca));
+        return;
+      }
       if (tutorCurso) {
         const reply = generarRespuestaTutorLocal(question, contextoCurso);
         setMessages((current) => [...current, { role: "model", text: reply }]);
