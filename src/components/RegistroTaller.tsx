@@ -16,6 +16,7 @@ export function RegistroTaller({ className = "" }: Props) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [codigoPais, setCodigoPais] = useState("+51");
   const [form, setForm] = useState({
     nombre: "",
     taller: "",
@@ -40,7 +41,8 @@ export function RegistroTaller({ className = "" }: Props) {
     let tallerCreado = false;
 
     try {
-      const resultado = await registrarTaller({ data: form });
+      const telefonoNormalizado = form.telefono.replace(/\D/g, "");
+      const resultado = await registrarTaller({ data: { ...form, telefono: telefonoNormalizado ? `${codigoPais}${telefonoNormalizado}` : "" } });
       tallerCreado = true;
       registrarEvento("registration_completed", { source: "public_workshop_form" });
       setCorreoEnviado(resultado.correoEnviado === true);
@@ -113,53 +115,89 @@ export function RegistroTaller({ className = "" }: Props) {
               <form onSubmit={registrar} className="mt-7 space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                    Nombre / usuario
+                    Nombre de usuario
                     <span className="relative mt-2 block">
                       <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <input required maxLength={120} autoComplete="username" aria-label="Nombre y usuario de acceso" value={form.nombre} onChange={(e) => setForm((v) => ({ ...v, nombre: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                      <input required maxLength={120} autoComplete="username" aria-label="Nombre de usuario para iniciar sesión" placeholder="Elige tu usuario" value={form.nombre} onChange={(e) => setForm((v) => ({ ...v, nombre: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
-                    <span className="mt-1.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">También será tu usuario para iniciar sesión.</span>
+                    <span className="mt-1.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">Este será tu usuario para iniciar sesión.</span>
+                  </label>
+
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    Contraseña
+                    <span className="relative mt-2 block">
+                      <input required minLength={8} maxLength={128} type={mostrarPassword ? "text" : "password"} autoComplete="new-password" placeholder="Crea una contraseña segura" value={form.password} onChange={(e) => setForm((v) => ({ ...v, password: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-3 pr-10 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                      <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#987400]" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                        {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </span>
+                    <span className="mt-1.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">Mínimo 8 caracteres.</span>
                   </label>
 
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Nombre del taller
                     <span className="relative mt-2 block">
                       <Building2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <input required maxLength={160} value={form.taller} onChange={(e) => setForm((v) => ({ ...v, taller: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                      <input required maxLength={160} placeholder="Ej. Taller Lucas" value={form.taller} onChange={(e) => setForm((v) => ({ ...v, taller: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
 
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                    Correo
+                    Correo electrónico
                     <span className="relative mt-2 block">
                       <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <input required type="email" maxLength={160} autoComplete="email" value={form.email} onChange={(e) => setForm((v) => ({ ...v, email: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                      <input required type="email" maxLength={160} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={form.email} onChange={(e) => setForm((v) => ({ ...v, email: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
 
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 sm:col-span-2">
                     WhatsApp / teléfono
-                    <span className="relative mt-2 block">
-                      <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <input maxLength={30} autoComplete="tel" value={form.telefono} onChange={(e) => setForm((v) => ({ ...v, telefono: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                    <span className="mt-2 flex gap-2">
+                      <span className="relative w-[132px] shrink-0">
+                        <select aria-label="Código telefónico del país" value={codigoPais} onChange={(e) => setCodigoPais(e.target.value)} className="h-full min-h-[46px] w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-7 text-sm font-semibold text-[#17232d] outline-none transition focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25">
+                          <option value="+51">🇵🇪 +51</option>
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+54">🇦🇷 +54</option>
+                          <option value="+591">🇧🇴 +591</option>
+                          <option value="+55">🇧🇷 +55</option>
+                          <option value="+56">🇨🇱 +56</option>
+                          <option value="+57">🇨🇴 +57</option>
+                          <option value="+506">🇨🇷 +506</option>
+                          <option value="+53">🇨🇺 +53</option>
+                          <option value="+593">🇪🇨 +593</option>
+                          <option value="+503">🇸🇻 +503</option>
+                          <option value="+34">🇪🇸 +34</option>
+                          <option value="+1">🇨🇦 +1</option>
+                          <option value="+502">🇬🇹 +502</option>
+                          <option value="+504">🇭🇳 +504</option>
+                          <option value="+52">🇲🇽 +52</option>
+                          <option value="+505">🇳🇮 +505</option>
+                          <option value="+507">🇵🇦 +507</option>
+                          <option value="+595">🇵🇾 +595</option>
+                          <option value="+1">🇵🇷 +1</option>
+                          <option value="+1">🇩🇴 +1</option>
+                          <option value="+598">🇺🇾 +598</option>
+                          <option value="+58">🇻🇪 +58</option>
+                          <option value="+33">🇫🇷 +33</option>
+                          <option value="+49">🇩🇪 +49</option>
+                          <option value="+39">🇮🇹 +39</option>
+                          <option value="+44">🇬🇧 +44</option>
+                          <option value="+81">🇯🇵 +81</option>
+                        </select>
+                      </span>
+                      <span className="relative min-w-0 flex-1">
+                        <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <input type="tel" inputMode="numeric" maxLength={20} autoComplete="tel-national" placeholder="Número sin código de país" value={form.telefono} onChange={(e) => setForm((v) => ({ ...v, telefono: e.target.value.replace(/[^0-9\s()-]/g, "") }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                      </span>
                     </span>
+                    <span className="mt-1.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">Selecciona el prefijo internacional de tu país.</span>
                   </label>
 
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 sm:col-span-2">
                     Ciudad
                     <span className="relative mt-2 block">
                       <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <input maxLength={80} value={form.ciudad} onChange={(e) => setForm((v) => ({ ...v, ciudad: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
-                    </span>
-                  </label>
-
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                    Contraseña
-                    <span className="relative mt-2 block">
-                      <input required minLength={8} maxLength={128} type={mostrarPassword ? "text" : "password"} autoComplete="new-password" value={form.password} onChange={(e) => setForm((v) => ({ ...v, password: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-3 pr-10 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
-                      <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#987400]" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
-                        {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                      </button>
+                      <input maxLength={80} placeholder="Tu ciudad" value={form.ciudad} onChange={(e) => setForm((v) => ({ ...v, ciudad: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
                 </div>
