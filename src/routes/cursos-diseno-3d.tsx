@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { registrarVisitaAfiliado } from "@/lib/aurum-afiliados-referral";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, BookOpen, Bot, CalendarDays, CheckCircle2, Clock3, Gem, GraduationCap,
@@ -82,6 +83,25 @@ const complementos = [
 function CursosDiseno3DPage() {
   const [programaAbierto, setProgramaAbierto] = useState(false);
   const [nivelEscrito, setNivelEscrito] = useState(0);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const codigo = params.get("ref");
+    if (!codigo) return;
+
+    let vigente = true;
+    void registrarVisitaAfiliado(codigo)
+      .catch((error) => console.warn("[afiliados] No se pudo registrar la visita:", error))
+      .finally(() => {
+        if (!vigente) return;
+        params.delete("ref");
+        const query = params.toString();
+        const cleanUrl = window.location.pathname + (query ? `?${query}` : "") + window.location.hash;
+        window.history.replaceState(window.history.state, "", cleanUrl);
+      });
+
+    return () => { vigente = false; };
+  }, []);
 
   useEffect(() => {
     // La escritura es parte visible de la identidad del curso:
