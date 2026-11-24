@@ -429,6 +429,22 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
   const apartado = contexto.match(/Apartado:\s*([^\n]+)/i)?.[1]?.trim() ?? "este apartado";
   const contenido = contexto.split("Contenido de referencia:")[1]?.trim() ?? contexto;
   const extracto = contenido.replace(/\s+/g, " ").slice(0, 900);
+  if (/conoce mas|amplia este apartado|explicacion complementaria/.test(normalizada)) {
+    if (/diseño CAD aplicado a la joyeria/i.test(apartado) || /CAD significa diseño asistido por computadora/i.test(contenido)) {
+      return [
+        "**Conoce más: ¿qué significa CAD y de dónde viene?**",
+        "CAD son las siglas en inglés de **Computer-Aided Design**:",
+        "- **Computer:** computadora.",
+        "- **Aided:** asistido o apoyado.",
+        "- **Design:** diseño.",
+        "En español lo traducimos como **diseño asistido por computadora**. El término describe el uso de programas informáticos como herramientas para crear, revisar y modificar modelos digitales.",
+        "**¿Por qué es importante en joyería?**",
+        "Permite comprobar proporciones, dimensiones, espesores y ubicación de piedras o engastes antes de fabricar la pieza. Por ejemplo, al diseñar un anillo puedes revisar el ancho del aro y la posición de la piedra en el modelo digital antes de pasar a fabricación.",
+        "**Idea esencial:** CAD no diseña por el joyero ni sustituye su oficio; le proporciona herramientas para trabajar con mayor control y precisión."
+      ].join("\\n\\n");
+    }
+    return ["**Conoce más: " + apartado + "**", "**Concepto central**", extracto, "**Relación con la joyería**", "Este contenido ayuda a tomar decisiones durante el diseño digital de una pieza. Identifica qué forma, medida, herramienta o criterio del apartado debes controlar y relaciónalo con una joya concreta antes de continuar.", "**Recuerda**", contenido.split(/[.!?]/).map((parte) => parte.trim()).filter(Boolean).slice(0, 2).join(". ") + "."].join("\\n\\n");
+  }
   if (/pista|ayuda|atascad|no entiendo/.test(normalizada)) {
     return `Vamos paso a paso con **${apartado}**. Primera pista: identifica qué concepto, herramienta o decisión explica el material y para qué se utiliza en el diseño de joyería. Después, intenta relacionarlo con una pieza concreta. ¿Qué parte te está resultando más difícil?`;
   }
