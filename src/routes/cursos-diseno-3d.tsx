@@ -244,6 +244,9 @@ function CursosDiseno3DPage() {
                 <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Cupos limitados</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">Quedan <strong className="rounded-md bg-[#f5e4ad] px-1.5 text-[#7d5818]">8</strong> de 15 cupos</span></span>
               </div>
             </div>
+            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="8 de 15 cupos disponibles">
+              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 8 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
+            </div>
             <div className="mt-5 rounded-xl bg-[#fff9e9] p-5">
               <div className="flex items-start justify-between gap-3">
                 <div><p className="text-xs font-semibold text-[#7a8793]">Precio regular</p><p className="mt-1 text-2xl font-semibold text-[#89939d] line-through">US$ 250</p></div>
@@ -252,9 +255,7 @@ function CursosDiseno3DPage() {
               <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1"><span className="text-sm font-bold text-[#9b762e]">Precio final</span><span className="text-5xl font-bold tracking-tight text-[#1e3042]">US$ 230</span></div>
               <p className="mt-3 inline-flex rounded-full bg-[#e0f5eb] px-3 py-1.5 text-xs font-bold text-[#176b49]">✓ Ahorro: US$ 20 (8 % de descuento)</p>
             </div>
-            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="8 de 15 cupos disponibles">
-              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 8 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
-            </div>
+
             <ul className="mt-5 space-y-3 text-sm text-[#5d7183]">
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Clases online en vivo con docente</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> 10 sesiones guiadas · 20 horas académicas</li>
