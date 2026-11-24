@@ -199,6 +199,7 @@ function AgendaPage() {
   const reservasFiltradas = misReservas.filter((r) => filtro === "todas" || r.estado === filtro);
   const horariosFuturos = (horarios.data ?? []).filter((h) => new Date(h.inicio_at) > new Date());
   const slotsDia = horariosFuturos.filter((h) => new Date(h.inicio_at).toLocaleDateString("en-CA") === fecha);
+  const horariosDiaSeleccionado = horariosFuturos.filter((h) => new Date(h.inicio_at).toLocaleDateString("en-CA") === fechaSeleccionada);
   const diaDisponibilidad = (diasDisponibilidad.data ?? []).find((d) => d.fecha === fechaSeleccionada);
   const diaDisponible = diaDisponibilidad?.disponible === true;
   const diasDisponiblesMap = new Map((diasDisponibilidad.data ?? []).map((d) => [d.fecha, d.disponible]));
@@ -278,6 +279,29 @@ function AgendaPage() {
                 </div>
                 <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={()=>setMostrarFormularioEvento(false)} className="rounded-xl border px-4 py-2.5 text-sm font-semibold">Cancelar</button><button type="button" disabled={crearEvento.isPending} onClick={()=>crearEvento.mutate()} className="rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground disabled:opacity-50">{crearEvento.isPending?"Guardando…":"Guardar evento"}</button></div>
               </div>:null}
+              <section className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="flex items-center gap-2 font-semibold text-emerald-950"><Clock3 className="size-4" /> Horarios disponibles</h3>
+                    <p className="mt-1 text-xs text-emerald-800">Bloques publicados para la fecha seleccionada.</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">{horariosDiaSeleccionado.length} {horariosDiaSeleccionado.length === 1 ? "horario" : "horarios"}</span>
+                </div>
+                {horarios.isLoading ? <p className="mt-3 text-sm text-muted-foreground">Cargando horarios…</p> : horarios.isError ? <p className="mt-3 text-sm text-destructive">No se pudieron consultar los horarios disponibles.</p> : horariosDiaSeleccionado.length > 0 ? (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {horariosDiaSeleccionado.map((h) => (
+                      <div key={h.id} className="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-background px-3 py-2.5">
+                        <span className="font-semibold tabular-nums text-sm">{new Date(h.inicio_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})} – {new Date(h.fin_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</span>
+                        <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-800">Libre</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-3 rounded-lg border border-dashed border-emerald-200 bg-background/70 p-3 text-center text-sm text-muted-foreground">
+                    {diaDisponible ? "Todavía no has publicado horarios para este día. Usa «Administrar horarios» para añadir bloques." : "Este día no está habilitado. Márcalo como disponible para publicar horarios."}
+                  </p>
+                )}
+              </section>
               <div className="mt-5"><h3 className="font-semibold">Actividades del día</h3><div className="mt-3 space-y-2">{(eventos.data||[]).filter(e=>new Date(e.inicio_at).toLocaleDateString("en-CA")===fechaSeleccionada).map(e=><div key={e.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3"><div><p className="font-semibold">{e.titulo} <span className="text-xs font-normal text-muted-foreground">· {tipoEventoLabel[e.tipo]}</span></p><p className="mt-1 text-xs text-muted-foreground">{new Date(e.inicio_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})} – {new Date(e.fin_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</p>{e.descripcion?<p className="mt-1 text-xs text-muted-foreground">{e.descripcion}</p>:null}</div><button type="button" onClick={()=>eliminarEvento.mutate(e.id)} disabled={eliminarEvento.isPending} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /> Eliminar</button></div>)}{(reservas.data||[]).filter(r=>new Date(r.inicio_at).toLocaleDateString("en-CA")===fechaSeleccionada&&(r.estado==="pendiente"||r.estado==="confirmada")).map(r=><div key={r.id} className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900"><p className="font-semibold">Asesoría · {r.solicitante_nombre} · {estadoLabel[r.estado]}</p><p className="mt-1 text-xs">{fechaHora(r.inicio_at)} · {r.tema}</p></div>)}{!(eventos.data||[]).some(e=>new Date(e.inicio_at).toLocaleDateString("en-CA")===fechaSeleccionada)&&!(reservas.data||[]).some(r=>new Date(r.inicio_at).toLocaleDateString("en-CA")===fechaSeleccionada&&(r.estado==="pendiente"||r.estado==="confirmada"))?<p className="rounded-xl border border-dashed p-5 text-center text-sm text-muted-foreground">No hay compromisos registrados para este día.</p>:null}</div></div>
             </div>
             <div className="rounded-2xl border bg-card p-4 shadow-card">
