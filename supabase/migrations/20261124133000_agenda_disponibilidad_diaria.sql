@@ -135,15 +135,8 @@ returns trigger
 language plpgsql
 set search_path = public
 as $
-declare
-  v_fecha date;
-  v_zona text;
 begin
   if new.estado in ('pendiente','confirmada') then
-    select h.inicio_at, h.zona_horaria into v_fecha, v_zona
-    from public.agenda_horarios h
-    where h.id = new.horario_id;
-
     if not exists (
       select 1
       from public.agenda_horarios h
