@@ -79,6 +79,9 @@ function AfiliadosPage() {
   const [importe, setImporte] = useState("50");
   const [metodo, setMetodo] = useState("Transferencia bancaria");
   const [titular, setTitular] = useState("");
+  const [retiroEnRevision, setRetiroEnRevision] = useState<string | null>(null);
+  const [referenciaPago, setReferenciaPago] = useState("");
+  const [observaciones, setObservaciones] = useState("");
 
   const afiliadosQuery = useQuery({
     queryKey: ["aurum-afiliados", esAdmin, sesion?.user?.id, participanteId],
@@ -147,6 +150,29 @@ function AfiliadosPage() {
     onError: (error: any) => toast.error(error?.message ?? "No se pudo registrar la solicitud."),
   });
 
+  const resolverRetiroMutation = useMutation({
+    mutationFn: async ({ retiroId, decision }: { retiroId: string; decision: "pagado" | "rechazado" }) => {
+      if (decision === "pagado" && !referenciaPago.trim()) {
+        throw new Error("Registra la referencia del desembolso antes de marcarlo como pagado.");
+      }
+      const { error } = await (supabase as any).rpc("aurum_resolver_retiro_afiliado", {
+        _retiro_id: retiroId,
+        _decision: decision,
+        _referencia_pago: decision === "pagado" ? referenciaPago.trim() : null,
+        _observaciones: observaciones.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Solicitud de retiro actualizada.");
+      setRetiroEnRevision(null);
+      setReferenciaPago("");
+      setObservaciones("");
+      await queryClient.invalidateQueries({ queryKey: ["aurum-afiliados-actividad"] });
+    },
+    onError: (error: any) => toast.error(error?.message ?? "No se pudo resolver el retiro."),
+  });
+
   const actividad = actividadQuery.data ?? { movimientos: [], referidos: [], comisiones: [], retiros: [], pagos: [] };
   const movimientos = actividad.movimientos;
   const saldo = movimientos.reduce((sum: number, item: any) => sum + Number(item.importe_pen ?? 0), 0);
@@ -157,7 +183,7 @@ function AfiliadosPage() {
     : actividad.comisiones.filter((item: any) => item.estado !== "revertida").length;
   const afiliadoActivo = afiliados.find((item: any) => item.estado === "activo") ?? null;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://tallerdeljoyero.com";
-  const referralUrl = afiliadoActivo?.codigo ? `${baseUrl}/r/${afiliadoActivo.codigo}` : "";
+  const referralUrl = afiliadoActivo?.codigo ? `${baseUrl}/cursos-diseno-3d?ref=${encodeURIComponent(afiliadoActivo.codigo)}` : "";
   const retirosPendientes = actividad.retiros.filter((r: any) => ["solicitado", "pendiente", "pendiente_aprobacion"].includes(r.estado));
   const saldoDisponible = Math.max(0, saldo);
   const resumenAdmin = useMemo(() => ({
@@ -221,7 +247,7 @@ function AfiliadosPage() {
               </div>
               <div className="rounded-2xl border border-border bg-card p-5">
                 <div className="mb-4 flex items-center justify-between"><div><h2 className="font-semibold">Solicitudes de retiro</h2><p className="text-xs text-muted-foreground">Aprobación y desembolso manual</p></div><Banknote className="size-5 text-primary" /></div>
-                {actividad.retiros.length ? <div className="space-y-3">{actividad.retiros.slice(0, 8).map((r: any) => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"><div><p className="font-semibold">{money(r.importe_pen)}</p><p className="text-xs text-muted-foreground">{r.metodo_pago ?? "Método no indicado"} · {dateLabel(r.created_at)}</p></div><StatusPill value={r.estado} /></div>)}</div> : <EmptyState title="Sin solicitudes" detail="Las solicitudes de retiro aparecerán aquí para su revisión." />}
+                {actividad.retiros.length ? <div className="space-y-3">{actividad.retiros.slice(0, 8).map((r: any) => <div key={r.id} className="rounded-xl border border-border p-3"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-semibold">{money(r.importe_pen)}</p><p className="text-xs text-muted-foreground">{r.metodo_pago ?? "Método no indicado"} · {dateLabel(r.created_at)}</p><p className="mt-1 text-xs text-muted-foreground">Titular: {r.titular_pago ?? "—"}</p></div><StatusPill value={r.estado} /></div>{r.estado === "solicitado" ? <div className="mt-3 border-t border-border pt-3"><button type="button" onClick={() => { setRetiroEnRevision(retiroEnRevision === r.id ? null : r.id); setReferenciaPago(""); setObservaciones(""); }} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">{retiroEnRevision === r.id ? "Cerrar revisión" : "Resolver solicitud"}</button>{retiroEnRevision === r.id ? <div className="mt-3 grid gap-2"><input value={referenciaPago} onChange={(event) => setReferenciaPago(event.target.value)} placeholder="Referencia del desembolso (obligatoria al pagar)" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /><textarea value={observaciones} onChange={(event) => setObservaciones(event.target.value)} placeholder="Observaciones administrativas (opcional)" rows={2} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /><div className="flex flex-wrap gap-2"><button type="button" disabled={resolverRetiroMutation.isPending} onClick={() => resolverRetiroMutation.mutate({ retiroId: r.id, decision: "pagado" })} className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Registrar pago realizado</button><button type="button" disabled={resolverRetiroMutation.isPending} onClick={() => resolverRetiroMutation.mutate({ retiroId: r.id, decision: "rechazado" })} className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 disabled:opacity-50">Rechazar y liberar saldo</button></div></div> : null}</div> : null}</div>)}</div> : <EmptyState title="Sin solicitudes" detail="Las solicitudes de retiro aparecerán aquí para su revisión." />}
               </div>
             </section>
             <section className="rounded-2xl border border-border bg-card p-5">
@@ -243,7 +269,7 @@ function AfiliadosPage() {
                 <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
                   <div className="rounded-2xl border border-border bg-card p-5">
                     <div className="flex items-center gap-2"><Link2 className="size-5 text-primary" /><h2 className="font-semibold">Tu enlace de recomendación</h2></div>
-                    <p className="mt-2 text-sm text-muted-foreground">Comparte este enlace. La atribución utiliza la primera referencia válida durante 30 días.</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Este enlace abre la página del curso con tu código de campaña. La captura y persistencia automática de la atribución de 30 días requiere todavía conectar el registro de visitas.</p>
                     <div className="mt-4 flex flex-col gap-2 sm:flex-row"><input readOnly value={referralUrl} className="min-w-0 flex-1 rounded-xl border border-border bg-muted/40 px-3 py-3 text-sm" /><button type="button" onClick={copiarEnlace} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"><Copy className="size-4" /> Copiar enlace</button></div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="rounded-full bg-muted px-3 py-1">Código: {afiliadoActivo.codigo}</span><span className="inline-flex items-center gap-1"><BadgeCheck className="size-3.5" /> Afiliación activa</span></div>
                   </div>
