@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
 });
 
-type Horario = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; };
+type Horario = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; invitacion_titulo: string | null; invitacion_descripcion: string | null; invitacion_url: string | null; };
 type DiaDisponibilidad = { fecha: string; disponible: boolean };
 type Evento = { id: string; titulo: string; tipo: "reunion" | "capacitacion" | "evento" | "bloqueo" | "vacaciones" | "otro"; descripcion: string | null; inicio_at: string; fin_at: string; todo_el_dia: boolean; };
 type SolicitudDemo = { id: string; empresa: string; nombre: string; telefono: string; email: string; interes: string; horario_preferido: string | null; estado: "pendiente" | "contactado" | "demo_agendada" | "cerrado"; created_at: string; fecha_reunion_at: string | null; };
@@ -62,6 +62,10 @@ function AgendaPage() {
   const [horarioEditando, setHorarioEditando] = useState<string | null>(null);
   const [horaInicioEdicion, setHoraInicioEdicion] = useState("09:00");
   const [horaFinEdicion, setHoraFinEdicion] = useState("09:30");
+  const [invitacionEditando, setInvitacionEditando] = useState<string | null>(null);
+  const [invitacionTitulo, setInvitacionTitulo] = useState("");
+  const [invitacionDescripcion, setInvitacionDescripcion] = useState("");
+  const [invitacionUrl, setInvitacionUrl] = useState("");
 
   const horarios = useQuery<Horario[]>({
     queryKey: ["agenda-horarios"],
@@ -180,6 +184,23 @@ function AgendaPage() {
       await invalidar();
     },
     onError: (error: Error) => toast.error("No se pudo editar el horario", { description: error.message }),
+  });
+  const guardarInvitacion = useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const titulo = invitacionTitulo.trim();
+      const descripcion = invitacionDescripcion.trim();
+      const url = invitacionUrl.trim();
+      if (titulo && titulo.length < 3) throw new Error("El título debe tener al menos 3 caracteres.");
+      if (titulo && !descripcion) throw new Error("Escribe una descripción para la invitación.");
+      if (url && !/^https:\/\//i.test(url)) throw new Error("El enlace debe comenzar con https://");
+      const { error } = await db.rpc("agenda_guardar_invitacion_horario", {
+        _horario_id: id, _titulo: titulo || null,
+        _descripcion: descripcion || null, _url: url || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => { setInvitacionEditando(null); toast.success("Invitación guardada"); await invalidar(); },
+    onError: (error: Error) => toast.error("No se pudo guardar la invitación", { description: error.message }),
   });
   const eliminarHorarios = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -373,6 +394,16 @@ function AgendaPage() {
                                 </div>
                               </div>
                             ) : null}
+                            <button type="button" onClick={()=>{setInvitacionEditando(invitacionEditando===h.id?null:h.id);setInvitacionTitulo(h.invitacion_titulo??"");setInvitacionDescripcion(h.invitacion_descripcion??"");setInvitacionUrl(h.invitacion_url??"");}} className="mt-2 inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100"><Pencil className="size-3.5"/> {h.invitacion_titulo?"Editar invitación":"Crear invitación"}</button>
+                            {invitacionEditando===h.id ? <div className="mt-2 space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-2.5">
+                              <label className="block text-[11px] font-semibold text-amber-950">Título del evento<input value={invitacionTitulo} onChange={e=>setInvitacionTitulo(e.target.value)} maxLength={120} placeholder="Ej. Presentación del curso CAD 3D" className="mt-1 w-full rounded-md border bg-background px-2.5 py-2 text-xs text-foreground"/></label>
+                              <label className="block text-[11px] font-semibold text-amber-950">Texto de invitación<textarea value={invitacionDescripcion} onChange={e=>setInvitacionDescripcion(e.target.value)} maxLength={1200} rows={3} placeholder="Describe qué podrán conocer y por qué participar…" className="mt-1 w-full resize-y rounded-md border bg-background px-2.5 py-2 text-xs text-foreground"/></label>
+                              <label className="block text-[11px] font-semibold text-amber-950">Enlace de participación<input value={invitacionUrl} onChange={e=>setInvitacionUrl(e.target.value)} maxLength={500} type="url" placeholder="https://discord.gg/…" className="mt-1 w-full rounded-md border bg-background px-2.5 py-2 text-xs text-foreground"/></label>
+                              <div className="flex flex-wrap justify-end gap-2">
+                                <button type="button" onClick={()=>setInvitacionEditando(null)} className="rounded-md border bg-background px-2.5 py-1.5 text-xs font-semibold">Cancelar</button>
+                                <button type="button" disabled={guardarInvitacion.isPending} onClick={()=>guardarInvitacion.mutate({id:h.id})} className="rounded-md bg-amber-700 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50">{guardarInvitacion.isPending?"Guardando…":"Guardar invitación"}</button>
+                              </div>
+                            </div> : null}
                           </div>
                         )}
                       </div>
