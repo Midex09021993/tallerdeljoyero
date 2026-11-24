@@ -58,6 +58,7 @@ function AgendaPage() {
   const [eventoFin, setEventoFin] = useState("10:00");
   const [mostrarFormularioEvento, setMostrarFormularioEvento] = useState(false);
   const [mostrarPublicacionHorarios, setMostrarPublicacionHorarios] = useState(false);
+  const [horariosSeleccionados, setHorariosSeleccionados] = useState<string[]>([]);
 
   const horarios = useQuery<Horario[]>({
     queryKey: ["agenda-horarios"],
@@ -155,6 +156,25 @@ function AgendaPage() {
     },
     onSuccess: async () => { toast.success("Horario publicado"); await invalidar(); },
     onError: (error: Error) => toast.error("No se pudo crear el horario", { description: error.message }),
+  });
+  const eliminarHorarios = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data, error } = await db.rpc("agenda_eliminar_horarios", { _horario_ids: ids });
+      if (error) throw error;
+      return data?.[0] ?? { eliminados: 0, protegidos: ids.length };
+    },
+    onSuccess: async (resultado: { eliminados: number; protegidos: number }) => {
+      setHorariosSeleccionados([]);
+      if (resultado.eliminados > 0 && resultado.protegidos > 0) {
+        toast.success(`${resultado.eliminados} horario(s) eliminado(s)`, { description: `${resultado.protegidos} horario(s) se conservaron porque tienen reservas o demostraciones asociadas.` });
+      } else if (resultado.eliminados > 0) {
+        toast.success(`${resultado.eliminados} horario(s) eliminado(s)`);
+      } else {
+        toast.error("No se eliminaron horarios", { description: "Los bloques seleccionados tienen reservas o demostraciones asociadas." });
+      }
+      await invalidar();
+    },
+    onError: (error: Error) => toast.error("No se pudieron eliminar los horarios", { description: error.message }),
   });
   const crearEvento = useMutation({
     mutationFn: async () => {
@@ -285,17 +305,27 @@ function AgendaPage() {
                     <h3 className="flex items-center gap-2 font-semibold text-emerald-950"><Clock3 className="size-4" /> Horarios disponibles</h3>
                     <p className="mt-1 text-xs text-emerald-800">Bloques publicados para la fecha seleccionada.</p>
                   </div>
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">{horariosDiaSeleccionado.length} {horariosDiaSeleccionado.length === 1 ? "horario" : "horarios"}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">{horariosDiaSeleccionado.length} {horariosDiaSeleccionado.length === 1 ? "horario" : "horarios"}</span>
+                    {horariosDiaSeleccionado.length > 0 ? <button type="button" onClick={() => setHorariosSeleccionados(horariosSeleccionados.length === horariosDiaSeleccionado.length ? [] : horariosDiaSeleccionado.map((h) => h.id))} className="rounded-lg border border-emerald-300 bg-background px-2.5 py-1.5 text-xs font-semibold text-emerald-900">{horariosSeleccionados.length === horariosDiaSeleccionado.length ? "Deseleccionar todos" : "Seleccionar todos"}</button> : null}
+                  </div>
                 </div>
                 {horarios.isLoading ? <p className="mt-3 text-sm text-muted-foreground">Cargando horarios…</p> : horarios.isError ? <p className="mt-3 text-sm text-destructive">No se pudieron consultar los horarios disponibles.</p> : horariosDiaSeleccionado.length > 0 ? (
                   <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {horariosDiaSeleccionado.map((h) => (
-                      <div key={h.id} className="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-background px-3 py-2.5">
-                        <span className="font-semibold tabular-nums text-sm">{new Date(h.inicio_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})} – {new Date(h.fin_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</span>
+                      <label key={h.id} className={"flex cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-2.5 transition "+(horariosSeleccionados.includes(h.id) ? "border-emerald-500 bg-emerald-100/70 ring-1 ring-emerald-400" : "border-emerald-200 bg-background hover:border-emerald-400")}>
+                        <span className="flex items-center gap-2">
+                          <input type="checkbox" checked={horariosSeleccionados.includes(h.id)} onChange={(event) => setHorariosSeleccionados((actuales) => event.target.checked ? [...actuales, h.id] : actuales.filter((id) => id !== h.id))} className="size-4 accent-emerald-600" />
+                          <span className="font-semibold tabular-nums text-sm">{new Date(h.inicio_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})} – {new Date(h.fin_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</span>
+                        </span>
                         <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-800">Libre</span>
-                      </div>
+                      </label>
                     ))}
                   </div>
+                  {horariosSeleccionados.length > 0 ? <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3">
+                    <span className="text-sm font-medium text-rose-900">{horariosSeleccionados.length} horario(s) seleccionado(s)</span>
+                    <button type="button" disabled={eliminarHorarios.isPending} onClick={() => { if (window.confirm(`¿Eliminar ${horariosSeleccionados.length} horario(s) seleccionado(s)? Esta acción no se puede deshacer.`)) eliminarHorarios.mutate(horariosSeleccionados); }} className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"><Trash2 className="size-3.5" /> {eliminarHorarios.isPending ? "Eliminando…" : "Eliminar seleccionados"}</button>
+                  </div> : null}
                 ) : (
                   <p className="mt-3 rounded-lg border border-dashed border-emerald-200 bg-background/70 p-3 text-center text-sm text-muted-foreground">
                     {diaDisponible ? "Todavía no has publicado horarios para este día. Usa «Administrar horarios» para añadir bloques." : "Este día no está habilitado. Márcalo como disponible para publicar horarios."}
