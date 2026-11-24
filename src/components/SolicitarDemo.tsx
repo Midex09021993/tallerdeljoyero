@@ -1,10 +1,12 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, CheckCircle2, Clock3, Gem, Mail, Phone, UserRound, X } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { registrarEvento } from "@/lib/analytics";
 
 type Props = { className?: string };
+type HorarioPublico = { id: string; inicio_at: string; fin_at: string; zona_horaria: string };
+const DISCORD_DEMO_URL = "https://discord.gg/TEjqZUcbg";
 
 const intereses = [
   "AURUM RENDER y diseño 3D",
@@ -22,13 +24,50 @@ export function SolicitarDemo({ className = "" }: Props) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [codigoPais, setCodigoPais] = useState("+51");
+  const [horariosDisponibles, setHorariosDisponibles] = useState<HorarioPublico[]>([]);
+  const [horarioSeleccionado, setHorarioSeleccionado] = useState("");
+  const [cargandoHorarios, setCargandoHorarios] = useState(false);
+  const [errorHorarios, setErrorHorarios] = useState("");
+  const [mesVisible, setMesVisible] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [fechaSeleccionada, setFechaSeleccionada] = useState("");
   const [form, setForm] = useState({ empresa: "", nombre: "", telefono: "", email: "", interes: intereses[4], horario: "", sitio: "" });
+
+  useEffect(() => {
+    if (!abierto) return;
+    let activo = true;
+    setCargandoHorarios(true);
+    setErrorHorarios("");
+    (supabasePublic as any).rpc("agenda_listar_horarios_publicos").then(({ data, error }: { data: HorarioPublico[] | null; error: { message: string } | null }) => {
+      if (!activo) return;
+      if (error) { setErrorHorarios("No pudimos cargar el calendario. Inténtalo nuevamente en unos minutos."); setHorariosDisponibles([]); }
+      else {
+        const disponibles = data ?? [];
+        setHorariosDisponibles(disponibles);
+        if (disponibles[0]?.inicio_at) {
+          const primera = new Date(disponibles[0].inicio_at);
+          setMesVisible(new Date(primera.getFullYear(), primera.getMonth(), 1));
+          setFechaSeleccionada(primera.toLocaleDateString("en-CA"));
+        }
+      }
+    }).catch(() => { if (activo) setErrorHorarios("No pudimos cargar el calendario. Inténtalo nuevamente en unos minutos."); })
+      .finally(() => { if (activo) setCargandoHorarios(false); });
+    return () => { activo = false; };
+  }, [abierto]);
+
+  const fechasConDisponibilidad = useMemo(() => new Set(horariosDisponibles.map(h => new Date(h.inicio_at).toLocaleDateString("en-CA"))), [horariosDisponibles]);
+  const horariosDelDia = useMemo(() => horariosDisponibles.filter(h => new Date(h.inicio_at).toLocaleDateString("en-CA") === fechaSeleccionada), [horariosDisponibles, fechaSeleccionada]);
+  const diasCalendario = useMemo(() => {
+    const inicio = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1);
+    const offset = (inicio.getDay() + 6) % 7;
+    return Array.from({ length: 35 }, (_, i) => new Date(inicio.getFullYear(), inicio.getMonth(), i - offset + 1));
+  }, [mesVisible]);
 
   function cerrar() {
     if (cargando) return;
     setAbierto(false);
     setError("");
     setEnviado(false);
+    setHorarioSeleccionado("");
   }
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
@@ -40,23 +79,18 @@ export function SolicitarDemo({ className = "" }: Props) {
     }
     setCargando(true);
     try {
-      const { error: insertError } = await (supabasePublic as any)
-        .from("solicitudes_demo")
-        .insert({
-          empresa: form.empresa.trim(),
-          nombre: form.nombre.trim(),
-          telefono: form.telefono.trim() ? `${codigoPais}${form.telefono.replace(/\\D/g, "")}` : "",
-          email: form.email.trim().toLowerCase(),
-          interes: form.interes,
-          horario_preferido: form.horario || null,
-          origen: "landing_home",
-        });
+      if (!horarioSeleccionado) throw new Error("Selecciona un día y una hora para tu demostración.");
+      const { error: insertError } = await (supabasePublic as any).rpc("agenda_solicitar_demo_publica", {
+        _horario_id: horarioSeleccionado, _empresa: form.empresa.trim(), _nombre: form.nombre.trim(),
+        _telefono: form.telefono.trim() ? `${codigoPais}${form.telefono.replace(/\\D/g, "")}` : "",
+        _email: form.email.trim().toLowerCase(), _interes: form.interes, _horario_preferido: form.horario || null,
+      });
       if (insertError) throw insertError;
       registrarEvento("demo_request_submitted", { source: "landing_home", interest: form.interes });
       setEnviado(true);
     } catch (err) {
       console.error("[solicitud-demo] No se pudo registrar la solicitud", err);
-      setError("No pudimos enviar tu solicitud. Inténtalo nuevamente o escríbenos por correo.");
+      setError("No pudimos reservar ese horario. Puede que otra persona lo haya elegido; actualiza el calendario e inténtalo nuevamente.");
     } finally {
       setCargando(false);
     }
@@ -64,7 +98,7 @@ export function SolicitarDemo({ className = "" }: Props) {
 
   return (
     <>
-      <button type="button" onClick={() => { setAbierto(true); registrarEvento("demo_request_started", { source: "landing_home" }); }}
+      <button type="button" onClick={() => { setAbierto(true); setHorarioSeleccionado(""); registrarEvento("demo_request_started", { source: "landing_home" }); }}
         className={className || "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-6 py-3 text-sm font-bold text-[#17232d] shadow-lg shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-[#ffdf65] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2"}>
         Solicitar una demostración <ArrowRight className="size-4" />
       </button>
@@ -78,8 +112,9 @@ export function SolicitarDemo({ className = "" }: Props) {
                 <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-[#fff4c4] text-[#987400]"><CheckCircle2 className="size-8" /></span>
                 <p className="mt-5 text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">AURUM LAB · DEMOSTRACIÓN</p>
                 <h2 className="mt-3 text-2xl font-bold text-[#17232d]">¡Solicitud recibida!</h2>
-                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">Gracias por tu interés. Nuestro equipo revisará tus datos para coordinar una demostración personalizada contigo.</p>
-                <button type="button" onClick={cerrar} className="mt-7 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]">Cerrar</button>
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">Tu horario quedó reservado. Te esperamos en Discord para una demostración personalizada de AURUM LAB.</p>
+                <a href={DISCORD_DEMO_URL} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[#5865F2] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#4752c4]">Entrar al Discord de AURUM LAB <ArrowRight className="size-4" /></a>
+                <button type="button" onClick={cerrar} className="mt-3 block w-full py-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800">Cerrar</button>
               </div>
             ) : (
               <>
@@ -89,7 +124,18 @@ export function SolicitarDemo({ className = "" }: Props) {
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Cuéntanos un poco sobre tu taller. Prepararemos un recorrido práctico de 20–30 minutos según lo que necesitas.</p>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] px-3 py-2 text-xs font-medium text-slate-600"><Clock3 className="size-4 text-[#987400]" /> 20–30 min · Sin compromiso</div>
                 </div>
-                <form onSubmit={enviar} className="mt-6 space-y-4">
+                <section className="mt-6 rounded-2xl border border-[#eadca8] bg-[#fffdf7] p-4" aria-label="Calendario de disponibilidad">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div><h3 className="text-sm font-bold text-[#17232d]">Elige el día de tu demostración</h3><p className="mt-1 text-xs text-slate-500">Sesión online de 20–30 minutos por Discord.</p></div>
+                    <div className="flex items-center gap-2"><button type="button" aria-label="Mes anterior" onClick={() => setMesVisible(v => new Date(v.getFullYear(),v.getMonth()-1,1))} className="grid size-8 place-items-center rounded-lg border bg-white">‹</button><span className="min-w-[118px] text-center text-xs font-semibold capitalize">{new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(mesVisible)}</span><button type="button" aria-label="Mes siguiente" onClick={() => setMesVisible(v => new Date(v.getFullYear(),v.getMonth()+1,1))} className="grid size-8 place-items-center rounded-lg border bg-white">›</button></div>
+                  </div>
+                  {cargandoHorarios ? <p className="py-5 text-center text-xs text-slate-500">Consultando disponibilidad…</p> : errorHorarios ? <p role="alert" className="py-4 text-xs text-red-700">{errorHorarios}</p> : horariosDisponibles.length === 0 ? <p className="py-4 text-xs text-slate-500">Todavía no hay horarios publicados. Puedes volver más tarde.</p> : <>
+                    <div className="mt-3 grid grid-cols-7 gap-1">{["L","M","X","J","V","S","D"].map((d,i)=><span key={i} className="py-1 text-center text-[10px] font-bold text-slate-400">{d}</span>)}{diasCalendario.map((dia,i)=>{const key=dia.toLocaleDateString("en-CA");const delMes=dia.getMonth()===mesVisible.getMonth();const disponible=fechasConDisponibilidad.has(key);const seleccionado=key===fechaSeleccionada;return <button key={i} type="button" disabled={!delMes||!disponible} onClick={()=>{setFechaSeleccionada(key);setHorarioSeleccionado("");}} className={"min-h-9 rounded-lg text-xs font-semibold transition "+(seleccionado?"bg-[#e9c65f] text-[#17232d] ring-2 ring-[#c59a18]":disponible?"border border-[#d8c18a] bg-white text-[#6f541e] hover:bg-[#fff3cf]":delMes?"bg-slate-100 text-slate-300":"text-slate-200")}>{dia.getDate()}</button>;})}</div>
+                    <div className="mt-4"><p className="text-xs font-semibold text-slate-700">Horarios disponibles {fechaSeleccionada ? "· "+new Intl.DateTimeFormat("es-PE",{dateStyle:"medium"}).format(new Date(fechaSeleccionada+"T12:00:00")) : ""}</p><div className="mt-2 flex flex-wrap gap-2">{horariosDelDia.length?horariosDelDia.map(h=><button key={h.id} type="button" onClick={()=>setHorarioSeleccionado(h.id)} className={"rounded-lg border px-3 py-2 text-xs font-semibold transition "+(horarioSeleccionado===h.id?"border-[#b68b2d] bg-[#fff0c4] text-[#6f541e]":"border-slate-200 bg-white text-slate-600 hover:border-[#d5b45f]")}>{new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.inicio_at))}</button>):<span className="text-xs text-slate-400">Selecciona un día marcado para ver sus horarios.</span>}</div></div>
+                    {horarioSeleccionado?<p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">Horario seleccionado: {new Intl.DateTimeFormat("es-PE",{dateStyle:"full",timeStyle:"short"}).format(new Date(horariosDisponibles.find(h=>h.id===horarioSeleccionado)!.inicio_at))}</p>:null}
+                  </>}
+                </section>
+                <form onSubmit={enviar} className="mt-5 space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Nombre del taller o empresa *
                       <input required maxLength={140} autoComplete="organization" value={form.empresa} onChange={e => setForm(v => ({ ...v, empresa: e.target.value }))} className={inputClass + " mt-1.5"} placeholder="Ej. Joyería Aurora" />
@@ -126,7 +172,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                   {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
                   <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
                     <button type="button" onClick={cerrar} disabled={cargando} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Ahora no</button>
-                    <button type="submit" disabled={cargando} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-6 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffdf65] disabled:cursor-wait disabled:opacity-60">{cargando ? "Enviando solicitud…" : "Solicitar mi demostración"} {!cargando && <ArrowRight className="size-4" />}</button>
+                    <button type="submit" disabled={cargando || !horarioSeleccionado || cargandoHorarios || horariosDisponibles.length===0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-6 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffdf65] disabled:cursor-wait disabled:opacity-60">{cargando ? "Enviando solicitud…" : "Solicitar mi demostración"} {!cargando && <ArrowRight className="size-4" />}</button>
                   </div>
                 </form>
               </>
