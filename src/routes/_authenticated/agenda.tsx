@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
 });
 
-type Horario = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; };
+type Horario = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; };\ntype DiaDisponibilidad = { fecha: string; disponible: boolean };
 type Evento = { id: string; titulo: string; tipo: "reunion" | "capacitacion" | "evento" | "bloqueo" | "vacaciones" | "otro"; descripcion: string | null; inicio_at: string; fin_at: string; todo_el_dia: boolean; };
 type SolicitudDemo = { id: string; empresa: string; nombre: string; telefono: string; email: string; interes: string; horario_preferido: string | null; estado: "pendiente" | "contactado" | "demo_agendada" | "cerrado"; created_at: string; fecha_reunion_at: string | null; };
 type Reserva = {
@@ -69,6 +69,17 @@ function AgendaPage() {
   });
   const inicioMes = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1);
   const finMes = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + 1, 1);
+  const diasDisponibilidad = useQuery<DiaDisponibilidad[]>({
+    queryKey: ["agenda-dias-disponibilidad", mesVisible.getFullYear(), mesVisible.getMonth()],
+    enabled: Boolean(sesion?.user.id && esAdministrador),
+    queryFn: async () => {
+      const desde = [inicioMes.getFullYear(), String(inicioMes.getMonth() + 1).padStart(2, "0"), "01"].join("-");
+      const hasta = [finMes.getFullYear(), String(finMes.getMonth() + 1).padStart(2, "0"), "01"].join("-");
+      const { data, error } = await db.rpc("agenda_listar_dias_disponibilidad", { _desde: desde, _hasta: hasta });
+      if (error) throw error;
+      return (data ?? []) as DiaDisponibilidad[];
+    },
+  });
   const eventos = useQuery<Evento[]>({
     queryKey: ["agenda-eventos", mesVisible.getFullYear(), mesVisible.getMonth()],
     enabled: Boolean(sesion?.user.id && esAdministrador),
@@ -99,7 +110,7 @@ function AgendaPage() {
   });
   const invalidar = async () => {
     await Promise.all([
-      qc.invalidateQueries({ queryKey: ["agenda-horarios"] }),
+      qc.invalidateQueries({ queryKey: ["agenda-horarios"] }),\n      qc.invalidateQueries({ queryKey: ["agenda-dias-disponibilidad"] }),
       qc.invalidateQueries({ queryKey: ["agenda-reservas"] }),
       qc.invalidateQueries({ queryKey: ["agenda-eventos"] }),
       qc.invalidateQueries({ queryKey: ["agenda-solicitudes-demo"] }),
@@ -112,6 +123,24 @@ function AgendaPage() {
     },
     onSuccess: async () => { toast.success("Solicitud enviada", { description: "El administrador revisará tu solicitud y confirmará la asesoría." }); setHorarioSeleccionado(""); setDescripcion(""); await invalidar(); },
     onError: (error: Error) => toast.error("No se pudo reservar", { description: error.message }),
+  });
+  const cambiarDisponibilidadDia = useMutation({
+    mutationFn: async (disponible: boolean) => {
+      const { error } = await db.rpc("agenda_establecer_disponibilidad_dia", {
+        _fecha: fechaSeleccionada,
+        _disponible: disponible,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async (_data, disponible) => {
+      toast.success(disponible ? "Día habilitado" : "Día bloqueado", {
+        description: disponible
+          ? "Ahora puedes publicar horarios para este día."
+          : "No se ofrecerán nuevos horarios de este día. Las reservas existentes se conservan.",
+      });
+      await invalidar();
+    },
+    onError: (error: Error) => toast.error("No se pudo actualizar el día", { description: error.message }),
   });
   const crearHorario = useMutation({
     mutationFn: async () => {
@@ -168,6 +197,9 @@ function AgendaPage() {
   const reservasFiltradas = misReservas.filter((r) => filtro === "todas" || r.estado === filtro);
   const horariosFuturos = (horarios.data ?? []).filter((h) => new Date(h.inicio_at) > new Date());
   const slotsDia = horariosFuturos.filter((h) => new Date(h.inicio_at).toLocaleDateString("en-CA") === fecha);
+  const diaDisponibilidad = (diasDisponibilidad.data ?? []).find((d) => d.fecha === fechaSeleccionada);
+  const diaDisponible = diaDisponibilidad?.disponible === true;
+  const diasDisponiblesMap = new Map((diasDisponibilidad.data ?? []).map((d) => [d.fecha, d.disponible]));
 
   return (
     <AppShell titulo="Agenda" subtitulo="Reserva y administra asesorías de AURUM LAB" atrasMovil={{ to: "/inicio" }}>
@@ -213,14 +245,23 @@ function AgendaPage() {
                   const selected=key===fechaSeleccionada;
                   const ev=(eventos.data||[]).filter(e=>new Date(e.inicio_at).toLocaleDateString("en-CA")===key);
                   const rs=(reservas.data||[]).filter(r=>new Date(r.inicio_at).toLocaleDateString("en-CA")===key&&(r.estado==="pendiente"||r.estado==="confirmada"));
-                  const demos=(solicitudesDemo.data||[]).filter(d=>d.fecha_reunion_at&&new Date(d.fecha_reunion_at).toLocaleDateString("en-CA")===key);
+                  const demos=(solicitudesDemo.data||[]).filter(d=>d.fecha_reunion_at&&new Date(d.fecha_reunion_at).toLocaleDateString("en-CA")===key);\n                  const habilitado=diasDisponiblesMap.get(key)===true;
                   return <button key={key} type="button" onClick={()=>{setFechaSeleccionada(key);setMostrarFormularioEvento(false);}} className={"min-h-[52px] rounded-lg border p-1.5 text-left transition sm:min-h-[60px] sm:rounded-xl sm:p-2 lg:min-h-[68px] "+(selected?"border-gold bg-gold/10 ring-1 ring-gold/40":inMonth?"border-border bg-background hover:border-gold/50":"border-transparent bg-muted/30 text-muted-foreground/50")}>
-                    <div className="flex items-center justify-between"><span className="text-xs font-semibold sm:text-sm">{dia.getDate()}</span>{ev.length+rs.length+demos.length>0?<span className="text-[10px] text-muted-foreground">{ev.length+rs.length+demos.length}</span>:null}</div>
+                    <div className="flex items-center justify-between"><span className="text-xs font-semibold sm:text-sm">{dia.getDate()}</span>{ev.length+rs.length+demos.length>0?<span className="text-[10px] text-muted-foreground">{ev.length+rs.length+demos.length}</span>:null}</div>\n                    {inMonth?<span className={"mt-1 inline-flex rounded px-1 py-0.5 text-[8px] font-bold sm:text-[9px] "+(habilitado?"bg-emerald-100 text-emerald-800":"bg-slate-100 text-slate-500")}>{habilitado?"Disponible":"No disponible"}</span>:null}
                     <div className="mt-1 space-y-0.5">{ev.slice(0,2).map(e=><span key={e.id} className="block truncate rounded bg-amber-100 px-1 py-0.5 text-[9px] font-semibold text-amber-900">{e.titulo}</span>)}{rs.slice(0,1).map(r=><span key={r.id} className="block truncate rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold text-emerald-900">Asesoría · {r.solicitante_nombre}</span>)}{demos.slice(0,1).map(d=><span key={d.id} className="block truncate rounded bg-indigo-100 px-1 py-0.5 text-[9px] font-semibold text-indigo-900">Demo · {d.empresa}</span>)}</div>
                   </button>;
                 })}
               </div>
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-4"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Día seleccionado</p><p className="mt-1 font-semibold capitalize">{new Intl.DateTimeFormat("es-PE",{dateStyle:"full"}).format(new Date(fechaSeleccionada+"T12:00:00"))}</p></div><button type="button" onClick={()=>setMostrarFormularioEvento(v=>!v)} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground"><Plus className="size-4" /> Agregar evento</button></div>
+              <div className="mt-5 rounded-xl border bg-muted/30 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div><p className="text-xs font-semibold uppercase text-muted-foreground">Día seleccionado</p><p className="mt-1 font-semibold capitalize">{new Intl.DateTimeFormat("es-PE",{dateStyle:"full"}).format(new Date(fechaSeleccionada+"T12:00:00"))}</p><p className="mt-1 text-xs text-muted-foreground">{diasDisponibilidad.isLoading ? "Consultando disponibilidad…" : diaDisponible ? "Este día permite publicar horarios para reservas." : "Este día está cerrado para nuevas reservas."}</p></div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" disabled={cambiarDisponibilidadDia.isPending || diasDisponibilidad.isLoading || fechaSeleccionada < new Date().toLocaleDateString("en-CA")} onClick={()=>cambiarDisponibilidadDia.mutate(true)} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-800 disabled:opacity-50"><CheckCircle2 className="size-4" /> Marcar disponible</button>
+                    <button type="button" disabled={cambiarDisponibilidadDia.isPending || diasDisponibilidad.isLoading || !diaDisponible} onClick={()=>cambiarDisponibilidadDia.mutate(false)} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-800 disabled:opacity-50"><XCircle className="size-4" /> No disponible</button>
+                    <button type="button" onClick={()=>setMostrarFormularioEvento(v=>!v)} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground"><Plus className="size-4" /> Agregar evento</button>
+                  </div>
+                </div>
+              </div>
               {mostrarFormularioEvento?<div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4">
                 <h3 className="font-semibold">Nuevo compromiso de FADILAB</h3><p className="mt-1 text-xs text-muted-foreground">El horario quedará bloqueado para nuevas asesorías mientras dure el evento.</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -241,7 +282,7 @@ function AgendaPage() {
                 <label className="text-xs font-semibold text-muted-foreground">Fecha<input type="date" min={new Date().toLocaleDateString("en-CA")} value={fechaSeleccionada} onChange={e=>setFechaSeleccionada(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
                 <label className="text-xs font-semibold text-muted-foreground">Hora de inicio<input type="time" value={horaInicio} onChange={e=>setHoraInicio(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
                 <label className="text-xs font-semibold text-muted-foreground">Hora de fin<input type="time" value={horaFin} onChange={e=>setHoraFin(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
-                <div className="flex items-end"><button type="button" disabled={crearHorario.isPending} onClick={()=>{setFecha(fechaSeleccionada);crearHorario.mutate();}} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground disabled:opacity-50"><Plus className="size-4" /> Publicar bloque</button></div>
+                <div className="flex items-end"><button type="button" disabled={!diaDisponible || crearHorario.isPending} onClick={()=>{setFecha(fechaSeleccionada);crearHorario.mutate();}} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground disabled:opacity-50"><Plus className="size-4" /> Publicar bloque</button></div>{!diaDisponible?<p className="text-xs text-amber-700 sm:col-span-2 lg:col-span-4">Primero marca el día seleccionado como disponible para publicar horarios.</p>:null}
               </div>:null}
             </div>
           </section>
