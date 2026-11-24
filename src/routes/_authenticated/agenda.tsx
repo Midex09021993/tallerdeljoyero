@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { CalendarDays, Clock3, Video, Plus, CheckCircle2, XCircle, CalendarCheck, UserRound, Building2, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { CalendarDays, Clock3, Video, Plus, CheckCircle2, XCircle, CalendarCheck, UserRound, Building2, RefreshCw, ChevronLeft, ChevronRight, Trash2, Pencil, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +59,9 @@ function AgendaPage() {
   const [mostrarFormularioEvento, setMostrarFormularioEvento] = useState(false);
   const [mostrarPublicacionHorarios, setMostrarPublicacionHorarios] = useState(false);
   const [horariosSeleccionados, setHorariosSeleccionados] = useState<string[]>([]);
+  const [horarioEditando, setHorarioEditando] = useState<string | null>(null);
+  const [horaInicioEdicion, setHoraInicioEdicion] = useState("09:00");
+  const [horaFinEdicion, setHoraFinEdicion] = useState("09:30");
 
   const horarios = useQuery<Horario[]>({
     queryKey: ["agenda-horarios"],
@@ -156,6 +159,27 @@ function AgendaPage() {
     },
     onSuccess: async () => { toast.success("Horario publicado"); await invalidar(); },
     onError: (error: Error) => toast.error("No se pudo crear el horario", { description: error.message }),
+  });
+  const actualizarHorario = useMutation({
+    mutationFn: async ({ id, inicio, fin }: { id: string; inicio: string; fin: string }) => {
+      const inicioAt = new Date(`${fechaSeleccionada}T${inicio}:00`);
+      const finAt = new Date(`${fechaSeleccionada}T${fin}:00`);
+      if (!Number.isFinite(inicioAt.getTime()) || !Number.isFinite(finAt.getTime()) || finAt <= inicioAt || inicioAt <= new Date()) {
+        throw new Error("Selecciona una hora futura y una hora final posterior a la inicial.");
+      }
+      const { error } = await db.rpc("agenda_actualizar_horario", {
+        _horario_id: id,
+        _inicio_at: inicioAt.toISOString(),
+        _fin_at: finAt.toISOString(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setHorarioEditando(null);
+      toast.success("Horario actualizado");
+      await invalidar();
+    },
+    onError: (error: Error) => toast.error("No se pudo editar el horario", { description: error.message }),
   });
   const eliminarHorarios = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -314,13 +338,31 @@ function AgendaPage() {
                   <>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {horariosDiaSeleccionado.map((h) => (
-                      <label key={h.id} className={"flex cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-2.5 transition "+(horariosSeleccionados.includes(h.id) ? "border-emerald-500 bg-emerald-100/70 ring-1 ring-emerald-400" : "border-emerald-200 bg-background hover:border-emerald-400")}>
-                        <span className="flex items-center gap-2">
-                          <input type="checkbox" checked={horariosSeleccionados.includes(h.id)} onChange={(event) => setHorariosSeleccionados((actuales) => event.target.checked ? [...actuales, h.id] : actuales.filter((id) => id !== h.id))} className="size-4 accent-emerald-600" />
-                          <span className="font-semibold tabular-nums text-sm">{new Date(h.inicio_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})} – {new Date(h.fin_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</span>
-                        </span>
-                        <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-800">Libre</span>
-                      </label>
+                      <div key={h.id} className={"rounded-lg border p-2.5 transition "+(horariosSeleccionados.includes(h.id) ? "border-emerald-500 bg-emerald-100/70 ring-1 ring-emerald-400" : "border-emerald-200 bg-background")}>
+                        {horarioEditando === h.id ? (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <label className="text-[11px] font-medium text-muted-foreground">Desde<input type="time" value={horaInicioEdicion} onChange={(event)=>setHoraInicioEdicion(event.target.value)} className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-sm text-foreground"/></label>
+                              <label className="text-[11px] font-medium text-muted-foreground">Hasta<input type="time" value={horaFinEdicion} onChange={(event)=>setHoraFinEdicion(event.target.value)} className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-sm text-foreground"/></label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <button type="button" onClick={()=>setHorarioEditando(null)} className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold"><X className="size-3.5"/> Cancelar</button>
+                              <button type="button" disabled={actualizarHorario.isPending} onClick={()=>actualizarHorario.mutate({id:h.id,inicio:horaInicioEdicion,fin:horaFinEdicion})} className="inline-flex items-center gap-1 rounded-md bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"><Save className="size-3.5"/> {actualizarHorario.isPending?"Guardando…":"Guardar"}</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <label className="flex min-w-0 cursor-pointer items-center gap-2">
+                              <input type="checkbox" checked={horariosSeleccionados.includes(h.id)} onChange={(event) => setHorariosSeleccionados((actuales) => event.target.checked ? [...actuales, h.id] : actuales.filter((id) => id !== h.id))} className="size-4 accent-emerald-600" />
+                              <span className="font-semibold tabular-nums text-sm">{new Date(h.inicio_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})} – {new Date(h.fin_at).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</span>
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-800">Libre</span>
+                              <button type="button" title="Editar horario" aria-label="Editar horario" onClick={()=>{setHorarioEditando(h.id);setHoraInicioEdicion(fechaLocal(new Date(h.inicio_at)).slice(11,16));setHoraFinEdicion(fechaLocal(new Date(h.fin_at)).slice(11,16));setHorariosSeleccionados((actuales)=>actuales.filter((id)=>id!==h.id));}} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-background px-2 py-1.5 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-50"><Pencil className="size-3.5"/> Editar</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                   {horariosSeleccionados.length > 0 ? <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3">
