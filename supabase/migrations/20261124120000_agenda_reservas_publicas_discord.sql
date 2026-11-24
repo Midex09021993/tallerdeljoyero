@@ -84,6 +84,16 @@ begin
     raise exception using errcode = 'P0002', message = 'Ese horario acaba de dejar de estar disponible. Selecciona otro.';
   end if;
 
+  if not exists (
+    select 1
+    from public.agenda_dias_disponibilidad d
+    where d.fecha = (v_horario.inicio_at at time zone v_horario.zona_horaria)::date
+      and d.disponible = true
+  ) then
+    raise exception using errcode = '23514',
+      message = 'Este día ya no está habilitado para nuevas demostraciones.';
+  end if;
+
   if exists (
     select 1 from public.agenda_eventos e
     where e.activo
