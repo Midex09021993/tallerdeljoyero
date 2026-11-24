@@ -124,7 +124,8 @@ export function SolicitarDemo({ className = "" }: Props) {
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Cuéntanos un poco sobre tu taller. Prepararemos un recorrido práctico de 20–30 minutos según lo que necesitas.</p>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] px-3 py-2 text-xs font-medium text-slate-600"><Clock3 className="size-4 text-[#987400]" /> 20–30 min · Sin compromiso</div>
                 </div>
-                <div className="mt-5 grid gap-5 lg:grid-cols-[1.08fr_.92fr] lg:items-start">\n                <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="Calendario de disponibilidad">
+                <div className="mt-5 grid gap-5 lg:grid-cols-[1.08fr_.92fr] lg:items-start">
+                <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="Calendario de disponibilidad">
                   <div className="border-b border-slate-100 bg-gradient-to-r from-[#fffaf0] via-white to-white px-4 py-4 sm:px-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -200,6 +201,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                     <button type="submit" disabled={cargando || !horarioSeleccionado || cargandoHorarios || horariosDisponibles.length===0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-6 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffdf65] disabled:cursor-wait disabled:opacity-60">{cargando ? "Enviando solicitud…" : "Solicitar mi demostración"} {!cargando && <ArrowRight className="size-4" />}</button>
                   </div>
                 </form>
+                </div>
               </>
             )}
           </div>
