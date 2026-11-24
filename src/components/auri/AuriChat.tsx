@@ -441,9 +441,9 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
         "**¿Por qué es importante en joyería?**",
         "Permite comprobar proporciones, dimensiones, espesores y ubicación de piedras o engastes antes de fabricar la pieza. Por ejemplo, al diseñar un anillo puedes revisar el ancho del aro y la posición de la piedra en el modelo digital antes de pasar a fabricación.",
         "**Idea esencial:** CAD no diseña por el joyero ni sustituye su oficio; le proporciona herramientas para trabajar con mayor control y precisión."
-      ].join("\\n\\n");
+      ].join(String.fromCharCode(10, 10));
     }
-    return ["**Conoce más: " + apartado + "**", "**Concepto central**", extracto, "**Relación con la joyería**", "Este contenido ayuda a tomar decisiones durante el diseño digital de una pieza. Identifica qué forma, medida, herramienta o criterio del apartado debes controlar y relaciónalo con una joya concreta antes de continuar.", "**Recuerda**", contenido.split(/[.!?]/).map((parte) => parte.trim()).filter(Boolean).slice(0, 2).join(". ") + "."].join("\\n\\n");
+    return ["**Conoce más: " + apartado + "**", "**Concepto central**", extracto, "**Relación con la joyería**", "Este contenido ayuda a tomar decisiones durante el diseño digital de una pieza. Identifica qué forma, medida, herramienta o criterio del apartado debes controlar y relaciónalo con una joya concreta antes de continuar.", "**Recuerda**", contenido.split(/[.!?]/).map((parte) => parte.trim()).filter(Boolean).slice(0, 2).join(". ") + "."].join(String.fromCharCode(10, 10));
   }
   if (/pista|ayuda|atascad|no entiendo/.test(normalizada)) {
     return `Vamos paso a paso con **${apartado}**. Primera pista: identifica qué concepto, herramienta o decisión explica el material y para qué se utiliza en el diseño de joyería. Después, intenta relacionarlo con una pieza concreta. ¿Qué parte te está resultando más difícil?`;
