@@ -9,7 +9,8 @@ type HorarioPublico = { id: string; inicio_at: string; fin_at: string; zona_hora
 const DISCORD_DEMO_URL = "https://discord.gg/TEjqZUcbg";
 
 const intereses = [
-  "AURUM RENDER y diseño 3D",
+  "AURUM RENDER",
+  "Curso: Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial",
   "Calculadoras y herramientas técnicas",
   "Gestión de clientes, cotizaciones y pedidos",
   "Mi Nube y catálogo digital",
