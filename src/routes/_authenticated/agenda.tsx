@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { CalendarDays, Clock3, Video, Plus, CheckCircle2, XCircle, CalendarCheck, UserRound, Building2, RefreshCw, ChevronLeft, ChevronRight, Trash2, Pencil, Save, X } from "lucide-react";
+import { CalendarDays, Clock3, Video, Plus, CheckCircle2, XCircle, CalendarCheck, UserRound, Building2, RefreshCw, ChevronLeft, ChevronRight, Trash2, Pencil, Save, X, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +66,10 @@ function AgendaPage() {
   const [invitacionTitulo, setInvitacionTitulo] = useState("");
   const [invitacionDescripcion, setInvitacionDescripcion] = useState("");
   const [invitacionUrl, setInvitacionUrl] = useState("");
+  const [busquedaSolicitudes, setBusquedaSolicitudes] = useState("");
+  const [estadoSolicitudes, setEstadoSolicitudes] = useState<"todas" | "pendiente" | "contactado" | "demo_agendada" | "cerrado">("todas");
+  const [paginaSolicitudes, setPaginaSolicitudes] = useState(1);
+  const solicitudesPorPagina = 10;
 
   const horarios = useQuery<Horario[]>({
     queryKey: ["agenda-horarios"],
@@ -267,6 +271,23 @@ function AgendaPage() {
   const horariosDiaSeleccionado = horariosFuturos.filter((h) => new Date(h.inicio_at).toLocaleDateString("en-CA") === fechaSeleccionada);
   const diaDisponibilidad = (diasDisponibilidad.data ?? []).find((d) => d.fecha === fechaSeleccionada);
   const diaDisponible = diaDisponibilidad?.disponible === true;
+  const solicitudesFiltradas = useMemo(() => {
+    const termino = busquedaSolicitudes.trim().toLocaleLowerCase("es");
+    return (solicitudesDemo.data ?? []).filter((d) => {
+      const coincideEstado = estadoSolicitudes === "todas" || d.estado === estadoSolicitudes;
+      const coincideTexto = !termino || [d.empresa, d.nombre, d.email, d.telefono, d.interes]
+        .some((valor) => valor.toLocaleLowerCase("es").includes(termino));
+      return coincideEstado && coincideTexto;
+    });
+  }, [solicitudesDemo.data, busquedaSolicitudes, estadoSolicitudes]);
+  const totalPaginasSolicitudes = Math.max(1, Math.ceil(solicitudesFiltradas.length / solicitudesPorPagina));
+  const solicitudesPagina = solicitudesFiltradas.slice((paginaSolicitudes - 1) * solicitudesPorPagina, paginaSolicitudes * solicitudesPorPagina);
+  const conteoSolicitudes = {
+    pendientes: (solicitudesDemo.data ?? []).filter((d) => d.estado === "pendiente").length,
+    contactados: (solicitudesDemo.data ?? []).filter((d) => d.estado === "contactado").length,
+    coordinados: (solicitudesDemo.data ?? []).filter((d) => d.estado === "demo_agendada").length,
+    cerrados: (solicitudesDemo.data ?? []).filter((d) => d.estado === "cerrado").length,
+  };
   const diasDisponiblesMap = new Map((diasDisponibilidad.data ?? []).map((d) => [d.fecha, d.disponible]));
 
   return (
@@ -281,20 +302,34 @@ function AgendaPage() {
         {esAdministrador ? (
           <>
           <div className="rounded-2xl border border-gold/25 bg-card p-5 shadow-card md:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="flex items-center gap-2 text-xl font-semibold"><UserRound className="size-5 text-gold-deep" /> Solicitudes de demostración</h2><p className="mt-1 text-sm text-muted-foreground">Los formularios enviados desde la página pública aparecen aquí para que FADILAB contacte al interesado y coordine una fecha.</p></div>
-              <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">{(solicitudesDemo.data ?? []).filter(x => x.estado === "pendiente").length} pendientes</span>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div><h2 className="flex items-center gap-2 text-xl font-semibold"><UserRound className="size-5 text-gold-deep" /> Solicitudes de demostración</h2><p className="mt-1 text-sm text-muted-foreground">Bandeja comercial de interesados. Las solicitudes cerradas se conservan en el historial.</p></div>
+              <button type="button" onClick={() => solicitudesDemo.refetch()} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent"><RefreshCw className="size-3.5"/> Actualizar</button>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <button type="button" onClick={() => {setEstadoSolicitudes("pendiente");setPaginaSolicitudes(1);}} className={"rounded-xl border p-3 text-left transition "+(estadoSolicitudes==="pendiente"?"border-amber-400 bg-amber-50":"bg-background hover:bg-accent")}><p className="text-2xl font-semibold tabular-nums text-amber-700">{conteoSolicitudes.pendientes}</p><p className="text-xs text-muted-foreground">Pendientes</p></button>
+              <button type="button" onClick={() => {setEstadoSolicitudes("contactado");setPaginaSolicitudes(1);}} className={"rounded-xl border p-3 text-left transition "+(estadoSolicitudes==="contactado"?"border-sky-400 bg-sky-50":"bg-background hover:bg-accent")}><p className="text-2xl font-semibold tabular-nums text-sky-700">{conteoSolicitudes.contactados}</p><p className="text-xs text-muted-foreground">Contactados</p></button>
+              <button type="button" onClick={() => {setEstadoSolicitudes("demo_agendada");setPaginaSolicitudes(1);}} className={"rounded-xl border p-3 text-left transition "+(estadoSolicitudes==="demo_agendada"?"border-emerald-400 bg-emerald-50":"bg-background hover:bg-accent")}><p className="text-2xl font-semibold tabular-nums text-emerald-700">{conteoSolicitudes.coordinados}</p><p className="text-xs text-muted-foreground">Demo coordinada</p></button>
+              <button type="button" onClick={() => {setEstadoSolicitudes("cerrado");setPaginaSolicitudes(1);}} className={"rounded-xl border p-3 text-left transition "+(estadoSolicitudes==="cerrado"?"border-slate-400 bg-slate-100":"bg-background hover:bg-accent")}><p className="text-2xl font-semibold tabular-nums text-slate-700">{conteoSolicitudes.cerrados}</p><p className="text-xs text-muted-foreground">Cerrados</p></button>
+            </div>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/><input value={busquedaSolicitudes} onChange={(e)=>{setBusquedaSolicitudes(e.target.value);setPaginaSolicitudes(1);}} placeholder="Buscar empresa, persona, correo, teléfono o interés…" className="w-full rounded-lg border bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:border-gold"/></div>
+              <select value={estadoSolicitudes} onChange={(e)=>{setEstadoSolicitudes(e.target.value as typeof estadoSolicitudes);setPaginaSolicitudes(1);}} className="rounded-lg border bg-background px-3 py-2.5 text-sm"><option value="todas">Todos los estados</option><option value="pendiente">Pendientes</option><option value="contactado">Contactados</option><option value="demo_agendada">Demo coordinada</option><option value="cerrado">Cerrados</option></select>
             </div>
             {solicitudesDemo.isLoading ? <p className="py-6 text-center text-sm text-muted-foreground">Cargando solicitudes…</p> : null}
-            {solicitudesDemo.isError ? <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">No se pudieron cargar las solicitudes. Verifica que Lovable haya aplicado la migración SQL de integración con Agenda.</p> : null}
+            {solicitudesDemo.isError ? <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">No se pudieron cargar las solicitudes. Verifica la función SQL agenda_listar_solicitudes_demo.</p> : null}
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {(solicitudesDemo.data ?? []).map((d) => <article key={d.id} className="rounded-xl border bg-background p-4">
+                            {solicitudesPagina.map((d) => <article key={d.id} className="rounded-xl border bg-background p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="font-semibold">{d.empresa}</p><p className="mt-1 text-xs text-muted-foreground">{d.nombre} · {fechaHora(d.created_at)}</p></div><span className={"rounded-full border px-2.5 py-1 text-[11px] font-semibold " + (d.estado === "pendiente" ? "border-amber-300 bg-amber-50 text-amber-800" : d.estado === "contactado" ? "border-sky-300 bg-sky-50 text-sky-800" : "border-emerald-300 bg-emerald-50 text-emerald-800")}>{d.estado === "pendiente" ? "Pendiente" : d.estado === "contactado" ? "Contactado" : "Demo coordinada"}</span></div>
                 <div className="mt-3 space-y-1 text-sm text-muted-foreground"><p>{d.email}</p><p>{d.telefono}</p><p className="pt-1 text-xs">Interés: {d.interes}</p>{d.horario_preferido ? <p className="text-xs">Horario preferido: {d.horario_preferido}</p> : null}{d.fecha_reunion_at ? <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 p-2 text-xs text-indigo-900"><p className="font-semibold">Demostración reservada</p><p>{fechaHora(d.fecha_reunion_at)} · Discord</p><a href="https://discord.gg/TEjqZUcbg" target="_blank" rel="noreferrer" className="mt-1 inline-flex font-semibold underline">Abrir servidor de Discord</a></div> : null}</div>
                 <div className="mt-4 flex flex-wrap gap-2"><a href={"https://wa.me/" + d.telefono.replace(/\D/g, "")} target="_blank" rel="noreferrer" className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">WhatsApp</a><a href={"mailto:" + d.email + "?subject=" + encodeURIComponent("Confirmación de tu demostración de AURUM LAB") + "&body=" + encodeURIComponent("Hola " + d.nombre + ",\n\nTu demostración de AURUM LAB está reservada para " + (d.fecha_reunion_at ? fechaHora(d.fecha_reunion_at) : "la fecha coordinada") + ".\n\nNos reuniremos por Discord: https://discord.gg/TEjqZUcbg\n\nSaludos,\nEquipo AURUM LAB\nfabricaciondigital@hotmail.com")} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">Correo</a>{d.estado === "pendiente" ? <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"contactado"})} className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">Marcar contactado</button> : null}{d.estado !== "demo_agendada" ? <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"demo_agendada"})} className="rounded-lg border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800">Marcar demo coordinada</button> : null}<button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"cerrado"})} className="rounded-lg border px-3 py-2 text-xs font-semibold text-muted-foreground">Cerrar</button></div>
               </article>)}
             </div>
-            {!solicitudesDemo.isLoading && !solicitudesDemo.isError && (solicitudesDemo.data ?? []).length === 0 ? <p className="mt-4 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Todavía no hay solicitudes de demostración. Cuando alguien complete el formulario público, aparecerá aquí.</p> : null}
+            {!solicitudesDemo.isLoading && !solicitudesDemo.isError && solicitudesFiltradas.length===0 ? <p className="mt-4 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">{(solicitudesDemo.data ?? []).length===0 ? "Todavía no hay solicitudes de demostración." : "No hay solicitudes que coincidan con esos filtros."}</p> : null}
+            {!solicitudesDemo.isLoading && !solicitudesDemo.isError && solicitudesFiltradas.length>0 ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+              <p className="text-xs text-muted-foreground">Mostrando {(paginaSolicitudes-1)*solicitudesPorPagina+1}–{Math.min(paginaSolicitudes*solicitudesPorPagina,solicitudesFiltradas.length)} de {solicitudesFiltradas.length} solicitudes</p>
+              <div className="flex items-center gap-2"><button type="button" disabled={paginaSolicitudes===1} onClick={()=>setPaginaSolicitudes(p=>Math.max(1,p-1))} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-40">Anterior</button><span className="text-xs tabular-nums text-muted-foreground">Página {paginaSolicitudes} de {totalPaginasSolicitudes}</span><button type="button" disabled={paginaSolicitudes>=totalPaginasSolicitudes} onClick={()=>setPaginaSolicitudes(p=>Math.min(totalPaginasSolicitudes,p+1))} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-40">Siguiente</button></div>
+            </div> : null}
           </div>
           <section className="space-y-5">
             <div className="rounded-2xl border bg-card p-4 shadow-card md:p-5">
