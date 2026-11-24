@@ -842,22 +842,45 @@ function InicioPublico() {
               <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Encuentra explicaciones sencillas sobre metales, gemas y técnicas de joyería.</p>
               <Link to="/guias" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar todas las guías <ArrowRight className="size-4" /></Link>
             </div>
-            <article data-aurum-reveal className="group overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)] transition hover:border-[#dfbd4b] hover:shadow-[0_16px_36px_rgba(23,35,45,.08)]">
-              <div className="flex items-start gap-4 p-5 sm:p-7">
-                <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]"><Calculator className="size-5" /></span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Metalurgia y materiales · Guía técnica</p>
-                  <h3 className="mt-2 text-xl font-bold leading-snug text-[#17232d] sm:text-2xl">Cómo preparar aleaciones de oro de 18K, 14K y 9K</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">Mira cómo hacer el cálculo paso a paso con un ejemplo de 10 gramos.</p>
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "aleacion-oro" }} className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[#765900] hover:text-[#17232d]">Abrir calculadora <Calculator className="size-3.5" /></Link>
+            <article data-aurum-reveal className="group overflow-hidden rounded-[26px] border border-[#e5dfcf] bg-white shadow-[0_14px_45px_rgba(23,35,45,.07)] transition duration-300 hover:-translate-y-0.5 hover:border-[#d9bd70] hover:shadow-[0_22px_55px_rgba(23,35,45,.11)]">
+              <div className="grid lg:grid-cols-[minmax(0,1.2fr)_minmax(250px,.8fr)]">
+                <div className="relative z-10 p-5 sm:p-7 lg:p-8">
+                  <div className="flex items-center gap-2">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff6d8] to-[#f5e4a8] text-[#8f6b00] shadow-sm"><Gem className="size-5" /></span>
+                    <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Metalurgia y materiales <span className="mx-1 text-[#c9b36e]">/</span> Guía técnica destacada</p>
                   </div>
+                  <h3 className="mt-5 max-w-xl text-2xl font-extrabold leading-[1.13] tracking-tight text-[#17232d] sm:text-3xl">Cómo preparar aleaciones de oro de <span className="text-[#a77d13]">18K, 14K y 9K</span></h3>
+                  <p className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-[15px]">Aprende a preparar tus aleaciones con una explicación paso a paso y ejemplos prácticos en gramos.</p>
+                  <div className="mt-6">
+                    <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "aleacion-oro" }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#b68a24] to-[#d4ad45] px-5 py-3 text-sm font-bold text-white shadow-[0_7px_18px_rgba(166,124,24,.23)] transition hover:-translate-y-0.5 hover:from-[#9e741b] hover:to-[#c39a32] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c69b32] focus-visible:ring-offset-2">Abrir calculadora de aleaciones <ArrowRight className="size-4" /></Link>
+                  </div>
+                  <p className="mt-3 text-[11px] text-slate-400">Herramienta especializada de AURUM LAB · Acceso directo</p>
+                </div>
+                <div className="relative flex min-h-[190px] items-center justify-center overflow-hidden border-t border-[#eee7d5] bg-[radial-gradient(ellipse_at_50%_42%,#fff4c8_0%,#f8f5ec_42%,#f3f5f7_100%)] p-5 sm:min-h-[220px] lg:border-l lg:border-t-0">
+                  <div className="absolute -right-12 -top-16 size-48 rounded-full border border-[#d8bd72]/30" />
+                  <div className="absolute -right-5 -top-9 size-36 rounded-full border border-[#d8bd72]/35" />
+                  <div className="absolute bottom-5 left-6 right-6 h-8 rounded-[50%] bg-[#c5a04a]/10 blur-xl" />
+                  <div className="relative flex w-full max-w-[310px] items-end justify-center gap-3">
+                    <div className="w-[29%]">
+                      <div className="flex h-[76px] items-center justify-center rounded-t-lg border border-[#b88c2b] bg-gradient-to-br from-[#f8e8a5] via-[#d4ad48] to-[#a97919] shadow-[0_12px_18px_rgba(124,91,20,.18)]"><span className="text-lg font-black tracking-tight text-[#fff8dc] drop-shadow">18K</span></div>
+                      <div className="h-3 -skew-x-6 rounded-b-md border-x border-b border-[#a77b24] bg-gradient-to-r from-[#c0922c] via-[#f0d47b] to-[#a77b24]" />
+                    </div>
+                    <div className="w-[29%]">
+                      <div className="flex h-[62px] items-center justify-center rounded-t-lg border border-[#b88c2b] bg-gradient-to-br from-[#f4e4a1] via-[#cba13c] to-[#a97919] shadow-[0_12px_18px_rgba(124,91,20,.16)]"><span className="text-lg font-black tracking-tight text-[#fff8dc] drop-shadow">14K</span></div>
+                      <div className="h-3 -skew-x-6 rounded-b-md border-x border-b border-[#a77b24] bg-gradient-to-r from-[#c0922c] via-[#e8ca69] to-[#a77b24]" />
+                    </div>
+                    <div className="w-[29%]">
+                      <div className="flex h-[49px] items-center justify-center rounded-t-lg border border-[#b88c2b] bg-gradient-to-br from-[#f0dc8d] via-[#bf9631] to-[#956817] shadow-[0_12px_18px_rgba(124,91,20,.14)]"><span className="text-lg font-black tracking-tight text-[#fff8dc] drop-shadow">9K</span></div>
+                      <div className="h-3 -skew-x-6 rounded-b-md border-x border-b border-[#956817] bg-gradient-to-r from-[#aa7d22] via-[#dfbf5b] to-[#956817]" />
+                    </div>
+                  </div>
+                  <span className="absolute bottom-4 right-5 rounded-full border border-white/80 bg-white/75 px-3 py-1 text-[9px] font-bold uppercase tracking-[.18em] text-[#987400] shadow-sm">Oro · Leyes</span>
                 </div>
               </div>
-              <div className="grid gap-3 border-t border-slate-200 bg-white px-5 py-4 text-xs text-slate-600 sm:grid-cols-3 sm:px-7">
+              <div className="grid gap-3 border-t border-slate-100 bg-[#fffefa] px-5 py-4 text-xs text-slate-600 sm:grid-cols-3 sm:px-7">
                 <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Fórmulas explicadas</div>
                 <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Ejemplos en gramos</div>
-                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Herramienta relacionada</div>
+                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Calculadora especializada</div>
               </div>
             </article>
           </div>
