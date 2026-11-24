@@ -19,11 +19,11 @@ const REFUERZOS_SESION_1: Record<number, Refuerzo> = {
 };
 
 function crearRefuerzo(contexto: string): Refuerzo {
-  const sesion = Number(contexto.match(/Sesión\\s+(\\d+)/i)?.[1] ?? 0);
-  const apartado = Number(contexto.match(/Apartado:\\s*(\\d+)/i)?.[1] ?? 0);
+  const sesion = Number(contexto.match(/Sesión\s+(\d+)/i)?.[1] ?? 0);
+  const apartado = Number(contexto.match(/Apartado:\s*(\d+)/i)?.[1] ?? 0);
   if (sesion === 1 && REFUERZOS_SESION_1[apartado]) return REFUERZOS_SESION_1[apartado];
-  const titulo = contexto.match(/Apartado:\\s*([^\\n]+)/i)?.[1]?.replace(/^\\d+\\.\\s*/, "").trim() ?? "Concepto del apartado";
-  const bloques = contexto.split("Contenido de referencia:")[1]?.trim().split("\\n").map((linea) => linea.trim()).filter(Boolean) ?? [];
+  const titulo = contexto.match(/Apartado:\s*([^\n]+)/i)?.[1]?.replace(/^\d+\.\s*/, "").trim() ?? "Concepto del apartado";
+  const bloques = contexto.split("Contenido de referencia:")[1]?.trim().split("\n").map((linea) => linea.trim()).filter(Boolean) ?? [];
   const definicion = bloques[0] ?? "Este apartado desarrolla un concepto del programa de formación.";
   const aplicacion = bloques[1] ?? "Relaciona este concepto con la práctica de diseño y modelado de joyería.";
   return {
