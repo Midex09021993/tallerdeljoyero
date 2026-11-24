@@ -339,7 +339,7 @@ function CursosDiseno3DPage() {
                   { value: "1.500", label: "operaciones comerciales al mes", detail: "Capacidad configurada para tu actividad comercial." },
                   { value: "10 GB", label: "de almacenamiento en Mi Nube", detail: "Conserva archivos y proyectos del taller." },
                   { value: "200", label: "carpetas en Mi Nube", detail: "Clasifica tus trabajos y documentos." },
-                  { value: "250", label: "usos de AURUM RENDER al mes", detail: "Cuota mensual configurada para renderizados." },
+                  { value: "Ilimitado", label: "uso de AURUM RENDER", detail: "Renderiza tus proyectos sin un límite mensual de usos." },
                 ].map((item) => <div key={item.label} className="rounded-xl border border-[#e7e9e9] bg-[#fbfcfd] p-4">
                   <p className="text-2xl font-extrabold tracking-tight text-[#24374a]">{item.value}</p>
                   <p className="mt-1 text-xs font-bold text-[#9a742d]">{item.label}</p>
