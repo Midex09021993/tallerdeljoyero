@@ -4,9 +4,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowUpRight, BadgeCheck, Banknote, Building2, CalendarClock, Copy,
-  ExternalLink, GraduationCap, Link2, RefreshCw, ShieldCheck, Users,
-  Wallet, AlertCircle, Clock3, CheckCircle2,
+  BadgeCheck, Banknote, Copy, GraduationCap, Link2, RefreshCw,
+  ShieldCheck, Users, Wallet, Clock3,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -153,7 +152,9 @@ function AfiliadosPage() {
   const saldo = movimientos.reduce((sum: number, item: any) => sum + Number(item.importe_pen ?? 0), 0);
   const totalComision = actividad.comisiones.reduce((sum: number, item: any) => sum + (item.estado === "revertida" ? 0 : Number(item.importe_pen ?? 0)), 0);
   const totalReferidos = actividad.referidos.length;
-  const conversiones = actividad.pagos.filter((p: any) => ["pagado", "paid"].includes(p.estado)).length;
+  const conversiones = esAdmin
+    ? actividad.pagos.filter((p: any) => ["pagado", "paid"].includes(p.estado)).length
+    : actividad.comisiones.filter((item: any) => item.estado !== "revertida").length;
   const afiliadoActivo = afiliados.find((item: any) => item.estado === "activo") ?? null;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://tallerdeljoyero.com";
   const referralUrl = afiliadoActivo?.codigo ? `${baseUrl}/r/${afiliadoActivo.codigo}` : "";
