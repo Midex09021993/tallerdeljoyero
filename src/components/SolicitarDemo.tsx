@@ -5,7 +5,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { registrarEvento } from "@/lib/analytics";
 
 type Props = { className?: string };
-type HorarioPublico = { id: string; inicio_at: string; fin_at: string; zona_horaria: string };
+type HorarioPublico = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; invitacion_titulo: string | null; invitacion_descripcion: string | null; invitacion_url: string | null };
 const DISCORD_DEMO_URL = "https://discord.gg/TEjqZUcbg";
 
 const intereses = [
@@ -217,11 +217,21 @@ export function SolicitarDemo({ className = "" }: Props) {
                       </div>
                       <button type="button" onClick={()=>setSelectorHorariosAbierto(false)} aria-label="Cerrar horarios" className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="size-5"/></button>
                     </div>
-                    <div className="space-y-2 p-4">
+                    <div className="space-y-3 p-4">
+                      {horariosDelDia.some(h=>h.invitacion_titulo) ? <div className="rounded-xl border border-[#ead69a] bg-gradient-to-br from-[#fff9e9] to-white p-4">
+                        <span className="text-[10px] font-bold uppercase tracking-[.14em] text-[#987400]">Invitación especial</span>
+                        {horariosDelDia.filter(h=>h.invitacion_titulo).map(h=><div key={h.id} className="mt-2">
+                          <h4 className="text-sm font-bold text-[#17232d]">{h.invitacion_titulo}</h4>
+                          {h.invitacion_descripcion ? <p className="mt-1 whitespace-pre-line text-xs leading-5 text-slate-600">{h.invitacion_descripcion}</p> : null}
+                          {h.invitacion_url ? <a href={h.invitacion_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#17232d] px-3 py-2 text-xs font-semibold text-white hover:bg-[#263b4b]">Ver enlace del evento <ArrowRight className="size-3.5"/></a> : null}
+                        </div>)}
+                      </div> : null}
+                      <div className="space-y-2">
                       {horariosDelDia.length ? horariosDelDia.map(h=>{const elegido=horarioSeleccionado===h.id;return <button key={h.id} type="button" aria-pressed={elegido} onClick={()=>{setHorarioSeleccionado(h.id);setSelectorHorariosAbierto(false);}} className={"flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition "+(elegido?"border-[#c59a18] bg-[#fff8df] ring-1 ring-[#c59a18]/25":"border-slate-200 bg-white hover:border-[#d5b45f] hover:bg-[#fffdf6]")}>
                         <span className="flex items-center gap-3"><span className={"grid size-9 place-items-center rounded-lg "+(elegido?"bg-[#f5e4a6] text-[#765900]":"bg-slate-50 text-slate-500")}><Clock3 className="size-4"/></span><span><span className="block text-sm font-bold tabular-nums text-[#17232d]">{new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.inicio_at))} – {new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.fin_at))}</span><span className="mt-0.5 block text-[10px] text-slate-500">Sesión online · 20–30 minutos</span></span></span>
                         <span className={"rounded-full px-2.5 py-1 text-[10px] font-bold "+(elegido?"bg-[#f5e4a6] text-[#765900]":"bg-emerald-50 text-emerald-700")}>{elegido?"Elegido":"Disponible"}</span>
                       </button>;}) : <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">No quedan horarios disponibles para esta fecha.</p>}
+                      </div>
                     </div>
                     <div className="flex justify-end border-t border-slate-100 px-4 py-3"><button type="button" onClick={()=>setSelectorHorariosAbierto(false)} className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50">Cerrar</button></div>
                   </section>
