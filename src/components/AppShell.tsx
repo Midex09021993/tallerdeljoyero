@@ -63,7 +63,8 @@ type Seccion = {
     | "/cursos-formacion"
     | "/aula-formacion"
     | "/servicios-externos"
-    | "/tienda-admin";
+    | "/tienda-admin"
+    | "/afiliados";
   label: string;
   area?: string;
   roles?: Rol[];
@@ -100,6 +101,7 @@ const secciones: Seccion[] = [
   { to: "/cursos-formacion", label: "Cursos y formación", area: "Cursos y formación", icono: BookOpen, grupo: "aprendizaje" },
   { to: "/aula-formacion", label: "Aula de formación", roles: ["dueno", "gerente", "operario"], icono: GraduationCap, grupo: "aprendizaje" },
   { to: "/tienda-admin", label: "Tienda FADILAB", roles: ["dueno", "gerente"], icono: ShoppingBag, grupo: "administracion" },
+  { to: "/afiliados", label: "Afiliados", icono: Users, grupo: "administracion" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
 
@@ -254,6 +256,7 @@ function seccionesVisibles(
     (s) =>
       s.to === "/operario" ||
       s.to === "/agenda" ||
+      s.to === "/afiliados" ||
       (s.to === "/aula-formacion" && (roles.includes("gerente") || roles.includes("operario") || roles.includes("dueno"))) ||
       (s.to === "/servicios-externos" && Boolean(modalidades?.serviciosExternosActivos)),
   );
