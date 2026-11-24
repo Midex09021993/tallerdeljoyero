@@ -134,7 +134,7 @@ create or replace function public.agenda_validar_disponibilidad_reserva()
 returns trigger
 language plpgsql
 set search_path = public
-as $
+as $$
 begin
   if new.estado in ('pendiente','confirmada') then
     if not exists (
@@ -151,7 +151,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists agenda_reservas_validar_disponibilidad on public.agenda_reservas;
 create trigger agenda_reservas_validar_disponibilidad
