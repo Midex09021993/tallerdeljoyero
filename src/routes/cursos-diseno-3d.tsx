@@ -276,12 +276,39 @@ function CursosDiseno3DPage() {
               <p className="mt-3 inline-flex rounded-full bg-[#e0f5eb] px-3 py-1.5 text-xs font-bold text-[#176b49]">✓ Ahorro: US$ 20 (8 % de descuento)</p>
             </div>
 
+            <section className="mt-5 overflow-hidden rounded-2xl border border-[#d9c18a] bg-gradient-to-br from-[#fffaf0] via-white to-[#f3f6f8] p-5" aria-labelledby="bono-profesionalizacion">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Beneficio exclusivo de matrícula</p>
+                  <h3 id="bono-profesionalizacion" className="mt-1 text-xl font-bold leading-tight text-[#24374a]">Bono de Profesionalización AURUM LAB</h3>
+                </div>
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[#ead7a5] bg-[#fff1c9] text-[#98712a]"><Sparkles className="size-5" /></span>
+              </div>
+              <div className="mt-4 flex flex-wrap items-end gap-x-3 gap-y-1">
+                <span className="text-3xl font-extrabold tracking-tight text-[#24374a]">12 meses</span>
+                <span className="pb-1 text-xs font-bold uppercase tracking-wide text-[#98712a]">Plan Profesional incluidos</span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-[#627487]">Al confirmar tu matrícula, recibirás un año del Plan Profesional para llevar la formación a la gestión diaria de tu taller.</p>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {[
+                  "Gestión de clientes y contactos",
+                  "Cotizaciones y seguimiento de pedidos",
+                  "Contratos y ventas",
+                  "Catálogo digital para tus joyas",
+                  "Mi Nube para organizar archivos",
+                  "Mayores capacidades de uso que el Plan Taller",
+                ].map((beneficio) => <div key={beneficio} className="flex items-start gap-2 rounded-lg border border-[#e9e4d9] bg-white/90 px-3 py-2.5 text-xs leading-5 text-[#53677a]"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#a17a2e]" />{beneficio}</div>)}
+              </div>
+              <p className="mt-3 text-[10px] leading-4 text-[#7a8793]">Beneficio personal de 12 meses, activado después de verificar el pago. No incluye renovación automática. Si ya tienes un Plan Profesional activo, el periodo promocional se añadirá al vencimiento vigente.</p>
+            </section>
+
             <ul className="mt-5 space-y-3 text-sm text-[#5d7183]">
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Clases online en vivo con docente</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> 10 sesiones guiadas · 20 horas académicas</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Programa de nivel inicial</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Laboratorios interactivos de práctica</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> AURI Tutor: asistente de IA propio durante tu formación</li>
+              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Bono de Profesionalización: 12 meses del Plan Profesional incluidos</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Registro de cuenta AURUM LAB gratuito</li>
             </ul>
             <Link to="/auth" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105">Crear cuenta e iniciar matrícula · US$ 230 <ArrowRight className="size-4" /></Link>
