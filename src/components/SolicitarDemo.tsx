@@ -59,7 +59,7 @@ export function SolicitarDemo({ className = "" }: Props) {
   const diasCalendario = useMemo(() => {
     const inicio = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1);
     const offset = (inicio.getDay() + 6) % 7;
-    return Array.from({ length: 35 }, (_, i) => new Date(inicio.getFullYear(), inicio.getMonth(), i - offset + 1));
+    return Array.from({ length: 42 }, (_, i) => new Date(inicio.getFullYear(), inicio.getMonth(), i - offset + 1));
   }, [mesVisible]);
 
   function cerrar() {
@@ -82,7 +82,7 @@ export function SolicitarDemo({ className = "" }: Props) {
       if (!horarioSeleccionado) throw new Error("Selecciona un día y una hora para tu demostración.");
       const { error: insertError } = await (supabasePublic as any).rpc("agenda_solicitar_demo_publica", {
         _horario_id: horarioSeleccionado, _empresa: form.empresa.trim(), _nombre: form.nombre.trim(),
-        _telefono: form.telefono.trim() ? `${codigoPais}${form.telefono.replace(/\\D/g, "")}` : "",
+        _telefono: form.telefono.trim() ? `${codigoPais}${form.telefono.replace(/\D/g, "")}` : "",
         _email: form.email.trim().toLowerCase(), _interes: form.interes, _horario_preferido: form.horario || null,
       });
       if (insertError) throw insertError;
