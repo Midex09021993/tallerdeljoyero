@@ -26,6 +26,7 @@ export function SolicitarDemo({ className = "" }: Props) {
   const [codigoPais, setCodigoPais] = useState("+51");
   const [horariosDisponibles, setHorariosDisponibles] = useState<HorarioPublico[]>([]);
   const [horarioSeleccionado, setHorarioSeleccionado] = useState("");
+  const [selectorHorariosAbierto, setSelectorHorariosAbierto] = useState(false);
   const [cargandoHorarios, setCargandoHorarios] = useState(false);
   const [errorHorarios, setErrorHorarios] = useState("");
   const [mesVisible, setMesVisible] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -148,20 +149,19 @@ export function SolicitarDemo({ className = "" }: Props) {
                       </div>
                       <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                         {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map((d,i)=><span key={i} className="pb-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">{d}</span>)}
-                        {diasCalendario.map((dia,i)=>{const key=dia.toLocaleDateString("en-CA");const delMes=dia.getMonth()===mesVisible.getMonth();const disponible=fechasConDisponibilidad.has(key);const seleccionado=key===fechaSeleccionada;const hoy=key===new Date().toLocaleDateString("en-CA");return <button key={i} type="button" disabled={!delMes||!disponible} aria-label={`${dia.getDate()} de ${new Intl.DateTimeFormat("es-PE",{month:"long"}).format(dia)}${disponible?", disponible":", no disponible"}`} aria-pressed={seleccionado} onClick={()=>{setFechaSeleccionada(key);setHorarioSeleccionado("");}} className={"group relative flex min-h-[34px] flex-col items-center justify-center gap-0 rounded-lg border text-[11px] font-semibold transition sm:min-h-[38px] lg:min-h-[34px] "+(seleccionado?"border-[#c59a18] bg-gradient-to-b from-[#f8d976] to-[#edc34d] text-[#17232d] shadow-[0_3px_10px_rgba(197,154,24,.2)] ring-1 ring-[#c59a18]/30":disponible?"border-emerald-100 bg-emerald-50/70 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50":delMes?"border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed":"border-transparent bg-transparent text-slate-200")}>
+                        {diasCalendario.map((dia,i)=>{const key=dia.toLocaleDateString("en-CA");const delMes=dia.getMonth()===mesVisible.getMonth();const disponible=fechasConDisponibilidad.has(key);const seleccionado=key===fechaSeleccionada;const hoy=key===new Date().toLocaleDateString("en-CA");return <button key={i} type="button" disabled={!delMes||!disponible} aria-label={`${dia.getDate()} de ${new Intl.DateTimeFormat("es-PE",{month:"long"}).format(dia)}${disponible?", disponible":", no disponible"}`} aria-pressed={seleccionado} onClick={()=>{setFechaSeleccionada(key);setHorarioSeleccionado("");setSelectorHorariosAbierto(true);}} className={"group relative flex min-h-[34px] flex-col items-center justify-center gap-0 rounded-lg border text-[11px] font-semibold transition sm:min-h-[38px] lg:min-h-[34px] "+(seleccionado?"border-[#c59a18] bg-gradient-to-b from-[#f8d976] to-[#edc34d] text-[#17232d] shadow-[0_3px_10px_rgba(197,154,24,.2)] ring-1 ring-[#c59a18]/30":disponible?"border-emerald-100 bg-emerald-50/70 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50":delMes?"border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed":"border-transparent bg-transparent text-slate-200")}>
                           <span className={"text-sm sm:text-base "+(hoy&&!seleccionado?"underline decoration-2 underline-offset-4 decoration-[#c59a18]":"")}>{dia.getDate()}</span>
                           {disponible?<span className={"size-1.5 rounded-full "+(seleccionado?"bg-[#735500]":"bg-emerald-500")}/>:<span className="h-1.5"/>}
                         </button>;})}
                       </div>
-                      <div className="mt-3 border-t border-slate-100 pt-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div><p className="text-[10px] font-bold uppercase tracking-[.13em] text-slate-400">Horarios disponibles</p><p className="mt-1 text-sm font-bold capitalize text-[#17232d]">{fechaSeleccionada ? new Intl.DateTimeFormat("es-PE",{dateStyle:"full"}).format(new Date(fechaSeleccionada+"T12:00:00")) : "Selecciona una fecha"}</p></div>
-                          {horariosDelDia.length>0?<span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">{horariosDelDia.length} opciones</span>:null}
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[.13em] text-slate-400">Fecha seleccionada</p>
+                          <p className="mt-0.5 truncate text-xs font-semibold capitalize text-[#17232d]">{fechaSeleccionada ? new Intl.DateTimeFormat("es-PE",{dateStyle:"medium"}).format(new Date(fechaSeleccionada+"T12:00:00")) : "Selecciona una fecha"}</p>
                         </div>
-                        <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                          {horariosDelDia.length?horariosDelDia.map(h=>{const seleccionado=horarioSeleccionado===h.id;return <button key={h.id} type="button" aria-pressed={seleccionado} onClick={()=>setHorarioSeleccionado(h.id)} className={"flex items-center justify-between gap-2 rounded-lg border px-2.5 py-2 text-left transition "+(seleccionado?"border-[#c59a18] bg-[#fff8df] shadow-sm ring-1 ring-[#c59a18]/20":"border-slate-200 bg-white hover:border-[#d5b45f] hover:bg-[#fffdf6]")}><span className="flex items-center gap-2.5"><Clock3 className={"size-4 "+(seleccionado?"text-[#987400]":"text-slate-400")}/><span className="text-xs font-bold tabular-nums text-[#17232d]">{new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.inicio_at))} – {new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.fin_at))}</span></span><span className={"rounded-md px-2 py-1 text-[9px] font-bold "+(seleccionado?"bg-[#f5e4a6] text-[#765900]":"bg-emerald-50 text-emerald-700")}>{seleccionado?"Elegido":"Libre"}</span></button>;}) : <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500 sm:col-span-2">Selecciona un día con indicador verde para consultar sus horarios.</p>}
-                        </div>
-                        {horarioSeleccionado?<p className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-800"><CheckCircle2 className="size-4 shrink-0" /> Horario seleccionado: {new Intl.DateTimeFormat("es-PE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(horariosDisponibles.find(h=>h.id===horarioSeleccionado)!.inicio_at))}</p>:null}
+                        <button type="button" disabled={!fechaSeleccionada || horariosDelDia.length===0} onClick={()=>setSelectorHorariosAbierto(true)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[#d9bd69] bg-[#fff9e8] px-3 py-2 text-xs font-bold text-[#765900] transition hover:bg-[#fff1c2] disabled:cursor-not-allowed disabled:opacity-50">
+                          <Clock3 className="size-3.5" /> {horarioSeleccionado ? "Cambiar horario" : "Ver horarios"} {horariosDelDia.length>0 ? `(${horariosDelDia.length})` : ""}
+                        </button>
                       </div>
                     </>}
                   </div>
@@ -206,6 +206,25 @@ export function SolicitarDemo({ className = "" }: Props) {
                   </div>
                 </form>
                 </div>
+                {selectorHorariosAbierto ? <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-[#101820]/55 p-4 backdrop-blur-sm" onMouseDown={(event)=>{if(event.target===event.currentTarget)setSelectorHorariosAbierto(false);}}>
+                  <section role="dialog" aria-modal="true" aria-labelledby="demo-horarios-title" className="w-full max-w-md overflow-hidden rounded-2xl border border-[#eadca8] bg-white shadow-2xl">
+                    <div className="flex items-start justify-between border-b border-slate-100 bg-gradient-to-r from-[#fffaf0] to-white px-5 py-4">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-[.15em] text-[#987400]">AURUM LAB · Agenda</span>
+                        <h3 id="demo-horarios-title" className="mt-1 text-base font-bold text-[#17232d]">Elige tu horario</h3>
+                        <p className="mt-1 text-xs capitalize text-slate-500">{fechaSeleccionada ? new Intl.DateTimeFormat("es-PE",{dateStyle:"full"}).format(new Date(fechaSeleccionada+"T12:00:00")) : ""}</p>
+                      </div>
+                      <button type="button" onClick={()=>setSelectorHorariosAbierto(false)} aria-label="Cerrar horarios" className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="size-5"/></button>
+                    </div>
+                    <div className="space-y-2 p-4">
+                      {horariosDelDia.length ? horariosDelDia.map(h=>{const elegido=horarioSeleccionado===h.id;return <button key={h.id} type="button" aria-pressed={elegido} onClick={()=>{setHorarioSeleccionado(h.id);setSelectorHorariosAbierto(false);}} className={"flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition "+(elegido?"border-[#c59a18] bg-[#fff8df] ring-1 ring-[#c59a18]/25":"border-slate-200 bg-white hover:border-[#d5b45f] hover:bg-[#fffdf6]")}>
+                        <span className="flex items-center gap-3"><span className={"grid size-9 place-items-center rounded-lg "+(elegido?"bg-[#f5e4a6] text-[#765900]":"bg-slate-50 text-slate-500")}><Clock3 className="size-4"/></span><span><span className="block text-sm font-bold tabular-nums text-[#17232d]">{new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.inicio_at))} – {new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.fin_at))}</span><span className="mt-0.5 block text-[10px] text-slate-500">Sesión online · 20–30 minutos</span></span></span>
+                        <span className={"rounded-full px-2.5 py-1 text-[10px] font-bold "+(elegido?"bg-[#f5e4a6] text-[#765900]":"bg-emerald-50 text-emerald-700")}>{elegido?"Elegido":"Disponible"}</span>
+                      </button>;}) : <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">No quedan horarios disponibles para esta fecha.</p>}
+                    </div>
+                    <div className="flex justify-end border-t border-slate-100 px-4 py-3"><button type="button" onClick={()=>setSelectorHorariosAbierto(false)} className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50">Cerrar</button></div>
+                  </section>
+                </div> : null}
               </>
             )}
           </div>
