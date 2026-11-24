@@ -30,6 +30,15 @@ function money(value: unknown) {
   const n = Number(value ?? 0);
   return Number.isFinite(n) ? PEN.format(n) : PEN.format(0);
 }
+function paymentMoney(value: unknown, currency: unknown) {
+  const amount = Number(value ?? 0);
+  const code = String(currency ?? "USD").toUpperCase();
+  try {
+    return new Intl.NumberFormat("es-PE", { style: "currency", currency: code }).format(Number.isFinite(amount) ? amount : 0);
+  } catch {
+    return USD.format(Number.isFinite(amount) ? amount : 0);
+  }
+}
 function dateLabel(value: string | null | undefined) {
   if (!value) return "—";
   const date = new Date(value);
@@ -76,6 +85,28 @@ function AfiliadosPage() {
   const queryClient = useQueryClient();
   const esAdmin = Boolean(sesion?.roles?.some((role) => role === "dueno" || role === "gerente"));
   const participanteId = sesion?.participante?.id ?? sesion?.perfil?.participante_id ?? null;
+  const configuracionQuery = useQuery({
+    queryKey: ["aurum-afiliados-config"],
+    enabled: Boolean(sesion?.user?.id),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("aurum_afiliados_config")
+        .select("precio_curso_usd,comision_pen,retiro_minimo_pen,ventana_atribucion_dias")
+        .eq("id", true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const configuracion = configuracionQuery.data ?? {
+    precio_curso_usd: 230,
+    comision_pen: 50,
+    retiro_minimo_pen: 50,
+    ventana_atribucion_dias: 30,
+  };
+  const retiroMinimo = Number(configuracion.retiro_minimo_pen ?? 50);
+  const comisionPorMatricula = Number(configuracion.comision_pen ?? 50);
+  const precioCursoUsd = Number(configuracion.precio_curso_usd ?? 230);
   const [importe, setImporte] = useState("50");
   const [metodo, setMetodo] = useState("Transferencia bancaria");
   const [titular, setTitular] = useState("");
@@ -131,7 +162,7 @@ function AfiliadosPage() {
       const afiliado = afiliados.find((item: any) => item.estado === "activo");
       if (!afiliado) throw new Error("Necesitas una afiliación activa para solicitar un retiro.");
       const amount = Number(importe);
-      if (!Number.isFinite(amount) || amount < 50) throw new Error("El retiro mínimo es S/50.");
+      if (!Number.isFinite(amount) || amount < retiroMinimo) throw new Error(`El retiro mínimo es ${money(retiroMinimo)}.`);
       if (!titular.trim()) throw new Error("Indica el titular de la cuenta de pago.");
       const { data, error } = await (supabase as any).rpc("aurum_solicitar_retiro_afiliado", {
         _afiliado_id: afiliado.id,
@@ -225,8 +256,8 @@ function AfiliadosPage() {
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur">
               <p className="text-xs text-zinc-300">Comisión por matrícula</p>
-              <p className="mt-1 text-3xl font-semibold">S/50</p>
-              <p className="mt-1 text-xs text-zinc-300">Pago validado · retiro mínimo S/50</p>
+              <p className="mt-1 text-3xl font-semibold">{money(comisionPorMatricula)}</p>
+              <p className="mt-1 text-xs text-zinc-300">Curso: {USD.format(precioCursoUsd)} · retiro mínimo: {money(retiroMinimo)}</p>
             </div>
           </div>
         </header>
@@ -251,7 +282,7 @@ function AfiliadosPage() {
             </section>
             <section className="rounded-2xl border border-border bg-card p-5">
               <div className="mb-4 flex items-center justify-between"><div><h2 className="font-semibold">Pagos atribuidos</h2><p className="text-xs text-muted-foreground">Registros de matrícula asociados a afiliados</p></div><Banknote className="size-5 text-primary" /></div>
-              {actividad.pagos.length ? <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="pb-3">Referencia</th><th className="pb-3">Moneda</th><th className="pb-3">Importe</th><th className="pb-3">Estado</th><th className="pb-3">Fecha</th></tr></thead><tbody>{actividad.pagos.slice(0, 12).map((p: any) => <tr key={p.id} className="border-t border-border"><td className="py-3 font-mono text-xs">{p.referencia_externa ?? p.id?.slice(0, 8) ?? "—"}</td><td className="py-3">{p.moneda ?? "USD"}</td><td className="py-3">{USD.format(Number(p.importe ?? 0))}</td><td className="py-3"><StatusPill value={p.estado} /></td><td className="py-3 text-muted-foreground">{dateLabel(p.creado_en ?? p.created_at)}</td></tr>)}</tbody></table></div> : <EmptyState title="Todavía no hay pagos atribuidos" detail="Los pagos aparecerán después de integrar y validar el checkout del curso." />}
+              {actividad.pagos.length ? <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="pb-3">Referencia</th><th className="pb-3">Moneda</th><th className="pb-3">Importe</th><th className="pb-3">Estado</th><th className="pb-3">Fecha</th></tr></thead><tbody>{actividad.pagos.slice(0, 12).map((p: any) => <tr key={p.id} className="border-t border-border"><td className="py-3 font-mono text-xs">{p.referencia_externa ?? p.id?.slice(0, 8) ?? "—"}</td><td className="py-3">{p.moneda ?? "USD"}</td><td className="py-3">{paymentMoney(p.importe, p.moneda)}</td><td className="py-3"><StatusPill value={p.estado} /></td><td className="py-3 text-muted-foreground">{dateLabel(p.creado_en ?? p.created_at)}</td></tr>)}</tbody></table></div> : <EmptyState title="Todavía no hay pagos atribuidos" detail="Los pagos aparecerán después de integrar y validar el checkout del curso." />}
             </section>
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p className="font-semibold">Control administrativo</p><p className="mt-1">Este panel permite supervisar. La aprobación de afiliaciones y la resolución de retiros se mantienen fuera de línea hasta validar los permisos y las firmas exactas de las funciones administrativas.</p></div>
           </>
@@ -268,19 +299,19 @@ function AfiliadosPage() {
                 <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
                   <div className="rounded-2xl border border-border bg-card p-5">
                     <div className="flex items-center gap-2"><Link2 className="size-5 text-primary" /><h2 className="font-semibold">Tu enlace de recomendación</h2></div>
-                    <p className="mt-2 text-sm text-muted-foreground">Este enlace abre la página del curso con tu código de campaña. La captura y persistencia automática de la atribución de 30 días requiere todavía conectar el registro de visitas.</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Este enlace abre la página del curso con tu código de campaña. La ventana de atribución configurada es de {configuracion.ventana_atribucion_dias} días; el registro de visitas y su persistencia deben quedar conectados al flujo público del curso.</p>
                     <div className="mt-4 flex flex-col gap-2 sm:flex-row"><input readOnly value={referralUrl} className="min-w-0 flex-1 rounded-xl border border-border bg-muted/40 px-3 py-3 text-sm" /><button type="button" onClick={copiarEnlace} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"><Copy className="size-4" /> Copiar enlace</button></div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="rounded-full bg-muted px-3 py-1">Código: {afiliadoActivo.codigo}</span><span className="inline-flex items-center gap-1"><BadgeCheck className="size-3.5" /> Afiliación activa</span></div>
                   </div>
                   <div className="rounded-2xl border border-border bg-card p-5">
                     <h2 className="font-semibold">Solicitar retiro</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">Mínimo S/50. La administración revisa y realiza el pago manualmente.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Mínimo {money(retiroMinimo)}. La administración revisa y realiza el pago manualmente.</p>
                     <form className="mt-4 space-y-3" onSubmit={(event) => { event.preventDefault(); retiroMutation.mutate(); }}>
-                      <label className="block text-xs font-medium">Importe (PEN)<input type="number" min="50" step="0.01" value={importe} onChange={(event) => setImporte(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" /></label>
+                      <label className="block text-xs font-medium">Importe (PEN)<input type="number" min={retiroMinimo} step="0.01" value={importe} onChange={(event) => setImporte(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" /></label>
                       <label className="block text-xs font-medium">Método de pago<select value={metodo} onChange={(event) => setMetodo(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"><option>Transferencia bancaria</option><option>Yape</option><option>Plin</option></select></label>
                       <label className="block text-xs font-medium">Titular de la cuenta<input value={titular} onChange={(event) => setTitular(event.target.value)} required maxLength={120} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" placeholder="Nombre del titular" /></label>
-                      <button disabled={retiroMutation.isPending || saldoDisponible < 50} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">{retiroMutation.isPending ? "Enviando…" : "Solicitar retiro"}</button>
-                      {saldoDisponible < 50 ? <p className="text-xs text-amber-700">Necesitas al menos S/50 de saldo neto para solicitar un retiro.</p> : null}
+                      <button disabled={retiroMutation.isPending || saldoDisponible < retiroMinimo} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">{retiroMutation.isPending ? "Enviando…" : "Solicitar retiro"}</button>
+                      {saldoDisponible < retiroMinimo ? <p className="text-xs text-amber-700">Necesitas al menos {money(retiroMinimo)} de saldo neto para solicitar un retiro.</p> : null}
                     </form>
                   </div>
                 </section>
