@@ -381,19 +381,7 @@ function AgendaPage() {
                               <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-800">Libre</span>
                               <button type="button" title="Editar horario" aria-label="Editar horario" onClick={()=>{setHorarioEditando(h.id);setHoraInicioEdicion(fechaLocal(new Date(h.inicio_at)).slice(11,16));setHoraFinEdicion(fechaLocal(new Date(h.fin_at)).slice(11,16));setHorariosSeleccionados((actuales)=>actuales.filter((id)=>id!==h.id));}} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-background px-2 py-1.5 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-50"><Pencil className="size-3.5"/> Editar</button>
                             </div>
-                            {fechaSeleccionada === "2026-11-24"
-                              && new Date(h.inicio_at).getHours() === 19
-                              && new Date(h.fin_at).getHours() === 22
-                              && new Date(h.inicio_at).getMinutes() === 0
-                              && new Date(h.fin_at).getMinutes() === 0 ? (
-                              <div className="mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2">
-                                <Video className="mt-0.5 size-3.5 shrink-0 text-amber-700" />
-                                <div className="min-w-0">
-                                  <p className="text-[10px] font-bold uppercase tracking-wide text-amber-800">Evento demostrativo · Curso CAD 3D</p>
-                                  <p className="mt-0.5 text-[11px] leading-4 text-amber-900">Presentación especial del curso Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial.</p>
-                                </div>
-                              </div>
-                            ) : null}
+
                             <button type="button" onClick={()=>{setInvitacionEditando(invitacionEditando===h.id?null:h.id);setInvitacionTitulo(h.invitacion_titulo??"");setInvitacionDescripcion(h.invitacion_descripcion??"");setInvitacionUrl(h.invitacion_url??"");}} className="mt-2 inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100"><Pencil className="size-3.5"/> {h.invitacion_titulo?"Editar invitación":"Crear invitación"}</button>
                             {invitacionEditando===h.id ? <div className="mt-2 space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-2.5">
                               <label className="block text-[11px] font-semibold text-amber-950">Título del evento<input value={invitacionTitulo} onChange={e=>setInvitacionTitulo(e.target.value)} maxLength={120} placeholder="Ej. Presentación del curso CAD 3D" className="mt-1 w-full rounded-md border bg-background px-2.5 py-2 text-xs text-foreground"/></label>
