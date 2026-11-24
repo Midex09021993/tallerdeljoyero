@@ -280,7 +280,7 @@ function CursosDiseno3DPage() {
             <section className="mt-5 overflow-hidden rounded-2xl border border-[#d9c18a] bg-gradient-to-br from-[#fffaf0] via-white to-[#f3f6f8] p-5" aria-labelledby="bono-profesionalizacion">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Promoción para los primeros 5 inscritos</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Bono de lanzamiento · 5 beneficiarios</p>
                   <h3 id="bono-profesionalizacion" className="mt-1 text-xl font-bold leading-tight text-[#24374a]">Bono de Profesionalización AURUM LAB</h3>
                 </div>
                 <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[#ead7a5] bg-[#fff1c9] text-[#98712a]"><Sparkles className="size-5" /></span>
@@ -289,7 +289,7 @@ function CursosDiseno3DPage() {
                 <span className="text-3xl font-extrabold tracking-tight text-[#24374a]">12 meses</span>
                 <span className="pb-1 text-xs font-bold uppercase tracking-wide text-[#98712a]">Plan Profesional incluidos</span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-[#627487]">Los primeros cinco alumnos que completen su matrícula reciben un año del Plan Profesional para gestionar y hacer crecer su taller.</p>
+              <p className="mt-2 text-xs leading-5 text-[#627487]">Inscríbete entre los próximos 5 alumnos y recibe 12 meses del Plan Profesional de AURUM LAB sin costo adicional.</p>
               <button type="button" onClick={() => setBonoAbierto(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#d6bd7e] bg-white px-4 text-sm font-bold text-[#76591e] transition hover:bg-[#fff4d7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">
                 Descubrir qué incluye el Plan Profesional <ArrowRight className="size-4" />
               </button>
@@ -324,9 +324,9 @@ function CursosDiseno3DPage() {
               <button type="button" aria-label="Cerrar detalles del Plan Profesional" onClick={() => setBonoAbierto(false)} className="absolute right-4 top-4 grid size-9 place-items-center rounded-full border border-[#e2d8c4] bg-white/90 text-[#526273] transition hover:bg-white"><X className="size-4" /></button>
               <div className="flex flex-col gap-5 pr-10 sm:flex-row sm:items-center sm:justify-between">
                 <div className="max-w-2xl">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#98712a]">Beneficio exclusivo · Primeros 5 inscritos</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#98712a]">Bono de lanzamiento · 5 beneficiarios</p>
                   <h2 id="bono-modal-titulo" className="mt-2 font-display text-3xl font-semibold leading-tight text-[#1d2b39] sm:text-4xl">Un año para profesionalizar tu taller</h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d7183]">Al matricularte en el curso, puedes recibir 12 meses del Plan Profesional de AURUM LAB, sin pagar una suscripción adicional durante ese periodo.</p>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d7183]">Inscríbete entre los próximos 5 alumnos y recibe 12 meses del Plan Profesional de AURUM LAB sin costo adicional.</p>
                 </div>
                 <div className="inline-flex shrink-0 items-center gap-3 self-start rounded-2xl border border-[#e4d2a5] bg-white/90 px-4 py-3 sm:self-center">
                   <span className="grid size-11 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><Sparkles className="size-5" /></span>
