@@ -360,6 +360,19 @@ function AgendaPage() {
                               <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-800">Libre</span>
                               <button type="button" title="Editar horario" aria-label="Editar horario" onClick={()=>{setHorarioEditando(h.id);setHoraInicioEdicion(fechaLocal(new Date(h.inicio_at)).slice(11,16));setHoraFinEdicion(fechaLocal(new Date(h.fin_at)).slice(11,16));setHorariosSeleccionados((actuales)=>actuales.filter((id)=>id!==h.id));}} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-background px-2 py-1.5 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-50"><Pencil className="size-3.5"/> Editar</button>
                             </div>
+                            {fechaSeleccionada === "2026-11-24"
+                              && new Date(h.inicio_at).getHours() === 19
+                              && new Date(h.fin_at).getHours() === 22
+                              && new Date(h.inicio_at).getMinutes() === 0
+                              && new Date(h.fin_at).getMinutes() === 0 ? (
+                              <div className="mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2">
+                                <Video className="mt-0.5 size-3.5 shrink-0 text-amber-700" />
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-bold uppercase tracking-wide text-amber-800">Evento demostrativo · Curso CAD 3D</p>
+                                  <p className="mt-0.5 text-[11px] leading-4 text-amber-900">Presentación especial del curso Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial.</p>
+                                </div>
+                              </div>
+                            ) : null}
                           </div>
                         )}
                       </div>
