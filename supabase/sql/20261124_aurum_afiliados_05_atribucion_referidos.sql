@@ -139,7 +139,7 @@ begin
   end if;
 
   -- Impedir autorreferidos de alumnos y propietarios de talleres.
-  if v_afiliado.user_id = v_user_id then
+  if public.aurum_afiliado_es_propietario(v_afiliado.id) then
     return null;
   end if;
 
@@ -178,6 +178,56 @@ grant execute on function public.aurum_registrar_visita_afiliado(text, text) to 
 
 revoke all on function public.aurum_vincular_referido_afiliado(text) from public, anon;
 grant execute on function public.aurum_vincular_referido_afiliado(text) to authenticated, service_role;
+
+-- Cada pago de matrícula hereda la atribución ya vinculada a la cuenta.
+-- El navegador no puede elegir afiliado_id ni referido_id.
+create or replace function public.aurum_asignar_atribucion_pago_afiliado()
+returns trigger
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+declare
+  v_afiliado_id uuid;
+  v_referido_id uuid;
+begin
+  if new.alumno_user_id is null then
+    return new;
+  end if;
+
+  select a.afiliado_id, a.referido_id
+    into v_afiliado_id, v_referido_id
+  from public.aurum_afiliado_atribuciones a
+  where a.referido_user_id = new.alumno_user_id;
+
+  if not found then
+    return new;
+  end if;
+
+  if new.afiliado_id is not null and new.afiliado_id <> v_afiliado_id then
+    raise exception 'La afiliación del pago no coincide con la atribución registrada.';
+  end if;
+
+  if new.referido_id is not null and new.referido_id <> v_referido_id then
+    raise exception 'El referido del pago no coincide con la atribución registrada.';
+  end if;
+
+  new.afiliado_id := v_afiliado_id;
+  new.referido_id := v_referido_id;
+  return new;
+end;
+$function$;
+
+revoke all on function public.aurum_asignar_atribucion_pago_afiliado() from public, anon, authenticated;
+
+drop trigger if exists trg_aurum_asignar_atribucion_pago_afiliado
+  on public.aurum_formacion_pagos;
+
+create trigger trg_aurum_asignar_atribucion_pago_afiliado
+before insert or update of alumno_user_id
+on public.aurum_formacion_pagos
+for each row
+execute function public.aurum_asignar_atribucion_pago_afiliado();
 
 notify pgrst, 'reload schema';
 
