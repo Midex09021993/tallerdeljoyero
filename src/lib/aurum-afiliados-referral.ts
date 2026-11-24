@@ -52,6 +52,11 @@ export async function registrarVisitaAfiliado(codigo: string): Promise<void> {
     _visitante_hash: visitanteHash,
   });
   if (error) throw error;
+
+  // Si la visita ocurre con una sesión ya iniciada, vincularla sin esperar otro login.
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+  if (sessionData.session?.user) await vincularReferidoPendiente();
 }
 
 /** Vincula la visita guardada a la cuenta autenticada; la RPC es idempotente. */
