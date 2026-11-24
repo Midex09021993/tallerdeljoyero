@@ -46,18 +46,28 @@ function dateLabel(value: string | null | undefined) {
 }
 function statusLabel(value: string | null | undefined) {
   const labels: Record<string, string> = {
-    activo: "Activo", pendiente: "Pendiente", suspendido: "Suspendido",
-    disponible: "Disponible", revertida: "Revertida", solicitado: "Solicitado",
-    solicitado: "Solicitado", pagado: "Pagado", rechazado: "Rechazado",
-    pendiente_aprobacion: "Pendiente de aprobación", pagado: "Pagado",
-    pendiente: "Pendiente", failed: "Fallido", refunded: "Reembolsado",
-    paid: "Pagado", refunded: "Reembolsado", disputed: "En disputa",
+    activo: "Activo",
+    pendiente: "Pendiente",
+    suspendido: "Suspendido",
+    disponible: "Disponible",
+    revertida: "Revertida",
+    solicitado: "Solicitado",
+    pagado: "Pagado",
+    rechazado: "Rechazado",
+    pendiente_aprobacion: "Pendiente de aprobación",
+    fallido: "Fallido",
+    failed: "Fallido",
+    reembolsado: "Reembolsado",
+    refunded: "Reembolsado",
+    paid: "Pagado",
+    disputado: "En disputa",
+    disputed: "En disputa",
   };
   return labels[value ?? ""] ?? value ?? "Sin estado";
 }
 function StatusPill({ value }: { value: string }) {
   const good = ["activo", "disponible", "pagado", "paid"].includes(value);
-  const bad = ["suspendido", "revertida", "rechazado", "refunded", "failed"].includes(value);
+  const bad = ["suspendido", "revertida", "rechazado", "reembolsado", "refunded", "fallido", "failed", "disputado", "disputed"].includes(value);
   return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${good ? "bg-emerald-50 text-emerald-700" : bad ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}>{statusLabel(value)}</span>;
 }
 function Metric({ label, value, detail, icon: Icon }: any) {
