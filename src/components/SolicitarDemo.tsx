@@ -21,6 +21,7 @@ export function SolicitarDemo({ className = "" }: Props) {
   const [enviado, setEnviado] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const [codigoPais, setCodigoPais] = useState("+51");
   const [form, setForm] = useState({ empresa: "", nombre: "", telefono: "", email: "", interes: intereses[4], horario: "", sitio: "" });
 
   function cerrar() {
@@ -44,7 +45,7 @@ export function SolicitarDemo({ className = "" }: Props) {
         .insert({
           empresa: form.empresa.trim(),
           nombre: form.nombre.trim(),
-          telefono: form.telefono.trim(),
+          telefono: form.telefono.trim() ? `${codigoPais}${form.telefono.replace(/\\D/g, "")}` : "",
           email: form.email.trim().toLowerCase(),
           interes: form.interes,
           horario_preferido: form.horario || null,
@@ -97,7 +98,12 @@ export function SolicitarDemo({ className = "" }: Props) {
                       <span className="relative mt-1.5 block"><UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required maxLength={120} autoComplete="name" value={form.nombre} onChange={e => setForm(v => ({ ...v, nombre: e.target.value }))} className={inputClass + " pl-10"} placeholder="Tu nombre" /></span>
                     </label>
                     <label className="text-xs font-semibold text-slate-700">Teléfono / WhatsApp *
-                      <span className="relative mt-1.5 block"><Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required type="tel" maxLength={30} autoComplete="tel" value={form.telefono} onChange={e => setForm(v => ({ ...v, telefono: e.target.value }))} className={inputClass + " pl-10"} placeholder="+51 999 999 999" /></span>
+                      <span className="mt-1.5 flex gap-2">
+                        <select aria-label="Código telefónico del país" value={codigoPais} onChange={e => setCodigoPais(e.target.value)} className="min-h-[46px] w-[116px] shrink-0 rounded-xl border border-slate-200 bg-white px-2 text-sm font-semibold text-[#17232d] outline-none transition focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25">
+                          <option value="+51">🇵🇪 +51</option><option value="+1">🇺🇸 +1</option><option value="+54">🇦🇷 +54</option><option value="+591">🇧🇴 +591</option><option value="+55">🇧🇷 +55</option><option value="+56">🇨🇱 +56</option><option value="+57">🇨🇴 +57</option><option value="+506">🇨🇷 +506</option><option value="+53">🇨🇺 +53</option><option value="+593">🇪🇨 +593</option><option value="+503">🇸🇻 +503</option><option value="+34">🇪🇸 +34</option><option value="+502">🇬🇹 +502</option><option value="+504">🇭🇳 +504</option><option value="+52">🇲🇽 +52</option><option value="+505">🇳🇮 +505</option><option value="+507">🇵🇦 +507</option><option value="+595">🇵🇾 +595</option><option value="+1">🇩🇴 +1</option><option value="+598">🇺🇾 +598</option><option value="+58">🇻🇪 +58</option><option value="+49">🇩🇪 +49</option><option value="+33">🇫🇷 +33</option><option value="+39">🇮🇹 +39</option><option value="+44">🇬🇧 +44</option><option value="+81">🇯🇵 +81</option>
+                        </select>
+                        <span className="relative min-w-0 flex-1"><Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required type="tel" inputMode="numeric" maxLength={20} autoComplete="tel-national" value={form.telefono} onChange={e => setForm(v => ({ ...v, telefono: e.target.value.replace(/[^0-9\\s()-]/g, "") }))} className={inputClass + " pl-10"} placeholder="Número de WhatsApp" /></span>
+                      </span>
                     </label>
                     <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Correo electrónico *
                       <span className="relative mt-1.5 block"><Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required type="email" maxLength={160} autoComplete="email" value={form.email} onChange={e => setForm(v => ({ ...v, email: e.target.value }))} className={inputClass + " pl-10"} placeholder="tu@correo.com" /></span>
