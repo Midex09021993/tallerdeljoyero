@@ -240,6 +240,7 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
     { label: "Dame una pista", prompt: "Dame una pista progresiva para resolver la práctica, sin darme la solución completa.", icon: Sparkles },
     { label: "Comprueba lo aprendido", prompt: "Hazme tres preguntas breves para comprobar si comprendí este apartado.", icon: Gem },
     { label: "Consultar comandos Rhino", prompt: "Consulta el inventario maestro de comandos de Rhino 7. Muéstrame cómo buscar un comando y dime qué fichas didácticas tienen explicación.", icon: BookOpen },
+    { label: "Conoce más", prompt: "Amplía este apartado con una explicación complementaria: desarrolla el concepto clave, explica por qué es importante en el diseño de joyería, añade un ejemplo práctico y termina con una idea esencial para recordar. Utiliza el contenido de este apartado como fuente y no te desvíes a otros temas.", icon: Sparkles },
   ];
   const llamarInterno = useServerFn(auriInterno);
   const llamarDirecto = useServerFn(auriDirecto);
