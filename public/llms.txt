@@ -12,6 +12,16 @@ El contenido público está dirigido a joyeros, talleres, diseñadores y profesi
 
 - [Herramientas públicas](https://www.tallerdeljoyero.com/herramientas-publicas): índice de calculadoras y utilidades técnicas disponibles sin iniciar sesión.
 - [Cálculo de aleaciones de oro](https://www.tallerdeljoyero.com/herramientas-publicas/aleacion-oro): herramienta para calcular proporciones de aleación según la ley del oro.
+
+### Ficha de referencia: calculadora de aleación de oro
+- URL: https://www.tallerdeljoyero.com/herramientas-publicas/aleacion-oro
+- Propósito: estimar la cantidad de metal de liga que debe añadirse para ajustar la ley de una masa de oro a una ley objetivo.
+- Público: joyeros, orfebres, talleres de fabricación y estudiantes de metalurgia aplicada a joyería.
+- Datos de cálculo: peso inicial, ley inicial, ley final y receta de color disponible en la herramienta.
+- Relación teórica de balance de masa, cuando se añade liga sin oro y se conserva el oro fino: peso final = peso inicial × ley inicial ÷ ley final; liga a añadir = peso final − peso inicial. Las dos leyes deben expresarse en la misma unidad.
+- Ejemplo matemático: 10 g de oro de 24K ajustados a 18K dan una masa final teórica de 13,33 g y requieren aproximadamente 3,33 g de liga sin oro.
+- Límites: el resultado es una estimación teórica. La ley real del material, la composición específica de la liga, las pérdidas de proceso y la ficha técnica del proveedor pueden cambiar el resultado práctico. La distribución por color depende de las recetas configuradas en la calculadora.
+- Guía técnica relacionada: https://www.tallerdeljoyero.com/guias/calcular-aleaciones-oro-18k-14k-9k
 - [Peso de joyas 3D](https://www.tallerdeljoyero.com/herramientas-publicas/peso-joya-3d): estimación de peso de modelos tridimensionales.
 - [Cálculo de yeso y agua](https://www.tallerdeljoyero.com/herramientas-publicas/yeso-agua): apoyo para calcular proporciones de revestimiento.
 - [Conversión de tallas de anillos](https://www.tallerdeljoyero.com/herramientas-publicas/tallas-anillos): consulta de equivalencias de tallas.
