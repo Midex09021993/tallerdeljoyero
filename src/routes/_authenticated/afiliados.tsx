@@ -184,7 +184,6 @@ function AfiliadosPage() {
   const afiliadoActivo = afiliados.find((item: any) => item.estado === "activo") ?? null;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://tallerdeljoyero.com";
   const referralUrl = afiliadoActivo?.codigo ? `${baseUrl}/cursos-diseno-3d?ref=${encodeURIComponent(afiliadoActivo.codigo)}` : "";
-  const retirosPendientes = actividad.retiros.filter((r: any) => ["solicitado", "pendiente", "pendiente_aprobacion"].includes(r.estado));
   const saldoDisponible = Math.max(0, saldo);
   const resumenAdmin = useMemo(() => ({
     activos: afiliados.filter((a: any) => a.estado === "activo").length,
