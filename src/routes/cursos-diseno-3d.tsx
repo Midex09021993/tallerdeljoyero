@@ -318,45 +318,53 @@ function CursosDiseno3DPage() {
         </div>
       </section>
       {bonoAbierto && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[#142333]/65 p-3 backdrop-blur-sm sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setBonoAbierto(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="bono-modal-titulo" className="relative my-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-[#e4d5ad] bg-white shadow-[0_28px_90px_rgba(10,20,30,.32)]">
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#fff7df] via-white to-[#eaf0f5] px-6 pb-6 pt-7 sm:px-8">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[#142333]/65 p-3 backdrop-blur-sm sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) setBonoAbierto(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="bono-modal-titulo" className="relative my-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-[#e4d5ad] bg-white shadow-[0_28px_90px_rgba(10,20,30,.32)]">
+            <div className="relative bg-gradient-to-r from-[#fff7df] via-white to-[#eaf0f5] px-5 py-5 sm:px-8 sm:py-6">
               <button type="button" aria-label="Cerrar detalles del Plan Profesional" onClick={() => setBonoAbierto(false)} className="absolute right-4 top-4 grid size-9 place-items-center rounded-full border border-[#e2d8c4] bg-white/90 text-[#526273] transition hover:bg-white"><X className="size-4" /></button>
-              <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#98712a]">Beneficio exclusivo · Primeros 5 inscritos</p>
-              <h2 id="bono-modal-titulo" className="mt-2 max-w-lg font-display text-3xl font-semibold leading-tight text-[#1d2b39] sm:text-4xl">Un año para profesionalizar tu taller</h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-[#5d7183]">Al matricularte en el curso, puedes recibir 12 meses del Plan Profesional de AURUM LAB, sin pagar una suscripción adicional durante ese periodo.</p>
-              <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-[#e4d2a5] bg-white/90 px-4 py-3">
-                <span className="grid size-11 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><Sparkles className="size-5" /></span>
-                <span><span className="block text-2xl font-extrabold text-[#24374a]">12 meses</span><span className="block text-[10px] font-bold uppercase tracking-wider text-[#98712a]">Plan Profesional incluidos</span></span>
+              <div className="flex flex-col gap-5 pr-10 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#98712a]">Beneficio exclusivo · Primeros 5 inscritos</p>
+                  <h2 id="bono-modal-titulo" className="mt-2 font-display text-3xl font-semibold leading-tight text-[#1d2b39] sm:text-4xl">Un año para profesionalizar tu taller</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d7183]">Al matricularte en el curso, puedes recibir 12 meses del Plan Profesional de AURUM LAB, sin pagar una suscripción adicional durante ese periodo.</p>
+                </div>
+                <div className="inline-flex shrink-0 items-center gap-3 self-start rounded-2xl border border-[#e4d2a5] bg-white/90 px-4 py-3 sm:self-center">
+                  <span className="grid size-11 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><Sparkles className="size-5" /></span>
+                  <span><span className="block text-2xl font-extrabold text-[#24374a]">12 meses</span><span className="block text-[10px] font-bold uppercase tracking-wider text-[#98712a]">Plan Profesional incluidos</span></span>
+                </div>
               </div>
             </div>
-            <div className="px-6 py-6 sm:px-8">
-              <h3 className="text-base font-bold text-[#24374a]">¿Qué capacidad tendrás?</h3>
-              <p className="mt-1 text-xs leading-5 text-[#738397]">Capacidades definidas para el Plan Profesional en AURUM LAB.</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="px-5 py-5 sm:px-8 sm:py-6">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-bold text-[#24374a]">Toda esta capacidad para tu taller</h3>
+                  <p className="mt-1 text-xs text-[#738397]">Recursos incluidos en el Plan Profesional.</p>
+                </div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#98712a]">5 capacidades clave</span>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
                 {[
-                  { value: "1.000", label: "productos en tu catálogo", detail: "Organiza y presenta tus joyas." },
-                  { value: "1.500", label: "operaciones comerciales al mes", detail: "Capacidad configurada para tu actividad comercial." },
-                  { value: "10 GB", label: "de almacenamiento en Mi Nube", detail: "Conserva archivos y proyectos del taller." },
-                  { value: "200", label: "carpetas en Mi Nube", detail: "Clasifica tus trabajos y documentos." },
-                  { value: "Ilimitado", label: "uso de AURUM RENDER", detail: "Renderiza tus proyectos sin un límite mensual de usos." },
-                ].map((item) => <div key={item.label} className="rounded-xl border border-[#e7e9e9] bg-[#fbfcfd] p-4">
+                  { value: "1.000", label: "productos en catálogo", detail: "Organiza y presenta tus joyas." },
+                  { value: "1.500", label: "operaciones al mes", detail: "Gestiona la actividad comercial." },
+                  { value: "10 GB", label: "Mi Nube", detail: "Almacena archivos y proyectos." },
+                  { value: "200", label: "carpetas", detail: "Clasifica trabajos y documentos." },
+                  { value: "Ilimitado", label: "AURUM RENDER", detail: "Renderiza sin límite mensual de usos." },
+                ].map((item) => <div key={item.label} className="rounded-xl border border-[#e7e9e9] bg-[#fbfcfd] p-3 sm:p-3.5">
                   <p className="text-2xl font-extrabold tracking-tight text-[#24374a]">{item.value}</p>
-                  <p className="mt-1 text-xs font-bold text-[#9a742d]">{item.label}</p>
-                  <p className="mt-1 text-[11px] leading-4 text-[#718196]">{item.detail}</p>
+                  <p className="mt-1 text-[11px] font-bold text-[#9a742d]">{item.label}</p>
+                  <p className="mt-1 text-[10px] leading-4 text-[#718196]">{item.detail}</p>
                 </div>)}
               </div>
-              <div className="mt-4 rounded-xl border border-[#e7e1d4] bg-[#fffaf0] p-4">
-                <h3 className="text-sm font-bold text-[#24374a]">Herramientas para gestionar tu taller</h3>
-                <p className="mt-1 text-xs leading-5 text-[#627487]">Clientes, cotizaciones, pedidos, contratos, ventas y catálogo digital, con mayores capacidades que el Plan Taller.</p>
+              <div className="mt-3 flex flex-col gap-2 rounded-xl border border-[#e7e1d4] bg-[#fffaf0] px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+                <h3 className="shrink-0 text-sm font-bold text-[#24374a]">Herramientas de gestión</h3>
+                <p className="text-xs leading-5 text-[#627487]">Clientes · Cotizaciones · Pedidos · Contratos · Ventas · Catálogo digital</p>
               </div>
-              <div className="mt-4 flex items-start gap-2 rounded-xl bg-[#f3f6f8] p-3 text-[11px] leading-5 text-[#657789]">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#98712a]" />
-                <p>El bono se concede a las primeras cinco matrículas cuyo pago sea confirmado. Se activa por 12 meses desde la asignación; no se renueva automáticamente. Si ya tienes el Plan Profesional, el periodo promocional se suma al vencimiento vigente. Las cuotas indicadas son capacidades configuradas del plan; la disponibilidad de cada módulo depende de su habilitación en tu cuenta.</p>
-              </div>
-              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <button type="button" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#d9e0e6] px-5 text-sm font-semibold text-[#40576c] hover:bg-[#f7f8f9]">Cerrar</button>
-                <Link to="/auth" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Quiero matricularme <ArrowRight className="size-4" /></Link>
+              <div className="mt-3 flex flex-col gap-3 border-t border-[#edf0f2] pt-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="flex max-w-2xl items-start gap-2 text-[10px] leading-4 text-[#718196]"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#98712a]" /><span>Válido para las primeras cinco matrículas con pago confirmado. Beneficio por 12 meses, sin renovación automática. Si ya tienes el Plan Profesional, se amplía tu vencimiento vigente.</span></p>
+                <div className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row">
+                  <button type="button" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#d9e0e6] px-4 text-xs font-semibold text-[#40576c] hover:bg-[#f7f8f9]">Cerrar</button>
+                  <Link to="/auth" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-4 text-xs font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Quiero matricularme <ArrowRight className="size-4" /></Link>
+                </div>
               </div>
             </div>
           </section>
