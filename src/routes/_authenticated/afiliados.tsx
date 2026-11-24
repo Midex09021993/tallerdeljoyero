@@ -224,7 +224,7 @@ function AfiliadosPage() {
     : actividad.comisiones.filter((item: any) => item.estado !== "revertida").length;
   const afiliadoActivo = afiliados.find((item: any) => item.estado === "activo") ?? null;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://tallerdeljoyero.com";
-  const referralUrl = afiliadoActivo?.codigo ? `${baseUrl}/cursos-diseno-3d?ref=${encodeURIComponent(afiliadoActivo.codigo)}` : "";
+  const referralUrl = afiliadoActivo?.codigo ? `${baseUrl}/r/${encodeURIComponent(afiliadoActivo.codigo)}` : "";
   const saldoDisponible = Math.max(0, saldo);
   const resumenAdmin = useMemo(() => ({
     activos: afiliados.filter((a: any) => a.estado === "activo").length,
@@ -309,7 +309,7 @@ function AfiliadosPage() {
                 <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
                   <div className="rounded-2xl border border-border bg-card p-5">
                     <div className="flex items-center gap-2"><Link2 className="size-5 text-primary" /><h2 className="font-semibold">Tu enlace de recomendación</h2></div>
-                    <p className="mt-2 text-sm text-muted-foreground">Este enlace abre la página del curso con tu código de campaña. La ventana de atribución configurada es de {configuracion.ventana_atribucion_dias} días; el registro de visitas y su persistencia deben quedar conectados al flujo público del curso.</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Este enlace registra la visita y conserva la atribución durante {configuracion.ventana_atribucion_dias} días para vincularla a la cuenta cuando el referido inicie sesión.</p>
                     <div className="mt-4 flex flex-col gap-2 sm:flex-row"><input readOnly value={referralUrl} className="min-w-0 flex-1 rounded-xl border border-border bg-muted/40 px-3 py-3 text-sm" /><button type="button" onClick={copiarEnlace} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"><Copy className="size-4" /> Copiar enlace</button></div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="rounded-full bg-muted px-3 py-1">Código: {afiliadoActivo.codigo}</span><span className="inline-flex items-center gap-1"><BadgeCheck className="size-3.5" /> Afiliación activa</span></div>
                   </div>
