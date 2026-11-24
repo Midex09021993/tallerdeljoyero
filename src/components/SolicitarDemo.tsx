@@ -105,7 +105,7 @@ export function SolicitarDemo({ className = "" }: Props) {
 
       {abierto && typeof document !== "undefined" ? createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#101820]/65 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-labelledby="solicitud-demo-title">
-          <div className="relative my-auto max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-[#eadca8] bg-white p-5 shadow-2xl sm:p-6 lg:max-h-[90vh] lg:max-w-6xl lg:p-7">
+          <div className="relative my-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-3xl border border-[#eadca8] bg-white p-4 shadow-2xl sm:p-6 lg:max-h-[88dvh] lg:max-w-7xl lg:p-6">
             <button type="button" onClick={cerrar} disabled={cargando} aria-label="Cerrar formulario" className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="size-5" /></button>
             {enviado ? (
               <div className="px-2 py-10 text-center sm:px-8">
@@ -124,7 +124,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Cuéntanos un poco sobre tu taller. Prepararemos un recorrido práctico de 20–30 minutos según lo que necesitas.</p>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] px-3 py-2 text-xs font-medium text-slate-600"><Clock3 className="size-4 text-[#987400]" /> 20–30 min · Sin compromiso</div>
                 </div>
-                <div className="mt-5 grid gap-5 lg:grid-cols-[1.08fr_.92fr] lg:items-start">
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1.04fr_.96fr] lg:items-start">
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="Calendario de disponibilidad">
                   <div className="border-b border-slate-100 bg-gradient-to-r from-[#fffaf0] via-white to-white px-4 py-4 sm:px-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -166,9 +166,13 @@ export function SolicitarDemo({ className = "" }: Props) {
                     </>}
                   </div>
                 </section>
-                <form onSubmit={enviar} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 lg:mt-0">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Nombre del taller o empresa *
+                <form onSubmit={enviar} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:mt-0">
+                  <div className="rounded-xl border border-[#eadca8] bg-gradient-to-r from-[#fffaf0] to-white px-3.5 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#987400]">Tu demostración</p>
+                    {horarioSeleccionado && horariosDisponibles.find(h => h.id === horarioSeleccionado) ? <p className="mt-1 text-sm font-bold text-[#17232d]">{new Intl.DateTimeFormat("es-PE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(horariosDisponibles.find(h => h.id === horarioSeleccionado)!.inicio_at))}</p> : <p className="mt-1 text-xs text-slate-500">Selecciona primero un día y horario en el calendario.</p>}
+                  </div>
+                  <div className="grid gap-3">
+                    <label className="text-xs font-semibold text-slate-700">Nombre del taller o empresa *
                       <input required maxLength={140} autoComplete="organization" value={form.empresa} onChange={e => setForm(v => ({ ...v, empresa: e.target.value }))} className={inputClass + " mt-1.5"} placeholder="Ej. Joyería Aurora" />
                     </label>
                     <label className="text-xs font-semibold text-slate-700">Nombre y apellido *
@@ -176,16 +180,16 @@ export function SolicitarDemo({ className = "" }: Props) {
                     </label>
                     <label className="text-xs font-semibold text-slate-700">Teléfono / WhatsApp *
                       <span className="mt-1.5 flex gap-2">
-                        <select aria-label="Código telefónico del país" value={codigoPais} onChange={e => setCodigoPais(e.target.value)} className="min-h-[46px] w-[116px] shrink-0 rounded-xl border border-slate-200 bg-white px-2 text-sm font-semibold text-[#17232d] outline-none transition focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25">
+                        <select aria-label="Código telefónico del país" value={codigoPais} onChange={e => setCodigoPais(e.target.value)} className="min-h-[46px] w-[124px] shrink-0 rounded-xl border border-slate-200 bg-white px-2 text-sm font-semibold text-[#17232d] outline-none transition focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25">
                           <option value="+51">🇵🇪 +51</option><option value="+1">🇺🇸 +1</option><option value="+54">🇦🇷 +54</option><option value="+591">🇧🇴 +591</option><option value="+55">🇧🇷 +55</option><option value="+56">🇨🇱 +56</option><option value="+57">🇨🇴 +57</option><option value="+506">🇨🇷 +506</option><option value="+53">🇨🇺 +53</option><option value="+593">🇪🇨 +593</option><option value="+503">🇸🇻 +503</option><option value="+34">🇪🇸 +34</option><option value="+502">🇬🇹 +502</option><option value="+504">🇭🇳 +504</option><option value="+52">🇲🇽 +52</option><option value="+505">🇳🇮 +505</option><option value="+507">🇵🇦 +507</option><option value="+595">🇵🇾 +595</option><option value="+1">🇩🇴 +1</option><option value="+598">🇺🇾 +598</option><option value="+58">🇻🇪 +58</option><option value="+49">🇩🇪 +49</option><option value="+33">🇫🇷 +33</option><option value="+39">🇮🇹 +39</option><option value="+44">🇬🇧 +44</option><option value="+81">🇯🇵 +81</option>
                         </select>
                         <span className="relative min-w-0 flex-1"><Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required type="tel" inputMode="numeric" maxLength={20} autoComplete="tel-national" value={form.telefono} onChange={e => setForm(v => ({ ...v, telefono: e.target.value.replace(/[^0-9\\s()-]/g, "") }))} className={inputClass + " pl-10"} placeholder="Número de WhatsApp" /></span>
                       </span>
                     </label>
-                    <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Correo electrónico *
+                    <label className="text-xs font-semibold text-slate-700">Correo electrónico *
                       <span className="relative mt-1.5 block"><Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required type="email" maxLength={160} autoComplete="email" value={form.email} onChange={e => setForm(v => ({ ...v, email: e.target.value }))} className={inputClass + " pl-10"} placeholder="tu@correo.com" /></span>
                     </label>
-                    <label className="text-xs font-semibold text-slate-700 sm:col-span-2">¿Qué te gustaría conocer?
+                    <label className="text-xs font-semibold text-slate-700">¿Qué te gustaría conocer?
                       <select value={form.interes} onChange={e => setForm(v => ({ ...v, interes: e.target.value }))} className={inputClass + " mt-1.5"}>
                         {intereses.map(item => <option key={item} value={item}>{item}</option>)}
                       </select>
@@ -196,7 +200,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                   </div>
                   <p className="text-[11px] leading-5 text-slate-500">Al enviar, autorizas a AURUM LAB a contactarte para coordinar esta demostración. Tus datos se utilizarán únicamente para atender tu solicitud.</p>
                   {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
-                  <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
+                  <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:justify-end">
                     <button type="button" onClick={cerrar} disabled={cargando} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Ahora no</button>
                     <button type="submit" disabled={cargando || !horarioSeleccionado || cargandoHorarios || horariosDisponibles.length===0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-6 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffdf65] disabled:cursor-wait disabled:opacity-60">{cargando ? "Enviando solicitud…" : "Solicitar mi demostración"} {!cargando && <ArrowRight className="size-4" />}</button>
                   </div>
