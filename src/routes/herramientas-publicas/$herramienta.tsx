@@ -11,9 +11,10 @@ import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 const paginas = {
   "aleacion-oro": {
     titulo: "Calculadora de aleación de oro: calcula la liga en gramos",
-    metaTitulo: "Calculadora de aleación de oro y liga en gramos | AURUM LAB",
-    descripcion: "Calcula la cantidad estimada de liga para ajustar la ley del oro y preparar aleaciones de 18K, 14K y otras purezas en joyería.",
-    contenido: "Introduce el peso del oro inicial y su quilataje, define la ley final y estima cuántos gramos de metal de liga necesitas. Selecciona el color de oro y consulta el cálculo según la receta configurada.",
+    metaTitulo: "Calculadora de aleación de oro 18K, 14K y 9K | AURUM LAB",
+    descripcion: "Calculadora gratuita para joyeros: estima cuántos gramos de liga añadir para ajustar la pureza del oro a 18K, 14K, 9K u otra ley. Incluye cálculo por quilates y recetas de color configuradas.",
+    contenido: "Introduce el peso y la ley del oro inicial, selecciona la ley final y consulta la cantidad estimada de liga en gramos. La distribución por color utiliza las recetas configuradas en la herramienta.",
+    palabrasClave: ["calculadora de aleación de oro", "calcular liga de oro en gramos", "oro 18K", "oro 14K", "oro 9K", "bajar ley del oro", "aleación de oro para joyería", "quilataje", "oro fino", "metal de liga"],
     id: "oro",
     guiaSlug: "calcular-aleaciones-oro-18k-14k-9k",
     secciones: [
@@ -170,16 +171,38 @@ export const Route = createFileRoute("/herramientas-publicas/$herramienta")({
           "@context": "https://schema.org",
           "@graph": [
             {
+              "@type": "Organization",
+              "@id": "https://www.tallerdeljoyero.com/#organization",
+              name: "Taller del Joyero · AURUM LAB",
+              url: "https://www.tallerdeljoyero.com/",
+              description: "Plataforma digital y recursos técnicos para talleres, joyeros y profesionales de la fabricación de joyería.",
+            },
+            {
+              "@type": "WebPage",
+              "@id": canonical + "#webpage",
+              url: canonical,
+              name: pagina.metaTitulo,
+              description: pagina.descripcion,
+              inLanguage: "es-PE",
+              isPartOf: { "@type": "WebSite", "@id": "https://www.tallerdeljoyero.com/#website", name: "Taller del Joyero · AURUM LAB", url: "https://www.tallerdeljoyero.com/" },
+              publisher: { "@id": "https://www.tallerdeljoyero.com/#organization" },
+              mainEntity: { "@id": canonical + "#software" },
+              ...(pagina.id === "oro" ? { about: ["aleaciones de oro", "quilataje", "oro fino", "metales de liga", "metalurgia de joyería"] } : {}),
+            },
+            {
               "@type": "SoftwareApplication",
+              "@id": canonical + "#software",
               name: pagina.titulo,
               description: pagina.descripcion,
               applicationCategory: "UtilitiesApplication",
+              applicationSubCategory: "Calculadora de metalurgia para joyería",
               operatingSystem: "Web",
               isAccessibleForFree: true,
               offers: { "@type": "Offer", price: "0", priceCurrency: "PEN" },
               url: canonical,
               inLanguage: "es-PE",
-              publisher: { "@type": "Organization", name: "AURUM LAB", url: "https://www.tallerdeljoyero.com/" },
+              ...(pagina.id === "oro" ? { keywords: pagina.palabrasClave.join(", "), featureList: ["Ajuste de ley del oro", "Estimación de liga en gramos", "Cálculo para distintas leyes de quilataje", "Distribución según recetas de color configuradas"] } : {}),
+              publisher: { "@id": "https://www.tallerdeljoyero.com/#organization" },
             },
             {
               "@type": "BreadcrumbList",
@@ -205,6 +228,7 @@ export const Route = createFileRoute("/herramientas-publicas/$herramienta")({
       meta: [
         { title },
         { name: "description", content: description },
+        ...(pagina.id === "oro" ? [{ name: "keywords", content: pagina.palabrasClave.join(", ") }] : []),
         { name: "robots", content: pagina ? "index, follow, max-image-preview:large" : "noindex, follow" },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
@@ -261,11 +285,11 @@ function HerramientaPublicaPage() {
           <Link to="/auth" className="text-xs font-semibold uppercase tracking-[.18em] text-[#987400]">Aurum Lab</Link>
         </header>
 
-        <section className="py-9 sm:py-12">
+        <section className={pagina.id === "oro" ? "py-5 sm:py-7" : "py-9 sm:py-12"}>
           <div className="flex items-center gap-3 text-[#987400]"><span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4]"><Icono className="size-5" /></span><p className="text-[10px] font-bold uppercase tracking-[.22em]">Herramienta gratuita para joyeros</p></div>
-          <h1 className="mt-5 max-w-4xl font-display text-3xl italic leading-tight sm:text-5xl">{pagina.titulo}</h1>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">{pagina.descripcion}</p>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">{pagina.contenido}</p>
+          <h1 className={pagina.id === "oro" ? "mt-3 max-w-4xl font-display text-3xl italic leading-tight sm:text-4xl" : "mt-5 max-w-4xl font-display text-3xl italic leading-tight sm:text-5xl"}>{pagina.titulo}</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{pagina.descripcion}</p>
+          {pagina.id !== "oro" ? <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">{pagina.contenido}</p> : null}
         </section>
 
         <section aria-label={pagina.titulo} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
@@ -278,24 +302,44 @@ function HerramientaPublicaPage() {
           </div>
         </section>
 
-        <section aria-labelledby="contenido-tecnico-herramienta" className="mx-auto mt-10 max-w-4xl space-y-8 px-1 sm:mt-14">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Información técnica</p>
-            <h2 id="contenido-tecnico-herramienta" className="mt-2 text-2xl font-bold tracking-tight text-[#17232d]">{pagina.secciones[0].titulo}</h2>
-            {pagina.secciones[0].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.secciones[1].titulo}</h2>
-            {pagina.secciones[1].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
-          </div>
+        <section aria-labelledby="contenido-tecnico-herramienta" className="mx-auto mt-8 max-w-4xl space-y-5 px-1 sm:mt-10">
+          {pagina.id === "oro" ? (
+            <div className="rounded-2xl border border-[#e8dfc7] bg-[#fffaf0] p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Referencia rápida · Metalurgia de joyería</p>
+              <h2 id="contenido-tecnico-herramienta" className="mt-2 text-xl font-bold tracking-tight text-[#17232d]">Cómo se calcula la liga para bajar la ley del oro</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-700">El cálculo conserva la cantidad de oro fino: primero se estima la masa final necesaria para alcanzar la ley objetivo y después se resta el peso inicial.</p>
+              <div className="mt-3 rounded-xl border border-[#eadfbe] bg-white p-3">
+                <p className="text-xs font-semibold text-[#72560d]">Fórmula teórica</p>
+                <p className="mt-1 font-mono text-sm text-[#17232d]">Peso final = peso inicial × ley inicial ÷ ley final</p>
+                <p className="mt-1 font-mono text-sm text-[#17232d]">Liga a añadir = peso final − peso inicial</p>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-slate-600">Ejemplo orientativo: al bajar 10 g de oro de 24K a 18K, la masa final teórica es 13,33 g y se añadirían aproximadamente 3,33 g de liga sin oro. El resultado real depende de la ley verificada, la composición y las pérdidas del proceso.</p>
+            </div>
+          ) : null}
+          <details className="group rounded-2xl border border-slate-200 bg-white p-5 sm:p-6" open={pagina.id !== "oro"}>
+            <summary className="cursor-pointer list-none text-base font-bold text-[#17232d] marker:hidden">
+              <span className="flex items-center justify-between gap-3"><span><span className="mb-1 block text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Información técnica</span>{pagina.secciones[0].titulo}</span><span aria-hidden="true" className="text-xl text-[#987400] transition group-open:rotate-45">+</span></span>
+            </summary>
+            <div className="mt-3">
+              {pagina.secciones[0].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
+            </div>
+          </details>
+          <details className="group rounded-2xl border border-slate-200 bg-white p-5 sm:p-6" open={pagina.id !== "oro"}>
+            <summary className="cursor-pointer list-none text-base font-bold text-[#17232d] marker:hidden">
+              <span className="flex items-center justify-between gap-3"><span>{pagina.secciones[1].titulo}</span><span aria-hidden="true" className="text-xl text-[#987400] transition group-open:rotate-45">+</span></span>
+            </summary>
+            <div className="mt-3">
+              {pagina.secciones[1].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
+            </div>
+          </details>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
             <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : pagina.id === "oro" ? "Preguntas frecuentes sobre aleaciones de oro y metales de liga" : pagina.id === "gemas" ? "Preguntas frecuentes sobre el peso de las gemas" : pagina.id === "tallas" ? "Preguntas frecuentes sobre tallas y equivalencias de anillos" : pagina.id === "peso" ? "Preguntas frecuentes sobre el peso de joyas en 3D" : "Preguntas frecuentes"}</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {pagina.preguntas.map((item) => (
-                <div key={item.pregunta} className="py-4 first:pt-0 last:pb-0">
-                  <h3 className="text-sm font-semibold text-[#17232d]">{item.pregunta}</h3>
+                <details key={item.pregunta} className="group py-3 first:pt-0 last:pb-0">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[#17232d]">{item.pregunta}<span aria-hidden="true" className="text-lg text-[#987400] transition group-open:rotate-45">+</span></summary>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{item.respuesta}</p>
-                </div>
+                </details>
               ))}
             </div>
           </div>
