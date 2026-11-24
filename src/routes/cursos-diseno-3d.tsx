@@ -4,7 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, BookOpen, Bot, CalendarDays, CheckCircle2, Clock3, Gem, GraduationCap,
   Layers3, Monitor, MousePointer2, PenTool, Ruler, ShieldCheck, UsersRound,
-  Sparkles, Target,
+  Sparkles, Target, X,
 } from "lucide-react";
 
 export const Route = createFileRoute("/cursos-diseno-3d")({
@@ -82,6 +82,7 @@ const complementos = [
 
 function CursosDiseno3DPage() {
   const [programaAbierto, setProgramaAbierto] = useState(false);
+  const [bonoAbierto, setBonoAbierto] = useState(false);
   const [nivelEscrito, setNivelEscrito] = useState(0);
 
   useEffect(() => {
@@ -279,7 +280,7 @@ function CursosDiseno3DPage() {
             <section className="mt-5 overflow-hidden rounded-2xl border border-[#d9c18a] bg-gradient-to-br from-[#fffaf0] via-white to-[#f3f6f8] p-5" aria-labelledby="bono-profesionalizacion">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Beneficio exclusivo de matrícula</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Promoción para los primeros 5 inscritos</p>
                   <h3 id="bono-profesionalizacion" className="mt-1 text-xl font-bold leading-tight text-[#24374a]">Bono de Profesionalización AURUM LAB</h3>
                 </div>
                 <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[#ead7a5] bg-[#fff1c9] text-[#98712a]"><Sparkles className="size-5" /></span>
@@ -288,18 +289,11 @@ function CursosDiseno3DPage() {
                 <span className="text-3xl font-extrabold tracking-tight text-[#24374a]">12 meses</span>
                 <span className="pb-1 text-xs font-bold uppercase tracking-wide text-[#98712a]">Plan Profesional incluidos</span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-[#627487]">Al confirmar tu matrícula, recibirás un año del Plan Profesional para llevar la formación a la gestión diaria de tu taller.</p>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                {[
-                  "Gestión de clientes y contactos",
-                  "Cotizaciones y seguimiento de pedidos",
-                  "Contratos y ventas",
-                  "Catálogo digital para tus joyas",
-                  "Mi Nube para organizar archivos",
-                  "Mayores capacidades de uso que el Plan Taller",
-                ].map((beneficio) => <div key={beneficio} className="flex items-start gap-2 rounded-lg border border-[#e9e4d9] bg-white/90 px-3 py-2.5 text-xs leading-5 text-[#53677a]"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#a17a2e]" />{beneficio}</div>)}
-              </div>
-              <p className="mt-3 text-[10px] leading-4 text-[#7a8793]">Beneficio personal de 12 meses, activado después de verificar el pago. No incluye renovación automática. Si ya tienes un Plan Profesional activo, el periodo promocional se añadirá al vencimiento vigente.</p>
+              <p className="mt-2 text-xs leading-5 text-[#627487]">Los primeros cinco alumnos que completen su matrícula reciben un año del Plan Profesional para gestionar y hacer crecer su taller.</p>
+              <button type="button" onClick={() => setBonoAbierto(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#d6bd7e] bg-white px-4 text-sm font-bold text-[#76591e] transition hover:bg-[#fff4d7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">
+                Descubrir qué incluye el Plan Profesional <ArrowRight className="size-4" />
+              </button>
+              <p className="mt-3 text-[10px] leading-4 text-[#7a8793]">Promoción limitada a las primeras 5 matrículas confirmadas. El beneficio se activa después de verificar el pago y no tiene renovación automática.</p>
             </section>
 
             <ul className="mt-5 space-y-3 text-sm text-[#5d7183]">
@@ -323,6 +317,51 @@ function CursosDiseno3DPage() {
           <Link to="/auth" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] hover:bg-[#dfb83e]">Crear mi cuenta gratis <ArrowRight className="size-4" /></Link>
         </div>
       </section>
+      {bonoAbierto && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[#142333]/65 p-3 backdrop-blur-sm sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setBonoAbierto(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="bono-modal-titulo" className="relative my-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-[#e4d5ad] bg-white shadow-[0_28px_90px_rgba(10,20,30,.32)]">
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#fff7df] via-white to-[#eaf0f5] px-6 pb-6 pt-7 sm:px-8">
+              <button type="button" aria-label="Cerrar detalles del Plan Profesional" onClick={() => setBonoAbierto(false)} className="absolute right-4 top-4 grid size-9 place-items-center rounded-full border border-[#e2d8c4] bg-white/90 text-[#526273] transition hover:bg-white"><X className="size-4" /></button>
+              <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#98712a]">Beneficio exclusivo · Primeros 5 inscritos</p>
+              <h2 id="bono-modal-titulo" className="mt-2 max-w-lg font-display text-3xl font-semibold leading-tight text-[#1d2b39] sm:text-4xl">Un año para profesionalizar tu taller</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-[#5d7183]">Al matricularte en el curso, puedes recibir 12 meses del Plan Profesional de AURUM LAB, sin pagar una suscripción adicional durante ese periodo.</p>
+              <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-[#e4d2a5] bg-white/90 px-4 py-3">
+                <span className="grid size-11 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><Sparkles className="size-5" /></span>
+                <span><span className="block text-2xl font-extrabold text-[#24374a]">12 meses</span><span className="block text-[10px] font-bold uppercase tracking-wider text-[#98712a]">Plan Profesional incluidos</span></span>
+              </div>
+            </div>
+            <div className="px-6 py-6 sm:px-8">
+              <h3 className="text-base font-bold text-[#24374a]">¿Qué capacidad tendrás?</h3>
+              <p className="mt-1 text-xs leading-5 text-[#738397]">Capacidades definidas para el Plan Profesional en AURUM LAB.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {[
+                  { value: "1.000", label: "productos en tu catálogo", detail: "Organiza y presenta tus joyas." },
+                  { value: "1.500", label: "operaciones comerciales al mes", detail: "Capacidad configurada para tu actividad comercial." },
+                  { value: "10 GB", label: "de almacenamiento en Mi Nube", detail: "Conserva archivos y proyectos del taller." },
+                  { value: "200", label: "carpetas en Mi Nube", detail: "Clasifica tus trabajos y documentos." },
+                  { value: "250", label: "usos de AURUM RENDER al mes", detail: "Cuota mensual configurada para renderizados." },
+                ].map((item) => <div key={item.label} className="rounded-xl border border-[#e7e9e9] bg-[#fbfcfd] p-4">
+                  <p className="text-2xl font-extrabold tracking-tight text-[#24374a]">{item.value}</p>
+                  <p className="mt-1 text-xs font-bold text-[#9a742d]">{item.label}</p>
+                  <p className="mt-1 text-[11px] leading-4 text-[#718196]">{item.detail}</p>
+                </div>)}
+              </div>
+              <div className="mt-4 rounded-xl border border-[#e7e1d4] bg-[#fffaf0] p-4">
+                <h3 className="text-sm font-bold text-[#24374a]">Herramientas para gestionar tu taller</h3>
+                <p className="mt-1 text-xs leading-5 text-[#627487]">Clientes, cotizaciones, pedidos, contratos, ventas y catálogo digital, con mayores capacidades que el Plan Taller.</p>
+              </div>
+              <div className="mt-4 flex items-start gap-2 rounded-xl bg-[#f3f6f8] p-3 text-[11px] leading-5 text-[#657789]">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#98712a]" />
+                <p>El bono se concede a las primeras cinco matrículas cuyo pago sea confirmado. Se activa por 12 meses desde la asignación; no se renueva automáticamente. Si ya tienes el Plan Profesional, el periodo promocional se suma al vencimiento vigente. Las cuotas indicadas son capacidades configuradas del plan; la disponibilidad de cada módulo depende de su habilitación en tu cuenta.</p>
+              </div>
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#d9e0e6] px-5 text-sm font-semibold text-[#40576c] hover:bg-[#f7f8f9]">Cerrar</button>
+                <Link to="/auth" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Quiero matricularme <ArrowRight className="size-4" /></Link>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
       <footer className="bg-[#203243] text-white"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-white/65 sm:px-7 lg:px-10"><span>AURUM LAB · Formación para profesionales de la joyería</span><span>El arte de crear. La inteligencia de gestionar.</span></div></footer>
     </main>
     </>
