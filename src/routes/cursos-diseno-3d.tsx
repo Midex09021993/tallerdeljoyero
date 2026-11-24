@@ -241,7 +241,7 @@ function CursosDiseno3DPage() {
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-3">
                 <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><UsersRound className="size-5" /></span>
-                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Cupos limitados</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">Quedan <strong className="rounded-md bg-[#f5e4ad] px-1.5 text-[#7d5818]">12</strong> de 15 cupos</span></span>
+                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Cupos limitados</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">Quedan <strong className="rounded-md bg-[#f5e4ad] px-1.5 text-[#7d5818]">8</strong> de 15 cupos</span></span>
               </div>
             </div>
             <div className="mt-5 rounded-xl bg-[#fff9e9] p-5">
@@ -252,8 +252,8 @@ function CursosDiseno3DPage() {
               <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1"><span className="text-sm font-bold text-[#9b762e]">Precio final</span><span className="text-5xl font-bold tracking-tight text-[#1e3042]">US$ 230</span></div>
               <p className="mt-3 inline-flex rounded-full bg-[#e0f5eb] px-3 py-1.5 text-xs font-bold text-[#176b49]">✓ Ahorro: US$ 20 (8 % de descuento)</p>
             </div>
-            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="12 de 15 cupos disponibles">
-              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 12 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
+            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="8 de 15 cupos disponibles">
+              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 8 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
             </div>
             <ul className="mt-5 space-y-3 text-sm text-[#5d7183]">
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Clases online en vivo con docente</li>
