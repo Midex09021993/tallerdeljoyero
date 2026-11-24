@@ -105,7 +105,7 @@ export function SolicitarDemo({ className = "" }: Props) {
 
       {abierto && typeof document !== "undefined" ? createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#101820]/65 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-labelledby="solicitud-demo-title">
-          <div className="relative my-auto max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-[#eadca8] bg-white p-5 shadow-2xl sm:p-8">
+          <div className="relative my-auto max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-[#eadca8] bg-white p-5 shadow-2xl sm:p-6 lg:max-h-[90vh] lg:max-w-6xl lg:p-7">
             <button type="button" onClick={cerrar} disabled={cargando} aria-label="Cerrar formulario" className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="size-5" /></button>
             {enviado ? (
               <div className="px-2 py-10 text-center sm:px-8">
@@ -124,7 +124,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Cuéntanos un poco sobre tu taller. Prepararemos un recorrido práctico de 20–30 minutos según lo que necesitas.</p>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] px-3 py-2 text-xs font-medium text-slate-600"><Clock3 className="size-4 text-[#987400]" /> 20–30 min · Sin compromiso</div>
                 </div>
-                <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="Calendario de disponibilidad">
+                <div className="mt-5 grid gap-5 lg:grid-cols-[1.08fr_.92fr] lg:items-start">\n                <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="Calendario de disponibilidad">
                   <div className="border-b border-slate-100 bg-gradient-to-r from-[#fffaf0] via-white to-white px-4 py-4 sm:px-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -147,7 +147,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                       </div>
                       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
                         {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map((d,i)=><span key={i} className="pb-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">{d}</span>)}
-                        {diasCalendario.map((dia,i)=>{const key=dia.toLocaleDateString("en-CA");const delMes=dia.getMonth()===mesVisible.getMonth();const disponible=fechasConDisponibilidad.has(key);const seleccionado=key===fechaSeleccionada;const hoy=key===new Date().toLocaleDateString("en-CA");return <button key={i} type="button" disabled={!delMes||!disponible} aria-label={`${dia.getDate()} de ${new Intl.DateTimeFormat("es-PE",{month:"long"}).format(dia)}${disponible?", disponible":", no disponible"}`} aria-pressed={seleccionado} onClick={()=>{setFechaSeleccionada(key);setHorarioSeleccionado("");}} className={"group relative flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl border text-xs font-semibold transition sm:min-h-[62px] "+(seleccionado?"border-[#c59a18] bg-gradient-to-b from-[#f8d976] to-[#edc34d] text-[#17232d] shadow-[0_3px_10px_rgba(197,154,24,.2)] ring-1 ring-[#c59a18]/30":disponible?"border-emerald-100 bg-emerald-50/70 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50":delMes?"border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed":"border-transparent bg-transparent text-slate-200")}>
+                        {diasCalendario.map((dia,i)=>{const key=dia.toLocaleDateString("en-CA");const delMes=dia.getMonth()===mesVisible.getMonth();const disponible=fechasConDisponibilidad.has(key);const seleccionado=key===fechaSeleccionada;const hoy=key===new Date().toLocaleDateString("en-CA");return <button key={i} type="button" disabled={!delMes||!disponible} aria-label={`${dia.getDate()} de ${new Intl.DateTimeFormat("es-PE",{month:"long"}).format(dia)}${disponible?", disponible":", no disponible"}`} aria-pressed={seleccionado} onClick={()=>{setFechaSeleccionada(key);setHorarioSeleccionado("");}} className={"group relative flex min-h-[46px] flex-col items-center justify-center gap-1 rounded-xl border text-xs font-semibold transition sm:min-h-[52px] lg:min-h-[48px] "+(seleccionado?"border-[#c59a18] bg-gradient-to-b from-[#f8d976] to-[#edc34d] text-[#17232d] shadow-[0_3px_10px_rgba(197,154,24,.2)] ring-1 ring-[#c59a18]/30":disponible?"border-emerald-100 bg-emerald-50/70 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50":delMes?"border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed":"border-transparent bg-transparent text-slate-200")}>
                           <span className={"text-sm sm:text-base "+(hoy&&!seleccionado?"underline decoration-2 underline-offset-4 decoration-[#c59a18]":"")}>{dia.getDate()}</span>
                           {disponible?<span className={"size-1.5 rounded-full "+(seleccionado?"bg-[#735500]":"bg-emerald-500")}/>:<span className="h-1.5"/>}
                         </button>;})}
@@ -165,7 +165,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                     </>}
                   </div>
                 </section>
-                <form onSubmit={enviar} className="mt-5 space-y-4">
+                <form onSubmit={enviar} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 lg:mt-0">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Nombre del taller o empresa *
                       <input required maxLength={140} autoComplete="organization" value={form.empresa} onChange={e => setForm(v => ({ ...v, empresa: e.target.value }))} className={inputClass + " mt-1.5"} placeholder="Ej. Joyería Aurora" />
