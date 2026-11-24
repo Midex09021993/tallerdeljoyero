@@ -69,7 +69,7 @@ begin
     or _nombre is null or char_length(btrim(_nombre)) not between 2 and 120
     or _telefono is null or char_length(btrim(_telefono)) not between 7 and 30
     or _email is null or char_length(btrim(_email)) not between 5 and 160
-    or _email !~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$'
+    or _email !~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$'
     or _interes is null or char_length(btrim(_interes)) not between 3 and 120
     or (_horario_preferido is not null and _horario_preferido not in ('Mañana','Tarde')) then
     raise exception using errcode = '22023', message = 'Revisa los datos del formulario de demostración.';
