@@ -112,7 +112,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                 <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-[#fff4c4] text-[#987400]"><CheckCircle2 className="size-8" /></span>
                 <p className="mt-5 text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">AURUM LAB · DEMOSTRACIÓN</p>
                 <h2 className="mt-3 text-2xl font-bold text-[#17232d]">¡Solicitud recibida!</h2>
-                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">Tu horario quedó reservado. Te esperamos en Discord para una demostración personalizada de AURUM LAB.</p>
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">Tu horario quedó reservado{horariosDisponibles.find(h => h.id === horarioSeleccionado) ? ` para el ${new Intl.DateTimeFormat("es-PE",{dateStyle:"full",timeStyle:"short"}).format(new Date(horariosDisponibles.find(h => h.id === horarioSeleccionado)!.inicio_at))}` : ""}. Te esperamos en Discord para una demostración personalizada de AURUM LAB.</p>
                 <a href={DISCORD_DEMO_URL} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[#5865F2] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#4752c4]">Entrar al Discord de AURUM LAB <ArrowRight className="size-4" /></a>
                 <button type="button" onClick={cerrar} className="mt-3 block w-full py-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800">Cerrar</button>
               </div>
