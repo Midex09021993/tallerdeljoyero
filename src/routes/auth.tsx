@@ -7,6 +7,7 @@ import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, H
 import { iniciarSesionUsuario, registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 import { registrarEvento } from "@/lib/analytics";
 import { oauthReturnPath } from "@/lib/oauth-return-path";
+import { vincularReferidoPendiente } from "@/lib/aurum-afiliados-referral";
 
 const RegistroTaller = lazy(() => import("@/components/RegistroTaller").then((module) => ({ default: module.RegistroTaller })));
 const ComunidadAurumLab = lazy(() => import("@/components/ComunidadAurumLab").then((module) => ({ default: module.ComunidadAurumLab })));
@@ -123,28 +124,40 @@ function LoginPage() {
 
   useEffect(() => {
     if (!sesion) return;
-    const siguiente = destinoSiguiente();
-    if (siguiente) {
-      window.location.assign(siguiente);
-      return;
-    }
-    const importTransfer = new URLSearchParams(window.location.search).get("importTransfer");
-    if (importTransfer && /^[A-Za-z0-9_-]{30,100}$/.test(importTransfer)) {
-      window.location.assign(`/mi-nube?importTransfer=${encodeURIComponent(importTransfer)}`);
-      return;
-    }
-    if (window.sessionStorage.getItem("aurum_peso_draft")) {
-      window.location.assign("/herramientas?recuperarPeso=1");
-      return;
-    }
-    // AURUM CONECT solo puede solicitar este destino interno explícito.
-    // No aceptamos URLs arbitrarias para evitar redirecciones abiertas.
-    if (new URLSearchParams(window.location.search).get("returnTo") === "aurum-render") {
-      const transferHash = window.location.hash.startsWith("#aurum-conect=") ? window.location.hash : window.sessionStorage.getItem("aurum-conect-pending") || "";
-      window.location.assign("/aurum-render" + transferHash);
-      return;
-    }
-    navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
+    let cancelled = false;
+    void (async () => {
+      try {
+        await vincularReferidoPendiente();
+      } catch (error) {
+        // No bloquea el acceso: la cookie se conserva para reintentar después.
+        console.warn("[afiliados] No se pudo vincular el referido:", error);
+      }
+      if (cancelled) return;
+
+      const siguiente = destinoSiguiente();
+      if (siguiente) {
+        window.location.assign(siguiente);
+        return;
+      }
+      const importTransfer = new URLSearchParams(window.location.search).get("importTransfer");
+      if (importTransfer && /^[A-Za-z0-9_-]{30,100}$/.test(importTransfer)) {
+        window.location.assign(`/mi-nube?importTransfer=${encodeURIComponent(importTransfer)}`);
+        return;
+      }
+      if (window.sessionStorage.getItem("aurum_peso_draft")) {
+        window.location.assign("/herramientas?recuperarPeso=1");
+        return;
+      }
+      // AURUM CONECT solo puede solicitar este destino interno explícito.
+      // No aceptamos URLs arbitrarias para evitar redirecciones abiertas.
+      if (new URLSearchParams(window.location.search).get("returnTo") === "aurum-render") {
+        const transferHash = window.location.hash.startsWith("#aurum-conect=") ? window.location.hash : window.sessionStorage.getItem("aurum-conect-pending") || "";
+        window.location.assign("/aurum-render" + transferHash);
+        return;
+      }
+      navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
+    })();
+    return () => { cancelled = true; };
   }, [sesion, navigate]);
 
   async function entrar(e: FormEvent) {
@@ -200,6 +213,11 @@ function LoginPage() {
       const { data: sesionActualizada, error: errorSesion } = await refetchSesion();
       if (errorSesion || !sesionActualizada) {
         throw new Error("La sesión se creó, pero no se pudo resolver el acceso al taller");
+      }
+      try {
+        await vincularReferidoPendiente();
+      } catch (error) {
+        console.warn("[afiliados] No se pudo vincular el referido tras el acceso:", error);
       }
       registrarEvento("login_completed", { mode: modoAlta ? "initial_owner" : "existing_user" });
       const siguiente = destinoSiguiente();
