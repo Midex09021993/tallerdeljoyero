@@ -3,6 +3,16 @@
 
 begin;
 
+-- Asegura la relación de las demos públicas con sus bloques reservados.
+alter table public.solicitudes_demo
+  add column if not exists fecha_reunion_at timestamptz;
+alter table public.agenda_horarios
+  add column if not exists solicitud_demo_id uuid
+  references public.solicitudes_demo(id) on delete set null;
+create unique index if not exists agenda_horarios_solicitud_demo_uidx
+  on public.agenda_horarios(solicitud_demo_id)
+  where solicitud_demo_id is not null;
+
 create table if not exists public.agenda_dias_disponibilidad (
   fecha date primary key,
   disponible boolean not null default false,
@@ -120,6 +130,41 @@ revoke all on function public.agenda_crear_horario(timestamptz,timestamptz,text)
 grant execute on function public.agenda_crear_horario(timestamptz,timestamptz,text) to authenticated;
 
 -- Los gerentes sólo reciben bloques pertenecientes a días habilitados.
+create or replace function public.agenda_validar_disponibilidad_reserva()
+returns trigger
+language plpgsql
+set search_path = public
+as $
+declare
+  v_fecha date;
+  v_zona text;
+begin
+  if new.estado in ('pendiente','confirmada') then
+    select h.inicio_at, h.zona_horaria into v_fecha, v_zona
+    from public.agenda_horarios h
+    where h.id = new.horario_id;
+
+    if not exists (
+      select 1
+      from public.agenda_horarios h
+      join public.agenda_dias_disponibilidad d
+        on d.fecha = (h.inicio_at at time zone h.zona_horaria)::date
+       and d.disponible = true
+      where h.id = new.horario_id
+    ) then
+      raise exception using errcode = '23514',
+        message = 'Este día ya no está habilitado para nuevas reservas.';
+    end if;
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists agenda_reservas_validar_disponibilidad on public.agenda_reservas;
+create trigger agenda_reservas_validar_disponibilidad
+before insert or update of horario_id, estado on public.agenda_reservas
+for each row execute function public.agenda_validar_disponibilidad_reserva();
+
 create or replace function public.agenda_listar_horarios()
 returns table (
   id uuid,
@@ -141,6 +186,7 @@ as $$
         and ur.role::text in ('gerente','dueno')
     )
     and h.activo = true
+    and h.solicitud_demo_id is null
     and h.inicio_at > now()
     and exists (
       select 1 from public.agenda_dias_disponibilidad d
