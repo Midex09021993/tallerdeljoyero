@@ -429,8 +429,9 @@ export function AuriChat({ onContact, modo = "publico", rutaActual = "", context
   const apartado = contexto.match(/Apartado:\s*([^\n]+)/i)?.[1]?.trim() ?? "este apartado";
   const contenido = contexto.split("Contenido de referencia:")[1]?.trim() ?? contexto;
   const extracto = contenido.replace(/\s+/g, " ").slice(0, 900);
+  const apartadoNormalizado = apartado.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   if (/conoce mas|amplia este apartado|explicacion complementaria/.test(normalizada)) {
-    if (/diseño CAD aplicado a la joyeria/i.test(apartado) || /CAD significa diseño asistido por computadora/i.test(contenido)) {
+    if (/diseno CAD aplicado a la joyeria/.test(apartadoNormalizado) || /CAD significa diseño asistido por computadora/i.test(contenido)) {
       return [
         "**Conoce más: ¿qué significa CAD y de dónde viene?**",
         "CAD son las siglas en inglés de **Computer-Aided Design**:",
@@ -471,6 +472,13 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
     setError("");
     setLoading(true);
     try {
+      const accionConoceMas = /conoce mas|amplia este apartado|explicacion complementaria/.test(NORMALIZAR_COMANDO_RHINO(question));
+      if (tutorCurso && accionConoceMas) {
+        const reply = generarRespuestaTutorLocal(question, contextoCurso);
+        setMessages((current) => [...current, { role: "model", text: reply }]);
+        speak(textoParaVoz(reply));
+        return;
+      }
       const contextoRhino = construirContextoRhino(question);
       if (tutorCurso && !contextoRhino) {
         const reply = generarRespuestaTutorLocal(question, contextoCurso);
