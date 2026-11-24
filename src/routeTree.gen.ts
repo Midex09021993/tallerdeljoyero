@@ -43,6 +43,7 @@ import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authent
 import { Route as AuthenticatedCursosFormacionRouteImport } from './routes/_authenticated/cursos-formacion'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
+import { Route as AuthenticatedAfiliadosRouteImport } from './routes/_authenticated/afiliados'
 import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authenticated/herramientas'
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
@@ -261,6 +262,11 @@ const AuthenticatedDiseno3dRoute = AuthenticatedDiseno3dRouteImport.update({
 const AuthenticatedGestionRoute = AuthenticatedGestionRouteImport.update({
   id: '/gestion',
   path: '/gestion',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAfiliadosRoute = AuthenticatedAfiliadosRouteImport.update({
+  id: '/afiliados',
+  path: '/afiliados',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHerramientasRoute =
@@ -523,6 +529,8 @@ export interface FileRoutesByFullPath {
   '/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
+  '/afiliados': typeof AuthenticatedAfiliadosRoute
+  '/afiliados': typeof AuthenticatedAfiliadosRoute
   '/herramientas': typeof AuthenticatedHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
@@ -676,6 +684,7 @@ export interface FileRoutesById {
   '/_authenticated/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
+  '/_authenticated/afiliados': typeof AuthenticatedAfiliadosRoute
   '/_authenticated/herramientas': typeof AuthenticatedHerramientasRoute
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
@@ -741,6 +750,7 @@ export interface FileRouteTypes {
     | '/$slug/$producto'
     | '/.well-known/oauth-protected-resource'
     | '/agenda'
+    | '/afiliados'
     | '/aula-comandos'
     | '/aula-formacion'
     | '/aurum-intelligence'
@@ -893,6 +903,7 @@ export interface FileRouteTypes {
     | '/$slug/$producto'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/agenda'
+    | '/_authenticated/afiliados'
     | '/_authenticated/aula-comandos'
     | '/_authenticated/aula-formacion'
     | '/_authenticated/aurum-intelligence'
@@ -1577,6 +1588,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCursosFormacionRoute: typeof AuthenticatedCursosFormacionRoute
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
+  AuthenticatedAfiliadosRoute: typeof AuthenticatedAfiliadosRoute
   AuthenticatedHerramientasRoute: typeof AuthenticatedHerramientasRoute
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
@@ -1617,6 +1629,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCursosFormacionRoute: AuthenticatedCursosFormacionRoute,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,
+  AuthenticatedAfiliadosRoute: AuthenticatedAfiliadosRoute,
   AuthenticatedHerramientasRoute: AuthenticatedHerramientasRoute,
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
