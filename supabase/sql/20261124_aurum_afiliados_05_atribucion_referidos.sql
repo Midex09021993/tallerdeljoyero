@@ -138,8 +138,20 @@ begin
     return null;
   end if;
 
-  -- Impedir autorreferidos de alumnos y propietarios de talleres.
-  if public.aurum_afiliado_es_propietario(v_afiliado.id) then
+  -- Impedir autorreferidos de alumnos y de la cuenta principal del taller.
+  if v_afiliado.user_id = v_user_id
+     or (
+       v_afiliado.tipo = 'taller'
+       and v_afiliado.participante_id is not null
+       and exists (
+         select 1
+         from public.participante_cuentas pc
+         where pc.participante_id = v_afiliado.participante_id
+           and pc.user_id = v_user_id
+           and pc.estado = 'activo'
+           and pc.relacion = 'principal'
+       )
+     ) then
     return null;
   end if;
 
