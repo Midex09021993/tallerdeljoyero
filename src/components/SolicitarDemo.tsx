@@ -16,7 +16,7 @@ const intereses = [
   "Quiero conocer toda la plataforma",
 ];
 
-const inputClass = "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25";
+const inputClass = "w-full min-h-[40px] rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25 lg:min-h-[36px] lg:py-1.5";
 
 export function SolicitarDemo({ className = "" }: Props) {
   const [abierto, setAbierto] = useState(false);
@@ -105,7 +105,7 @@ export function SolicitarDemo({ className = "" }: Props) {
 
       {abierto && typeof document !== "undefined" ? createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#101820]/65 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-labelledby="solicitud-demo-title">
-          <div className="relative my-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-3xl border border-[#eadca8] bg-white p-4 shadow-2xl sm:p-6 lg:max-h-[88dvh] lg:max-w-7xl lg:p-6">
+          <div className="relative my-auto max-h-[96dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-3xl border border-[#eadca8] bg-white p-3 shadow-2xl sm:p-4 lg:max-h-[94dvh] lg:max-w-7xl lg:p-5">
             <button type="button" onClick={cerrar} disabled={cargando} aria-label="Cerrar formulario" className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="size-5" /></button>
             {enviado ? (
               <div className="px-2 py-10 text-center sm:px-8">
@@ -120,13 +120,13 @@ export function SolicitarDemo({ className = "" }: Props) {
               <>
                 <div className="pr-8">
                   <span className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]"><Gem className="size-3.5" /> AURUM LAB · CONÓCENOS</span>
-                  <h2 id="solicitud-demo-title" className="mt-4 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Obtén una demostración personalizada.</h2>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Cuéntanos un poco sobre tu taller. Prepararemos un recorrido práctico de 20–30 minutos según lo que necesitas.</p>
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] px-3 py-2 text-xs font-medium text-slate-600"><Clock3 className="size-4 text-[#987400]" /> 20–30 min · Sin compromiso</div>
+                  <h2 id="solicitud-demo-title" className="mt-2 text-xl font-extrabold tracking-tight text-[#17232d] sm:text-2xl">Obtén una demostración personalizada.</h2>
+                  <p className="mt-1 max-w-xl text-xs leading-5 text-slate-600">Cuéntanos un poco sobre tu taller. Prepararemos un recorrido práctico de 20–30 minutos según lo que necesitas.</p>
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] px-3 py-1.5 text-[11px] font-medium text-slate-600"><Clock3 className="size-4 text-[#987400]" /> 20–30 min · Sin compromiso</div>
                 </div>
-                <div className="mt-4 grid gap-4 lg:grid-cols-[1.04fr_.96fr] lg:items-start">
+                <div className="mt-3 grid gap-3 lg:grid-cols-[1.04fr_.96fr] lg:items-start">
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="Calendario de disponibilidad">
-                  <div className="border-b border-slate-100 bg-gradient-to-r from-[#fffaf0] via-white to-white px-4 py-4 sm:px-5">
+                  <div className="border-b border-slate-100 bg-gradient-to-r from-[#fffaf0] via-white to-white px-3 py-2.5 sm:px-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-[#987400]"><CalendarDays className="size-3.5" /> Agenda de demostraciones</span>
@@ -140,39 +140,39 @@ export function SolicitarDemo({ className = "" }: Props) {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 sm:p-5">
+                  <div className="p-3 sm:p-4">
                     {cargandoHorarios ? <div className="grid min-h-48 place-items-center"><p className="text-sm text-slate-500">Consultando disponibilidad…</p></div> : errorHorarios ? <p role="alert" className="rounded-xl bg-red-50 px-3 py-3 text-sm text-red-700">{errorHorarios}</p> : horariosDisponibles.length === 0 ? <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center"><CalendarDays className="mx-auto size-7 text-slate-300" /><p className="mt-2 text-sm font-semibold text-slate-600">Aún no hay fechas disponibles</p><p className="mt-1 text-xs text-slate-400">Vuelve a visitarnos pronto para reservar tu demostración.</p></div> : <>
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-3 text-[10px] font-medium text-slate-500"><span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-emerald-500" /> Disponible</span><span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-300" /> No disponible</span></div>
                         <span className="text-[10px] font-semibold text-slate-400">{fechasConDisponibilidad.size} días con horarios</span>
                       </div>
-                      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                         {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map((d,i)=><span key={i} className="pb-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">{d}</span>)}
-                        {diasCalendario.map((dia,i)=>{const key=dia.toLocaleDateString("en-CA");const delMes=dia.getMonth()===mesVisible.getMonth();const disponible=fechasConDisponibilidad.has(key);const seleccionado=key===fechaSeleccionada;const hoy=key===new Date().toLocaleDateString("en-CA");return <button key={i} type="button" disabled={!delMes||!disponible} aria-label={`${dia.getDate()} de ${new Intl.DateTimeFormat("es-PE",{month:"long"}).format(dia)}${disponible?", disponible":", no disponible"}`} aria-pressed={seleccionado} onClick={()=>{setFechaSeleccionada(key);setHorarioSeleccionado("");}} className={"group relative flex min-h-[46px] flex-col items-center justify-center gap-1 rounded-xl border text-xs font-semibold transition sm:min-h-[52px] lg:min-h-[48px] "+(seleccionado?"border-[#c59a18] bg-gradient-to-b from-[#f8d976] to-[#edc34d] text-[#17232d] shadow-[0_3px_10px_rgba(197,154,24,.2)] ring-1 ring-[#c59a18]/30":disponible?"border-emerald-100 bg-emerald-50/70 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50":delMes?"border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed":"border-transparent bg-transparent text-slate-200")}>
+                        {diasCalendario.map((dia,i)=>{const key=dia.toLocaleDateString("en-CA");const delMes=dia.getMonth()===mesVisible.getMonth();const disponible=fechasConDisponibilidad.has(key);const seleccionado=key===fechaSeleccionada;const hoy=key===new Date().toLocaleDateString("en-CA");return <button key={i} type="button" disabled={!delMes||!disponible} aria-label={`${dia.getDate()} de ${new Intl.DateTimeFormat("es-PE",{month:"long"}).format(dia)}${disponible?", disponible":", no disponible"}`} aria-pressed={seleccionado} onClick={()=>{setFechaSeleccionada(key);setHorarioSeleccionado("");}} className={"group relative flex min-h-[34px] flex-col items-center justify-center gap-0 rounded-lg border text-[11px] font-semibold transition sm:min-h-[38px] lg:min-h-[34px] "+(seleccionado?"border-[#c59a18] bg-gradient-to-b from-[#f8d976] to-[#edc34d] text-[#17232d] shadow-[0_3px_10px_rgba(197,154,24,.2)] ring-1 ring-[#c59a18]/30":disponible?"border-emerald-100 bg-emerald-50/70 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50":delMes?"border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed":"border-transparent bg-transparent text-slate-200")}>
                           <span className={"text-sm sm:text-base "+(hoy&&!seleccionado?"underline decoration-2 underline-offset-4 decoration-[#c59a18]":"")}>{dia.getDate()}</span>
                           {disponible?<span className={"size-1.5 rounded-full "+(seleccionado?"bg-[#735500]":"bg-emerald-500")}/>:<span className="h-1.5"/>}
                         </button>;})}
                       </div>
-                      <div className="mt-5 border-t border-slate-100 pt-4">
+                      <div className="mt-3 border-t border-slate-100 pt-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div><p className="text-[10px] font-bold uppercase tracking-[.13em] text-slate-400">Horarios disponibles</p><p className="mt-1 text-sm font-bold capitalize text-[#17232d]">{fechaSeleccionada ? new Intl.DateTimeFormat("es-PE",{dateStyle:"full"}).format(new Date(fechaSeleccionada+"T12:00:00")) : "Selecciona una fecha"}</p></div>
                           {horariosDelDia.length>0?<span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">{horariosDelDia.length} opciones</span>:null}
                         </div>
-                        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          {horariosDelDia.length?horariosDelDia.map(h=>{const seleccionado=horarioSeleccionado===h.id;return <button key={h.id} type="button" aria-pressed={seleccionado} onClick={()=>setHorarioSeleccionado(h.id)} className={"flex items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition "+(seleccionado?"border-[#c59a18] bg-[#fff8df] shadow-sm ring-1 ring-[#c59a18]/20":"border-slate-200 bg-white hover:border-[#d5b45f] hover:bg-[#fffdf6]")}><span className="flex items-center gap-2.5"><Clock3 className={"size-4 "+(seleccionado?"text-[#987400]":"text-slate-400")}/><span className="text-xs font-bold tabular-nums text-[#17232d]">{new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.inicio_at))} – {new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.fin_at))}</span></span><span className={"rounded-md px-2 py-1 text-[9px] font-bold "+(seleccionado?"bg-[#f5e4a6] text-[#765900]":"bg-emerald-50 text-emerald-700")}>{seleccionado?"Elegido":"Libre"}</span></button>;}) : <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500 sm:col-span-2">Selecciona un día con indicador verde para consultar sus horarios.</p>}
+                        <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                          {horariosDelDia.length?horariosDelDia.map(h=>{const seleccionado=horarioSeleccionado===h.id;return <button key={h.id} type="button" aria-pressed={seleccionado} onClick={()=>setHorarioSeleccionado(h.id)} className={"flex items-center justify-between gap-2 rounded-lg border px-2.5 py-2 text-left transition "+(seleccionado?"border-[#c59a18] bg-[#fff8df] shadow-sm ring-1 ring-[#c59a18]/20":"border-slate-200 bg-white hover:border-[#d5b45f] hover:bg-[#fffdf6]")}><span className="flex items-center gap-2.5"><Clock3 className={"size-4 "+(seleccionado?"text-[#987400]":"text-slate-400")}/><span className="text-xs font-bold tabular-nums text-[#17232d]">{new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.inicio_at))} – {new Intl.DateTimeFormat("es-PE",{hour:"2-digit",minute:"2-digit"}).format(new Date(h.fin_at))}</span></span><span className={"rounded-md px-2 py-1 text-[9px] font-bold "+(seleccionado?"bg-[#f5e4a6] text-[#765900]":"bg-emerald-50 text-emerald-700")}>{seleccionado?"Elegido":"Libre"}</span></button>;}) : <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500 sm:col-span-2">Selecciona un día con indicador verde para consultar sus horarios.</p>}
                         </div>
                         {horarioSeleccionado?<p className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-800"><CheckCircle2 className="size-4 shrink-0" /> Horario seleccionado: {new Intl.DateTimeFormat("es-PE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(horariosDisponibles.find(h=>h.id===horarioSeleccionado)!.inicio_at))}</p>:null}
                       </div>
                     </>}
                   </div>
                 </section>
-                <form onSubmit={enviar} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:mt-0">
+                <form onSubmit={enviar} className="space-y-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:mt-0">
                   <div className="rounded-xl border border-[#eadca8] bg-gradient-to-r from-[#fffaf0] to-white px-3.5 py-3">
                     <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#987400]">Tu demostración</p>
                     {horarioSeleccionado && horariosDisponibles.find(h => h.id === horarioSeleccionado) ? <p className="mt-1 text-sm font-bold text-[#17232d]">{new Intl.DateTimeFormat("es-PE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(horariosDisponibles.find(h => h.id === horarioSeleccionado)!.inicio_at))}</p> : <p className="mt-1 text-xs text-slate-500">Selecciona primero un día y horario en el calendario.</p>}
                   </div>
-                  <div className="grid gap-3">
-                    <label className="text-xs font-semibold text-slate-700">Nombre del taller o empresa *
+                  <div className="grid gap-2.5 lg:grid-cols-2">
+                    <label className="text-xs font-semibold text-slate-700 lg:col-span-2">Nombre del taller o empresa *
                       <input required maxLength={140} autoComplete="organization" value={form.empresa} onChange={e => setForm(v => ({ ...v, empresa: e.target.value }))} className={inputClass + " mt-1.5"} placeholder="Ej. Joyería Aurora" />
                     </label>
                     <label className="text-xs font-semibold text-slate-700">Nombre y apellido *
@@ -186,10 +186,10 @@ export function SolicitarDemo({ className = "" }: Props) {
                         <span className="relative min-w-0 flex-1"><Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required type="tel" inputMode="numeric" maxLength={20} autoComplete="tel-national" value={form.telefono} onChange={e => setForm(v => ({ ...v, telefono: e.target.value.replace(/[^0-9\\s()-]/g, "") }))} className={inputClass + " pl-10"} placeholder="Número de WhatsApp" /></span>
                       </span>
                     </label>
-                    <label className="text-xs font-semibold text-slate-700">Correo electrónico *
+                    <label className="text-xs font-semibold text-slate-700 lg:col-span-2">Correo electrónico *
                       <span className="relative mt-1.5 block"><Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required type="email" maxLength={160} autoComplete="email" value={form.email} onChange={e => setForm(v => ({ ...v, email: e.target.value }))} className={inputClass + " pl-10"} placeholder="tu@correo.com" /></span>
                     </label>
-                    <label className="text-xs font-semibold text-slate-700">¿Qué te gustaría conocer?
+                    <label className="text-xs font-semibold text-slate-700 lg:col-span-2">¿Qué te gustaría conocer?
                       <select value={form.interes} onChange={e => setForm(v => ({ ...v, interes: e.target.value }))} className={inputClass + " mt-1.5"}>
                         {intereses.map(item => <option key={item} value={item}>{item}</option>)}
                       </select>
