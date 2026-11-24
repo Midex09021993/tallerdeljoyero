@@ -83,7 +83,7 @@ export function SolicitarDemo({ className = "" }: Props) {
       const { error: insertError } = await (supabasePublic as any).rpc("agenda_solicitar_demo_publica", {
         _horario_id: horarioSeleccionado, _empresa: form.empresa.trim(), _nombre: form.nombre.trim(),
         _telefono: form.telefono.trim() ? `${codigoPais}${form.telefono.replace(/\D/g, "")}` : "",
-        _email: form.email.trim().toLowerCase(), _interes: form.interes, _horario_preferido: form.horario || null,
+        _email: form.email.trim().toLowerCase(), _interes: form.interes, _horario_preferido: null,
       });
       if (insertError) throw insertError;
       registrarEvento("demo_request_submitted", { source: "landing_home", interest: form.interes });
@@ -187,11 +187,6 @@ export function SolicitarDemo({ className = "" }: Props) {
                     <label className="text-xs font-semibold text-slate-700 sm:col-span-2">¿Qué te gustaría conocer?
                       <select value={form.interes} onChange={e => setForm(v => ({ ...v, interes: e.target.value }))} className={inputClass + " mt-1.5"}>
                         {intereses.map(item => <option key={item} value={item}>{item}</option>)}
-                      </select>
-                    </label>
-                    <label className="text-xs font-semibold text-slate-700 sm:col-span-2">¿En qué horario podemos contactarte? <span className="font-normal text-slate-400">(opcional)</span>
-                      <select value={form.horario} onChange={e => setForm(v => ({ ...v, horario: e.target.value }))} className={inputClass + " mt-1.5"}>
-                        <option value="">Cualquier horario</option><option value="Mañana">Mañana</option><option value="Tarde">Tarde</option>
                       </select>
                     </label>
                   </div>
