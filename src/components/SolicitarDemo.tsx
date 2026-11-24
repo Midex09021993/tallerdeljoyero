@@ -30,7 +30,7 @@ export function SolicitarDemo({ className = "" }: Props) {
   const [errorHorarios, setErrorHorarios] = useState("");
   const [mesVisible, setMesVisible] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [fechaSeleccionada, setFechaSeleccionada] = useState("");
-  const [form, setForm] = useState({ empresa: "", nombre: "", telefono: "", email: "", interes: intereses[4], horario: "", sitio: "" });
+  const [form, setForm] = useState({ empresa: "", nombre: "", telefono: "", email: "", interes: intereses[4], sitio: "" });
 
   useEffect(() => {
     if (!abierto) return;
