@@ -311,6 +311,7 @@ function AgendaPage() {
                   </div>
                 </div>
                 {horarios.isLoading ? <p className="mt-3 text-sm text-muted-foreground">Cargando horarios…</p> : horarios.isError ? <p className="mt-3 text-sm text-destructive">No se pudieron consultar los horarios disponibles.</p> : horariosDiaSeleccionado.length > 0 ? (
+                  <>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {horariosDiaSeleccionado.map((h) => (
                       <label key={h.id} className={"flex cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-2.5 transition "+(horariosSeleccionados.includes(h.id) ? "border-emerald-500 bg-emerald-100/70 ring-1 ring-emerald-400" : "border-emerald-200 bg-background hover:border-emerald-400")}>
@@ -326,6 +327,7 @@ function AgendaPage() {
                     <span className="text-sm font-medium text-rose-900">{horariosSeleccionados.length} horario(s) seleccionado(s)</span>
                     <button type="button" disabled={eliminarHorarios.isPending} onClick={() => { if (window.confirm(`¿Eliminar ${horariosSeleccionados.length} horario(s) seleccionado(s)? Esta acción no se puede deshacer.`)) eliminarHorarios.mutate(horariosSeleccionados); }} className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"><Trash2 className="size-3.5" /> {eliminarHorarios.isPending ? "Eliminando…" : "Eliminar seleccionados"}</button>
                   </div> : null}
+                  </>
                 ) : (
                   <p className="mt-3 rounded-lg border border-dashed border-emerald-200 bg-background/70 p-3 text-center text-sm text-muted-foreground">
                     {diaDisponible ? "Todavía no has publicado horarios para este día. Usa «Administrar horarios» para añadir bloques." : "Este día no está habilitado. Márcalo como disponible para publicar horarios."}
