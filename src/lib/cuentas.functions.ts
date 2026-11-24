@@ -228,6 +228,7 @@ type RegistroTaller = {
   email: string;
   telefono?: string;
   ciudad?: string;
+  pais?: string;
   password: string;
 };
 
@@ -244,12 +245,14 @@ export const registrarTaller = createServerFn({ method: "POST" })
     const email = data.email?.trim().toLowerCase();
     const telefono = data.telefono?.trim() ?? "";
     const ciudad = data.ciudad?.trim() ?? "";
+    const pais = data.pais?.trim() ?? "";
 
     if (!nombre || nombre.length > 120) throw new Error("Ingresa tu nombre.");
     if (!taller || taller.length > 160) throw new Error("Ingresa el nombre de tu taller.");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Ingresa un correo válido.");
     if (telefono.length > 30) throw new Error("El teléfono es demasiado largo.");
     if (ciudad.length > 80) throw new Error("La ciudad es demasiado larga.");
+    if (!pais || pais.length > 80) throw new Error("Selecciona tu país.");
     if (!data.password || data.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
     if (data.password.length > 128) throw new Error("La contraseña es demasiado larga.");
 
@@ -304,6 +307,8 @@ export const registrarTaller = createServerFn({ method: "POST" })
         nombre,
         apellidos: "",
         telefono,
+        pais,
+        ciudad,
       },
     });
     if (authError || !creado.user) {
@@ -351,7 +356,7 @@ export const registrarTaller = createServerFn({ method: "POST" })
         ciudad: ciudad || null,
         estado: "activo",
         sede_id: sedeId,
-        metadata: { origen: "registro_publico", plan_comercial: "emprendedor" },
+        metadata: { origen: "registro_publico", plan_comercial: "emprendedor", pais },
       })
       .select("id")
       .single();
