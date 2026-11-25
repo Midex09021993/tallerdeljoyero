@@ -83,7 +83,7 @@ export function MicroGuiaOro({ slug }: { slug: MicroGuiaOroSlug }) {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
           <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Guías técnicas</Link>
-          <Link to="/herramientas-publicas/aleacion-oro" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white">Calculadora de aleaciones</Link>
+          <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "aleacion-oro" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white">Calculadora de aleaciones</Link>
         </div>
       </header>
       <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
@@ -121,7 +121,7 @@ export function MicroGuiaOro({ slug }: { slug: MicroGuiaOroSlug }) {
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="flex items-center gap-2 text-lg font-bold"><BookOpen className="size-5 text-[#987400]" /> Guía principal del cluster</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">Consulta la explicación completa de leyes, balances de masa, mezcla de aleaciones y controles de taller.</p>
-          <Link to="/guias/calcular-aleaciones-oro-18k-14k-9k" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#876500]">Cómo calcular aleaciones de oro de 18K, 14K y 9K <ArrowRight className="size-4" /></Link>
+          <Link to="/guias/$slug" params={{ slug: "calcular-aleaciones-oro-18k-14k-9k" }} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#876500]">Cómo calcular aleaciones de oro de 18K, 14K y 9K <ArrowRight className="size-4" /></Link>
         </section>
       </article>
     </main>
