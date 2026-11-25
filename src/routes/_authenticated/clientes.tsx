@@ -422,13 +422,13 @@ function ClientesPage() {
                   <ArrowLeft className="size-4" aria-hidden="true" /> Volver a clientes
                 </button>
               </div>
-              <div className="relative overflow-hidden border-b border-[#C5A36B]/25 bg-[linear-gradient(118deg,#182838_0%,#293B4A_72%,#354958_100%)] px-5 py-7 text-[#F5F1E8] sm:px-6">
-                <span className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-gold/10 blur-3xl" />
-                <span className="pointer-events-none absolute -bottom-20 left-1/3 size-40 rounded-full bg-gold/5 blur-3xl" />
+              <div className="relative overflow-hidden border-b border-[#C5A36B]/25 bg-[linear-gradient(118deg,#FFFEFC_0%,#F8F4EC_72%,#F2E9D8_100%)] px-5 py-7 text-[#293B4A] sm:px-6">
+                <span className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-[#C9A227]/10 blur-3xl" />
+                <span className="pointer-events-none absolute -bottom-20 left-1/3 size-40 rounded-full bg-[#C9A227]/5 blur-3xl" />
                 <div className="relative flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-[#D9BD8B]/45 bg-[#C5A36B]/15 text-lg font-semibold text-[#E8CC9A] shadow-[0_10px_30px_-15px_rgba(0,0,0,.55)]">{seleccionado.nombre.charAt(0).toUpperCase()}</span>
-                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#D9BD8B]">RELACIÓN CON EL CLIENTE <span className="px-1 text-white/30">/</span> PERFIL</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-[#D5DEE5]">{seleccionado.tipo === "empresa" ? "Cliente empresa" : "Cliente particular"} · Relación comercial · Aurum Lab</p><p className="mt-1 text-[11px] font-medium text-[#D9BD8B]">Sede · {seleccionado.sede_nombre}</p></div>
+                    <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-[#C9A227]/30 bg-[#F3E5C2] text-lg font-semibold text-[#8B6710] shadow-[0_8px_24px_-16px_rgba(139,103,16,.35)]">{seleccionado.nombre.charAt(0).toUpperCase()}</span>
+                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#9A7418]">RELACIÓN CON EL CLIENTE <span className="px-1 text-[#C5A36B]/60">/</span> PERFIL</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-[#617487]">{seleccionado.tipo === "empresa" ? "Cliente empresa" : "Cliente particular"} · Relación comercial · Aurum Lab</p><p className="mt-1 text-[11px] font-medium text-[#9A7418]">Sede · {seleccionado.sede_nombre}</p></div>
                   </div>
                   <span className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider ${seleccionado.estado === "activo" ? "border-success/30 bg-success/10 text-success" : "border-border bg-surface-muted text-muted-foreground"}`}>{seleccionado.estado}</span>
                 </div>
