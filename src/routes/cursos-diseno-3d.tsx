@@ -81,7 +81,7 @@ const complementos = [
 ] as const;
 
 function CursosDiseno3DPage() {
-  const culqiReservaUrl = "https://express.culqi.com/pago/9E6E758D9F";
+  const culqiReservaUrl = ""; // Pendiente: reemplazar por el enlace Culqi configurado a US$ 20.
   const [programaAbierto, setProgramaAbierto] = useState(false);
   const [bonoAbierto, setBonoAbierto] = useState(false);
   const [nivelEscrito, setNivelEscrito] = useState(0);
@@ -308,14 +308,14 @@ function CursosDiseno3DPage() {
             </ul>
             <section className="mt-6 rounded-2xl border border-[#d9c18a] bg-[#fffaf0] p-5" aria-labelledby="separar-vacante">
               <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Reserva tu matrícula</p>
-              <h3 id="separar-vacante" className="mt-1 text-lg font-bold text-[#24374a]">Separa tu vacante con el 50%</h3>
-              <div className="mt-3 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs text-[#718196]">Adelanto de matrícula</p><p className="text-3xl font-extrabold tracking-tight text-[#1e3042]">US$ 115</p></div><div className="text-right"><p className="text-xs text-[#718196]">Saldo antes del inicio</p><p className="text-xl font-bold text-[#24374a]">US$ 115</p></div></div>
-              <p className="mt-2 text-xs leading-5 text-[#627487]">Paga el 50% para separar tu vacante y completa el saldo antes del inicio del curso.</p>
-              {culqiReservaUrl ? <a href={culqiReservaUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Separar vacante con Culqi · US$ 115 <ArrowRight className="size-4" /></a> : <button type="button" disabled className="mt-4 inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#c9b78a] px-5 text-sm font-bold text-white opacity-80">Pago con Culqi · enlace pendiente de configurar</button>}
+              <h3 id="separar-vacante" className="mt-1 text-lg font-bold text-[#24374a]">Separa tu vacante con US$ 20</h3>
+              <div className="mt-3 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs text-[#718196]">Adelanto de matrícula</p><p className="text-3xl font-extrabold tracking-tight text-[#1e3042]">US$ 20</p></div><div className="text-right"><p className="text-xs text-[#718196]">Saldo antes del inicio</p><p className="text-xl font-bold text-[#24374a]">US$ 210</p></div></div>
+              <p className="mt-2 text-xs leading-5 text-[#627487]">Separa tu vacante con US$ 20 y paga los US$ 210 restantes antes del inicio del curso.</p>
+              {culqiReservaUrl ? <a href={culqiReservaUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Separar vacante con Culqi · US$ 20 <ArrowRight className="size-4" /></a> : <button type="button" disabled className="mt-4 inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#c9b78a] px-5 text-sm font-bold text-white opacity-80">Pago con Culqi · enlace pendiente de configurar</button>}
               {!culqiReservaUrl && <p className="mt-2 text-center text-[11px] leading-4 text-[#7a8793]">El checkout se habilitará cuando configuremos el enlace de pago oficial de Culqi.</p>}
             </section>
             <Link to="/auth" className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#d6bd7e] bg-white px-5 text-sm font-bold text-[#76591e] transition hover:bg-[#fff4d7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Crear cuenta gratuita en AURUM LAB <ArrowRight className="size-4" /></Link>
-            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">Precio final: US$ 230. Reserva: US$ 115 (50%); saldo: US$ 115. Inicio previsto: 30 de noviembre de 2026. Cupos disponibles anunciados: 5 de 15.</p>
+            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">Precio final: US$ 230. Reserva: US$ 20; saldo: US$ 210. Inicio previsto: 30 de noviembre de 2026. Cupos disponibles anunciados: 5 de 15. Inicio previsto: 30 de noviembre de 2026. Cupos disponibles anunciados: 5 de 15.</p>
           </aside>
         </div>
       </section>
