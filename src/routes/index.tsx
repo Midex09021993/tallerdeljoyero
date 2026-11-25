@@ -613,8 +613,8 @@ function InicioPublico() {
             ],
             "offers": [
               { "@type": "Offer", "name": "Emprendedor", "price": "0", "priceCurrency": "USD", "description": "Plan gratuito con herramientas públicas." },
-              { "@type": "Offer", "name": "Taller", "price": "9", "priceCurrency": "USD", "description": "Plan mensual de AURUM LAB." },
-              { "@type": "Offer", "name": "Profesional", "price": "24", "priceCurrency": "USD", "description": "Plan mensual de AURUM LAB." }
+              { "@type": "Offer", "name": "Taller", "price": "9", "priceCurrency": "USD", "description": "Plan mensual de AURUM LAB.", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "9", "priceCurrency": "USD", "billingDuration": "P1M" } },
+              { "@type": "Offer", "name": "Profesional", "price": "24", "priceCurrency": "USD", "description": "Plan mensual de AURUM LAB.", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "24", "priceCurrency": "USD", "billingDuration": "P1M" } }
             ],
             "inLanguage": "es"
           },
@@ -920,7 +920,7 @@ function InicioPublico() {
             ))}
           </ul>
           <div className="mx-auto mt-5 max-w-3xl rounded-xl border border-[#e7d9ad] bg-[#fffdf6] px-4 py-3 text-sm leading-6 text-[#3e4650]">
-            <p><strong>Guía relacionada:</strong> aprende a preparar aleaciones de oro 18K, 14K y 9K con ejemplos en gramos en nuestra <Link to="/guias" title="Guías técnicas de joyería" className="font-semibold text-[#705400] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b00]">biblioteca de guías técnicas</Link>.</p>
+            <p><strong>Guía relacionada:</strong> aprende a preparar aleaciones de oro 18K, 14K y 9K con ejemplos en gramos en nuestra <Link to="/guias/calcular-aleaciones-oro-18k-14k-9k" title="Cómo calcular aleaciones de oro 18K, 14K y 9K" className="font-semibold text-[#705400] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b00]">guía para calcular aleaciones de oro 18K, 14K y 9K</Link>.</p>
           </div>
           <section className="aurum-tools-faq mx-auto mt-8 max-w-3xl" aria-labelledby="herramientas-faq-titulo">
             <h3 id="herramientas-faq-titulo" className="text-lg font-bold text-[#17232d]">Preguntas frecuentes</h3>
