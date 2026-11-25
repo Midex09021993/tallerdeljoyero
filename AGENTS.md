@@ -20,3 +20,7 @@
 - `/auth` honors a validated same-origin `next` path after login so the OAuth consent route (`src/routes/[.]lovable.oauth.consent.tsx`) can resume.
 - AURI interno reutiliza los handlers MCP de `src/lib/mcp/tools/` desde una server fn con `requireSupabaseAuth` (`src/lib/auri/`), pasando el token de sesión verificado para que RLS aplique; la Edge Function `auri-chat` es solo pública y rechaza cualquier campo distinto de `message`/`history`. Why: separa datos privados del chat comercial sin duplicar herramientas.
 - La voz de AURI (Gemini TTS, voz y modelo fijos en servidor) vive en `src/lib/auri/auri-tts.functions.ts` con lógica pura en `tts-core.ts`; solo se usa para AURI público/Tutor y AURI interno lee con la voz local del navegador. Why: no se crean Edge Functions nuevas y las respuestas internas pueden contener datos del taller.
+
+## Navigation
+
+- Desktop nav dropdowns use `src/components/nav/NavDropdown.tsx` (hover bridge + 150 ms cancelable close, click, keyboard, Escape/outside/route close). Why: one consistent, robust pattern instead of ad-hoc mouseleave handlers.
