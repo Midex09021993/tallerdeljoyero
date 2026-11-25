@@ -63,7 +63,7 @@ export function MicroGuiaPeso3D({ slug }: { slug: MicroGuiaPeso3DSlug }) {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
           <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Guías técnicas</Link>
-          <Link to="/herramientas-publicas/peso-joya-3d" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white">Calculadora de peso 3D</Link>
+          <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-joya-3d" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white">Calculadora de peso 3D</Link>
         </div>
       </header>
       <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
