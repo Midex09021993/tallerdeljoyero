@@ -324,21 +324,38 @@ function AgendaPage() {
                 <div className="mt-3 space-y-1 text-sm text-muted-foreground"><p>{d.email}</p><p>{d.telefono}</p><p className="pt-1 text-xs">Interés: {d.interes}</p>{d.horario_preferido ? <p className="text-xs">Horario preferido: {d.horario_preferido}</p> : null}{d.fecha_reunion_at ? <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 p-2 text-xs text-indigo-900"><p className="font-semibold">Demostración reservada</p><p>{fechaHora(d.fecha_reunion_at)} · Discord</p><a href="https://discord.gg/TEjqZUcbg" target="_blank" rel="noreferrer" className="mt-1 inline-flex font-semibold underline">Abrir servidor de Discord</a></div> : null}</div>
                 <div className="mt-3 flex flex-wrap gap-2">
                 {(() => {
+                  const interes = d.interes.toLocaleLowerCase("es");
                   const mensaje = [
                     "Hola " + d.nombre + ", 👋",
                     "",
-                    "Gracias por solicitar una demostración de AURUM LAB para " + d.empresa + ".",
-                    "Vimos que te interesa: " + d.interes + ".",
-                    d.horario_preferido ? "Tu horario preferido es: " + d.horario_preferido + "." : "",
+                    "Gracias por tu interés en AURUM LAB y en " + d.empresa + ".",
                     "",
-                    "Queremos mostrarte cómo AURUM LAB puede ayudarte a organizar y mejorar el trabajo de tu taller de joyería, según lo que necesitas.",
-                    "¿Te parece si coordinamos una breve demostración personalizada?",
+                    interes.includes("curso")
+                      ? "Vimos que deseas información sobre el Curso de Diseño CAD 3D para Joyería. Podemos compartirte el contenido, modalidad, fechas, requisitos y opciones de matrícula para que conozcas todos los detalles."
+                      : interes.includes("aurum render")
+                        ? "Vimos que te interesa AURUM RENDER, nuestro render 3D especializado en joyería. Podemos mostrarte cómo aplicar metales, gemas e iluminación y preparar imágenes de presentación de tus modelos, además de su compatibilidad con Rhino 7 y 8."
+                        : interes.includes("calculadora") || interes.includes("herramientas")
+                          ? "Vimos que te interesan nuestras calculadoras y herramientas técnicas. Podemos enseñarte cómo calcular aleaciones, cantidades de metal y otros valores útiles antes de fabricar tus piezas."
+                          : interes.includes("gestión")
+                            ? "Vimos que te interesa la gestión de clientes, cotizaciones y pedidos. Podemos mostrarte cómo centralizar el seguimiento comercial y el trabajo diario de tu taller."
+                            : interes.includes("nube") || interes.includes("catálogo")
+                              ? "Vimos que te interesa Mi Nube y el catálogo digital. Podemos mostrarte cómo organizar tus diseños y compartirlos con tus clientes mediante enlaces."
+                              : "Vimos que deseas conocer toda la plataforma. Prepararemos un recorrido breve por las herramientas de AURUM LAB y nos enfocaremos en las funciones más útiles para tu taller.",
                     "",
-                    "Quedo atento(a). ¡Gracias por tu interés!",
+                    "Si te parece, coordinamos una demostración personalizada y resolvemos tus consultas.",
+                    d.horario_preferido ? "Horario preferido: " + d.horario_preferido + "." : "",
                     "",
+                    "¡Gracias! Quedo atento(a).",
                     "Equipo AURUM LAB"
                   ].filter(Boolean).join("\n");
-                  return <><button type="button" onClick={() => { void navigator.clipboard.writeText(mensaje).then(() => toast.success("Mensaje copiado", { description: "Ya puedes pegarlo en WhatsApp." })).catch(() => toast.error("No se pudo copiar", { description: "Selecciona y copia el mensaje manualmente." })); }} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">Copiar mensaje</button><a href={"https://wa.me/" + d.telefono.replace(/\\D/g, "") + "?text=" + encodeURIComponent(mensaje)} target="_blank" rel="noreferrer" className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">WhatsApp</a></>;
+                  return <div className="w-full space-y-2 rounded-xl border border-gold/25 bg-gold/5 p-3">
+                    <p className="text-xs font-semibold text-gold-deep">Mensaje sugerido · según el interés</p>
+                    <textarea readOnly value={mensaje} rows={7} className="w-full resize-y rounded-lg border bg-background p-2.5 text-xs leading-5 text-foreground" aria-label="Mensaje predeterminado para esta solicitud"/>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => { void navigator.clipboard.writeText(mensaje).then(() => toast.success("Mensaje copiado", { description: "Ya puedes pegarlo en WhatsApp." })).catch(() => toast.error("No se pudo copiar", { description: "Selecciona y copia el mensaje manualmente." })); }} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">Copiar mensaje</button>
+                      <a href={"https://wa.me/" + d.telefono.replace(/\\D/g, "") + "?text=" + encodeURIComponent(mensaje)} target="_blank" rel="noreferrer" className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">WhatsApp</a>
+                    </div>
+                  </div>;
                 })()}<a href={"mailto:" + d.email + "?subject=" + encodeURIComponent("Confirmación de tu demostración de AURUM LAB") + "&body=" + encodeURIComponent("Hola " + d.nombre + ",\n\nTu demostración de AURUM LAB está reservada para " + (d.fecha_reunion_at ? fechaHora(d.fecha_reunion_at) : "la fecha coordinada") + ".\n\nNos reuniremos por Discord: https://discord.gg/TEjqZUcbg\n\nSaludos,\nEquipo AURUM LAB\nfabricaciondigital@hotmail.com")} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">Correo</a>{d.estado === "pendiente" ? <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"contactado"})} className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">Marcar contactado</button> : null}{d.estado !== "demo_agendada" ? <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"demo_agendada"})} className="rounded-lg border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800">Marcar demo coordinada</button> : null}{d.estado === "cerrado" ? <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"pendiente"})} className="rounded-lg border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-800">Reabrir</button> : <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"cerrado"})} className="rounded-lg border px-3 py-2 text-xs font-semibold text-muted-foreground">Cerrar</button>}</div>
               </article>)}
             </div>
