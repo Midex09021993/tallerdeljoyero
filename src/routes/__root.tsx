@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#111111" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Taller del Joyero" },
+      { name: "apple-mobile-web-app-title", content: "AURUM LAB" },
       { name: "google", content: "notranslate" },
       { name: "google-site-verification", content: "49aJ2jM3v8am3NB35oWtwgwSFmdGB1cIuUxyxT0UdDM" },
     ],
