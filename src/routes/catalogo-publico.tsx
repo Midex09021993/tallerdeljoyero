@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, BookOpen, GraduationCap, Search, Sparkles, ArrowRight, Store, UsersRound } from "lucide-react";
+import { Building2, BookOpen, Search, ArrowRight, Award } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/catalogo-publico")({
@@ -61,8 +61,6 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
       return !q || [item.nombre, item.descripcion, item.formacion_titulo, item.formacion_descripcion, item.identidad_nombre, item.identidad_ciudad, item.identidad_pais, item.identidad_sitio_web].filter(Boolean).join(" ").toLocaleLowerCase("es").includes(q);
     });
   }, [data, busqueda, filtro]);
-  const talleres = data.filter((x) => x.tipo === "taller").length;
-  const cursos = data.filter((x) => x.tipo === "curso").length;
   const paises = [...new Set(data.filter(x => x.tipo === "taller").map(x => x.identidad_pais?.trim()).filter((x): x is string => Boolean(x)))].sort((a,b)=>a.localeCompare(b,"es"));
   const [paisFiltro, setPaisFiltro] = useState("todos");
   const [orden, setOrden] = useState<"alfabetico"|"productos">("alfabetico");
@@ -108,8 +106,6 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
         const country = item.identidad_pais?.trim() || "";
         const city = item.identidad_ciudad?.trim() || "";
         const website = item.identidad_sitio_web?.trim() || "";
-        const fieldsComplete = [Boolean(logo), Boolean(descripcion?.trim()), Boolean(country), Boolean(website), Boolean(item.tipo)].filter(Boolean).length;
-        const profileProgress = Math.round(fieldsComplete / 5 * 100);
         const initials = titulo.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("es") || "").join("") || "AL";
         const category = esCurso ? "Curso y formación" : "Taller / joyería";
         const count = esCurso ? null : item.productos_publicados;
@@ -124,9 +120,13 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
               <div className="min-w-0 flex-1"><h2 className="line-clamp-2 font-display text-xl leading-tight tracking-[-.02em] text-[#17232d]">{titulo}</h2><p className="mt-1 truncate text-xs text-slate-500">{[city,country].filter(Boolean).join(" · ") || "Comunidad joyera"}</p></div>
             </div>
             <p className="mt-4 line-clamp-2 min-h-[3rem] text-sm leading-6 text-slate-600">{descripcion?.trim() || "Descripción pendiente de completar."}</p>
-            <div className="mt-4 rounded-xl border border-slate-200 bg-[#faf9f6] p-3">
-              <div className="flex items-center justify-between gap-2"><span className="text-[10px] font-semibold uppercase tracking-[.12em] text-slate-500">{profileProgress === 100 ? "Perfil completo" : "Perfil por completar"}</span><span className="text-xs font-semibold text-[#987400]">{profileProgress}%</span></div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-gradient-to-r from-[#c6a15b] to-[#e6c36d]" style={{width:`${profileProgress}%`}} /></div>
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#d4aa19]/30 bg-gradient-to-r from-[#fff9e9] to-[#faf9f6] p-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-[#d4aa19]/35 bg-white text-[#987400] shadow-sm"><Award className="size-5" /></span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#8c6800]">{esCurso ? "Formación AURUM" : "Ranking AURUM"}</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-600">{esCurso ? "Propuesta formativa de la comunidad" : "Clasificación y medallas en preparación"}</p>
+              </div>
+              {!esCurso && <span className="shrink-0 rounded-full border border-[#d4aa19]/40 bg-white px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-[#987400]">Ranking</span>}
             </div>
             <div className="mt-4 flex min-h-7 items-center justify-between gap-3 text-xs text-slate-500">
               {count !== null ? <span>{count} {count === 1 ? "producto" : "productos"}</span> : <span>Propuesta formativa</span>}
