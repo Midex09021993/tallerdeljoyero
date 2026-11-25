@@ -857,11 +857,13 @@ function InicioPublico() {
           .aurum-tools-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:1rem; }
           @media(min-width:640px){.aurum-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
           @media(min-width:1280px){.aurum-tools-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+          @keyframes aurum-tools-edge-glow { 0%,100% {opacity:.18;} 50% {opacity:.48;} }
           .aurum-tools-card { transform:translateY(0); transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1),border-color .4s ease; }
           .aurum-tools-card:hover { transform:translateY(-4px); box-shadow:0 18px 38px rgba(23,35,45,.11); border-color:#d8b64a; }
           .aurum-tools-card[data-featured="true"] { border-color:rgba(190,151,48,.65); box-shadow:0 5px 22px rgba(166,124,24,.07); }
           .aurum-tools-card[data-featured="true"]::after { content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;border:1px solid transparent;background:linear-gradient(110deg,transparent 15%,rgba(230,197,103,.35),transparent 70%) border-box;mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);mask-composite:exclude;opacity:0; }
-          .aurum-tools-card[data-featured="true"]:hover::after { opacity:1; }
+          .aurum-tools-card[data-featured="true"]::after { animation:aurum-tools-edge-glow 5.5s ease-in-out infinite; }
+          .aurum-tools-card[data-featured="true"]:hover::after { opacity:.65; }
           .aurum-tools-card [data-aurum-icon] { transition:transform .45s cubic-bezier(.22,1,.36,1),background-color .3s ease; }
           .aurum-tools-card:hover [data-aurum-icon] { transform:rotate(-5deg) scale(1.06); }
           .aurum-tools-card .aurum-tools-arrow { transition:transform .4s cubic-bezier(.22,1,.36,1); }
@@ -884,7 +886,7 @@ function InicioPublico() {
           .aurum-tools-faq summary:focus-visible { outline:2px solid #b58b00;outline-offset:4px;border-radius:4px; }
           @media(prefers-reduced-motion:reduce){
             .aurum-tools-heading [data-aurum-reveal],.aurum-tools-card,.aurum-tools-card:hover,.aurum-tools-card [data-aurum-icon],.aurum-tools-arrow,.aurum-tools-number {transition:none!important;transform:none!important;translate:0 0!important;opacity:1!important;}
-            .aurum-tools-card[data-featured="true"]::after{display:none;}
+            .aurum-tools-card[data-featured="true"]::after{display:none;animation:none;}
           }
         `}</style>
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
