@@ -39,7 +39,7 @@ const paginas = {
       { pregunta: "¿La calculadora ofrece recetas para oro amarillo, blanco y rosa?", respuesta: "La herramienta distribuye la cantidad estimada de liga según la receta configurada para cada color. No sustituye la ficha técnica de una aleación comercial ni un análisis de laboratorio." },
       { pregunta: "¿Cuál es la fórmula para calcular la liga que se añade al oro?", respuesta: "Primero calcula el peso final teórico: peso inicial × ley inicial ÷ ley objetivo. Después resta el peso inicial. La fórmula supone que la liga añadida no contiene oro fino y que la ley objetivo es menor que la ley inicial." },
       { pregunta: "¿18K equivale a qué porcentaje de oro fino?", respuesta: "18K nominal equivale a 18 de 24 partes, es decir, 75 % de oro fino o 750 milésimas. La ley real del lote puede requerir ensayo o documentación." },
-      { pregunta: "¿La calculadora reemplaza un ensayo de oro?", respuesta: "No. Es una estimación matemática basada en los valores ingresados. No analiza el material ni confirma su ley real; considera las pérdidas y verifica la composición con los procedimientos de tu taller." }
+      { pregunta: "¿La calculadora reemplaza un ensayo de oro?", respuesta: "No. Es una estimación matemática basada en los valores ingresados. No analiza el material ni confirma su ley real. Considera las pérdidas del proceso y verifica la composición con los procedimientos de control de tu taller." }
     ]
   },
   "peso-joya-3d": {
