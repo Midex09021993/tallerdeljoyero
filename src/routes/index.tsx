@@ -7,7 +7,7 @@ import { AuriPublicoBoton } from "@/components/auri/AuriPublicoBoton";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X, ChevronDown, UsersRound, GraduationCap, Gem } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X, ChevronDown, UsersRound, GraduationCap } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 export const Route = createFileRoute("/")({
