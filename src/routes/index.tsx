@@ -376,7 +376,7 @@ function InicioPublico() {
     const root = mainRef.current;
     if (!root) return;
 
-    const targets = Array.from(root.querySelectorAll<HTMLElement>("[data-aurum-reveal]"));
+    const targets = Array.from(root.querySelectorAll<HTMLElement>("[data-aurum-reveal]:not([data-aurum-tools-reveal])"));
     root.classList.add("aurum-motion-ready");
 
     // Stagger only nearby siblings so the reveal feels intentional without delaying distant sections.
@@ -416,6 +416,25 @@ function InicioPublico() {
       revealObserver.disconnect();
       root.classList.remove("aurum-motion-ready");
     };
+  }, []);
+
+  useEffect(() => {
+    const section = mainRef.current?.querySelector<HTMLElement>("#soluciones");
+    if (!section) return;
+    const targets = Array.from(section.querySelectorAll<HTMLElement>("[data-aurum-tools-reveal]"));
+    const revealAll = () => targets.forEach((target) => target.classList.add("aurum-is-visible"));
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || typeof IntersectionObserver === "undefined") {
+      revealAll();
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) {
+        revealAll();
+        observer.disconnect();
+      }
+    }, { threshold: 0.2 });
+    observer.observe(section);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -892,14 +911,14 @@ function InicioPublico() {
         `}</style>
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="aurum-tools-heading mx-auto max-w-3xl text-center">
-            <p data-aurum-reveal className="text-[10px] font-bold uppercase tracking-[.22em] text-[#806000]">Tecnología pensada para el oficio joyero</p>
-            <h2 data-aurum-reveal id="herramientas-titulo" className="mx-auto mt-3 max-w-[48rem] text-balance text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Calcula, presenta y controla tu taller en un solo lugar.</h2>
-            <p data-aurum-reveal className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-700 sm:text-base">Menos merma de metal, mejores presentaciones para tus clientes y cada pedido bajo control.</p>
+            <p data-aurum-reveal data-aurum-tools-reveal className="text-[10px] font-bold uppercase tracking-[.22em] text-[#806000]">Tecnología pensada para el oficio joyero</p>
+            <h2 data-aurum-reveal data-aurum-tools-reveal id="herramientas-titulo" className="mx-auto mt-3 max-w-[48rem] text-balance text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Calcula, presenta y controla tu taller en un solo lugar.</h2>
+            <p data-aurum-reveal data-aurum-tools-reveal className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-700 sm:text-base">Menos merma de metal, mejores presentaciones para tus clientes y cada pedido bajo control.</p>
           </div>
           <ul className="aurum-tools-grid mt-8 list-none p-0">
             {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion, destacado, preview }, index) => (
               <li key={titulo} className="min-w-0">
-                <article data-aurum-reveal data-featured={destacado ? "true" : "false"} style={{ transitionDelay: (index * 100) + "ms" }} className="aurum-tools-card group relative flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_20px_rgba(23,35,45,.035)] sm:p-5">
+                <article data-aurum-reveal data-aurum-tools-reveal data-featured={destacado ? "true" : "false"} style={{ transitionDelay: (index * 100) + "ms" }} className="aurum-tools-card group relative flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_20px_rgba(23,35,45,.035)] sm:p-5">
                   {destacado && <span className="absolute right-4 top-4 rounded-full border border-[#d5b34c] bg-[#fff8dc] px-2.5 py-1 text-[10px] font-extrabold text-[#725400]">Gratis</span>}
                   <div className="flex items-center justify-between">
                     <span data-aurum-icon className="grid size-11 place-items-center rounded-xl bg-[#fff1bd] text-[#755600]"><Icono aria-hidden="true" className="size-5" strokeWidth={1.8} /></span>
