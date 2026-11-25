@@ -296,11 +296,13 @@ export function AppShell({
   ocultarEncabezado = false,
   encabezadoMovilCompacto = false,
   ocultarAccionesCelular = false,
+  atrasMovil,
   children,
 }: {
   titulo: string;
   subtitulo?: string;
   acciones?: ReactNode;
+  atrasMovil?: false | { to?: string; onClick?: () => void };
   encabezadoMovilCompacto?: boolean;
   ocultarAccionesCelular?: boolean;
   ocultarNavegacion?: boolean;
