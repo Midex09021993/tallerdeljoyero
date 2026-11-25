@@ -93,7 +93,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
         const website = item.identidad_sitio_web?.trim() || "";
         const fieldsComplete = [Boolean(logo), Boolean(descripcion?.trim()), Boolean(country), Boolean(website), Boolean(item.tipo)].filter(Boolean).length;
         const profileProgress = Math.round(fieldsComplete / 5 * 100);
-        const initials = titulo.split(/\\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("es") || "").join("") || "AL";
+        const initials = titulo.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("es") || "").join("") || "AL";
         const category = esCurso ? "Curso y formación" : "Taller / joyería";
         const count = esCurso ? null : item.productos_publicados;
         return <article key={`${item.tipo}-${item.participante_id}`} className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white shadow-[0_8px_28px_rgba(40,30,20,.045)] transition duration-300 motion-reduce:transition-none hover:-translate-y-1 hover:border-[#d4aa19] hover:shadow-[0_20px_45px_rgba(40,30,20,.10)]">
@@ -113,7 +113,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
             </div>
             <div className="mt-4 flex min-h-7 items-center justify-between gap-3 text-xs text-slate-500">
               {count !== null ? <span>{count} {count === 1 ? "producto" : "productos"}</span> : <span>Propuesta formativa</span>}
-              {website && /^https?:\\/\\//i.test(website) ? <a href={website} target="_blank" rel="noopener noreferrer" className="truncate text-[#987400] hover:underline">Sitio web</a> : <span>{esCurso ? "Curso" : "Perfil público"}</span>}
+              {website && /^https?:\/\//i.test(website) ? <a href={website} target="_blank" rel="noopener noreferrer" className="truncate text-[#987400] hover:underline">Sitio web</a> : <span>{esCurso ? "Curso" : "Perfil público"}</span>}
             </div>
             <div className="mt-auto border-t border-slate-200 pt-5">
               {href ? <Link to={href as never} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d4aa19]/70 bg-white px-4 text-xs font-semibold text-[#7c5c00] transition hover:bg-[#fff8e7]">{esCurso ? "Ver formación" : "Ver catálogo"} <ArrowRight className="size-4 transition group-hover:translate-x-1"/></Link> : <span className="inline-flex items-center gap-2 text-xs text-slate-500"><Building2 className="size-3.5 shrink-0"/> Perfil público · catálogo no publicado</span>}
