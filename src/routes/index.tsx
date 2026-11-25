@@ -852,9 +852,8 @@ function InicioPublico() {
 
       <section id="soluciones" aria-labelledby="herramientas-titulo" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 920px" }} className="border-y border-slate-200 bg-[#f7f9fc]">
         <style>{`
-          .aurum-tools-heading [data-aurum-reveal] { transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1); }
-          .aurum-tools-heading.aurum-motion-ready [data-aurum-reveal] { opacity: 0; transform: translateY(16px); }
-          .aurum-tools-heading.aurum-motion-ready [data-aurum-reveal].aurum-is-visible { opacity: 1; transform: translateY(0); }
+          .aurum-motion-ready #soluciones .aurum-tools-heading [data-aurum-reveal] { transition: opacity .5s cubic-bezier(.22,1,.36,1), translate .5s cubic-bezier(.22,1,.36,1); translate:0 16px; }
+          .aurum-motion-ready #soluciones .aurum-tools-heading [data-aurum-reveal].aurum-is-visible { opacity:1; translate:0 0; }
           .aurum-tools-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:1rem; }
           @media(min-width:640px){.aurum-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
           @media(min-width:1280px){.aurum-tools-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
@@ -869,6 +868,8 @@ function InicioPublico() {
           .aurum-tools-card:hover .aurum-tools-arrow { transform:translateX(4px); }
           .aurum-tools-number { opacity:0; transform:translateY(5px); transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1); }
           .aurum-tools-card.aurum-is-visible .aurum-tools-number { opacity:1; transform:translateY(0); }
+          .aurum-motion-ready #soluciones .aurum-tools-card[data-aurum-reveal] { translate:0 16px; transition:opacity .5s cubic-bezier(.22,1,.36,1),translate .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1); }
+          .aurum-motion-ready #soluciones .aurum-tools-card[data-aurum-reveal].aurum-is-visible { opacity:1; translate:0 0; }
           .aurum-tools-preview { height:112px; overflow:hidden; border:1px solid #e8e8e8; border-radius:12px; background:#f8fafc; }
           .aurum-tools-preview-ui { height:100%; display:flex; flex-direction:column; gap:7px; padding:10px; font-size:9px; color:#475569; }
           .aurum-preview-top { display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:700;color:#263541; }
@@ -882,7 +883,7 @@ function InicioPublico() {
           .aurum-tools-faq summary::-webkit-details-marker { display:none; }
           .aurum-tools-faq summary:focus-visible { outline:2px solid #b58b00;outline-offset:4px;border-radius:4px; }
           @media(prefers-reduced-motion:reduce){
-            .aurum-tools-heading [data-aurum-reveal],.aurum-tools-card,.aurum-tools-card:hover,.aurum-tools-card [data-aurum-icon],.aurum-tools-arrow,.aurum-tools-number {transition:none!important;transform:none!important;opacity:1!important;}
+            .aurum-tools-heading [data-aurum-reveal],.aurum-tools-card,.aurum-tools-card:hover,.aurum-tools-card [data-aurum-icon],.aurum-tools-arrow,.aurum-tools-number {transition:none!important;transform:none!important;translate:0 0!important;opacity:1!important;}
             .aurum-tools-card[data-featured="true"]::after{display:none;}
           }
         `}</style>
@@ -893,9 +894,9 @@ function InicioPublico() {
             <p data-aurum-reveal className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-700 sm:text-base">Menos merma de metal, mejores presentaciones para tus clientes y cada pedido bajo control.</p>
           </div>
           <ul className="aurum-tools-grid mt-8 list-none p-0">
-            {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion, destacado, preview }) => (
+            {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion, destacado, preview }, index) => (
               <li key={titulo} className="min-w-0">
-                <article data-aurum-reveal data-featured={destacado ? "true" : "false"} className="aurum-tools-card group relative flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_20px_rgba(23,35,45,.035)] sm:p-5">
+                <article data-aurum-reveal data-featured={destacado ? "true" : "false"} style={{ transitionDelay: (index * 100) + "ms" }} className="aurum-tools-card group relative flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_20px_rgba(23,35,45,.035)] sm:p-5">
                   {destacado && <span className="absolute right-4 top-4 rounded-full border border-[#d5b34c] bg-[#fff8dc] px-2.5 py-1 text-[10px] font-extrabold text-[#725400]">Gratis</span>}
                   <div className="flex items-center justify-between">
                     <span data-aurum-icon className="grid size-11 place-items-center rounded-xl bg-[#fff1bd] text-[#755600]"><Icono aria-hidden="true" className="size-5" strokeWidth={1.8} /></span>
