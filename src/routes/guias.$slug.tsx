@@ -209,6 +209,17 @@ function GuiaTecnicaPage() {
             <p className="mt-2 text-sm leading-6 text-slate-600">Introduce las dimensiones, selecciona el material y la talla y utiliza el resultado como referencia antes de confirmar el peso real.</p>
             <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-gemas" }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Abrir calculadora de peso de gemas</Link>
           </section>
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+            <h2 className="text-lg font-bold">Guías especializadas sobre peso de joyas</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Continúa con una consulta específica de cálculo, preparación o fabricación:</p>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+              <li><Link to="/guias/calcular-peso-anillo-oro-antes-fundir" className="text-sm font-semibold text-[#876500] hover:underline">Calcular peso de un anillo antes de fundirlo →</Link></li>
+              <li><Link to="/guias/calcular-peso-oro-archivo-stl" className="text-sm font-semibold text-[#876500] hover:underline">Calcular peso de oro desde STL →</Link></li>
+              <li><Link to="/guias/calcular-peso-joya-volumen" className="text-sm font-semibold text-[#876500] hover:underline">Peso de joya según volumen →</Link></li>
+              <li><Link to="/guias/cuanto-oro-necesito-fabricar-joya" className="text-sm font-semibold text-[#876500] hover:underline">Cuánto metal necesito para fabricar →</Link></li>
+              <li><Link to="/guias/estimar-peso-oro-impresion-resina" className="text-sm font-semibold text-[#876500] hover:underline">Estimar oro desde impresión de resina →</Link></li>
+            </ul>
+          </section>
           <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
         </article>
       </main>
