@@ -361,7 +361,9 @@ function TalleresDeLaComunidad() {
 function InicioPublico() {
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
-  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);\n  const [comunidadDropdownAbierto, setComunidadDropdownAbierto] = useState(false);\n  const [comunidadMovilAbierta, setComunidadMovilAbierta] = useState(false);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [comunidadDropdownAbierto, setComunidadDropdownAbierto] = useState(false); 
+  const [comunidadMovilAbierta, setComunidadMovilAbierta] = useState(false);
   const demo3DSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
