@@ -263,7 +263,7 @@ function CursosDiseno3DPage() {
               </div>
               <div className="rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-2.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[#98712a]">Vacantes</p>
-                <p className="text-sm font-bold text-[#26394b]">5 disponibles</p>
+                <p className="text-sm font-bold text-[#26394b]">8 disponibles</p>
               </div>
             </div>
             <div className="mt-3 flex items-end justify-between gap-3 rounded-xl bg-[#fff8e7] p-3">
