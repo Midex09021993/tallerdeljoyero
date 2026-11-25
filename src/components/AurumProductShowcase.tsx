@@ -43,7 +43,7 @@ function Metric({ label, value="—", detail, icon: Icon }: {label:string;value?
 
 function DemoCount({ value }: { value: number }) {
   const ref = useRef<HTMLSpanElement | null>(null);
-  const [shown, setShown] = useState(value);
+  const [shown, setShown] = useState(0);
   const [done, setDone] = useState(false);
   useEffect(() => {
     const node = ref.current;
@@ -67,7 +67,7 @@ function DemoCount({ value }: { value: number }) {
 function DemoMetric({ label, value, detail, icon: Icon, alert = false }: { label: string; value: number; detail: string; icon: typeof Package; alert?: boolean }) {
   return <div className={`min-w-0 rounded-lg border p-2 ${alert ? "border-[#e87970]/30 bg-[#fff9f8]" : "border-[#293b4a]/10 bg-[#fffefc]"}`}>
     <div className="flex items-start justify-between gap-1"><p className="text-[7px] font-bold uppercase tracking-[.1em] text-[#71808d]">{label}</p><Icon className={`size-2.5 shrink-0 ${alert ? "text-[#d76b63]" : "text-[#b9955d"}`}/></div>
-    <p className={`mt-1.5 font-serif text-[13px] font-semibold leading-tight ${alert ? "text-[#c65e56]" : "text-[#203142"}`}><DemoCount value={value}/></p><p className="mt-0.5 text-[6px] text-[#71808d]">{detail}</p>
+    <p className={`mt-1.5 font-serif text-[13px] font-semibold leading-tight ${alert ? "text-[#c65e56]" : "text-[#203142]"}`}><DemoCount value={value}/></p><p className="mt-0.5 text-[6px] text-[#71808d]">{detail}</p>
   </div>;
 }
 function MiniHome() {
@@ -107,7 +107,7 @@ function MiniHome() {
         <div className="border-b border-slate-200 bg-[#fbfaf7] p-2"><div className="flex justify-between gap-1"><div><p className="text-[8px] font-semibold text-[#182838]">Atención prioritaria</p><p className="text-[6px] text-[#71808d]">Seguimiento de pedidos</p></div><span className="text-[5px] text-[#a98249]">Ver pedidos ›</span></div>
           <div className="mt-1.5 flex gap-1">{([{id:"todos",label:"Todos"},{id:"vencidos",label:"Vencidos"},{id:"recibir",label:"Por recibir"}] as const).map(x=><button key={x.id} type="button" onClick={()=>setTab(x.id)} className={`rounded-md border px-1.5 py-0.5 text-[5px] ${tab===x.id?"border-[#c5a36b]/30 bg-[#f5ecdc] font-semibold text-[#92734b]":"border-slate-200 text-slate-500"}`}>{x.label}</button>)}</div>
         </div>
-        <div className="space-y-1 p-1.5">{visibleTasks.map(x=><div key={x.name} className="flex items-center justify-between gap-1 rounded-md border border-slate-100 p-1.5"><div className="min-w-0"><p className="truncate text-[6px] font-semibold text-[#203142]">{x.name}</p><p className="text-[5px] text-slate-500">{x.detail}</p></div><span className={`shrink-0 rounded-full px-1 py-0.5 text-[5px] ${x.type==="vencidos"?"bg-[#fff0ed] text-[#c65e56]":"bg-[#f5ecdc] text-[#92734b"}`}>{x.tag}</span></div>)}</div>
+        <div className="space-y-1 p-1.5">{visibleTasks.map(x=><div key={x.name} className="flex items-center justify-between gap-1 rounded-md border border-slate-100 p-1.5"><div className="min-w-0"><p className="truncate text-[6px] font-semibold text-[#203142]">{x.name}</p><p className="text-[5px] text-slate-500">{x.detail}</p></div><span className={`shrink-0 rounded-full px-1 py-0.5 text-[5px] ${x.type==="vencidos"?"bg-[#fff0ed] text-[#c65e56]":"bg-[#f5ecdc] text-[#92734b]"}`}>{x.tag}</span></div>)}</div>
       </section>
       <div className="space-y-1.5">
         <section className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white"><div className="border-b border-slate-100 p-2"><p className="text-[7px] font-semibold text-[#203142]">Estado de producción</p><p className="text-[6px] text-slate-500">Carga por área</p></div><div className="space-y-1.5 p-2">{[{name:"Diseño 3D",n:4,w:"80%"},{name:"Impresión",n:3,w:"60%"},{name:"Casting",n:2,w:"40%"}].map(x=><div key={x.name}><div className="flex justify-between text-[6px] text-slate-600"><span>{x.name}</span><span><DemoCount value={x.n}/></span></div><div className="mt-0.5 h-1 rounded-full bg-slate-100"><div className="h-1 rounded-full bg-[#c5a36b]" style={{width:x.w}}/></div></div>)}</div></section>
