@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { AppShell, MobileBackButton, Panel } from "@/components/AppShell";
+import { AppShell, Panel } from "@/components/AppShell";
 import { usePedidosDeArea, pedidoEnAreaActual, useTrabajosDelOperario, type PedidoOperativo, type TrabajoBandeja } from "@/hooks/use-pedidos-area";
 import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { destinosMovimientoPedido, useEnviarAArea } from "@/lib/taller-db";
@@ -630,7 +630,6 @@ export function AreaOperario({ area, children }: { area: string; children?: Reac
           <h1 className="truncate font-display text-3xl">{area}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Trabajos asignados</p>
         </div>
-        <MobileBackButton atrasMovil={{ to: "/inicio" }} />
       </header>
       <PedidosArea area={area} from={area} variante="operario" />
       {children ? <div className="mt-5">{children}</div> : null}
