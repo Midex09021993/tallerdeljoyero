@@ -45,41 +45,46 @@ const soluciones = [
     numero: "01",
     etiqueta: "EVITA ERRORES",
     icon: Calculator,
-    titulo: "Prepara tus materiales con más claridad",
-    texto: "Calcula el metal que necesitas para cada pieza.",
-    beneficio: "Calcula antes de fabricar",
+    titulo: "Calcula el metal exacto para cada pieza",
+    texto: "Calcula aleaciones de oro 18K, 14K y 9K y el peso de metal que necesitas antes de fabricar.",
+    beneficio: "Gratis y sin registro",
     enlace: "/herramientas-publicas" as const,
-    accion: "Calcular materiales",
+    accion: "Calcular gratis",
+    destacado: true,
+    preview: "aleacion",
   },
   {
     numero: "02",
     etiqueta: "PRESENTA MEJOR",
     icon: Gem,
-    titulo: "Renderiza tus modelos de joyería",
-    texto: "Aplica metales, gemas e iluminación para crear presentaciones realistas de tus modelos.",
-    beneficio: "Presenta tus modelos con un render profesional",
+    titulo: "Renderiza tus modelos de joyería en 3D",
+    texto: "Aplica metales, gemas e iluminación HDR para mostrar a tus clientes una imagen realista antes de producir.",
+    beneficio: "Compatible con Rhino 7 y Rhino 8",
     enlace: "/aurum-render-public" as const,
     accion: "Conocer AURUM RENDER",
+    preview: "render",
   },
   {
     numero: "03",
     etiqueta: "DA SEGUIMIENTO",
     icon: ChartNoAxesCombined,
-    titulo: "Sigue el trabajo de tu taller",
-    texto: "Guarda los datos de tus clientes y sigue cada pedido.",
-    beneficio: "Sigue cada pedido",
+    titulo: "Controla clientes, cotizaciones y pedidos",
+    texto: "Registra a tus clientes, envía cotizaciones y sigue cada pedido hasta la entrega.",
+    beneficio: "Todo tu trabajo diario en un panel",
     enlace: "/auth" as const,
-    accion: "Organizar mi área comercial",
+    accion: "Probar en mi taller",
+    preview: "gestion",
   },
   {
     numero: "04",
     etiqueta: "ENCUENTRA Y COMPARTE",
     icon: Cloud,
     titulo: "Guarda y comparte tus diseños",
-    texto: "Guarda tus diseños en Mi Nube y comparte tu catálogo.",
-    beneficio: "Archivos organizados",
+    texto: "Organiza tus archivos en Mi Nube y comparte tu catálogo digital con un enlace.",
+    beneficio: "Archivos organizados y catálogo listo para compartir",
     enlace: "/auth" as const,
     accion: "Organizar mis archivos",
+    preview: "nube",
   },
 ];
 
@@ -605,6 +610,33 @@ function InicioPublico() {
               "Almacenamiento de archivos y catálogo digital",
               "Formación técnica y recursos de aprendizaje",
               "AURUM RENDER: visualización y renderizado 3D especializado en joyería"
+            ],
+            "offers": [
+              { "@type": "Offer", "name": "Emprendedor", "price": "0", "priceCurrency": "USD", "description": "Plan gratuito con herramientas públicas." },
+              { "@type": "Offer", "name": "Taller", "price": "9", "priceCurrency": "USD", "description": "Plan mensual de AURUM LAB." },
+              { "@type": "Offer", "name": "Profesional", "price": "24", "priceCurrency": "USD", "description": "Plan mensual de AURUM LAB." }
+            ],
+            "inLanguage": "es"
+          },
+          {
+            "@type": "ItemList",
+            "@id": "https://www.tallerdeljoyero.com/#herramientas",
+            "name": "Herramientas de AURUM LAB para talleres de joyería",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Calculadora de aleaciones de oro 18K, 14K y 9K", "url": "https://www.tallerdeljoyero.com/herramientas-publicas", "description": "Calcula proporciones y peso de metal antes de fabricar una pieza." },
+              { "@type": "ListItem", "position": 2, "name": "AURUM RENDER, render 3D de joyería", "url": "https://www.tallerdeljoyero.com/aurum-render-public", "description": "Visualiza modelos con metales, gemas e iluminación HDR." },
+              { "@type": "ListItem", "position": 3, "name": "Gestión de clientes, cotizaciones y pedidos", "url": "https://www.tallerdeljoyero.com/auth", "description": "Organiza el seguimiento comercial y de producción del taller." },
+              { "@type": "ListItem", "position": 4, "name": "Mi Nube y catálogo digital", "url": "https://www.tallerdeljoyero.com/auth", "description": "Guarda archivos de diseño y comparte un catálogo digital." }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://www.tallerdeljoyero.com/#herramientas-faq",
+            "mainEntity": [
+              { "@type": "Question", "name": "¿Qué es AURUM LAB?", "acceptedAnswer": { "@type": "Answer", "text": "AURUM LAB es un software de gestión para joyerías y talleres de joyería que reúne calculadoras técnicas, render 3D, clientes, cotizaciones, pedidos y catálogo digital." } },
+              { "@type": "Question", "name": "¿Cómo calculo cuánto oro necesito para una pieza?", "acceptedAnswer": { "@type": "Answer", "text": "Usa la calculadora de aleaciones de oro de AURUM LAB para calcular proporciones de oro fino y ligadura para 18K, 14K y 9K. El cálculo depende del peso final que ingreses." } },
+              { "@type": "Question", "name": "¿AURUM RENDER funciona con Rhino 7 y Rhino 8?", "acceptedAnswer": { "@type": "Answer", "text": "AURUM RENDER es el render 3D de joyería de AURUM LAB y cuenta con complementos AURUM CONNECT para Rhino 7 y Rhino 8." } },
+              { "@type": "Question", "name": "¿Puedo probar las herramientas sin crear una cuenta?", "acceptedAnswer": { "@type": "Answer", "text": "Sí. Las herramientas públicas de cálculo se pueden explorar sin registro. Para funciones de gestión y Mi Nube necesitas ingresar a tu cuenta." } }
             ]
           }
         ]
@@ -818,30 +850,84 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="soluciones" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 680px" }} className="border-y border-slate-200 bg-[#f7f9fc]">
+      <section id="soluciones" aria-labelledby="herramientas-titulo" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 920px" }} className="border-y border-slate-200 bg-[#f7f9fc]">
+        <style>{`
+          .aurum-tools-heading [data-aurum-reveal] { transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1); }
+          .aurum-tools-heading.aurum-motion-ready [data-aurum-reveal] { opacity: 0; transform: translateY(16px); }
+          .aurum-tools-heading.aurum-motion-ready [data-aurum-reveal].aurum-is-visible { opacity: 1; transform: translateY(0); }
+          .aurum-tools-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:1rem; }
+          @media(min-width:640px){.aurum-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+          @media(min-width:1280px){.aurum-tools-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+          .aurum-tools-card { transform:translateY(0); transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1),border-color .4s ease; }
+          .aurum-tools-card:hover { transform:translateY(-4px); box-shadow:0 18px 38px rgba(23,35,45,.11); border-color:#d8b64a; }
+          .aurum-tools-card[data-featured="true"] { border-color:rgba(190,151,48,.65); box-shadow:0 5px 22px rgba(166,124,24,.07); }
+          .aurum-tools-card[data-featured="true"]::after { content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;border:1px solid transparent;background:linear-gradient(110deg,transparent 15%,rgba(230,197,103,.35),transparent 70%) border-box;mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);mask-composite:exclude;opacity:0; }
+          .aurum-tools-card[data-featured="true"]:hover::after { opacity:1; }
+          .aurum-tools-card [data-aurum-icon] { transition:transform .45s cubic-bezier(.22,1,.36,1),background-color .3s ease; }
+          .aurum-tools-card:hover [data-aurum-icon] { transform:rotate(-5deg) scale(1.06); }
+          .aurum-tools-card .aurum-tools-arrow { transition:transform .4s cubic-bezier(.22,1,.36,1); }
+          .aurum-tools-card:hover .aurum-tools-arrow { transform:translateX(4px); }
+          .aurum-tools-number { opacity:0; transform:translateY(5px); transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1); }
+          .aurum-tools-card.aurum-is-visible .aurum-tools-number { opacity:1; transform:translateY(0); }
+          .aurum-tools-preview { height:112px; overflow:hidden; border:1px solid #e8e8e8; border-radius:12px; background:#f8fafc; }
+          .aurum-tools-preview-ui { height:100%; display:flex; flex-direction:column; gap:7px; padding:10px; font-size:9px; color:#475569; }
+          .aurum-preview-top { display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:700;color:#263541; }
+          .aurum-preview-chip { border-radius:999px;background:#fff3c1;padding:3px 6px;color:#805f00;font-weight:700; }
+          .aurum-preview-row { display:flex;align-items:center;gap:5px; }
+          .aurum-preview-box { border:1px solid #e5e7eb;border-radius:6px;background:white;padding:5px;flex:1; }
+          .aurum-preview-bar { height:4px;border-radius:999px;background:#e8edf2; }
+          .aurum-preview-bar.gold { background:#d8b54d; }
+          .aurum-tools-faq details { border-bottom:1px solid #e5e7eb; }
+          .aurum-tools-faq summary { cursor:pointer;list-style:none; }
+          .aurum-tools-faq summary::-webkit-details-marker { display:none; }
+          .aurum-tools-faq summary:focus-visible { outline:2px solid #b58b00;outline-offset:4px;border-radius:4px; }
+          @media(prefers-reduced-motion:reduce){
+            .aurum-tools-heading [data-aurum-reveal],.aurum-tools-card,.aurum-tools-card:hover,.aurum-tools-card [data-aurum-icon],.aurum-tools-arrow,.aurum-tools-number {transition:none!important;transform:none!important;opacity:1!important;}
+            .aurum-tools-card[data-featured="true"]::after{display:none;}
+          }
+        `}</style>
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tecnología pensada para el oficio joyero</p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Herramientas para mejorar el trabajo de tu taller.</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Calcula materiales, prepara diseños y organiza tus pedidos.</p>
+          <div className="aurum-tools-heading mx-auto max-w-3xl text-center">
+            <p data-aurum-reveal className="text-[10px] font-bold uppercase tracking-[.22em] text-[#806000]">Tecnología pensada para el oficio joyero</p>
+            <h2 data-aurum-reveal id="herramientas-titulo" className="mx-auto mt-3 max-w-[48rem] text-balance text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Calcula, presenta y controla tu taller en un solo lugar.</h2>
+            <p data-aurum-reveal className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-700 sm:text-base">Menos merma de metal, mejores presentaciones para tus clientes y cada pedido bajo control.</p>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion }) => (
-              <article data-aurum-reveal key={titulo} className="aurum-motion-card group relative flex min-h-[290px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_5px_20px_rgba(23,35,45,.035)] hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)] sm:p-6">
-                <div className="flex items-start justify-between gap-3">
-                  <span data-aurum-icon className="grid size-12 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00] transition-colors group-hover:bg-[#ffdf65]"><Icono className="size-5" strokeWidth={1.8} /></span>
-                  <span className="text-[11px] font-semibold tracking-[.16em] text-slate-300">{numero}</span>
-                </div>
-                <p className="mt-5 text-[9px] font-bold tracking-[.18em] text-[#9a7600]">{etiqueta}</p>
-                <h3 className="mt-2 text-lg font-bold leading-snug text-[#17232d]">{titulo}</h3>
-                <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{texto}</p>
-                <div className="mt-4 border-t border-slate-100 pt-3">
-                  <p className="text-[11px] leading-5 text-slate-500"><span className="mr-1.5 text-[#b58b00]">✓</span>{beneficio}</p>
-                  <Link to={enlace} className="mt-4 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2">{accion}<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></Link>
-                </div>
-              </article>
+          <ul className="aurum-tools-grid mt-8 list-none p-0">
+            {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion, destacado, preview }) => (
+              <li key={titulo} className="min-w-0">
+                <article data-aurum-reveal data-featured={destacado ? "true" : "false"} className="aurum-tools-card group relative flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_20px_rgba(23,35,45,.035)] sm:p-5">
+                  {destacado && <span className="absolute right-4 top-4 rounded-full border border-[#d5b34c] bg-[#fff8dc] px-2.5 py-1 text-[10px] font-extrabold text-[#725400]">Gratis</span>}
+                  <div className="flex items-center justify-between">
+                    <span data-aurum-icon className="grid size-11 place-items-center rounded-xl bg-[#fff1bd] text-[#755600]"><Icono aria-hidden="true" className="size-5" strokeWidth={1.8} /></span>
+                    <span className="aurum-tools-number text-[11px] font-bold tracking-[.16em] text-slate-400">{numero}</span>
+                  </div>
+                  <div className="aurum-tools-preview mt-3" aria-hidden="true">
+                    {preview === "aleacion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Calculadora de aleación</span><span className="aurum-preview-chip">18K</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><span>Oro fino</span><div className="aurum-preview-bar gold mt-1 w-3/4" /></div><div className="aurum-preview-box"><span>Ligadura</span><div className="aurum-preview-bar mt-1 w-1/2" /></div></div><div className="aurum-preview-row"><div className="aurum-preview-box flex justify-between"><span>Metal requerido</span><strong className="text-[#806000]">g</strong></div></div></div>}
+                    {preview === "render" && <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#fff7df] via-white to-[#e8edf2]"><img src={heroColgante} alt="" width="480" height="320" loading="lazy" decoding="async" className="h-full w-full object-cover" /></div>}
+                    {preview === "gestion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Panel de taller</span><span className="aurum-preview-chip">Hoy</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">12</strong><span className="block">Pedidos</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">04</strong><span className="block">Cotizaciones</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">08</strong><span className="block">Clientes</span></div></div><div className="aurum-preview-bar gold w-4/5" /><div className="aurum-preview-bar w-2/3" /></div>}
+                    {preview === "nube" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Mi Nube</span><span className="aurum-preview-chip">Catálogo</span></div><div className="aurum-preview-row"><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#fff1bd] p-2 text-[#806000]">◇</span><span>Diseños</span></div><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#e9f0f8] p-2 text-[#48647e]">↗</span><span>Compartir</span></div></div><div className="aurum-preview-bar gold w-3/4" /><div className="aurum-preview-bar w-1/2" /></div>}
+                  </div>
+                  <p className="mt-3 text-[9px] font-extrabold tracking-[.18em] text-[#765900]">{etiqueta}</p>
+                  <h3 className="mt-1 text-base font-bold leading-snug text-[#17232d]">{titulo}</h3>
+                  <p className="mt-2 text-sm leading-5 text-slate-700">{texto}</p>
+                  <div className="mt-3">
+                    <p className="flex items-start gap-2 text-xs font-semibold leading-5 text-[#344250]"><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[#806000]" />{beneficio}</p>
+                    <Link to={enlace} title={accion} className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#d5b34c] bg-[#fffaf0] px-3 py-2 text-xs font-bold text-[#654c00] transition-colors hover:bg-[#fff0bd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b00] focus-visible:ring-offset-2">{accion}<ArrowRight aria-hidden="true" className="aurum-tools-arrow size-3.5" /></Link>
+                  </div>
+                </article>
+              </li>
             ))}
+          </ul>
+          <div className="mx-auto mt-5 max-w-3xl rounded-xl border border-[#e7d9ad] bg-[#fffdf6] px-4 py-3 text-sm leading-6 text-[#3e4650]">
+            <p><strong>Guía relacionada:</strong> aprende a preparar aleaciones de oro 18K, 14K y 9K con ejemplos en gramos en nuestra <Link to="/guias" title="Guías técnicas de joyería" className="font-semibold text-[#705400] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b00]">biblioteca de guías técnicas</Link>.</p>
           </div>
+          <section className="aurum-tools-faq mx-auto mt-8 max-w-3xl" aria-labelledby="herramientas-faq-titulo">
+            <h3 id="herramientas-faq-titulo" className="text-lg font-bold text-[#17232d]">Preguntas frecuentes</h3>
+            <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿Qué es AURUM LAB?</summary><p className="mt-2 text-sm leading-6 text-slate-700">AURUM LAB es un software de gestión para joyerías y talleres de joyería que reúne calculadoras técnicas, render 3D, clientes, cotizaciones, pedidos y catálogo digital.</p></details>
+            <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿Cómo calculo cuánto oro necesito para una pieza?</summary><p className="mt-2 text-sm leading-6 text-slate-700">Usa la calculadora de aleaciones de oro de AURUM LAB para calcular proporciones de oro fino y ligadura para 18K, 14K y 9K. El cálculo depende del peso final que ingreses.</p></details>
+            <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿AURUM RENDER funciona con Rhino 7 y Rhino 8?</summary><p className="mt-2 text-sm leading-6 text-slate-700">AURUM RENDER es el render 3D de joyería de AURUM LAB y cuenta con complementos AURUM CONNECT para Rhino 7 y Rhino 8.</p></details>
+            <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿Puedo probar las herramientas sin crear una cuenta?</summary><p className="mt-2 text-sm leading-6 text-slate-700">Sí. Las herramientas públicas de cálculo se pueden explorar sin registro desde <Link to="/herramientas-publicas" className="font-semibold text-[#705400] underline underline-offset-2">Herramientas públicas</Link>. Para funciones de gestión y Mi Nube necesitas ingresar a tu cuenta.</p></details>
+          </section>
         </div>
       </section>
 
