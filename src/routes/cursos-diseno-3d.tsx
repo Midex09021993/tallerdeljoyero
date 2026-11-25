@@ -81,7 +81,7 @@ const complementos = [
 ] as const;
 
 function CursosDiseno3DPage() {
-  const culqiReservaUrl = ""; // Pendiente: reemplazar por el enlace Culqi configurado a US$ 20.
+  const culqiReservaUrl = "https://express.culqi.com/pago/3EC9A474CD";
   const [programaAbierto, setProgramaAbierto] = useState(false);
   const [bonoAbierto, setBonoAbierto] = useState(false);
   const [nivelEscrito, setNivelEscrito] = useState(0);
