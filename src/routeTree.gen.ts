@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AgendaDemoRouteImport } from './routes/agenda-demo'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
@@ -100,6 +101,11 @@ const SlugRoute = SlugRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaDemoRoute = AgendaDemoRouteImport.update({
+  id: '/agenda-demo',
+  path: '/agenda-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AurumRenderPublicRoute = AurumRenderPublicRouteImport.update({
@@ -505,6 +511,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRouteWithChildren
+  '/agenda-demo': typeof AgendaDemoRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -583,6 +590,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda-demo': typeof AgendaDemoRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -662,6 +670,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$slug': typeof SlugRouteWithChildren
+  '/agenda-demo': typeof AgendaDemoRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -743,6 +752,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$slug'
+    | '/agenda-demo'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -821,6 +831,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agenda-demo'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -899,6 +910,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/$slug'
+    | '/agenda-demo'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -980,6 +992,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRouteWithChildren
+  AgendaDemoRoute: typeof AgendaDemoRoute
   AurumRenderPublicRoute: typeof AurumRenderPublicRoute
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
@@ -1028,6 +1041,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda-demo': {
+      id: '/agenda-demo'
+      path: '/agenda-demo'
+      fullPath: '/agenda-demo'
+      preLoaderRoute: typeof AgendaDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/aurum-render-public': {
@@ -1736,6 +1756,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRouteWithChildren,
+  AgendaDemoRoute: AgendaDemoRoute,
   AurumRenderPublicRoute: AurumRenderPublicRoute,
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
