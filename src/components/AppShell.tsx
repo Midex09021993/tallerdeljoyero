@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Boxes,
@@ -664,41 +664,6 @@ export function AppShell({
       </main>
       {sesion && !pathname.startsWith("/aurum-render") ? <AuriInternoBoton /> : null}
     </div>
-  );
-}
-
-export function MobileBackButton({
-  atrasMovil = { to: "/inicio" },
-  className = "",
-}: {
-  atrasMovil?: AtrasMovil;
-  className?: string;
-}) {
-  const navigate = useNavigate();
-
-  const volver = () => {
-    if (atrasMovil && typeof atrasMovil === "object" && atrasMovil.onClick) {
-      atrasMovil.onClick();
-      return;
-    }
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-    const destino =
-      atrasMovil && typeof atrasMovil === "object" && atrasMovil.to ? atrasMovil.to : "/inicio";
-    void navigate({ to: destino as never });
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={volver}
-      className={`inline-flex shrink-0 items-center rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground shadow-card transition hover:text-foreground active:scale-[0.98] lg:hidden ${className}`}
-      aria-label="Atrás"
-    >
-      ← Atrás
-    </button>
   );
 }
 
