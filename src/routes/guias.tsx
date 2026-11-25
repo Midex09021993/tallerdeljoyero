@@ -5,7 +5,7 @@ export const Route = createFileRoute("/guias")({
   head: () => ({
     meta: [
       { title: "Guías técnicas de joyería | Taller del Joyero · AURUM LAB" },
-      { name: "description", content: "Guías técnicas de joyería sobre aleaciones de oro, peso de joyas desde modelos 3D, distribución del taller, impresión 3D y preparación de cilindros para fundición." },
+      { name: "description", content: "Guías técnicas de joyería sobre aleaciones de oro, cálculo de leyes y liga, peso de joyas desde modelos 3D, gemología, impresión 3D y fundición." },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Guías técnicas de joyería | AURUM LAB" },
       { property: "og:description", content: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería." },
@@ -53,6 +53,56 @@ const guias = [
     descripcion: "Aprende cómo calcular oro fino y metal de liga para aleaciones de oro de 18 quilates, 14K y 9K, con fórmulas y ejemplos en gramos.",
     icon: Gem,
     lectura: "6 min de lectura",
+    herramienta: "Calculadora de aleación de oro",
+    herramientaHref: "/herramientas-publicas/aleacion-oro",
+  },
+  {
+    slug: "convertir-oro-14k-a-18k",
+    categoria: "Metalurgia y materiales",
+    titulo: "Cómo pasar oro de 14K a 18K: cálculo en gramos",
+    descripcion: "Calcula cuánto oro fino añadir para elevar la ley de 14K a 18K, con fórmula y ejemplo práctico.",
+    icon: Gem,
+    lectura: "4 min de lectura",
+    herramienta: "Calculadora de aleación de oro",
+    herramientaHref: "/herramientas-publicas/aleacion-oro",
+  },
+  {
+    slug: "bajar-oro-24k-a-18k",
+    categoria: "Metalurgia y materiales",
+    titulo: "Cómo bajar oro de 24K a 18K calculando la liga",
+    descripcion: "Calcula la cantidad teórica de liga para convertir oro fino en una aleación de 18K.",
+    icon: Gem,
+    lectura: "4 min de lectura",
+    herramienta: "Calculadora de aleación de oro",
+    herramientaHref: "/herramientas-publicas/aleacion-oro",
+  },
+  {
+    slug: "calcular-oro-fino-18k-14k-9k",
+    categoria: "Metalurgia y materiales",
+    titulo: "Cuánto oro fino contiene una pieza de 18K, 14K y 9K",
+    descripcion: "Consulta las proporciones de oro fino y calcula el contenido de oro puro según el peso de una pieza.",
+    icon: Gem,
+    lectura: "4 min de lectura",
+    herramienta: "Calculadora de aleación de oro",
+    herramientaHref: "/herramientas-publicas/aleacion-oro",
+  },
+  {
+    slug: "calcular-liga-oro-18k-14k",
+    categoria: "Metalurgia y materiales",
+    titulo: "Cómo calcular la liga que debes añadir al oro",
+    descripcion: "Fórmula de balance de masa para estimar la liga que se añade al ajustar la ley de oro.",
+    icon: Gem,
+    lectura: "4 min de lectura",
+    herramienta: "Calculadora de aleación de oro",
+    herramientaHref: "/herramientas-publicas/aleacion-oro",
+  },
+  {
+    slug: "diferencia-oro-14k-585-milesimas",
+    categoria: "Metalurgia y materiales",
+    titulo: "Diferencia entre oro 14K, 583 y 585 milésimas",
+    descripcion: "Entiende la equivalencia matemática entre quilates y milésimas y cómo afecta a los cálculos.",
+    icon: Gem,
+    lectura: "4 min de lectura",
     herramienta: "Calculadora de aleación de oro",
     herramientaHref: "/herramientas-publicas/aleacion-oro",
   },
@@ -143,7 +193,7 @@ function GuiasPage() {
         <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20">
           <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Conocimiento aplicado al oficio</p>
           <h1 className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Guías técnicas para trabajar mejor la joyería.</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Resuelve dudas frecuentes del taller: cómo calcular aleaciones de oro de 18K, 14K y 9K, estimar el peso de una joya desde un modelo 3D y preparar un cilindro para fundición. Cada guía explica los conceptos paso a paso para ayudarte a tomar mejores decisiones en el taller.</p>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Resuelve dudas concretas del taller con guías paso a paso, fórmulas y ejemplos: aleaciones de oro, oro fino, cálculo de liga, peso 3D, gemas, tallas y fundición. Explora las guías principales y sus microguías especializadas para encontrar una respuesta práctica.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#guias" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Explorar guías <ArrowRight className="size-4" /></a>
           </div>
