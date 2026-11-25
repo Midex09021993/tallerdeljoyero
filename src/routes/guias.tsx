@@ -325,7 +325,7 @@ function GuiasPage() {
     }, { threshold: 0.15 });
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
-  }, [visible, filtered.length, featuredMatches]);
+  }, [visible, filtered, featuredMatches]);
 
   if (pathname !== "/guias" && pathname !== "/guias/") return <Outlet />;
 
@@ -335,11 +335,17 @@ function GuiasPage() {
   const card = (guia: typeof guias[number], index: number, isFeatured = false) => {
     const style = categoryStyles[guia.categoria] ?? categoryStyles["Metalurgia y materiales"];
     const Icon = style.icon;
+    const updateDate = "fechaActualizacion" in guia ? guia.fechaActualizacion : undefined;
+    const publishedDate = "fechaPublicacion" in guia ? guia.fechaPublicacion : undefined;
+    const isNew = typeof publishedDate === "string" && publishedDate !== "[COMPLETAR]" &&
+      !Number.isNaN(Date.parse(publishedDate)) && Date.now() - Date.parse(publishedDate) <= 30 * 24 * 60 * 60 * 1000 &&
+      Date.now() - Date.parse(publishedDate) >= 0;
     return (
       <article key={guia.slug} ref={(node) => { cardRefs.current[index] = node; }} className={`guide-card group ${visible ? "guide-observed" : ""} ${isFeatured ? "guide-featured" : ""}`} style={{ transitionDelay: `${index * 70}ms` }}>
         <div className="flex items-start justify-between gap-3">
           <span className="guide-icon" aria-hidden="true"><Icon className="size-5" /></span>
           <div className="flex flex-wrap justify-end gap-1.5">
+            {isNew && <span className="guide-new-label">Nuevo</span>}
             {isFeatured && <span className="guide-feature-label">Guía destacada</span>}
             <span className="guide-reading">{guia.lectura}</span>
           </div>
@@ -347,7 +353,7 @@ function GuiasPage() {
         <p className="guide-category" style={{ color: style.color }}>{guia.categoria.toUpperCase()}</p>
         <h2 className="guide-title"><Link to="/guias/$slug" params={{ slug: guia.slug }} title={`Leer: ${guia.titulo}`}>{guia.titulo}</Link></h2>
         <p className="guide-excerpt">{guia.descripcion}</p>
-        <p className="guide-updated">Actualizado: <span>[COMPLETAR]</span></p>
+        <p className="guide-updated">Actualizado: <span>{updateDate || "[COMPLETAR]"}</span></p>
         <div className="guide-card-footer">
           <div className="guide-tools">
             {"herramientaHref" in guia && guia.herramientaHref ? (
@@ -379,6 +385,7 @@ function GuiasPage() {
         .guides-page .guide-excerpt { margin-top:10px;color:#525252;font-size:13px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:40px; }
         .guides-page .guide-reading { color:#737373;font-size:10px;font-weight:600; }
         .guides-page .guide-feature-label { border:1px solid #e3c75f;border-radius:999px;background:#fff8e1;color:#7c5e0d;padding:4px 8px;font-size:9px;font-weight:800; }
+        .guides-page .guide-new-label { border:1px solid #fda4af;border-radius:999px;background:#fff1f2;color:#be123c;padding:4px 8px;font-size:9px;font-weight:800; }
         .guides-page .guide-updated { margin-top:11px;color:#777;font-size:10px; }
         .guides-page .guide-updated span { color:#777; }
         .guides-page .guide-card-footer { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #eee; }
