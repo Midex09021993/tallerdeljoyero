@@ -132,9 +132,14 @@ as $function$
 declare v_count integer;
 begin
   insert into public.directorio_ranking_historial(participante_id,puntuacion_total,nivel)
-  select r.participante_id,r.ranking_score,r.ranking_level
+  select r.participante_id,r.ranking_score,
+    case when r.ranking_score>=cfg.nivel_oro then 'gold'
+         when r.ranking_score>=cfg.nivel_plata then 'silver'
+         when r.ranking_score>=cfg.nivel_bronce then 'bronze'
+         else 'none' end
   from public.obtener_directorio_comunidad_publica_ranking() r
-  where r.ranking_level in ('none','bronze','silver','gold')
+  cross join public.directorio_ranking_config cfg
+  where cfg.id=true
     and not exists(select 1 from public.directorio_ranking_historial h where h.participante_id=r.participante_id and h.calculado_en::date=current_date);
   get diagnostics v_count=row_count;
   return v_count;
