@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, BookOpen, Search, ArrowRight, Award } from "lucide-react";
+import { Building2, BookOpen, Search, ArrowRight, Award, Medal, Trophy, Sparkles } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/catalogo-publico")({
@@ -37,6 +37,9 @@ export type EntradaPublica = {
   identidad_ciudad: string | null;
   identidad_pais: string | null;
   identidad_sitio_web: string | null;
+  ranking_score?: number | null;
+  ranking_level?: "none" | "bronze" | "silver" | "gold" | "diamond" | null;
+  ranking_diamond_position?: number | null;
 };
 
 export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPublica[] }) {
@@ -45,7 +48,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
   const { data = [], isLoading, isError } = useQuery({
     queryKey: ["directorio-comunidad-publica"],
     queryFn: async () => {
-      const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica");
+      const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica_ranking");
       if (error) throw error;
       return (data ?? []) as EntradaPublica[];
     },
@@ -120,14 +123,21 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
               <div className="min-w-0 flex-1"><h2 className="line-clamp-2 font-display text-xl leading-tight tracking-[-.02em] text-[#17232d]">{titulo}</h2><p className="mt-1 truncate text-xs text-slate-500">{[city,country].filter(Boolean).join(" · ") || "Comunidad joyera"}</p></div>
             </div>
             <p className="mt-4 line-clamp-2 min-h-[3rem] text-sm leading-6 text-slate-600">{descripcion?.trim() || "Descripción pendiente de completar."}</p>
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#d4aa19]/30 bg-gradient-to-r from-[#fff9e9] to-[#faf9f6] p-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-[#d4aa19]/35 bg-white text-[#987400] shadow-sm"><Award className="size-5" /></span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#8c6800]">{esCurso ? "Formación AURUM" : "Ranking AURUM"}</p>
-                <p className="mt-0.5 text-xs font-medium text-slate-600">{esCurso ? "Propuesta formativa de la comunidad" : "Clasificación y medallas en preparación"}</p>
-              </div>
-              {!esCurso && <span className="shrink-0 rounded-full border border-[#d4aa19]/40 bg-white px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-[#987400]">Ranking</span>}
-            </div>
+            {(() => {
+              const level = item.ranking_level ?? "none";
+              const isDiamond = Boolean(item.ranking_diamond_position);
+              const MedalIcon = isDiamond ? Trophy : level === "gold" ? Award : level === "silver" ? Medal : level === "bronze" ? Medal : Sparkles;
+              const medalLabel = isDiamond ? `DIAMANTE · TOP ${item.ranking_diamond_position}` : level === "gold" ? "ORO" : level === "silver" ? "PLATA" : level === "bronze" ? "BRONCE" : "EN EVALUACIÓN";
+              const medalTone = isDiamond ? "border-[#d4aa19] bg-[#fff3c7] text-[#8c6800]" : level === "gold" ? "border-[#d4aa19]/50 bg-[#fff8e7] text-[#8c6800]" : level === "silver" ? "border-slate-300 bg-slate-50 text-slate-600" : level === "bronze" ? "border-[#c68a56]/40 bg-[#fbf0e5] text-[#8a552b]" : "border-slate-200 bg-white text-slate-500";
+              return <div className={`mt-4 flex items-center gap-3 rounded-xl border p-3 ${medalTone}`}>
+                <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-current/20 bg-white/80 shadow-sm"><MedalIcon className="size-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[.14em]">{esCurso ? "Formación AURUM" : "Ranking AURUM"}</p>
+                  <p className="mt-0.5 text-xs font-semibold">{esCurso ? "Comunidad formativa" : medalLabel}</p>
+                </div>
+                {!esCurso && <span className="shrink-0 rounded-full border border-current/25 bg-white/80 px-2.5 py-1 text-[10px] font-bold tabular-nums">{Number(item.ranking_score ?? 0).toFixed(0)}/100</span>}
+              </div>;
+            })()}
             <div className="mt-4 flex min-h-7 items-center justify-between gap-3 text-xs text-slate-500">
               {count !== null ? <span>{count} {count === 1 ? "producto" : "productos"}</span> : <span>Propuesta formativa</span>}
               {website && /^https?:\/\//i.test(website) ? <a href={website} target="_blank" rel="noopener noreferrer" className="truncate text-[#987400] hover:underline">Sitio web</a> : <span>{esCurso ? "Curso" : "Perfil público"}</span>}
