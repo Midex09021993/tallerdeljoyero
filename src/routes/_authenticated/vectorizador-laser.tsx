@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell, MobileBackButton } from "@/components/AppShell";
+import { AppShell } from "@/components/AppShell";
 import { VectorizadorLaser } from "@/components/VectorizadorLaser";
 
 export const Route = createFileRoute("/_authenticated/vectorizador-laser")({
@@ -17,7 +17,6 @@ function VectorizadorLaserPage() {
     <AppShell
       titulo="Vectorizador Láser"
       subtitulo="Preparación de geometría para corte y grabado"
-      acciones={<MobileBackButton atrasMovil={{ to: "/corte-laser" }} />}
     >
       <VectorizadorLaser />
     </AppShell>
