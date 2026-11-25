@@ -1098,6 +1098,25 @@ function GuiaTecnicaPage() {
           </section>
         </div>
 
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Microguías especializadas</p>
+          <h2 className="mt-2 text-xl font-bold text-[#17232d]">Resuelve cálculos específicos de aleaciones de oro</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Consulta guías breves con fórmulas y ejemplos para conversiones concretas. Todas están conectadas con la calculadora de aleaciones.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {[
+              ["convertir-oro-14k-a-18k", "Cómo pasar oro de 14K a 18K"],
+              ["bajar-oro-24k-a-18k", "Cómo bajar oro de 24K a 18K"],
+              ["calcular-oro-fino-18k-14k-9k", "Cuánto oro fino contiene 18K, 14K y 9K"],
+              ["calcular-liga-oro-18k-14k", "Cómo calcular la liga que debes añadir"],
+              ["diferencia-oro-14k-585-milesimas", "Diferencia entre 14K, 583 y 585"],
+            ].map(([microSlug, label]) => (
+              <Link key={microSlug} to="/guias/$slug" params={{ slug: microSlug }} className="group flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm font-semibold text-slate-700 transition hover:border-[#d9bd70] hover:bg-[#fffaf0]">
+                <span>{label}</span><ArrowRight className="mt-0.5 size-4 shrink-0 text-[#987400] transition group-hover:translate-x-1" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-2xl">
