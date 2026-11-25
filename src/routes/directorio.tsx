@@ -7,7 +7,7 @@ export const Route = createFileRoute("/directorio")({
     const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica");
     if (error) {
       console.error("[Directorio] No se pudo obtener el listado público:", error);
-      return [] as EntradaPublica[];
+      return undefined;
     }
     return (data ?? []) as EntradaPublica[];
   },
@@ -66,5 +66,5 @@ export const Route = createFileRoute("/directorio")({
       scripts: [{ type: "application/ld+json", children: JSON.stringify(collectionSchema) }],
     };
   },
-  component: () => <ComunidadPublicaPage initialData={Route.useLoaderData()} />,
+  component: () => <ComunidadPublicaPage initialData={Route.useLoaderData() ?? undefined} />,
 });
