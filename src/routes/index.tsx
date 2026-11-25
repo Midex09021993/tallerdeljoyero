@@ -681,8 +681,8 @@ function InicioPublico() {
           <nav className="hidden items-center gap-7 text-[13px] font-medium text-slate-700 lg:flex" aria-label="Navegación principal">
             <Link to="/" className="transition hover:text-[#a77a00]">Inicio</Link>
             <a href="#soluciones" className="transition hover:text-[#a77a00]">Soluciones</a>
-            <Link to="/herramientas-publicas" className="transition hover:text-[#a77a00]">Herramientas</Link>
             <a href="#como-funciona" className="transition hover:text-[#a77a00]">Cómo funciona</a>
+            <Link to="/herramientas-publicas" className="transition hover:text-[#a77a00]">Herramientas</Link>
             <Link to="/guias" className="transition hover:text-[#a77a00]">Guías técnicas</Link>
             <NavDropdown label="Comunidad">
               {(close) => (
@@ -724,8 +724,8 @@ function InicioPublico() {
             <div className="mx-auto grid max-w-[1440px] gap-1">
               <Link to="/" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Inicio</Link>
               <a href="#soluciones" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Soluciones</a>
-              <Link to="/herramientas-publicas" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Herramientas</Link>
               <a href="#como-funciona" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Cómo funciona</a>
+              <Link to="/herramientas-publicas" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Herramientas</Link>
               <Link to="/guias" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Guías técnicas</Link>
               <div className="rounded-lg">
                 <button type="button" onClick={() => setComunidadMovilAbierta((abierta) => !abierta)} aria-expanded={comunidadMovilAbierta} className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">
