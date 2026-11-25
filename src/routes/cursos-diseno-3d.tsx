@@ -270,10 +270,11 @@ function CursosDiseno3DPage() {
               <div><p className="text-xs text-[#718196] line-through">US$ 250</p><p className="text-xs font-semibold text-[#9b762e]">Precio promocional</p><p className="text-3xl font-extrabold tracking-tight text-[#1e3042]">US$ 230</p></div>
               <span className="rounded-full bg-[#e0f5eb] px-2.5 py-1 text-[11px] font-bold text-[#176b49]">Ahorras US$20</span>
             </div>
-            <div className="mt-3 rounded-xl border border-[#e6d4a5] px-3 py-3">
+            <button type="button" onClick={() => setBonoAbierto(true)} aria-haspopup="dialog" aria-expanded={bonoAbierto} className="mt-3 w-full rounded-xl border border-[#e6d4a5] px-3 py-3 text-left transition hover:border-[#c9a227] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">
               <p className="text-sm font-bold text-[#24374a]">🎁 12 meses del Plan Profesional incluidos</p>
               <p className="mt-1 text-xs leading-4 text-[#627487]">Exclusivo para las primeras 5 matrículas con pago completo de US$230. No aplica a reservas de US$20.</p>
-            </div>
+              <p className="mt-2 text-[11px] font-semibold text-[#98712a]">Toca para conocer todo lo que incluye ↗</p>
+            </button>
             <ul className="mt-3 space-y-1.5 text-xs text-[#5d7183]">
               <li className="flex gap-2"><CheckCircle2 className="size-3.5 shrink-0 text-[#a17a2e]" /> 10 sesiones en vivo · 20 horas</li>
               <li className="flex gap-2"><CheckCircle2 className="size-3.5 shrink-0 text-[#a17a2e]" /> Prácticas y laboratorios interactivos</li>
