@@ -82,7 +82,7 @@ as $function$
     left join public.directorio_ranking_verificaciones v on v.participante_id=ep.id
     cross join public.directorio_ranking_config cfg
     left join public.aurum_community_activity a on a.participante_id=ep.id and a.is_public=true and a.created_at >= now() - make_interval(days => cfg.actividad_dias)
-    where ep.estado='activo' and coalesce(ep.comunidad_visible,true))
+    where ep.estado='activo' and coalesce(ep.comunidad_visible,true)
     group by ep.id, ep.nombre, ep.descripcion, ep.ciudad, c.descripcion, c.logo_url, c.telefono_contacto, c.whatsapp, c.email_contacto, ic.logo_url, ic.ciudad, ic.pais_nombre, ic.telefono, ic.email, ic.sitio_web, v.verificado, cfg.actividad_dias
   ),
   puntuaciones as (
