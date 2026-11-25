@@ -4,14 +4,14 @@ import { ArrowRight, Gem, Ruler } from "lucide-react";
 export const Route = createFileRoute("/guias")({
   head: () => ({
     meta: [
-      { title: "Guías técnicas de joyería | Taller del Joyero · AURUM LAB" },
+      { title: "Guías técnicas de joyería | AURUM LAB" },
       { name: "description", content: "Guías técnicas de joyería sobre aleaciones de oro, cálculo de leyes y liga, peso de joyas desde modelos 3D, gemología, impresión 3D y fundición." },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Guías técnicas de joyería | AURUM LAB" },
       { property: "og:description", content: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/guias" },
-      { property: "og:site_name", content: "AURUM LAB · Taller del Joyero" },
+      { property: "og:site_name", content: "AURUM LAB" },
       { property: "og:locale", content: "es_PE" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Guías técnicas de joyería | AURUM LAB" },
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/guias")({
         description: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería.",
         url: "https://www.tallerdeljoyero.com/guias",
         inLanguage: "es-PE",
-        isPartOf: { "@type": "WebSite", name: "Taller del Joyero · AURUM LAB", url: "https://www.tallerdeljoyero.com/" },
+        isPartOf: { "@type": "WebSite", name: "AURUM LAB", alternateName: "Taller del Joyero", url: "https://www.tallerdeljoyero.com/" },
         mainEntity: {
           "@type": "ItemList",
           itemListOrder: "https://schema.org/ItemListOrderAscending",
