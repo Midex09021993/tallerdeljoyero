@@ -33,6 +33,11 @@ El contenido público está dirigido a joyeros, talleres, diseñadores y profesi
 - [Calcular el peso de gemas por medidas](https://www.tallerdeljoyero.com/guias/calcular-peso-gemas-por-medidas): criterios y cálculos para estimar el peso de gemas.
 - [Convertir tallas de anillos entre España, Europa y Estados Unidos](https://www.tallerdeljoyero.com/guias/convertir-tallas-anillos-espana-europa-usa): equivalencias de sistemas de tallaje.
 - [Calcular el peso de una joya desde un modelo 3D](https://www.tallerdeljoyero.com/guias/calcular-peso-joya-modelo-3d): estimación de peso a partir de geometría tridimensional.
+- [Calcular el peso de un anillo de oro antes de fundirlo](https://www.tallerdeljoyero.com/guias/calcular-peso-anillo-oro-antes-fundir): volumen CAD, densidad y planificación del sistema de colada.
+- [Calcular el peso de oro desde un archivo STL](https://www.tallerdeljoyero.com/guias/calcular-peso-oro-archivo-stl): escala, malla, volumen y densidad de metal.
+- [Calcular el peso de una joya según su volumen](https://www.tallerdeljoyero.com/guias/calcular-peso-joya-volumen): conversión de volumen a masa con unidades consistentes.
+- [Cuánto oro necesitas para fabricar una joya](https://www.tallerdeljoyero.com/guias/cuanto-oro-necesito-fabricar-joya): pieza, sistema de colada y margen de proceso.
+- [Estimar el peso del oro desde una impresión de resina](https://www.tallerdeljoyero.com/guias/estimar-peso-oro-impresion-resina): estimación indirecta desde peso y densidad de resina.
 - [Calcular aleaciones de oro de 18K, 14K y 9K](https://www.tallerdeljoyero.com/guias/calcular-aleaciones-oro-18k-14k-9k): proporciones de oro fino y metales de liga.
 - [Distribución de un taller de joyería](https://www.tallerdeljoyero.com/guias/distribucion-taller-joyeria): organización funcional del espacio de trabajo.
 - [Impresión 3D para joyería](https://www.tallerdeljoyero.com/guias/impresion-3d-joyeria): conceptos y procesos de impresión 3D aplicados a joyería.
