@@ -81,7 +81,7 @@ const complementos = [
 ] as const;
 
 function CursosDiseno3DPage() {
-  const culqiReservaUrl = import.meta.env.VITE_CULQI_RESERVA_URL?.trim() ?? "";
+  const culqiReservaUrl = "https://express.culqi.com/pago/9E6E758D9F";
   const [programaAbierto, setProgramaAbierto] = useState(false);
   const [bonoAbierto, setBonoAbierto] = useState(false);
   const [nivelEscrito, setNivelEscrito] = useState(0);
