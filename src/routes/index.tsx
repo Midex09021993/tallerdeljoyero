@@ -13,21 +13,26 @@ import heroColgante from "@/assets/diseno-colgante.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AURUM LAB | Software de gestión para joyerías y render 3D" },
+      { title: "AURUM LAB | Software para talleres de joyería, gestión y render 3D" },
       {
         name: "description",
         content:
-          "Software para joyerías: organiza clientes, cotizaciones y pedidos. Calcula materiales y crea renders 3D con AURUM RENDER.",
+          "AURUM LAB es el software para talleres de joyería: gestiona clientes, cotizaciones y pedidos, calcula aleaciones y pesos, y presenta diseños con render 3D profesional.",
       },
-      { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "AURUM LAB | Software para joyeros y talleres de joyería" },
+      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
+      { name: "application-name", content: "AURUM LAB" },
+      { property: "og:site_name", content: "AURUM LAB | Taller del Joyero" },
+      { property: "og:locale", content: "es_PE" },
+      { property: "og:title", content: "AURUM LAB | Software para talleres de joyería" },
       {
         property: "og:description",
-        content: "Organiza tu taller, calcula materiales y crea renders 3D de joyería con AURUM RENDER.",
+        content: "Gestiona tu taller, calcula materiales y crea presentaciones 3D de joyería con AURUM LAB.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "AURUM LAB | Software para talleres de joyería" },
+      { name: "twitter:description", content: "Gestión de talleres, calculadoras joyeras y render 3D profesional en una sola plataforma." },
     ],
     links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/" }],
   }),
@@ -543,25 +548,36 @@ function InicioPublico() {
           {
             "@type": "Organization",
             "@id": "https://www.tallerdeljoyero.com/#organization",
-            "name": "Taller del Joyero",
-            "alternateName": "AURUM LAB",
-            "url": "https://www.tallerdeljoyero.com/"
+            "name": "AURUM LAB",
+            "alternateName": "Taller del Joyero",
+            "url": "https://www.tallerdeljoyero.com/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://www.tallerdeljoyero.com/brand/aurum-symbol.svg"
+            },
+            "knowsAbout": [
+              "Gestión de talleres de joyería",
+              "Diseño CAD 3D para joyería",
+              "Renderizado 3D de joyas",
+              "Aleaciones y cálculo de metales preciosos",
+              "Gemología y manufactura aditiva"
+            ]
           },
           {
             "@type": "WebSite",
             "@id": "https://www.tallerdeljoyero.com/#website",
             "url": "https://www.tallerdeljoyero.com/",
-            "name": "Taller del Joyero",
-            "alternateName": "AURUM LAB",
-            "inLanguage": "es",
+            "name": "AURUM LAB",
+            "alternateName": "Taller del Joyero",
+            "inLanguage": "es-PE",
             "publisher": { "@id": "https://www.tallerdeljoyero.com/#organization" }
           },
           {
             "@type": "WebPage",
             "@id": "https://www.tallerdeljoyero.com/#webpage",
             "url": "https://www.tallerdeljoyero.com/",
-            "name": "AURUM LAB | Software para joyeros y talleres de joyería",
-            "description": "AURUM LAB ayuda a los talleres de joyería a calcular aleaciones y pesos, mostrar diseños en 3D y organizar clientes, cotizaciones y pedidos.",
+            "name": "AURUM LAB | Software para talleres de joyería",
+            "description": "Plataforma web para talleres de joyería que integra gestión comercial, calculadoras técnicas, visualización y renderizado 3D, formación y recursos especializados.",
             "inLanguage": "es",
             "isPartOf": { "@id": "https://www.tallerdeljoyero.com/#website" },
             "about": { "@id": "https://www.tallerdeljoyero.com/#software" }
@@ -571,10 +587,12 @@ function InicioPublico() {
             "@id": "https://www.tallerdeljoyero.com/#software",
             "name": "AURUM LAB",
             "alternateName": "Taller del Joyero",
-            "applicationCategory": "DesignApplication, BusinessApplication",
+            "applicationCategory": "BusinessApplication",
+            "applicationSubCategory": "Software de gestión y diseño 3D para joyería",
+            "publisher": { "@id": "https://www.tallerdeljoyero.com/#organization" },
             "operatingSystem": "Web",
             "url": "https://www.tallerdeljoyero.com/",
-            "description": "Software para joyeros con herramientas de cálculo de materiales, visualización 3D, gestión de clientes y pedidos, y organización de archivos.",
+            "description": "Software web especializado para joyeros y talleres de joyería. Permite gestionar clientes, cotizaciones y pedidos; calcular aleaciones, pesos y medidas; visualizar modelos con render 3D; y organizar archivos y catálogos.",
             "featureList": [
               "Cálculo de aleaciones, pesos y medidas",
               "Visualización de modelos de joyería en 3D",
