@@ -253,69 +253,41 @@ function CursosDiseno3DPage() {
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">{complementos.map(({icon:Icon,title,desc})=><div key={title} className="rounded-xl border border-[#e5e8e9] bg-white p-4"><Icon className="size-5 text-[#a17a2e]" /><h3 className="mt-3 text-sm font-bold text-[#2a3d4f]">{title}</h3><p className="mt-1 text-xs leading-5 text-[#718196]">{desc}</p></div>)}</div>
           </div>
-          <aside id="inversion" className="scroll-mt-24 rounded-[1.6rem] border border-[#e4d5ad] bg-white p-6 shadow-[0_18px_55px_rgba(31,45,58,.09)] sm:p-8">
+          <aside id="inversion" className="scroll-mt-24 rounded-[1.6rem] border border-[#e4d5ad] bg-white p-4 shadow-[0_18px_55px_rgba(31,45,58,.09)] sm:p-5">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#9b762e]">Matrícula · Lanzamiento</p>
-            <h2 className="mt-2 text-xl font-bold text-[#24374a]">Invierte en tu formación profesional</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><CalendarDays className="size-5" /></span>
-                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Próximo inicio</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">30 de noviembre de 2026</span></span>
+            <h2 className="mt-1 text-lg font-bold text-[#24374a]">Curso de Diseño CAD 3D para Joyería</h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#98712a]">Inicio</p>
+                <p className="text-sm font-bold text-[#26394b]">30 nov. 2026</p>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><UsersRound className="size-5" /></span>
-                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Cupos limitados</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">Quedan <strong className="rounded-md bg-[#f5e4ad] px-1.5 text-[#7d5818]">5</strong> de 15 cupos</span></span>
+              <div className="rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#98712a]">Vacantes</p>
+                <p className="text-sm font-bold text-[#26394b]">5 disponibles</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="5 de 15 cupos disponibles">
-              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 5 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
+            <div className="mt-3 flex items-end justify-between gap-3 rounded-xl bg-[#fff8e7] p-3">
+              <div><p className="text-xs text-[#718196] line-through">US$ 250</p><p className="text-xs font-semibold text-[#9b762e]">Precio promocional</p><p className="text-3xl font-extrabold tracking-tight text-[#1e3042]">US$ 230</p></div>
+              <span className="rounded-full bg-[#e0f5eb] px-2.5 py-1 text-[11px] font-bold text-[#176b49]">Ahorras US$20</span>
             </div>
-            <div className="mt-5 rounded-xl bg-[#fff9e9] p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div><p className="text-xs font-semibold text-[#7a8793]">Precio regular</p><p className="mt-1 text-2xl font-semibold text-[#89939d] line-through">US$ 250</p></div>
-                <span className="rounded-xl bg-[#d49b18] px-3 py-2 text-center text-xs font-extrabold uppercase leading-tight text-white shadow-sm">Precio<br />promocional final</span>
-              </div>
-              <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1"><span className="text-sm font-bold text-[#9b762e]">Precio final</span><span className="text-5xl font-bold tracking-tight text-[#1e3042]">US$ 230</span></div>
-              <p className="mt-3 inline-flex rounded-full bg-[#e0f5eb] px-3 py-1.5 text-xs font-bold text-[#176b49]">✓ Ahorro: US$ 20 (8 % de descuento)</p>
+            <div className="mt-3 rounded-xl border border-[#e6d4a5] px-3 py-3">
+              <p className="text-sm font-bold text-[#24374a]">🎁 12 meses del Plan Profesional incluidos</p>
+              <p className="mt-1 text-xs leading-4 text-[#627487]">Beneficio para las primeras 5 matrículas confirmadas.</p>
             </div>
-
-            <section className="mt-5 overflow-hidden rounded-2xl border border-[#d9c18a] bg-gradient-to-br from-[#fffaf0] via-white to-[#f3f6f8] p-5" aria-labelledby="bono-profesionalizacion">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Bono de lanzamiento · 5 beneficiarios</p>
-                  <h3 id="bono-profesionalizacion" className="mt-1 text-xl font-bold leading-tight text-[#24374a]">Bono de Profesionalización AURUM LAB</h3>
-                </div>
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[#ead7a5] bg-[#fff1c9] text-[#98712a]"><Sparkles className="size-5" /></span>
-              </div>
-              <div className="mt-4 flex flex-wrap items-end gap-x-3 gap-y-1">
-                <span className="text-3xl font-extrabold tracking-tight text-[#24374a]">12 meses</span>
-                <span className="pb-1 text-xs font-bold uppercase tracking-wide text-[#98712a]">Plan Profesional incluidos</span>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-[#627487]">Inscríbete entre los próximos 5 alumnos y recibe 12 meses del Plan Profesional de AURUM LAB sin costo adicional.</p>
-              <button type="button" onClick={() => setBonoAbierto(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#d6bd7e] bg-white px-4 text-sm font-bold text-[#76591e] transition hover:bg-[#fff4d7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">
-                Descubrir qué incluye el Plan Profesional <ArrowRight className="size-4" />
-              </button>
-              <p className="mt-3 text-[10px] leading-4 text-[#7a8793]">Promoción limitada a las primeras 5 matrículas confirmadas. El beneficio se activa después de verificar el pago y no tiene renovación automática.</p>
-            </section>
-
-            <ul className="mt-5 space-y-3 text-sm text-[#5d7183]">
-              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Clases online en vivo con docente</li>
-              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> 10 sesiones guiadas · 20 horas académicas</li>
-              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Programa de nivel inicial</li>
-              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Laboratorios interactivos de práctica</li>
-              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> AURI Tutor: asistente de IA propio durante tu formación</li>
-              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Bono de Profesionalización: 12 meses del Plan Profesional incluidos</li>
-              <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Registro de cuenta AURUM LAB gratuito</li>
+            <ul className="mt-3 space-y-1.5 text-xs text-[#5d7183]">
+              <li className="flex gap-2"><CheckCircle2 className="size-3.5 shrink-0 text-[#a17a2e]" /> 10 sesiones en vivo · 20 horas</li>
+              <li className="flex gap-2"><CheckCircle2 className="size-3.5 shrink-0 text-[#a17a2e]" /> Prácticas y laboratorios interactivos</li>
+              <li className="flex gap-2"><CheckCircle2 className="size-3.5 shrink-0 text-[#a17a2e]" /> AURI Tutor durante tu formación</li>
             </ul>
-            <section className="mt-6 rounded-2xl border border-[#d9c18a] bg-[#fffaf0] p-5" aria-labelledby="separar-vacante">
-              <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Reserva tu matrícula</p>
-              <h3 id="separar-vacante" className="mt-1 text-lg font-bold text-[#24374a]">Separa tu vacante con US$ 20</h3>
-              <div className="mt-3 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs text-[#718196]">Adelanto de matrícula</p><p className="text-3xl font-extrabold tracking-tight text-[#1e3042]">US$ 20</p></div><div className="text-right"><p className="text-xs text-[#718196]">Saldo antes del inicio</p><p className="text-xl font-bold text-[#24374a]">US$ 210</p></div></div>
-              <p className="mt-2 text-xs leading-5 text-[#627487]">Separa tu vacante con US$ 20 y paga los US$ 210 restantes antes del inicio del curso.</p>
-              {culqiReservaUrl ? <a href={culqiReservaUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Separar vacante con Culqi · US$ 20 <ArrowRight className="size-4" /></a> : <button type="button" disabled className="mt-4 inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#c9b78a] px-5 text-sm font-bold text-white opacity-80">Pago con Culqi · enlace pendiente de configurar</button>}
-              {!culqiReservaUrl && <p className="mt-2 text-center text-[11px] leading-4 text-[#7a8793]">El checkout se habilitará cuando configuremos el enlace de pago oficial de Culqi.</p>}
-            </section>
-            <Link to="/auth" className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#d6bd7e] bg-white px-5 text-sm font-bold text-[#76591e] transition hover:bg-[#fff4d7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Crear cuenta gratuita en AURUM LAB <ArrowRight className="size-4" /></Link>
-            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">Precio final: US$ 230. Reserva: US$ 20; saldo: US$ 210. Inicio previsto: 30 de noviembre de 2026. Cupos disponibles anunciados: 5 de 15. Inicio previsto: 30 de noviembre de 2026. Cupos disponibles anunciados: 5 de 15.</p>
+            <div className="mt-4 rounded-xl border border-[#d9c18a] bg-[#fffaf0] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div><p className="text-[10px] font-bold uppercase tracking-wide text-[#98712a]">Reserva tu vacante</p><p className="text-2xl font-extrabold text-[#1e3042]">US$ 20</p></div>
+                <p className="text-right text-xs text-[#718196]">Saldo restante<br/><strong className="text-base text-[#24374a]">US$ 210</strong></p>
+              </div>
+              <p className="mt-1 text-[11px] text-[#627487]">Separa hoy y paga el saldo antes del inicio.</p>
+              {culqiReservaUrl ? <a href={culqiReservaUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-4 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Reservar con Culqi · US$ 20 <ArrowRight className="size-4" /></a> : <button type="button" disabled className="mt-3 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#c9b78a] px-4 text-sm font-bold text-white opacity-80">Pago pendiente de configurar</button>}
+            </div>
+            <Link to="/auth" className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#d6bd7e] bg-white px-4 text-xs font-bold text-[#76591e] transition hover:bg-[#fff4d7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Crear cuenta gratuita <ArrowRight className="size-3.5" /></Link>
           </aside>
         </div>
       </section>
