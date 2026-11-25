@@ -12,8 +12,8 @@ const paginas = {
   "aleacion-oro": {
     titulo: "Calculadora de aleación de oro: calcula la liga en gramos",
     metaTitulo: "Calculadora de aleación de oro 18K, 14K y 9K | AURUM LAB",
-    descripcion: "Calculadora gratuita para joyeros: estima cuántos gramos de liga añadir para ajustar la pureza del oro a 18K, 14K, 9K u otra ley. Incluye cálculo por quilates y recetas de color configuradas.",
-    contenido: "Introduce el peso y la ley del oro inicial, selecciona la ley final y consulta la cantidad estimada de liga en gramos. La distribución por color utiliza las recetas configuradas en la herramienta.",
+    descripcion: "Calcula cuántos gramos de liga añadir para ajustar oro a 18K, 14K o 9K. Calculadora de aleaciones para joyeros con balance de masa, leyes personalizadas y recetas de color configuradas.",
+    contenido: "Introduce el peso de tu oro, la ley inicial y el quilataje objetivo. Obtén una estimación de la liga que debes añadir en gramos y consulta la distribución por color según las recetas configuradas. Útil para planificar ajustes de ley en el taller; verifica la composición y la ley real del material antes de fabricar.",
     palabrasClave: ["calculadora de aleación de oro", "calcular liga de oro en gramos", "oro 18K", "oro 14K", "oro 9K", "bajar ley del oro", "aleación de oro para joyería", "quilataje", "oro fino", "metal de liga"],
     id: "oro",
     guiaSlug: "calcular-aleaciones-oro-18k-14k-9k",
@@ -21,14 +21,14 @@ const paginas = {
       {
         titulo: "Cómo calcular una aleación de oro y la cantidad de liga por quilates",
         parrafos: [
-          "El quilataje expresa la proporción de oro fino dentro de una aleación de 24 partes. Por ejemplo, una aleación de 18 quilates representa 18 partes de oro fino de cada 24; el resto corresponde a otros metales.",
+          "El quilataje expresa la proporción de oro fino dentro de una aleación de 24 partes. El oro de 18K equivale nominalmente a 18/24 (75 %), 14K a 14/24 y 9K a 9/24. El resto de la masa corresponde a otros metales.",
           "Para estimar la liga que debes añadir, la calculadora toma la masa inicial, la ley de partida y la ley objetivo. El resultado es teórico y depende de que los datos introducidos y la receta seleccionada correspondan al material real."
         ]
       },
       {
         titulo: "Cálculo de oro de 18K, 14K y otras leyes de pureza",
         parrafos: [
-          "La herramienta permite seleccionar leyes habituales o introducir una ley personalizada. Úsala para planificar el ajuste desde una ley inicial superior hacia una ley final inferior; comprueba que la ley de partida sea mayor que la ley deseada.",
+          "La herramienta permite seleccionar leyes habituales o introducir una ley personalizada. Este cálculo de adición de liga se aplica al ajuste desde una ley inicial superior hacia una ley final inferior; comprueba que la ley de partida sea mayor que la ley deseada.",
           "El color amarillo, blanco, rosa o naranja se calcula con la receta de metales de liga configurada en la herramienta. La composición de una aleación comercial puede variar según el fabricante y la aplicación."
         ]
       }
@@ -36,7 +36,10 @@ const paginas = {
     preguntas: [
       { pregunta: "¿Cuántos gramos de liga necesito para preparar oro de 18 quilates?", respuesta: "Depende del peso y de la ley del oro de partida. Introduce ambos valores y selecciona 18K como ley final para obtener una estimación según la receta configurada." },
       { pregunta: "¿Cómo calcular una aleación de oro de 14K o 9K?", respuesta: "Puedes seleccionar una ley disponible o introducir una ley personalizada. Verifica que la ley inicial sea superior a la ley final para que el cálculo sea aplicable." },
-      { pregunta: "¿La calculadora ofrece recetas para oro amarillo, blanco y rosa?", respuesta: "La herramienta distribuye la cantidad estimada de liga según la receta configurada para cada color. No sustituye la ficha técnica de una aleación comercial ni un análisis de laboratorio." }
+      { pregunta: "¿La calculadora ofrece recetas para oro amarillo, blanco y rosa?", respuesta: "La herramienta distribuye la cantidad estimada de liga según la receta configurada para cada color. No sustituye la ficha técnica de una aleación comercial ni un análisis de laboratorio." },
+      { pregunta: "¿Cuál es la fórmula para calcular la liga que se añade al oro?", respuesta: "Primero calcula el peso final teórico: peso inicial × ley inicial ÷ ley objetivo. Después resta el peso inicial. La fórmula supone que la liga añadida no contiene oro fino y que la ley objetivo es menor que la ley inicial." },
+      { pregunta: "¿18K equivale a qué porcentaje de oro fino?", respuesta: "18K nominal equivale a 18 de 24 partes, es decir, 75 % de oro fino o 750 milésimas. La ley real del lote puede requerir ensayo o documentación." },
+      { pregunta: "¿La calculadora reemplaza un ensayo de oro?", respuesta: "No. Es una estimación matemática basada en los valores ingresados. No analiza el material ni confirma su ley real; considera las pérdidas y verifica la composición con los procedimientos de tu taller." }
     ]
   },
   "peso-joya-3d": {
@@ -298,7 +301,7 @@ function HerramientaPublicaPage() {
           <div className="flex items-center gap-3 text-[#987400]"><span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4]"><Icono className="size-5" /></span><p className="text-[10px] font-bold uppercase tracking-[.22em]">Herramienta gratuita para joyeros</p></div>
           <h1 className={pagina.id === "oro" ? "mt-3 max-w-4xl font-display text-3xl italic leading-tight sm:text-4xl" : "mt-5 max-w-4xl font-display text-3xl italic leading-tight sm:text-5xl"}>{pagina.titulo}</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{pagina.descripcion}</p>
-          {pagina.id !== "oro" ? <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">{pagina.contenido}</p> : null}
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{pagina.contenido}</p>
         </section>
 
         <section aria-label={pagina.titulo} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
@@ -352,6 +355,20 @@ function HerramientaPublicaPage() {
               ))}
             </div>
           </div>
+          {pagina.id === "oro" ? (
+            <section aria-labelledby="guia-oro-relacionada" className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <h2 id="guia-oro-relacionada" className="text-lg font-bold text-[#17232d]">Guías relacionadas para calcular oro y aleaciones</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Amplía el cálculo con equivalencias de quilataje, contenido de oro fino y ejemplos de balance de masa.</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  ["calcular-oro-fino-18k-14k-9k", "Oro fino en 18K, 14K y 9K"],
+                  ["calcular-liga-oro-18k-14k", "Calcular la liga que debes añadir"],
+                  ["diferencia-oro-14k-585-milesimas", "14K, 583 y 585 milésimas"],
+                  ["bajar-oro-24k-a-18k", "Bajar oro de 24K a 18K"],
+                ].map(([slug, label]) => <Link key={slug} to="/guias/$slug" params={{ slug }} className="inline-flex rounded-full border border-[#e8dfc7] bg-[#fffaf0] px-3 py-2 text-xs font-semibold text-[#876500] transition hover:bg-[#fff2cf]">{label}</Link>)}
+              </div>
+            </section>
+          ) : null}
           {pagina.guiaSlug ? (
             <div className="rounded-2xl border border-[#e8dfc7] bg-[#fffaf0] p-5 sm:flex sm:items-center sm:justify-between sm:gap-5">
               <div>
