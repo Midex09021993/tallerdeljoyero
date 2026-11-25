@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Calculator, Gem } from "lucide-react";
+import { MicroGuiaOro, microGuiasOro, type MicroGuiaOroSlug } from "@/components/seo/MicroGuiaAleaciones";
 
 const slugGuia = "calcular-aleaciones-oro-18k-14k-9k";
 const slugPeso = "calcular-peso-joya-modelo-3d";
@@ -11,9 +12,10 @@ const slugTallas = "convertir-tallas-anillos-espana-europa-usa";
 
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
-    const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas].includes(params.slug);
-    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya desde un modelo 3D" : params.slug === slugPlano ? "Distribución de un taller de joyería: zonas, flujo y seguridad" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo estimar el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
-    const descripcion = params.slug === slugPeso ? "Guía técnica para validar el volumen de un modelo 3D, controlar unidades y estimar la masa de una joya según la densidad de su aleación." : params.slug === slugPlano ? "Guía para organizar zonas de diseño CAD, impresión 3D, posprocesado, fundición y acabado, con criterios de circulación, ventilación y seguridad." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Guía gemológica para estimar el peso en quilates mediante dimensiones, gravedad específica, forma de talla y proporciones de la piedra." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
+    const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas, ...Object.keys(microGuiasOro)].includes(params.slug);
+    const micro = microGuiasOro[params.slug as MicroGuiaOroSlug];
+    const titulo = micro?.title ?? (params.slug === slugPeso ? "Cómo estimar el peso de una joya desde un modelo 3D" : params.slug === slugPlano ? "Distribución de un taller de joyería: zonas, flujo y seguridad" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo estimar el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K");
+    const descripcion = micro?.description ?? (params.slug === slugPeso ? "Guía técnica para validar el volumen de un modelo 3D, controlar unidades y estimar la masa de una joya según la densidad de su aleación." : params.slug === slugPlano ? "Guía para organizar zonas de diseño CAD, impresión 3D, posprocesado, fundición y acabado, con criterios de circulación, ventilación y seguridad." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Guía gemológica para estimar el peso en quilates mediante dimensiones, gravedad específica, forma de talla y proporciones de la piedra." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.");
     return {
       meta: [
         { title: valida ? `${titulo} | Guías técnicas AURUM LAB` : "Guía no encontrada | AURUM LAB" },
@@ -54,7 +56,7 @@ export const Route = createFileRoute("/guias/$slug")({
 
 function GuiaTecnicaPage() {
   const { slug } = Route.useParams();
-  if (![slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas].includes(slug)) {
+  if (![slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas, ...Object.keys(microGuiasOro)].includes(slug)) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#fffefa] px-5 text-center text-[#17232d]">
         <div className="max-w-lg">
@@ -65,6 +67,8 @@ function GuiaTecnicaPage() {
       </main>
     );
   }
+
+  if (Object.prototype.hasOwnProperty.call(microGuiasOro, slug)) return <MicroGuiaOro slug={slug as MicroGuiaOroSlug} />;
 
   if (slug === slugGemas) {
     return (
