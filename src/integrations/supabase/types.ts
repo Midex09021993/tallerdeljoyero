@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_dias_disponibilidad: {
+        Row: {
+          actualizado_por: string | null
+          disponible: boolean
+          fecha: string
+          updated_at: string
+        }
+        Insert: {
+          actualizado_por?: string | null
+          disponible?: boolean
+          fecha: string
+          updated_at?: string
+        }
+        Update: {
+          actualizado_por?: string | null
+          disponible?: boolean
+          fecha?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agenda_eventos: {
+        Row: {
+          activo: boolean
+          creado_por: string
+          created_at: string
+          descripcion: string | null
+          fin_at: string
+          id: string
+          inicio_at: string
+          tipo: string
+          titulo: string
+          todo_el_dia: boolean
+        }
+        Insert: {
+          activo?: boolean
+          creado_por: string
+          created_at?: string
+          descripcion?: string | null
+          fin_at: string
+          id?: string
+          inicio_at: string
+          tipo?: string
+          titulo: string
+          todo_el_dia?: boolean
+        }
+        Update: {
+          activo?: boolean
+          creado_por?: string
+          created_at?: string
+          descripcion?: string | null
+          fin_at?: string
+          id?: string
+          inicio_at?: string
+          tipo?: string
+          titulo?: string
+          todo_el_dia?: boolean
+        }
+        Relationships: []
+      }
       agenda_horarios: {
         Row: {
           activo: boolean
@@ -22,6 +82,10 @@ export type Database = {
           fin_at: string
           id: string
           inicio_at: string
+          invitacion_descripcion: string | null
+          invitacion_titulo: string | null
+          invitacion_url: string | null
+          solicitud_demo_id: string | null
           zona_horaria: string
         }
         Insert: {
@@ -31,6 +95,10 @@ export type Database = {
           fin_at: string
           id?: string
           inicio_at: string
+          invitacion_descripcion?: string | null
+          invitacion_titulo?: string | null
+          invitacion_url?: string | null
+          solicitud_demo_id?: string | null
           zona_horaria?: string
         }
         Update: {
@@ -40,9 +108,21 @@ export type Database = {
           fin_at?: string
           id?: string
           inicio_at?: string
+          invitacion_descripcion?: string | null
+          invitacion_titulo?: string | null
+          invitacion_url?: string | null
+          solicitud_demo_id?: string | null
           zona_horaria?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agenda_horarios_solicitud_demo_id_fkey"
+            columns: ["solicitud_demo_id"]
+            isOneToOne: false
+            referencedRelation: "solicitudes_demo"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       agenda_reservas: {
         Row: {
@@ -174,6 +254,307 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      aurum_afiliado_atribuciones: {
+        Row: {
+          afiliado_id: string
+          atribuido_en: string
+          created_at: string
+          id: string
+          referido_id: string
+          referido_user_id: string
+        }
+        Insert: {
+          afiliado_id: string
+          atribuido_en?: string
+          created_at?: string
+          id?: string
+          referido_id: string
+          referido_user_id: string
+        }
+        Update: {
+          afiliado_id?: string
+          atribuido_en?: string
+          created_at?: string
+          id?: string
+          referido_id?: string
+          referido_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_afiliado_atribuciones_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_afiliado_atribuciones_referido_id_fkey"
+            columns: ["referido_id"]
+            isOneToOne: true
+            referencedRelation: "aurum_afiliado_referidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurum_afiliado_comisiones: {
+        Row: {
+          afiliado_id: string
+          creada_en: string
+          estado: string
+          id: string
+          importe_pen: number
+          pago_id: string
+          revertida_en: string | null
+        }
+        Insert: {
+          afiliado_id: string
+          creada_en?: string
+          estado?: string
+          id?: string
+          importe_pen?: number
+          pago_id: string
+          revertida_en?: string | null
+        }
+        Update: {
+          afiliado_id?: string
+          creada_en?: string
+          estado?: string
+          id?: string
+          importe_pen?: number
+          pago_id?: string
+          revertida_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_afiliado_comisiones_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_afiliado_comisiones_pago_id_fkey"
+            columns: ["pago_id"]
+            isOneToOne: true
+            referencedRelation: "aurum_formacion_pagos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurum_afiliado_movimientos: {
+        Row: {
+          afiliado_id: string
+          comision_id: string | null
+          creado_en: string
+          descripcion: string | null
+          id: string
+          importe_pen: number
+          retiro_id: string | null
+          tipo: string
+        }
+        Insert: {
+          afiliado_id: string
+          comision_id?: string | null
+          creado_en?: string
+          descripcion?: string | null
+          id?: string
+          importe_pen: number
+          retiro_id?: string | null
+          tipo: string
+        }
+        Update: {
+          afiliado_id?: string
+          comision_id?: string | null
+          creado_en?: string
+          descripcion?: string | null
+          id?: string
+          importe_pen?: number
+          retiro_id?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_afiliado_movimientos_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_afiliado_movimientos_comision_id_fkey"
+            columns: ["comision_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliado_comisiones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_movimiento_retiro_fk"
+            columns: ["retiro_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliado_retiros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurum_afiliado_referidos: {
+        Row: {
+          afiliado_id: string
+          created_at: string
+          id: string
+          primera_visita_en: string
+          vence_en: string
+          visitante_hash: string
+        }
+        Insert: {
+          afiliado_id: string
+          created_at?: string
+          id?: string
+          primera_visita_en?: string
+          vence_en: string
+          visitante_hash: string
+        }
+        Update: {
+          afiliado_id?: string
+          created_at?: string
+          id?: string
+          primera_visita_en?: string
+          vence_en?: string
+          visitante_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_afiliado_referidos_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurum_afiliado_retiros: {
+        Row: {
+          afiliado_id: string
+          estado: string
+          id: string
+          importe_pen: number
+          metodo_pago: string | null
+          observaciones: string | null
+          referencia_pago: string | null
+          resuelto_en: string | null
+          resuelto_por: string | null
+          solicitado_en: string
+          titular_pago: string | null
+        }
+        Insert: {
+          afiliado_id: string
+          estado?: string
+          id?: string
+          importe_pen: number
+          metodo_pago?: string | null
+          observaciones?: string | null
+          referencia_pago?: string | null
+          resuelto_en?: string | null
+          resuelto_por?: string | null
+          solicitado_en?: string
+          titular_pago?: string | null
+        }
+        Update: {
+          afiliado_id?: string
+          estado?: string
+          id?: string
+          importe_pen?: number
+          metodo_pago?: string | null
+          observaciones?: string | null
+          referencia_pago?: string | null
+          resuelto_en?: string | null
+          resuelto_por?: string | null
+          solicitado_en?: string
+          titular_pago?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_afiliado_retiros_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurum_afiliados: {
+        Row: {
+          aprobado_en: string | null
+          aprobado_por: string | null
+          codigo: string
+          created_at: string
+          estado: string
+          id: string
+          participante_id: string | null
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aprobado_en?: string | null
+          aprobado_por?: string | null
+          codigo: string
+          created_at?: string
+          estado?: string
+          id?: string
+          participante_id?: string | null
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aprobado_en?: string | null
+          aprobado_por?: string | null
+          codigo?: string
+          created_at?: string
+          estado?: string
+          id?: string
+          participante_id?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_afiliados_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurum_afiliados_config: {
+        Row: {
+          comision_pen: number
+          id: boolean
+          precio_curso_usd: number
+          retiro_minimo_pen: number
+          updated_at: string
+          ventana_atribucion_dias: number
+        }
+        Insert: {
+          comision_pen?: number
+          id?: boolean
+          precio_curso_usd?: number
+          retiro_minimo_pen?: number
+          updated_at?: string
+          ventana_atribucion_dias?: number
+        }
+        Update: {
+          comision_pen?: number
+          id?: boolean
+          precio_curso_usd?: number
+          retiro_minimo_pen?: number
+          updated_at?: string
+          ventana_atribucion_dias?: number
+        }
+        Relationships: []
       }
       aurum_analytics_events: {
         Row: {
@@ -308,6 +689,96 @@ export type Database = {
           value?: number
         }
         Relationships: []
+      }
+      aurum_formacion_pagos: {
+        Row: {
+          actualizado_en: string
+          afiliado_id: string | null
+          alumno_user_id: string
+          creado_en: string
+          curso_id: string
+          estado: string
+          id: string
+          importe: number
+          inscripcion_id: string | null
+          moneda: string
+          pagado_en: string | null
+          participante_id: string
+          proveedor: string
+          referencia_externa: string | null
+          referido_id: string | null
+        }
+        Insert: {
+          actualizado_en?: string
+          afiliado_id?: string | null
+          alumno_user_id: string
+          creado_en?: string
+          curso_id: string
+          estado?: string
+          id?: string
+          importe: number
+          inscripcion_id?: string | null
+          moneda?: string
+          pagado_en?: string | null
+          participante_id: string
+          proveedor: string
+          referencia_externa?: string | null
+          referido_id?: string | null
+        }
+        Update: {
+          actualizado_en?: string
+          afiliado_id?: string | null
+          alumno_user_id?: string
+          creado_en?: string
+          curso_id?: string
+          estado?: string
+          id?: string
+          importe?: number
+          inscripcion_id?: string | null
+          moneda?: string
+          pagado_en?: string | null
+          participante_id?: string
+          proveedor?: string
+          referencia_externa?: string | null
+          referido_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_formacion_pagos_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_formacion_pagos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_cursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_formacion_pagos_inscripcion_id_fkey"
+            columns: ["inscripcion_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_inscripciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_formacion_pagos_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurum_formacion_pagos_referido_id_fkey"
+            columns: ["referido_id"]
+            isOneToOne: false
+            referencedRelation: "aurum_afiliado_referidos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       aurum_plan_quotas: {
         Row: {
@@ -4311,6 +4782,7 @@ export type Database = {
           email: string
           empresa: string
           estado: string
+          fecha_reunion_at: string | null
           horario_preferido: string | null
           id: string
           interes: string
@@ -4323,6 +4795,7 @@ export type Database = {
           email: string
           empresa: string
           estado?: string
+          fecha_reunion_at?: string | null
           horario_preferido?: string | null
           id?: string
           interes: string
@@ -4335,6 +4808,7 @@ export type Database = {
           email?: string
           empresa?: string
           estado?: string
+          fecha_reunion_at?: string | null
           horario_preferido?: string | null
           id?: string
           interes?: string
@@ -4877,6 +5351,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agenda_actualizar_horario: {
+        Args: { _fin_at: string; _horario_id: string; _inicio_at: string }
+        Returns: undefined
+      }
       agenda_actualizar_reserva: {
         Args: {
           _enlace_reunion?: string
@@ -4898,13 +5376,55 @@ export type Database = {
         Args: { _fin_at: string; _inicio_at: string; _zona_horaria?: string }
         Returns: string
       }
+      agenda_eliminar_horarios: {
+        Args: { _horario_ids: string[] }
+        Returns: {
+          eliminados: number
+          protegidos: number
+        }[]
+      }
       agenda_es_administrador: { Args: never; Returns: boolean }
+      agenda_establecer_disponibilidad_dia: {
+        Args: { _disponible: boolean; _fecha: string }
+        Returns: undefined
+      }
+      agenda_guardar_invitacion_horario: {
+        Args: {
+          _descripcion: string
+          _horario_id: string
+          _titulo: string
+          _url: string
+        }
+        Returns: undefined
+      }
+      agenda_listar_dias_disponibilidad: {
+        Args: { _desde: string; _hasta: string }
+        Returns: {
+          disponible: boolean
+          fecha: string
+        }[]
+      }
       agenda_listar_horarios: {
         Args: never
         Returns: {
           fin_at: string
           id: string
           inicio_at: string
+          invitacion_descripcion: string
+          invitacion_titulo: string
+          invitacion_url: string
+          zona_horaria: string
+        }[]
+      }
+      agenda_listar_horarios_publicos: {
+        Args: never
+        Returns: {
+          fin_at: string
+          id: string
+          inicio_at: string
+          invitacion_descripcion: string
+          invitacion_titulo: string
+          invitacion_url: string
           zona_horaria: string
         }[]
       }
@@ -4933,6 +5453,7 @@ export type Database = {
           email: string
           empresa: string
           estado: string
+          fecha_reunion_at: string
           horario_preferido: string
           id: string
           interes: string
@@ -4944,12 +5465,40 @@ export type Database = {
         Args: { _descripcion?: string; _horario_id: string; _tema: string }
         Returns: string
       }
+      agenda_solicitar_demo_publica: {
+        Args: {
+          _email: string
+          _empresa: string
+          _horario_id: string
+          _horario_preferido?: string
+          _interes: string
+          _nombre: string
+          _telefono: string
+        }
+        Returns: {
+          fecha_reunion_at: string
+          solicitud_id: string
+        }[]
+      }
       asignar_participante_externo_trabajo: {
         Args: { _participante_id: string; _trabajo_id: string }
         Returns: Json
       }
       asignar_responsable_trabajo: {
         Args: { _responsable_user_id: string; _trabajo_id: string }
+        Returns: Json
+      }
+      aurum_afiliado_es_propietario: {
+        Args: { _afiliado_id: string }
+        Returns: boolean
+      }
+      aurum_confirmar_pago_afiliado: {
+        Args: {
+          _importe_confirmado: number
+          _moneda_confirmada: string
+          _pago_id: string
+          _referencia_externa: string
+        }
         Returns: Json
       }
       aurum_contar_productos_catalogo_owner: {
@@ -4968,6 +5517,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      aurum_registrar_visita_afiliado: {
+        Args: { _codigo: string; _visitante_hash: string }
+        Returns: string
+      }
+      aurum_resolver_retiro_afiliado: {
+        Args: {
+          _decision: string
+          _observaciones?: string
+          _referencia_pago?: string
+          _retiro_id: string
+        }
+        Returns: undefined
+      }
       aurum_resumen_mi_nube_owner: {
         Args: { p_participante_id: string }
         Returns: {
@@ -4976,6 +5538,23 @@ export type Database = {
           carpetas_compartidas: number
           carpetas_propias: number
         }[]
+      }
+      aurum_revertir_comision_afiliado: {
+        Args: { _motivo: string; _pago_id: string }
+        Returns: undefined
+      }
+      aurum_solicitar_retiro_afiliado: {
+        Args: {
+          _afiliado_id: string
+          _importe_pen: number
+          _metodo_pago: string
+          _titular_pago: string
+        }
+        Returns: string
+      }
+      aurum_vincular_referido_afiliado: {
+        Args: { _visitante_hash: string }
+        Returns: string
       }
       cambiar_estado_cotizacion: {
         Args: { _cotizacion_id: string; _nuevo_estado: string }
