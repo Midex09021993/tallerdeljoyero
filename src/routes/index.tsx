@@ -1059,14 +1059,13 @@ function InicioPublico() {
       <TalleresDeLaComunidad />
 
       <section className="aurum-tools-faq mx-auto max-w-4xl px-5 py-12 sm:px-8 lg:px-12" aria-labelledby="herramientas-faq-titulo">
-          <section className="aurum-tools-faq mx-auto max-w-4xl" aria-labelledby="herramientas-faq-titulo">
             <h3 id="herramientas-faq-titulo" className="text-lg font-bold text-[#17232d]">Preguntas frecuentes</h3>
             <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿Qué es AURUM LAB?</summary><p className="mt-2 text-sm leading-6 text-slate-700">AURUM LAB es un software de gestión para joyerías y talleres de joyería que reúne calculadoras técnicas, render 3D, clientes, cotizaciones, pedidos y catálogo digital.</p></details>
             <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿Cómo calculo cuánto oro necesito para una pieza?</summary><p className="mt-2 text-sm leading-6 text-slate-700">Usa la calculadora de aleaciones de oro de AURUM LAB para calcular proporciones de oro fino y ligadura para 18K, 14K y 9K. El cálculo depende del peso final que ingreses.</p></details>
             <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿AURUM RENDER funciona con Rhino 7 y Rhino 8?</summary><p className="mt-2 text-sm leading-6 text-slate-700">AURUM RENDER es el render 3D de joyería de AURUM LAB y cuenta con complementos AURUM CONNECT para Rhino 7 y Rhino 8.</p></details>
             <details className="py-3"><summary className="font-semibold text-sm text-[#263541]">¿Puedo probar las herramientas sin crear una cuenta?</summary><p className="mt-2 text-sm leading-6 text-slate-700">Sí. Las herramientas públicas de cálculo se pueden explorar sin registro desde <Link to="/herramientas-publicas" className="font-semibold text-[#705400] underline underline-offset-2">Herramientas públicas</Link>. Para funciones de gestión y Mi Nube necesitas ingresar a tu cuenta.</p></details>
           </section>
-      </section>
+
 
       <footer id="contacto" className="border-t border-[#8c7446] bg-[#17232d] text-slate-300">
         <div className="mx-auto max-w-[1440px] px-5 py-9 sm:px-8 sm:py-10 lg:px-12">
