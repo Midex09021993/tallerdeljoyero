@@ -7,7 +7,7 @@ import { AuriPublicoBoton } from "@/components/auri/AuriPublicoBoton";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X, ChevronDown, UsersRound, GraduationCap, Gem } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 export const Route = createFileRoute("/")({
@@ -361,7 +361,7 @@ function TalleresDeLaComunidad() {
 function InicioPublico() {
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
-  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);\n  const [comunidadDropdownAbierto, setComunidadDropdownAbierto] = useState(false);\n  const [comunidadMovilAbierta, setComunidadMovilAbierta] = useState(false);
   const demo3DSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -625,7 +625,25 @@ function InicioPublico() {
             <Link to="/herramientas-publicas" className="transition hover:text-[#a77a00]">Herramientas</Link>
             <a href="#como-funciona" className="transition hover:text-[#a77a00]">Cómo funciona</a>
             <Link to="/guias" className="transition hover:text-[#a77a00]">Guías técnicas</Link>
-            <Link to="/comunidad" className="transition hover:text-[#a77a00]">Comunidad</Link>
+            <div className="relative">
+              <button type="button" aria-expanded={comunidadDropdownAbierto} aria-haspopup="true" onClick={() => setComunidadDropdownAbierto((abierto) => !abierto)} className="inline-flex items-center gap-1.5 rounded transition hover:text-[#a77a00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
+                Comunidad <ChevronDown className={"size-3.5 transition-transform " + (comunidadDropdownAbierto ? "rotate-180" : "")} />
+              </button>
+              {comunidadDropdownAbierto && <div className="absolute left-1/2 top-full z-50 mt-3 w-[320px] -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_45px_rgba(15,23,42,.14)]" role="menu">
+                <Link to="/directorio" onClick={() => setComunidadDropdownAbierto(false)} role="menuitem" className="flex items-center gap-3 rounded-xl p-3 transition hover:bg-[#fff9e8]">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff4d5] text-[#9a7418]"><UsersRound className="size-5" /></span>
+                  <span><span className="block text-sm font-semibold text-[#17232d]">Red de Joyería</span><span className="mt-0.5 block text-xs text-slate-500">Talleres, joyerías y profesionales</span></span>
+                </Link>
+                <Link to="/cursos-diseno-3d" onClick={() => setComunidadDropdownAbierto(false)} role="menuitem" className="flex items-center gap-3 rounded-xl p-3 transition hover:bg-[#fff9e8]">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff4d5] text-[#9a7418]"><GraduationCap className="size-5" /></span>
+                  <span><span className="block text-sm font-semibold text-[#17232d]">Cursos y Formación</span><span className="mt-0.5 block text-xs text-slate-500">Aprende diseño y técnicas joyeras</span></span>
+                </Link>
+                <Link to="/galeria-joyas" onClick={() => setComunidadDropdownAbierto(false)} role="menuitem" className="flex items-center gap-3 rounded-xl p-3 transition hover:bg-[#fff9e8]">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff4d5] text-[#9a7418]"><Gem className="size-5" /></span>
+                  <span><span className="block text-sm font-semibold text-[#17232d]">Galería de Diseños</span><span className="mt-0.5 block text-xs text-slate-500">Modelos 3D y recursos digitales</span></span>
+                </Link>
+              </div>}
+            </div>
             <a href="#contacto" className="transition hover:text-[#a77a00]">Contacto</a>
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -651,7 +669,16 @@ function InicioPublico() {
               <Link to="/herramientas-publicas" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Herramientas</Link>
               <a href="#como-funciona" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Cómo funciona</a>
               <Link to="/guias" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Guías técnicas</Link>
-              <Link to="/comunidad" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Comunidad</Link>
+              <div className="rounded-lg">
+                <button type="button" onClick={() => setComunidadMovilAbierta((abierta) => !abierta)} aria-expanded={comunidadMovilAbierta} className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">
+                  Comunidad <ChevronDown className={"size-4 transition-transform " + (comunidadMovilAbierta ? "rotate-180" : "")} />
+                </button>
+                {comunidadMovilAbierta && <div className="ml-3 grid gap-1 border-l-2 border-[#e8d39a] pl-2 pb-2">
+                  <Link to="/directorio" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-amber-50">Red de Joyería</Link>
+                  <Link to="/cursos-diseno-3d" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-amber-50">Cursos y Formación</Link>
+                  <Link to="/galeria-joyas" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-amber-50">Galería de Diseños</Link>
+                </div>}
+              </div>
               <a href="#contacto" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Contacto</a>
             </div>
           </nav>
