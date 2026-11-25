@@ -66,7 +66,7 @@ function MensajeSolicitudDemo({ solicitud }: { solicitud: SolicitudDemo }) {
     "",
     "¡Te esperamos!",
     "Equipo AURUM LAB",
-  ].filter(Boolean).join("\\n");
+  ].filter(Boolean).join("\n");
   return <div className="w-full space-y-2 rounded-xl border border-gold/25 bg-gold/5 p-3">
     <p className="text-xs font-semibold text-gold-deep">Personaliza el mensaje antes de contactar</p>
     <label className="block space-y-1"><span className="text-xs font-medium">Interés (opciones del formulario web)</span><select value={interes} onChange={e => setInteres(e.target.value)} className="w-full rounded-lg border bg-background px-2.5 py-2 text-xs">{INTERESES_DEMO.map(op => <option key={op} value={op}>{op}</option>)}</select></label>
