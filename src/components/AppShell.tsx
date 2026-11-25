@@ -293,7 +293,6 @@ export function AppShell({
   titulo,
   subtitulo,
   acciones,
-  atrasMovil = { to: "/inicio" },
   ocultarNavegacion = false,
   modoAulaExpandida = false,
   ocultarEncabezado = false,
@@ -304,7 +303,6 @@ export function AppShell({
   titulo: string;
   subtitulo?: string;
   acciones?: ReactNode;
-  atrasMovil?: AtrasMovil;
   encabezadoMovilCompacto?: boolean;
   ocultarAccionesCelular?: boolean;
   ocultarNavegacion?: boolean;
@@ -348,7 +346,6 @@ export function AppShell({
     "Usuario";
   const tallerVisible = sesion?.participante?.nombre?.trim() || sesion?.sede?.nombre?.trim() || "";
   const inicial = nombreVisible.charAt(0).toUpperCase();
-  const mostrarAtrasMovil = atrasMovil !== false;
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const seccionActual = [...visiblesOrdenadas].sort((a, b) => b.to.length - a.to.length).find((s) => pathname === s.to || pathname.startsWith(`${s.to}/`));
   useEffect(() => {
@@ -508,9 +505,6 @@ export function AppShell({
                 <p className="hidden text-sm text-muted-foreground lg:block">{subtitulo}</p>
               ) : null}
             </div>
-            {mostrarAtrasMovil ? (
-              <MobileBackButton atrasMovil={atrasMovil} className="max-lg:ml-auto" />
-            ) : null}
           </div>
           {acciones ? (
             <div
