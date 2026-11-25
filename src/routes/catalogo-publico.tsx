@@ -20,7 +20,7 @@ export const Route = createFileRoute("/catalogo-publico")({
   component: ComunidadPublicaPage,
 });
 
-type Entrada = {
+export type EntradaPublica = {
   tipo: "taller" | "curso";
   participante_id: string;
   nombre: string;
@@ -39,7 +39,7 @@ type Entrada = {
   identidad_sitio_web: string | null;
 };
 
-export function ComunidadPublicaPage() {
+export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPublica[] }) {
   const [busqueda, setBusqueda] = useState("");
   const [filtro, setFiltro] = useState<"talleres" | "cursos">("talleres");
   const { data = [], isLoading, isError } = useQuery({
@@ -47,8 +47,9 @@ export function ComunidadPublicaPage() {
     queryFn: async () => {
       const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica");
       if (error) throw error;
-      return (data ?? []) as Entrada[];
+      return (data ?? []) as EntradaPublica[];
     },
+    initialData,
     staleTime: 60_000,
     retry: 1,
   });
