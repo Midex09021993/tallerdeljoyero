@@ -67,7 +67,7 @@ export function MicroGuiaPeso3D({ slug }: { slug: MicroGuiaPeso3DSlug }) {
         </div>
       </header>
       <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
-        <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><Link to="/guias/calcular-peso-joya-modelo-3d" className="hover:text-[#876500]">Peso de joyas 3D</Link><span aria-hidden="true"> / </span><span>Microguía</span></nav>
+        <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><Link to="/guias/$slug" params={{ slug: "calcular-peso-joya-modelo-3d" }} className="hover:text-[#876500]">Peso de joyas 3D</Link><span aria-hidden="true"> / </span><span>Microguía</span></nav>
         <header className="mt-6 rounded-[1.75rem] border border-[#eadca7] bg-gradient-to-br from-[#fff9e8] via-white to-[#f5f7fa] p-6 sm:p-9">
           <span className="rounded-full border border-[#e8d7a4] bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Diseño y fabricación · AURUM LAB</span>
           <h1 className="mt-5 text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">{guia.title}</h1>
