@@ -6,18 +6,73 @@ import { supabasePublic as supabase } from "@/integrations/supabase/client";
 import { ActividadComunidad } from "@/components/ActividadComunidad";
 
 export const Route = createFileRoute("/$slug/")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Catálogo de joyería | ${params.slug} · Taller del Joyero` },
-      { name: "description", content: `Explora las joyas y colecciones publicadas por ${params.slug} en su catálogo digital de Taller del Joyero.` },
-      { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Taller del Joyero" },
-      { property: "og:title", content: `Catálogo de joyería | ${params.slug}` },
-      { property: "og:description", content: `Descubre joyas y colecciones del catálogo digital ${params.slug}.` },
-    ],
-    links: [{ rel: "canonical", href: `https://www.tallerdeljoyero.com/${encodeURIComponent(params.slug)}` }],
-  }),
+  loader: async ({ params }) => {
+    const slug = params.slug.trim().toLowerCase();
+    if (RESERVED_SLUGS.has(slug)) return [];
+    const [catalogResult, contactResult] = await Promise.all([
+      supabase.rpc("obtener_catalogo_publico", { _slug: slug }),
+      supabase.rpc("obtener_contacto_catalogo_publico", { _slug: slug }),
+    ]);
+    if (catalogResult.error) {
+      console.error("[Catálogo público] No se pudo obtener el perfil para SEO:", catalogResult.error);
+      return undefined;
+    }
+    const rows = (catalogResult.data ?? []) as CatalogoRow[];
+    const contactRaw = Array.isArray(contactResult.data) ? contactResult.data[0] : contactResult.data;
+    const contact = contactRaw && typeof contactRaw === "object" ? contactRaw as Record<string, unknown> : {};
+    return rows.map((row) => ({
+      ...row,
+      telefono_contacto: typeof contact["telefono_contacto"] === "string" ? contact["telefono_contacto"] as string : null,
+      email_contacto: typeof contact["email_contacto"] === "string" ? contact["email_contacto"] as string : null,
+      direccion_contacto: typeof contact["direccion_contacto"] === "string" ? contact["direccion_contacto"] as string : null,
+    }));
+  },
+  head: ({ params, loaderData }) => {
+    const profile = (loaderData as CatalogoRow[] | undefined)?.[0];
+    const name = profile?.nombre_publico?.trim() || params.slug;
+    const description = profile?.descripcion_publica?.trim()
+      || `Explora las joyas y colecciones publicadas por ${name} en su catálogo digital de Taller del Joyero.`;
+    const url = `https://www.tallerdeljoyero.com/${encodeURIComponent(params.slug)}`;
+    const schema = profile ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "LocalBusiness",
+          "@id": `${url}#business`,
+          "name": name,
+          "description": description,
+          "url": url,
+          ...(profile.logo_url ? { "logo": profile.logo_url, "image": profile.logo_url } : {}),
+          ...(profile.telefono_contacto ? { "telephone": profile.telefono_contacto } : {}),
+          ...(profile.email_contacto ? { "email": profile.email_contacto } : {}),
+          ...(profile.direccion_contacto ? { "address": { "@type": "PostalAddress", "streetAddress": profile.direccion_contacto } } : {}),
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.tallerdeljoyero.com/" },
+            { "@type": "ListItem", "position": 2, "name": "Directorio", "item": "https://www.tallerdeljoyero.com/directorio" },
+            { "@type": "ListItem", "position": 3, "name": name, "item": url },
+          ],
+        },
+      ],
+    } : null;
+    return {
+      meta: [
+        { title: `Catálogo de joyería | ${name} · Taller del Joyero` },
+        { name: "description", content: description },
+        { name: "robots", content: profile ? "index, follow, max-image-preview:large" : "noindex, follow" },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Taller del Joyero" },
+        { property: "og:title", content: `Catálogo de joyería | ${name}` },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        ...(profile?.logo_url ? [{ property: "og:image", content: profile.logo_url }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      ...(schema ? { scripts: [{ type: "application/ld+json", children: JSON.stringify(schema) }] } : {}),
+    };
+  },
   component: CatalogoPublicoPage,
 });
 
@@ -120,6 +175,7 @@ function CatalogoPublicoPage() {
   const { slug } = Route.useParams();
   const slugNormalizado = slug.trim().toLowerCase();
   const slugReservado = RESERVED_SLUGS.has(slugNormalizado);
+  const loaderData = Route.useLoaderData();
   const [categoria, setCategoria] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<LineaCarrito[]>([]);
@@ -165,6 +221,7 @@ function CatalogoPublicoPage() {
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
+    initialData: loaderData,
     queryFn: async () => {
       const [catalogoResult, portadaResult, textoSuperiorResult, redesResult, contactoResult, carruselResult, coleccionesPortadasResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
