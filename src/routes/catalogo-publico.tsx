@@ -63,6 +63,18 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
   }, [data, busqueda, filtro]);
   const talleres = data.filter((x) => x.tipo === "taller").length;
   const cursos = data.filter((x) => x.tipo === "curso").length;
+  const paises = [...new Set(data.filter(x => x.tipo === "taller").map(x => x.identidad_pais?.trim()).filter((x): x is string => Boolean(x)))].sort((a,b)=>a.localeCompare(b,"es"));
+  const [paisFiltro, setPaisFiltro] = useState("todos");
+  const [orden, setOrden] = useState<"alfabetico"|"productos">("alfabetico");
+  const entradasOrdenadas = useMemo(() => {
+    const lista = entradas.filter(item => filtro !== "talleres" || paisFiltro === "todos" || item.identidad_pais?.trim() === paisFiltro);
+    return [...lista].sort((a,b) => {
+      if (orden === "productos" && a.tipo === "taller" && b.tipo === "taller") return b.productos_publicados - a.productos_publicados;
+      const nameA = a.tipo === "curso" ? (a.formacion_titulo || a.nombre) : (a.identidad_nombre || a.nombre);
+      const nameB = b.tipo === "curso" ? (b.formacion_titulo || b.nombre) : (b.identidad_nombre || b.nombre);
+      return nameA.localeCompare(nameB,"es");
+    });
+  }, [entradas, filtro, paisFiltro, orden]);
 
   return <main className="min-h-screen bg-[#f8f9fb] text-[#17232d]">
     <header className="border-b border-slate-200 bg-white">
@@ -76,13 +88,18 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
         <div><p className="text-[10px] font-bold uppercase tracking-[.24em] text-[#987400]">El universo AURUM</p><h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">Directorio de talleres y joyerías de la comunidad joyera</h1><p className="mt-2 text-sm text-slate-600">Identidad, oficio y visión en cada taller.</p></div>
         <label className="flex min-h-12 w-full items-center gap-3 rounded-full border border-slate-200 bg-white px-4 lg:max-w-md"><Search className="size-4 shrink-0 text-[#987400]" /><input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar talleres, joyerías o cursos…" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#9a9187]" /></label>
       </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {filtro === "talleres" ? <label className="flex items-center gap-2 text-xs text-slate-600">País<select value={paisFiltro} onChange={e=>setPaisFiltro(e.target.value)} className="min-h-10 rounded-full border border-slate-200 bg-white px-3 text-xs text-[#17232d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a227]"><option value="todos">Todos los países</option>{paises.map(p=><option key={p} value={p}>{p}</option>)}</select></label> : null}
+        <label className="flex items-center gap-2 text-xs text-slate-600">Ordenar<select value={orden} onChange={e=>setOrden(e.target.value as typeof orden)} className="min-h-10 rounded-full border border-slate-200 bg-white px-3 text-xs text-[#17232d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a227]"><option value="alfabetico">Nombre A–Z</option><option value="productos">Más productos</option></select></label>
+        <span className="ml-auto text-xs font-medium text-slate-500" aria-live="polite">{entradasOrdenadas.length} {entradasOrdenadas.length===1?"resultado":"resultados"}</span>
+      </div>
       <div className="mt-7 flex flex-wrap gap-2 border-b border-slate-200 pb-5" role="group" aria-label="Filtrar comunidad">
         {([{id:"talleres",label:"Talleres y joyerías"},{id:"cursos",label:"Cursos y formación"}] as const).map((item)=><button key={item.id} type="button" onClick={()=>setFiltro(item.id)} aria-pressed={filtro===item.id} className={"rounded-full border px-5 py-3 text-xs font-semibold transition duration-200 " + (filtro===item.id ? "border-[#17232d] bg-[#17232d] text-white shadow-[0_4px_14px_rgba(23,35,45,.12)]" : "border-slate-200 bg-white/70 text-slate-600 hover:border-[#d4aa19] hover:bg-white")}>{item.label}</button>)}
       </div>
       {isLoading ? <div className="grid gap-5 py-8 sm:grid-cols-2 lg:grid-cols-3">{[0,1,2].map(n=><div key={n} className="h-64 animate-pulse rounded-2xl border border-[#211d1910] bg-white/70" />)}</div>
       : isError ? <div className="mt-8 rounded-2xl border border-[#b453091f] bg-white p-6"><h3 className="font-semibold">No pudimos cargar la comunidad</h3><p className="mt-2 text-sm text-slate-600">La interfaz está preparada; falta habilitar la consulta pública segura en la base de datos. No se muestran datos inventados.</p></div>
       : entradas.length===0 ? <div className="mt-8 rounded-2xl border border-slate-200 bg-white/75 px-6 py-12 text-center"><BookOpen className="mx-auto size-8 text-[#987400]" /><h3 className="mt-4 text-lg font-semibold">Aún no hay resultados para mostrar</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">{busqueda?"Prueba con otro término de búsqueda.":"Los talleres y profesores aparecerán aquí cuando haya información pública disponible."}</p></div>
-      : <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{entradas.map(item=>{
+      : <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{entradasOrdenadas.map(item=>{
         const esCurso = item.tipo === "curso";
         const titulo = esCurso ? (item.formacion_titulo || "Cursos y formación") : (item.identidad_nombre?.trim() || item.nombre);
         const descripcion = esCurso ? (item.formacion_descripcion || item.descripcion) : item.descripcion;
