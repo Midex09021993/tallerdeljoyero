@@ -10,6 +10,7 @@ import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X, ChevronDown, UsersRound, GraduationCap } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
+import aurumRenderHero from "@/assets/aurum-render-hero.webp";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -904,9 +905,9 @@ function InicioPublico() {
                     <span data-aurum-icon className="grid size-11 place-items-center rounded-xl bg-[#fff1bd] text-[#755600]"><Icono aria-hidden="true" className="size-5" strokeWidth={1.8} /></span>
                     <span className="aurum-tools-number text-[11px] font-bold tracking-[.16em] text-slate-400">{numero}</span>
                   </div>
-                  <div className="aurum-tools-preview mt-3" aria-hidden="true">
+                  <div className="aurum-tools-preview mt-3" aria-hidden={preview !== "render" ? "true" : undefined}>
                     {preview === "aleacion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Calculadora de aleación</span><span className="aurum-preview-chip">18K</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><span>Oro fino</span><div className="aurum-preview-bar gold mt-1 w-3/4" /></div><div className="aurum-preview-box"><span>Ligadura</span><div className="aurum-preview-bar mt-1 w-1/2" /></div></div><div className="aurum-preview-row"><div className="aurum-preview-box flex justify-between"><span>Metal requerido</span><strong className="text-[#806000]">g</strong></div></div></div>}
-                    {preview === "render" && <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#fff7df] via-white to-[#e8edf2]"><img src={heroColgante} alt="" width="480" height="320" loading="lazy" decoding="async" className="h-full w-full object-cover" /></div>}
+                    {preview === "render" && <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#fff7df] via-white to-[#e8edf2]"><img src={aurumRenderHero} alt="Render 3D de joyería presentado con AURUM RENDER" width="480" height="320" loading="lazy" decoding="async" className="h-full w-full object-cover" /></div>}
                     {preview === "gestion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Panel de taller</span><span className="aurum-preview-chip">Hoy</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">12</strong><span className="block">Pedidos</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">04</strong><span className="block">Cotizaciones</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">08</strong><span className="block">Clientes</span></div></div><div className="aurum-preview-bar gold w-4/5" /><div className="aurum-preview-bar w-2/3" /></div>}
                     {preview === "nube" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Mi Nube</span><span className="aurum-preview-chip">Catálogo</span></div><div className="aurum-preview-row"><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#fff1bd] p-2 text-[#806000]">◇</span><span>Diseños</span></div><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#e9f0f8] p-2 text-[#48647e]">↗</span><span>Compartir</span></div></div><div className="aurum-preview-bar gold w-3/4" /><div className="aurum-preview-bar w-1/2" /></div>}
                   </div>
