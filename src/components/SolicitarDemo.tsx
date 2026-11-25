@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Clock3, Gem, Mail, Phone, UserRound, X, Chevr
 import { supabasePublic } from "@/integrations/supabase/client";
 import { registrarEvento } from "@/lib/analytics";
 
-type Props = { className?: string };
+type Props = { className?: string; abrirAlCargar?: boolean; origen?: string };
 type HorarioPublico = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; invitacion_titulo: string | null; invitacion_descripcion: string | null; invitacion_url: string | null };
 const DISCORD_DEMO_URL = "https://discord.gg/TEjqZUcbg";
 
@@ -88,7 +88,7 @@ export function SolicitarDemo({ className = "" }: Props) {
         _email: form.email.trim().toLowerCase(), _interes: form.interes, _horario_preferido: null,
       });
       if (insertError) throw insertError;
-      registrarEvento("demo_request_submitted", { source: "landing_home", interest: form.interes });
+      registrarEvento("demo_request_submitted", { source: origen, interest: form.interes });
       setEnviado(true);
     } catch (err) {
       console.error("[solicitud-demo] No se pudo registrar la solicitud", err);
@@ -100,7 +100,7 @@ export function SolicitarDemo({ className = "" }: Props) {
 
   return (
     <>
-      <button type="button" onClick={() => { setAbierto(true); setHorarioSeleccionado(""); registrarEvento("demo_request_started", { source: "landing_home" }); }}
+      <button type="button" onClick={() => { setAbierto(true); setHorarioSeleccionado(""); registrarEvento("demo_request_started", { source: origen }); }}
         className={className || "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-6 py-3 text-sm font-bold text-[#17232d] shadow-lg shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-[#ffdf65] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2"}>
         Solicitar una demostración <ArrowRight className="size-4" />
       </button>
