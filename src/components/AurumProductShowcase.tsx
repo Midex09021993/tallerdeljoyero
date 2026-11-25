@@ -41,51 +41,77 @@ function Metric({ label, value="—", detail, icon: Icon }: {label:string;value?
   return <div className="min-w-0 rounded-lg border border-[#293b4a]/10 bg-[#fffefc] p-2 shadow-[0_5px_14px_-12px_rgba(24,40,56,.4)]"><div className="flex items-start justify-between gap-1"><p className="text-[7px] font-bold uppercase tracking-[.12em] text-[#71808d]">{label}</p><Icon className="size-2.5 shrink-0 text-[#b9955d]"/></div><p className="mt-2 font-serif text-[12px] sm:text-[13px] font-semibold leading-tight break-words text-[#203142]">{value}</p><p className="mt-1 text-[7px] text-[#71808d]">{detail}</p></div>;
 }
 
+function DemoCount({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const [shown, setShown] = useState(value);
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || done) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || typeof IntersectionObserver === "undefined") { setShown(value); setDone(true); return; }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting || done) return;
+      setDone(true); observer.disconnect();
+      const start = performance.now(), duration = 760;
+      const timer = window.setInterval(() => {
+        const progress = Math.min((performance.now() - start) / duration, 1);
+        setShown(Math.round(value * progress));
+        if (progress >= 1) window.clearInterval(timer);
+      }, 24);
+    }, { threshold: 0.15 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [value, done]);
+  return <span ref={ref} aria-label={String(value)}>{shown}</span>;
+}
+function DemoMetric({ label, value, detail, icon: Icon, alert = false }: { label: string; value: number; detail: string; icon: typeof Package; alert?: boolean }) {
+  return <div className={`min-w-0 rounded-lg border p-2 ${alert ? "border-[#e87970]/30 bg-[#fff9f8]" : "border-[#293b4a]/10 bg-[#fffefc]"}`}>
+    <div className="flex items-start justify-between gap-1"><p className="text-[7px] font-bold uppercase tracking-[.1em] text-[#71808d]">{label}</p><Icon className={`size-2.5 shrink-0 ${alert ? "text-[#d76b63]" : "text-[#b9955d"}`}/></div>
+    <p className={`mt-1.5 font-serif text-[13px] font-semibold leading-tight ${alert ? "text-[#c65e56]" : "text-[#203142"}`}><DemoCount value={value}/></p><p className="mt-0.5 text-[6px] text-[#71808d]">{detail}</p>
+  </div>;
+}
 function MiniHome() {
-  return <div className="space-y-2.5">
+  const [tab, setTab] = useState<"todos"|"vencidos"|"recibir">("todos");
+  const tasks = [
+    {name:"Anillo de compromiso · Ana R.",detail:"Entrega: mañana · En producción",type:"todos",tag:"Mañana"},
+    {name:"Cadena 18K · Jorge M.",detail:"Vencido hace 1 día",type:"vencidos",tag:"Vencido"},
+    {name:"Pendientes de perla · Lucía P.",detail:"Por recibir",type:"recibir",tag:"Recepción"},
+  ];
+  const visibleTasks = tab==="todos" ? tasks : tasks.filter(x=>x.type===tab);
+  return <div className="space-y-2.5" aria-label="Vista previa de demostración del panel de AURUM LAB con datos de ejemplo">
     <header className="flex items-center justify-between gap-2 rounded-lg border border-[#c5a36b]/25 bg-gradient-to-r from-[#fffefc] to-[#f2ebdd] px-3 py-2">
-      <div className="min-w-0"><p className="text-[6px] font-bold tracking-[.18em] text-[#a98249]">✧ AURUM LAB / OPERACIONES</p><div className="mt-1 text-[12px] font-semibold leading-tight text-[#182838]">Centro de control</div><p className="mt-1 text-[6px] text-[#71808d]">Visión general del taller</p></div>
-      <div className="shrink-0 rounded-md border border-[#e8e1d6] bg-white px-2 py-1 text-[6px] text-slate-600">Sede de trabajo</div>
+      <div><p className="text-[6px] font-bold tracking-[.18em] text-[#a98249]">✧ AURUM LAB / OPERACIONES</p><div className="mt-1 text-[12px] font-semibold leading-tight text-[#182838]">Centro de control</div><p className="mt-1 text-[6px] text-[#71808d]">Sede: Taller Central</p></div>
+      <span className="shrink-0 rounded-full border border-[#c5a36b]/30 bg-white px-2 py-1 text-[6px] text-[#92734b]">Datos de ejemplo</span>
     </header>
-
     <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-      <Metric label="Pedidos activos" detail="En seguimiento" icon={PackageCheck}/>
-      <Metric label="En producción" detail="Trabajo en curso" icon={Package}/>
-      <Metric label="Entregas hoy" detail="Compromisos de hoy" icon={CheckCircle2}/>
-      <Metric label="Vencidos" detail="Requieren atención" icon={CircleAlert}/>
+      <DemoMetric label="Pedidos activos" value={12} detail="En seguimiento" icon={PackageCheck}/>
+      <DemoMetric label="En producción" value={5} detail="Trabajo en curso" icon={Package}/>
+      <DemoMetric label="Entregas hoy" value={3} detail="Compromisos de hoy" icon={CheckCircle2}/>
+      <DemoMetric label="Vencidos" value={1} detail="Requieren atención" icon={CircleAlert} alert/>
     </div>
-
     <section className="space-y-1.5">
-      <div className="flex items-end justify-between gap-2 border-b border-slate-200 pb-1.5">
-        <div><p className="text-[6px] font-bold tracking-[.17em] text-[#a98249]">01 / VISIÓN DEL NEGOCIO</p><div className="mt-0.5 text-[9px] font-semibold text-[#182838]">Comercial e inventario</div><p className="text-[6px] text-[#71808d]">Indicadores del taller seleccionado</p></div>
-        <span className="text-[5px] text-slate-400">Datos sujetos a permisos</span>
-      </div>
+      <div className="flex items-end justify-between gap-2 border-b border-slate-200 pb-1.5"><div><p className="text-[6px] font-bold tracking-[.17em] text-[#a98249]">01 / VISIÓN DEL NEGOCIO</p><div className="mt-0.5 text-[9px] font-semibold text-[#182838]">Comercial e inventario</div><p className="text-[6px] text-[#71808d]">Taller Central · Demostración</p></div></div>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-        <Metric label="Clientes registrados" detail="Cartera del taller" icon={Users}/>
-        <Metric label="Cotizaciones pendientes" detail="Borrador o enviadas" icon={FileText}/>
-        <Metric label="Cotizaciones aprobadas" detail="Aprobaciones registradas" icon={CheckCircle2}/>
-        <Metric label="Stock bajo o mínimo" detail="Materiales por revisar" icon={Warehouse}/>
+        <DemoMetric label="Clientes registrados" value={48} detail="Cartera del taller" icon={Users}/>
+        <DemoMetric label="Cotizaciones pendientes" value={7} detail="Borrador o enviadas" icon={FileText}/>
+        <DemoMetric label="Cotizaciones aprobadas" value={15} detail="Aprobaciones registradas" icon={CheckCircle2}/>
+        <DemoMetric label="Stock bajo o mínimo" value={3} detail="Materiales por revisar" icon={Warehouse} alert/>
       </div>
       <div className="grid grid-cols-2 gap-1.5">
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-[#293b4a]/10 bg-white p-2"><div className="min-w-0"><p className="text-[7px] font-semibold">Cotizaciones próximas a vencer</p><p className="mt-0.5 text-[6px] text-slate-500">Pendientes en los próximos 7 días</p></div><span className="font-serif text-[13px] font-semibold">—</span></div>
-        <div className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><div className="flex items-center justify-between gap-1"><p className="text-[7px] font-semibold">Materiales que requieren revisión</p><span className="text-[5px] font-semibold text-[#a98249]">Inventario</span></div><p className="mt-1 text-[6px] text-slate-500">Materiales en mínimo o por debajo del mínimo</p></div>
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-[#293b4a]/10 bg-white p-2"><div><p className="text-[7px] font-semibold">Próximas a vencer</p><p className="text-[6px] text-slate-500">Cotizaciones · próximos 7 días</p></div><span className="font-serif text-[13px] font-semibold text-[#203142]"><DemoCount value={2}/></span></div>
+        <div className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold">Materiales en mínimo</p><div className="mt-1 space-y-1 text-[6px] text-slate-600"><div className="flex justify-between"><span>Oro 18K</span><span>12 g <span className="text-slate-400">/ 20 g</span></span></div><div className="flex justify-between"><span>Plata 950</span><span>40 g <span className="text-slate-400">/ 50 g</span></span></div><div className="flex justify-between"><span>Gema 0.25 ct</span><span>2 <span className="text-slate-400">/ 5 unid.</span></span></div></div></div>
       </div>
     </section>
-
     <div className="grid grid-cols-[1.55fr_1fr] gap-1.5">
-      <section className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-[#fffefc]">
-        <div className="border-b border-slate-200 bg-gradient-to-r from-[#fffefc] to-[#f8f5ef] p-2">
-          <div className="flex items-center justify-between gap-1"><div><p className="text-[8px] font-semibold text-[#182838]">Atención prioritaria</p><p className="mt-0.5 text-[6px] text-[#71808d]">Seguimiento de pedidos que necesitan una acción</p></div><span className="text-[5px] font-semibold text-[#a98249]">Ver pedidos ›</span></div>
-          <div className="mt-1.5 flex gap-1"><span className="rounded-md border border-[#c5a36b]/30 bg-[#f5ecdc] px-1.5 py-0.5 text-[5px] font-semibold text-[#92734b]">Todos</span><span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[5px] text-slate-500">Vencidos</span><span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[5px] text-slate-500">Por recibir</span></div>
+      <section className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white">
+        <div className="border-b border-slate-200 bg-[#fbfaf7] p-2"><div className="flex justify-between gap-1"><div><p className="text-[8px] font-semibold text-[#182838]">Atención prioritaria</p><p className="text-[6px] text-[#71808d]">Seguimiento de pedidos</p></div><span className="text-[5px] text-[#a98249]">Ver pedidos ›</span></div>
+          <div className="mt-1.5 flex gap-1">{([{id:"todos",label:"Todos"},{id:"vencidos",label:"Vencidos"},{id:"recibir",label:"Por recibir"}] as const).map(x=><button key={x.id} type="button" onClick={()=>setTab(x.id)} className={`rounded-md border px-1.5 py-0.5 text-[5px] ${tab===x.id?"border-[#c5a36b]/30 bg-[#f5ecdc] font-semibold text-[#92734b]":"border-slate-200 text-slate-500"}`}>{x.label}</button>)}</div>
         </div>
-        <div className="flex min-h-[52px] flex-col items-center justify-center p-2 text-center"><CheckCircle2 className="size-4 text-emerald-600"/><p className="mt-1 text-[7px] font-semibold text-[#203142]">Sin pendientes urgentes</p><p className="mt-0.5 text-[6px] text-slate-500">No hay pedidos vencidos ni recepciones por verificar.</p></div>
+        <div className="space-y-1 p-1.5">{visibleTasks.map(x=><div key={x.name} className="flex items-center justify-between gap-1 rounded-md border border-slate-100 p-1.5"><div className="min-w-0"><p className="truncate text-[6px] font-semibold text-[#203142]">{x.name}</p><p className="text-[5px] text-slate-500">{x.detail}</p></div><span className={`shrink-0 rounded-full px-1 py-0.5 text-[5px] ${x.type==="vencidos"?"bg-[#fff0ed] text-[#c65e56]":"bg-[#f5ecdc] text-[#92734b"}`}>{x.tag}</span></div>)}</div>
       </section>
       <div className="space-y-1.5">
-        <section className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white">
-          <div className="border-b border-slate-100 p-2"><p className="text-[7px] font-semibold text-[#203142]">Estado de producción</p><p className="text-[6px] text-slate-500">Carga actual por área</p></div>
-          <div className="space-y-1.5 p-2">{["Diseño 3D","Impresión","Casting"].map(x=><div key={x}><div className="flex justify-between text-[6px] text-slate-600"><span>{x}</span><span>—</span></div><div className="mt-0.5 h-1 rounded-full bg-slate-100"/></div>)}</div>
-        </section>
-        <section className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold text-[#203142]">Resumen del día</p><div className="mt-1.5 space-y-1">{["En recepción","Entregas vencidas","Sin fecha de entrega"].map(x=><div key={x} className="flex justify-between gap-1 text-[6px] text-slate-500"><span>{x}</span><span className="font-semibold text-slate-700">—</span></div>)}</div></section>
+        <section className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white"><div className="border-b border-slate-100 p-2"><p className="text-[7px] font-semibold text-[#203142]">Estado de producción</p><p className="text-[6px] text-slate-500">Carga por área</p></div><div className="space-y-1.5 p-2">{[{name:"Diseño 3D",n:4,w:"80%"},{name:"Impresión",n:3,w:"60%"},{name:"Casting",n:2,w:"40%"}].map(x=><div key={x.name}><div className="flex justify-between text-[6px] text-slate-600"><span>{x.name}</span><span><DemoCount value={x.n}/></span></div><div className="mt-0.5 h-1 rounded-full bg-slate-100"><div className="h-1 rounded-full bg-[#c5a36b]" style={{width:x.w}}/></div></div>)}</div></section>
+        <section className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold text-[#203142]">Resumen del día</p><div className="mt-1.5 space-y-1">{[{name:"En recepción",n:2},{name:"Entregas vencidas",n:1},{name:"Sin fecha de entrega",n:1}].map(x=><div key={x.name} className="flex justify-between gap-1 text-[6px] text-slate-500"><span>{x.name}</span><span className="font-semibold text-slate-700"><DemoCount value={x.n}/></span></div>)}</div></section>
       </div>
     </div>
   </div>;
