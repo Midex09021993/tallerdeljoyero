@@ -10,7 +10,7 @@ import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X, ChevronDown, UsersRound, GraduationCap } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
-import aurumRenderHero from "@/assets/aurum-render-hero.webp";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -894,6 +894,8 @@ function InicioPublico() {
           .aurum-motion-ready #soluciones .aurum-tools-card[data-aurum-reveal].aurum-is-visible { opacity:1; translate:0 0; }
           .aurum-tools-preview { height:112px; overflow:hidden; border:1px solid #e8e8e8; border-radius:12px; background:#f8fafc; }
           .aurum-tools-preview-ui { height:100%; display:flex; flex-direction:column; gap:7px; padding:10px; font-size:9px; color:#475569; }
+          .aurum-render-preview { isolation:isolate; }
+          .aurum-render-preview::before { content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.04),transparent 55%,rgba(216,181,77,.08));pointer-events:none; }
           .aurum-preview-top { display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:700;color:#263541; }
           .aurum-preview-chip { border-radius:999px;background:#fff3c1;padding:3px 6px;color:#805f00;font-weight:700; }
           .aurum-preview-row { display:flex;align-items:center;gap:5px; }
@@ -919,18 +921,18 @@ function InicioPublico() {
             {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion, destacado, preview }, index) => (
               <li key={titulo} className="min-w-0">
                 <article data-aurum-reveal data-aurum-tools-reveal data-featured={destacado ? "true" : "false"} style={{ transitionDelay: (index * 100) + "ms" }} className="aurum-tools-card group relative flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_20px_rgba(23,35,45,.035)] sm:p-5">
-                  {destacado && <span className="absolute right-4 top-4 rounded-full border border-[#d5b34c] bg-[#fff8dc] px-2.5 py-1 text-[10px] font-extrabold text-[#725400]">Gratis</span>}
+                  
                   <div className="flex items-center justify-between">
                     <span data-aurum-icon className="grid size-11 place-items-center rounded-xl bg-[#fff1bd] text-[#755600]"><Icono aria-hidden="true" className="size-5" strokeWidth={1.8} /></span>
                     <span className="aurum-tools-number text-[11px] font-bold tracking-[.16em] text-slate-400">{numero}</span>
                   </div>
                   <div className="aurum-tools-preview mt-3" aria-hidden={preview !== "render" ? "true" : undefined}>
                     {preview === "aleacion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Calculadora de aleación</span><span className="aurum-preview-chip">18K</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><span>Oro fino</span><div className="aurum-preview-bar gold mt-1 w-3/4" /></div><div className="aurum-preview-box"><span>Ligadura</span><div className="aurum-preview-bar mt-1 w-1/2" /></div></div><div className="aurum-preview-row"><div className="aurum-preview-box flex justify-between"><span>Metal requerido</span><strong className="text-[#806000]">g</strong></div></div></div>}
-                    {preview === "render" && <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#fff7df] via-white to-[#e8edf2]"><img src={aurumRenderHero} alt="Render 3D de joyería presentado con AURUM RENDER" width="480" height="320" loading="lazy" decoding="async" className="h-full w-full object-cover" /></div>}
+                    {preview === "render" && <div className="aurum-render-preview relative flex h-full flex-col justify-between overflow-hidden bg-[#101b29] p-3 text-white"><div className="absolute -right-8 -top-10 size-32 rounded-full bg-[#d8b54d]/15 blur-2xl" /><div className="aurum-preview-top relative"><span className="tracking-[.12em] text-white">AURUM RENDER</span><span className="aurum-preview-chip">3D</span></div><div className="relative flex flex-1 items-center justify-center"><span className="absolute size-16 rounded-full border border-[#d8b54d]/30" /><span className="absolute size-11 rounded-full border border-[#d8b54d]/20" /><Gem aria-hidden="true" className="size-8 text-[#e8c76c] drop-shadow-[0_0_12px_rgba(216,181,77,.4)]" strokeWidth={1.3} /></div><div className="aurum-preview-row relative"><span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[9px] text-white/85">Oro 18K</span><span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[9px] text-white/85">Gemas</span><span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[9px] text-white/85">HDR</span></div></div>}
                     {preview === "gestion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Panel de taller</span><span className="aurum-preview-chip">Hoy</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">12</strong><span className="block">Pedidos</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">04</strong><span className="block">Cotizaciones</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">08</strong><span className="block">Clientes</span></div></div><div className="aurum-preview-bar gold w-4/5" /><div className="aurum-preview-bar w-2/3" /></div>}
                     {preview === "nube" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Mi Nube</span><span className="aurum-preview-chip">Catálogo</span></div><div className="aurum-preview-row"><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#fff1bd] p-2 text-[#806000]">◇</span><span>Diseños</span></div><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#e9f0f8] p-2 text-[#48647e]">↗</span><span>Compartir</span></div></div><div className="aurum-preview-bar gold w-3/4" /><div className="aurum-preview-bar w-1/2" /></div>}
                   </div>
-                  <p className="mt-3 text-[9px] font-extrabold tracking-[.18em] text-[#765900]">{etiqueta}</p>
+                  <p className="mt-3 flex flex-wrap items-center gap-2 text-[9px] font-extrabold tracking-[.18em] text-[#765900]">{etiqueta}{destacado && <span className="rounded-full border border-[#d5b34c] bg-[#fff8dc] px-2 py-0.5 text-[9px] tracking-normal text-[#725400]">Gratis</span>}</p>
                   <h3 className="mt-1 text-base font-bold leading-snug text-[#17232d]">{titulo}</h3>
                   <p className="mt-2 text-sm leading-5 text-slate-700">{texto}</p>
                   <div className="mt-3">
