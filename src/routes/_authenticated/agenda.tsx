@@ -49,30 +49,42 @@ const INTERESES_DEMO = [
 ];
 function MensajeSolicitudDemo({ solicitud }: { solicitud: SolicitudDemo }) {
   const [interes, setInteres] = useState(solicitud.interes);
-  const [detalle, setDetalle] = useState("Gracias por tu interés en AURUM LAB. Queremos ayudarte a conocer mejor nuestras herramientas y resolver tus dudas en una demostración personalizada.\n\nPuedes elegir el día y horario que mejor te acomode en nuestro calendario:");
   const enlaceAgenda = "https://tallerdeljoyero.com/agenda-demo";
+  const yaAgendada = solicitud.estado === "demo_agendada" && Boolean(solicitud.fecha_reunion_at);
+  const fechaDemo = solicitud.fecha_reunion_at
+    ? new Date(solicitud.fecha_reunion_at).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short" })
+    : "";
+  const contenidoPorInteres: Record<string, string> = {
+    "AURUM RENDER": "Te compartiremos información de AURUM RENDER, nuestro render 3D especializado en joyería, y podemos mostrarte materiales, gemas, iluminación y fotografía de producto.",
+    "Curso: Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial": "Te enviaremos la información del curso de Diseño CAD 3D para Joyería: contenidos, modalidad, sesiones, laboratorios y opciones de matrícula.",
+    "Calculadoras y herramientas técnicas": "Te orientaremos sobre las calculadoras de aleaciones, cálculos de metal y demás herramientas técnicas disponibles para tu trabajo.",
+    "Gestión de clientes, cotizaciones y pedidos": "Te mostraremos cómo organizar clientes, cotizaciones, pedidos y el seguimiento de tu taller desde AURUM LAB.",
+    "Mi Nube y catálogo digital": "Te explicaremos cómo organizar archivos en Mi Nube y compartir diseños mediante tu catálogo digital.",
+    "Quiero conocer toda la plataforma": "Prepararemos un recorrido por las herramientas de AURUM LAB, enfocándonos en las funciones más útiles para tu taller.",
+  };
+  const detalle = yaAgendada
+    ? "¡Tu demostración personalizada ya está coordinada! Te esperamos en la fecha y hora reservadas. Si necesitas hacer algún cambio, responde a este mensaje y te ayudaremos."
+    : (contenidoPorInteres[interes] || "Te brindaremos información y orientación sobre lo que necesitas conocer de AURUM LAB.") + "\n\nSi deseas una demostración personalizada, elige el día y horario disponible en nuestro calendario:";
   const mensaje = [
     "Hola " + solicitud.nombre + ", 👋",
     "",
     "Gracias por tu interés en AURUM LAB" + (solicitud.empresa ? " y en " + solicitud.empresa : "") + ".",
     "",
-    "Interés seleccionado: " + interes + ".",
+    "Interés: " + interes + ".",
     "",
-    detalle.trim(),
+    detalle,
+    yaAgendada ? "" : enlaceAgenda,
     "",
-    enlaceAgenda,
+    yaAgendada ? "Tu demostración está reservada para: " + fechaDemo + "." : (solicitud.horario_preferido ? "Horario preferido que nos indicaste: " + solicitud.horario_preferido + "." : ""),
     "",
-    solicitud.horario_preferido ? "Horario preferido que nos indicaste: " + solicitud.horario_preferido + "." : "",
-    "",
-    "¡Te esperamos!",
+    "¡Quedamos atentos!",
     "Equipo AURUM LAB",
   ].filter(Boolean).join("\n");
   return <div className="w-full space-y-2 rounded-xl border border-gold/25 bg-gold/5 p-3">
     <p className="text-xs font-semibold text-gold-deep">Personaliza el mensaje antes de contactar</p>
     <label className="block space-y-1"><span className="text-xs font-medium">Interés (opciones del formulario web)</span><select value={interes} onChange={e => setInteres(e.target.value)} className="w-full rounded-lg border bg-background px-2.5 py-2 text-xs">{INTERESES_DEMO.map(op => <option key={op} value={op}>{op}</option>)}</select></label>
-    <label className="block space-y-1"><span className="text-xs font-medium">Mensaje específico · puedes editarlo</span><textarea value={detalle} onChange={e => setDetalle(e.target.value)} rows={4} className="w-full resize-y rounded-lg border bg-background p-2.5 text-xs leading-5 text-foreground" /></label>
-    <p className="text-[11px] text-muted-foreground">El mensaje mantiene la misma estructura para todos. Solo se personalizan automáticamente el nombre, empresa, interés seleccionado y horario preferido; puedes editar el texto común antes de enviarlo.</p>
-    <textarea readOnly value={mensaje} rows={7} className="w-full resize-y rounded-lg border bg-background p-2.5 text-xs leading-5 text-foreground" aria-label="Vista previa del mensaje" />
+    <p className="text-[11px] text-muted-foreground">El texto se adapta al interés seleccionado y al estado de la solicitud. Si ya tiene una demostración agendada, incluye la fecha reservada y no invita a reservar otra. Nombre, empresa y horario preferido se completan automáticamente.</p>
+    <textarea readOnly value={mensaje} rows={8} className="w-full resize-y rounded-lg border bg-background p-2.5 text-xs leading-5 text-foreground" aria-label="Vista previa del mensaje" />
     <div className="flex flex-wrap gap-2"><button type="button" onClick={() => { void navigator.clipboard.writeText(mensaje).then(() => toast.success("Mensaje copiado", { description: "Ya puedes pegarlo en WhatsApp." })).catch(() => toast.error("No se pudo copiar", { description: "Selecciona y copia el mensaje manualmente." })); }} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">Copiar mensaje</button><a href={"https://wa.me/" + solicitud.telefono.replace(/\\D/g, "") + "?text=" + encodeURIComponent(mensaje)} target="_blank" rel="noreferrer" className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">WhatsApp</a></div>
   </div>;
 }
