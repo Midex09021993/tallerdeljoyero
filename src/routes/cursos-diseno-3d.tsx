@@ -272,7 +272,7 @@ function CursosDiseno3DPage() {
             </div>
             <div className="mt-3 rounded-xl border border-[#e6d4a5] px-3 py-3">
               <p className="text-sm font-bold text-[#24374a]">🎁 12 meses del Plan Profesional incluidos</p>
-              <p className="mt-1 text-xs leading-4 text-[#627487]">Beneficio para las primeras 5 matrículas confirmadas.</p>
+              <p className="mt-1 text-xs leading-4 text-[#627487]">Exclusivo para las primeras 5 matrículas con pago completo de US$230. No aplica a reservas de US$20.</p>
             </div>
             <ul className="mt-3 space-y-1.5 text-xs text-[#5d7183]">
               <li className="flex gap-2"><CheckCircle2 className="size-3.5 shrink-0 text-[#a17a2e]" /> 10 sesiones en vivo · 20 horas</li>
@@ -307,7 +307,7 @@ function CursosDiseno3DPage() {
                 <div className="max-w-2xl">
                   <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#98712a]">Bono de lanzamiento · 5 beneficiarios</p>
                   <h2 id="bono-modal-titulo" className="mt-2 font-display text-3xl font-semibold leading-tight text-[#1d2b39] sm:text-4xl">Un año para profesionalizar tu taller</h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d7183]">Inscríbete entre los próximos 5 alumnos y recibe 12 meses del Plan Profesional de AURUM LAB sin costo adicional.</p>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d7183]">Las primeras 5 personas que paguen el curso completo (US$230) al matricularse reciben 12 meses del Plan Profesional de AURUM LAB. No aplica a pagos de reserva.</p>
                 </div>
                 <div className="inline-flex shrink-0 items-center gap-3 self-start rounded-2xl border border-[#e4d2a5] bg-white/90 px-4 py-3 sm:self-center">
                   <span className="grid size-11 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><Sparkles className="size-5" /></span>
@@ -341,7 +341,7 @@ function CursosDiseno3DPage() {
                 <p className="text-xs leading-5 text-[#627487]">Clientes · Cotizaciones · Pedidos · Contratos · Ventas · Catálogo digital</p>
               </div>
               <div className="mt-3 flex flex-col gap-3 border-t border-[#edf0f2] pt-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="flex max-w-2xl items-start gap-2 text-[10px] leading-4 text-[#718196]"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#98712a]" /><span>Válido para las primeras cinco matrículas con pago confirmado. Beneficio por 12 meses, sin renovación automática. Si ya tienes el Plan Profesional, se amplía tu vencimiento vigente.</span></p>
+                <p className="flex max-w-2xl items-start gap-2 text-[10px] leading-4 text-[#718196]"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#98712a]" /><span>Válido solo para las primeras cinco matrículas con pago completo de US$230. Las reservas de US$20 no califican. Beneficio por 12 meses, sin renovación automática. Si ya tienes el Plan Profesional, se amplía tu vencimiento vigente.</span></p>
                 <div className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row">
                   <button type="button" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#d9e0e6] px-4 text-xs font-semibold text-[#40576c] hover:bg-[#f7f8f9]">Cerrar</button>
                   <Link to="/auth" onClick={() => setBonoAbierto(false)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-4 text-xs font-bold text-[#202b35] shadow-sm transition hover:bg-[#dfb83e]">Quiero matricularme <ArrowRight className="size-4" /></Link>
