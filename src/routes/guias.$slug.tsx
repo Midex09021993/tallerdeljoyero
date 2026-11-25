@@ -213,11 +213,11 @@ function GuiaTecnicaPage() {
             <h2 className="text-lg font-bold">Guías especializadas sobre peso de joyas</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">Continúa con una consulta específica de cálculo, preparación o fabricación:</p>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-              <li><Link to="/guias/calcular-peso-anillo-oro-antes-fundir" className="text-sm font-semibold text-[#876500] hover:underline">Calcular peso de un anillo antes de fundirlo →</Link></li>
-              <li><Link to="/guias/calcular-peso-oro-archivo-stl" className="text-sm font-semibold text-[#876500] hover:underline">Calcular peso de oro desde STL →</Link></li>
-              <li><Link to="/guias/calcular-peso-joya-volumen" className="text-sm font-semibold text-[#876500] hover:underline">Peso de joya según volumen →</Link></li>
-              <li><Link to="/guias/cuanto-oro-necesito-fabricar-joya" className="text-sm font-semibold text-[#876500] hover:underline">Cuánto metal necesito para fabricar →</Link></li>
-              <li><Link to="/guias/estimar-peso-oro-impresion-resina" className="text-sm font-semibold text-[#876500] hover:underline">Estimar oro desde impresión de resina →</Link></li>
+              <li><Link to="/guias/$slug" params={{ slug: "calcular-peso-anillo-oro-antes-fundir" }} className="text-sm font-semibold text-[#876500] hover:underline">Calcular peso de un anillo antes de fundirlo →</Link></li>
+              <li><Link to="/guias/$slug" params={{ slug: "calcular-peso-oro-archivo-stl" }} className="text-sm font-semibold text-[#876500] hover:underline">Calcular peso de oro desde STL →</Link></li>
+              <li><Link to="/guias/$slug" params={{ slug: "calcular-peso-joya-volumen" }} className="text-sm font-semibold text-[#876500] hover:underline">Peso de joya según volumen →</Link></li>
+              <li><Link to="/guias/$slug" params={{ slug: "cuanto-oro-necesito-fabricar-joya" }} className="text-sm font-semibold text-[#876500] hover:underline">Cuánto metal necesito para fabricar →</Link></li>
+              <li><Link to="/guias/$slug" params={{ slug: "estimar-peso-oro-impresion-resina" }} className="text-sm font-semibold text-[#876500] hover:underline">Estimar oro desde impresión de resina →</Link></li>
             </ul>
           </section>
           <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
