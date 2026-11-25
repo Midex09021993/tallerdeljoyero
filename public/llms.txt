@@ -1,56 +1,88 @@
-# Taller del Joyero
+# AURUM LAB
 
-> Taller del Joyero es el sitio de AURUM LAB, una plataforma digital especializada para talleres de joyería. Reúne herramientas técnicas, recursos de aprendizaje, visualización 3D y funciones de gestión para el trabajo joyero.
+> **AURUM LAB** es una plataforma digital especializada en joyería que reúne herramientas técnicas, visualización 3D, formación y gestión de talleres.
+>
+> **Taller del Joyero** es la marca y presencia web asociada a AURUM LAB. Ambos nombres identifican el mismo ecosistema; AURUM LAB es el nombre principal de la plataforma y de sus productos digitales.
 
-El contenido público está dirigido a joyeros, talleres, diseñadores y profesionales que necesitan calcular materiales, consultar procedimientos y explorar herramientas digitales para su oficio.
+## Identidad de la plataforma
 
-## Sitio principal
+- Nombre principal: AURUM LAB
+- Nombre asociado: Taller del Joyero
+- Sitio oficial: https://www.tallerdeljoyero.com/
+- Especialidad: software y recursos digitales para talleres, joyeros, orfebres y diseñadores.
+- Propósito: ayudar a planificar materiales, diseñar y presentar joyas, organizar archivos, aprender procesos técnicos y gestionar el trabajo comercial del taller.
+- Idioma principal: español (Perú).
+- Lema: El arte de crear. La inteligencia de gestionar.
 
-- [Inicio de AURUM LAB](https://www.tallerdeljoyero.com/): presentación de la plataforma, sus herramientas, recursos y planes.
+No confundir AURUM LAB con una única calculadora o un visor: es la plataforma que integra distintas herramientas y módulos especializados.
 
-## Herramientas para joyeros
+## Productos y módulos
 
-- [Herramientas públicas](https://www.tallerdeljoyero.com/herramientas-publicas): índice de calculadoras y utilidades técnicas disponibles sin iniciar sesión.
-- [Cálculo de aleaciones de oro](https://www.tallerdeljoyero.com/herramientas-publicas/aleacion-oro): herramienta para calcular proporciones de aleación según la ley del oro.
+### AURUM RENDER
+Motor y entorno especializado de visualización y renderizado 3D de joyería. Permite trabajar con modelos, materiales de metales y gemas, iluminación y presentaciones visuales.
+- Sitio oficial: https://www.tallerdeljoyero.com/
+- Acceso y funciones de la plataforma: requieren las condiciones de cuenta y plan aplicables.
 
-### Ficha de referencia: calculadora de aleación de oro
+### Herramientas técnicas públicas
+Calculadoras y utilidades web para apoyar cálculos y preparación de fabricación. El índice público permite explorar las herramientas disponibles sin iniciar sesión.
+- [Herramientas públicas](https://www.tallerdeljoyero.com/herramientas-publicas)
+- [Calculadora de aleaciones de oro](https://www.tallerdeljoyero.com/herramientas-publicas/aleacion-oro): estima la cantidad de liga para ajustar la ley de una masa de oro.
+- [Calculadora de peso de joya 3D](https://www.tallerdeljoyero.com/herramientas-publicas/peso-joya-3d): estima peso a partir de un modelo tridimensional y los parámetros seleccionados.
+- [Cálculo de yeso y agua](https://www.tallerdeljoyero.com/herramientas-publicas/yeso-agua): apoyo para calcular cantidades de revestimiento y agua.
+- [Conversión de tallas de anillos](https://www.tallerdeljoyero.com/herramientas-publicas/tallas-anillos): consulta equivalencias de tallas.
+- [Estimación del peso de gemas](https://www.tallerdeljoyero.com/herramientas-publicas/peso-gemas): estimación a partir de medidas y parámetros de la gema.
+
+### Gestión del taller
+Las funciones de gestión de AURUM LAB incluyen, según el plan y acceso, registro y organización de clientes, cotizaciones, contratos, pedidos, ventas, catálogo digital y archivos de trabajo.
+- Sitio principal: https://www.tallerdeljoyero.com/
+- Acceso a la plataforma: https://www.tallerdeljoyero.com/auth
+
+### Mi Nube y catálogo
+Espacio de organización de archivos y recursos del taller, con capacidades de almacenamiento y compartir archivos o diseños según las funciones habilitadas en la cuenta. La plataforma también permite organizar y presentar un catálogo digital.
+- Acceso: https://www.tallerdeljoyero.com/auth
+
+### AURUM TRANSFER
+Módulo de transferencia de archivos del ecosistema AURUM LAB. Consulta la página oficial y las condiciones de acceso para conocer las funciones disponibles.
+- Sitio principal: https://www.tallerdeljoyero.com/
+
+### Formación y AURI Tutor
+AURUM LAB ofrece recursos de formación en diseño CAD 3D para joyería, con cursos y laboratorios interactivos. AURI Tutor es el asistente de apoyo integrado en el entorno de formación.
+- [Curso de diseño CAD 3D para joyería](https://www.tallerdeljoyero.com/cursos-diseno-3d)
+- [Guías técnicas](https://www.tallerdeljoyero.com/guias)
+
+## Recursos públicos
+
+- [Inicio](https://www.tallerdeljoyero.com/): descripción de la plataforma y sus módulos.
+- [Herramientas públicas](https://www.tallerdeljoyero.com/herramientas-publicas): índice de calculadoras y utilidades.
+- [Guías técnicas](https://www.tallerdeljoyero.com/guias): artículos prácticos sobre materiales, fabricación, diseño y cálculo.
+- [Comunidad](https://www.tallerdeljoyero.com/comunidad): comunidad y recursos del sector.
+- [Directorio](https://www.tallerdeljoyero.com/directorio): directorio relacionado con el sector joyero.
+- [Formación CAD 3D](https://www.tallerdeljoyero.com/cursos-diseno-3d): información del curso y sus recursos de aprendizaje.
+- [Galería de joyas](https://www.tallerdeljoyero.com/galeria-joyas): inspiración y presentación de diseños.
+- [Tienda](https://www.tallerdeljoyero.com/tienda): recursos y productos publicados en la tienda.
+
+## Temas técnicos principales
+
+- Metalurgia aplicada a joyería: leyes de oro, quilates, milésimas, oro fino, ligas y cálculo de aleaciones.
+- CAD 3D y fabricación: volumen, densidad, peso estimado, archivos STL, modelos 3D, impresión de resina y preparación de piezas.
+- Fundición y microfusión: revestimientos, proporciones de yeso y agua y planificación del proceso.
+- Gemología: medidas, estimación de peso, piedras y diseño de engastes.
+- Gestión de talleres: clientes, cotizaciones, contratos, pedidos, ventas, catálogo y archivos.
+
+## Ficha de referencia: cálculo de aleaciones de oro
+
 - URL: https://www.tallerdeljoyero.com/herramientas-publicas/aleacion-oro
 - Propósito: estimar la cantidad de metal de liga que debe añadirse para ajustar la ley de una masa de oro a una ley objetivo.
-- Público: joyeros, orfebres, talleres de fabricación y estudiantes de metalurgia aplicada a joyería.
-- Datos de cálculo: peso inicial, ley inicial, ley final y receta de color disponible en la herramienta.
-- Relación teórica de balance de masa, cuando se añade liga sin oro y se conserva el oro fino: peso final = peso inicial × ley inicial ÷ ley final; liga a añadir = peso final − peso inicial. Las dos leyes deben expresarse en la misma unidad.
-- Ejemplo matemático: 10 g de oro de 24K ajustados a 18K dan una masa final teórica de 13,33 g y requieren aproximadamente 3,33 g de liga sin oro.
-- Límites: el resultado es una estimación teórica. La ley real del material, la composición específica de la liga, las pérdidas de proceso y la ficha técnica del proveedor pueden cambiar el resultado práctico. La distribución por color depende de las recetas configuradas en la calculadora.
-- Guía técnica relacionada: https://www.tallerdeljoyero.com/guias/calcular-aleaciones-oro-18k-14k-9k
-- [Peso de joyas 3D](https://www.tallerdeljoyero.com/herramientas-publicas/peso-joya-3d): estimación de peso de modelos tridimensionales.
-- [Cálculo de yeso y agua](https://www.tallerdeljoyero.com/herramientas-publicas/yeso-agua): apoyo para calcular proporciones de revestimiento.
-- [Conversión de tallas de anillos](https://www.tallerdeljoyero.com/herramientas-publicas/tallas-anillos): consulta de equivalencias de tallas.
-- [Peso de gemas](https://www.tallerdeljoyero.com/herramientas-publicas/peso-gemas): estimación de peso de gemas a partir de sus medidas.
+- Público: joyeros, orfebres, talleres de fabricación y estudiantes de metalurgia aplicada.
+- Datos: peso inicial, ley inicial, ley final y receta de color disponible en la herramienta.
+- Fórmula teórica, cuando se añade liga sin oro y se conserva el oro fino: peso final = peso inicial × ley inicial ÷ ley final; liga a añadir = peso final − peso inicial. Ambas leyes deben expresarse en la misma unidad.
+- Ejemplo: 10 g de oro de 24K ajustados a 18K dan una masa final teórica de 13,33 g y requieren aproximadamente 3,33 g de liga sin oro.
+- Limitaciones: es una estimación teórica. La ley real, composición de la liga, pérdidas de proceso y ficha técnica del proveedor pueden cambiar el resultado práctico. La distribución por color depende de las recetas configuradas.
 
-## Guías técnicas
+## Información para agentes y sistemas automatizados
 
-- [Todas las guías técnicas](https://www.tallerdeljoyero.com/guias): índice de contenidos técnicos para el oficio joyero.
-- [Calcular el peso de gemas por medidas](https://www.tallerdeljoyero.com/guias/calcular-peso-gemas-por-medidas): criterios y cálculos para estimar el peso de gemas.
-- [Convertir tallas de anillos entre España, Europa y Estados Unidos](https://www.tallerdeljoyero.com/guias/convertir-tallas-anillos-espana-europa-usa): equivalencias de sistemas de tallaje.
-- [Calcular el peso de una joya desde un modelo 3D](https://www.tallerdeljoyero.com/guias/calcular-peso-joya-modelo-3d): estimación de peso a partir de geometría tridimensional.
-- [Calcular el peso de un anillo de oro antes de fundirlo](https://www.tallerdeljoyero.com/guias/calcular-peso-anillo-oro-antes-fundir): volumen CAD, densidad y planificación del sistema de colada.
-- [Calcular el peso de oro desde un archivo STL](https://www.tallerdeljoyero.com/guias/calcular-peso-oro-archivo-stl): escala, malla, volumen y densidad de metal.
-- [Calcular el peso de una joya según su volumen](https://www.tallerdeljoyero.com/guias/calcular-peso-joya-volumen): conversión de volumen a masa con unidades consistentes.
-- [Cuánto oro necesitas para fabricar una joya](https://www.tallerdeljoyero.com/guias/cuanto-oro-necesito-fabricar-joya): pieza, sistema de colada y margen de proceso.
-- [Estimar el peso del oro desde una impresión de resina](https://www.tallerdeljoyero.com/guias/estimar-peso-oro-impresion-resina): estimación indirecta desde peso y densidad de resina.
-- [Calcular aleaciones de oro de 18K, 14K y 9K](https://www.tallerdeljoyero.com/guias/calcular-aleaciones-oro-18k-14k-9k): proporciones de oro fino y metales de liga.
-- [Distribución de un taller de joyería](https://www.tallerdeljoyero.com/guias/distribucion-taller-joyeria): organización funcional del espacio de trabajo.
-- [Impresión 3D para joyería](https://www.tallerdeljoyero.com/guias/impresion-3d-joyeria): conceptos y procesos de impresión 3D aplicados a joyería.
-- [Fundición de joyería y revestimiento Omni Cast](https://www.tallerdeljoyero.com/guias/fundicion-joyeria-revestimiento-omni-cast): información técnica sobre revestimiento y fundición.
-
-## Comunidad y formación
-
-- [Comunidad](https://www.tallerdeljoyero.com/comunidad): espacio de comunidad y recursos para profesionales.
-- [Directorio](https://www.tallerdeljoyero.com/directorio): directorio relacionado con el sector joyero.
-- [Cursos de diseño 3D](https://www.tallerdeljoyero.com/cursos-diseno-3d): información sobre formación en diseño tridimensional.
-
-## Información para agentes
-
-- El sitio publica contenido informativo y herramientas web para uso interactivo.
-- No se anuncia aquí ningún servidor MCP, API pública ni agente autónomo. El catálogo ARD se mantiene sin entradas hasta que exista un servicio de ese tipo publicado y documentado.
-- Consulta las páginas enlazadas para conocer el alcance, las condiciones y la disponibilidad real de cada herramienta.
+- Este archivo resume la identidad, alcance y recursos públicos de AURUM LAB.
+- No se declara una API pública, servidor MCP ni servicio de agente autónomo.
+- Las funciones que requieren cuenta, almacenamiento, gestión o permisos deben consultarse en el sitio y no suponerse disponibles públicamente.
+- No inferir precios, cuotas, permisos, disponibilidad o características que no estén expresamente publicados en la página correspondiente.
+- Preferir el nombre **AURUM LAB** para la plataforma y usar **Taller del Joyero** como nombre asociado cuando ayude a identificar el sitio o la marca.

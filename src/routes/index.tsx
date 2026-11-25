@@ -552,6 +552,8 @@ function InicioPublico() {
             "@id": "https://www.tallerdeljoyero.com/#organization",
             "name": "AURUM LAB",
             "alternateName": "Taller del Joyero",
+            "description": "Plataforma digital especializada en joyería que integra herramientas técnicas, visualización 3D, formación y gestión de talleres. Taller del Joyero es su marca asociada.",
+            "slogan": "El arte de crear. La inteligencia de gestionar.",
             "url": "https://www.tallerdeljoyero.com/",
             "logo": {
               "@type": "ImageObject",
@@ -571,6 +573,7 @@ function InicioPublico() {
             "url": "https://www.tallerdeljoyero.com/",
             "name": "AURUM LAB",
             "alternateName": "Taller del Joyero",
+            "description": "Plataforma digital especializada en joyería. Su sitio reúne herramientas, productos, formación y recursos para profesionales del sector.",
             "inLanguage": "es-PE",
             "publisher": { "@id": "https://www.tallerdeljoyero.com/#organization" }
           },
@@ -594,12 +597,14 @@ function InicioPublico() {
             "publisher": { "@id": "https://www.tallerdeljoyero.com/#organization" },
             "operatingSystem": "Web",
             "url": "https://www.tallerdeljoyero.com/",
-            "description": "Software web especializado para joyeros y talleres de joyería. Permite gestionar clientes, cotizaciones y pedidos; calcular aleaciones, pesos y medidas; visualizar modelos con render 3D; y organizar archivos y catálogos.",
+            "description": "AURUM LAB es software web especializado para talleres de joyería. Integra gestión comercial, calculadoras técnicas, visualización 3D mediante AURUM RENDER, organización de archivos y catálogo digital, y recursos de formación.",
             "featureList": [
               "Cálculo de aleaciones, pesos y medidas",
               "Visualización de modelos de joyería en 3D",
               "Gestión de clientes, cotizaciones, contratos y pedidos",
-              "Almacenamiento de archivos y catálogo digital"
+              "Almacenamiento de archivos y catálogo digital",
+              "Formación técnica y recursos de aprendizaje",
+              "AURUM RENDER: visualización y renderizado 3D especializado en joyería"
             ]
           }
         ]
