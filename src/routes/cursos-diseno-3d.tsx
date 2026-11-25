@@ -81,6 +81,7 @@ const complementos = [
 ] as const;
 
 function CursosDiseno3DPage() {
+  const culqiReservaUrl = import.meta.env.VITE_CULQI_RESERVA_URL?.trim() ?? "";
   const [programaAbierto, setProgramaAbierto] = useState(false);
   const [bonoAbierto, setBonoAbierto] = useState(false);
   const [nivelEscrito, setNivelEscrito] = useState(0);
@@ -262,11 +263,11 @@ function CursosDiseno3DPage() {
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-[#ead7a5] bg-[#fffaf0] px-3 py-3">
                 <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff0c4] text-[#98712a]"><UsersRound className="size-5" /></span>
-                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Cupos limitados</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">Quedan <strong className="rounded-md bg-[#f5e4ad] px-1.5 text-[#7d5818]">8</strong> de 15 cupos</span></span>
+                <span><span className="block text-[10px] font-bold uppercase tracking-[.16em] text-[#98712a]">Cupos limitados</span><span className="mt-0.5 block text-sm font-bold text-[#26394b]">Quedan <strong className="rounded-md bg-[#f5e4ad] px-1.5 text-[#7d5818]">5</strong> de 15 cupos</span></span>
               </div>
             </div>
-            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="8 de 15 cupos disponibles">
-              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 8 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
+            <div className="mt-4 flex gap-1.5 rounded-lg bg-[#f6f7f8] p-3" aria-label="5 de 15 cupos disponibles">
+              {Array.from({ length: 15 }, (_, index) => <span key={index} className={`h-3 flex-1 rounded-sm ${index < 5 ? "bg-[#c49a42]" : "bg-[#cfd4da]"}`} />)}
             </div>
             <div className="mt-5 rounded-xl bg-[#fff9e9] p-5">
               <div className="flex items-start justify-between gap-3">
@@ -305,8 +306,16 @@ function CursosDiseno3DPage() {
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Bono de Profesionalización: 12 meses del Plan Profesional incluidos</li>
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> Registro de cuenta AURUM LAB gratuito</li>
             </ul>
-            <Link to="/auth" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105">Crear cuenta e iniciar matrícula · US$ 230 <ArrowRight className="size-4" /></Link>
-            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">El precio final de matrícula es US$ 230 (ahorro de US$ 20 frente al precio regular). Crear tu cuenta en AURUM LAB es gratuito; después podrás continuar con la gestión de tu matrícula. Inicio previsto: 30 de noviembre de 2026. Cupos limitados: 15 en total.</p>
+            <section className="mt-6 rounded-2xl border border-[#d9c18a] bg-[#fffaf0] p-5" aria-labelledby="separar-vacante">
+              <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#98712a]">Reserva tu matrícula</p>
+              <h3 id="separar-vacante" className="mt-1 text-lg font-bold text-[#24374a]">Separa tu vacante con el 50%</h3>
+              <div className="mt-3 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs text-[#718196]">Adelanto de matrícula</p><p className="text-3xl font-extrabold tracking-tight text-[#1e3042]">US$ 115</p></div><div className="text-right"><p className="text-xs text-[#718196]">Saldo antes del inicio</p><p className="text-xl font-bold text-[#24374a]">US$ 115</p></div></div>
+              <p className="mt-2 text-xs leading-5 text-[#627487]">Paga el 50% para separar tu vacante y completa el saldo antes del inicio del curso.</p>
+              {culqiReservaUrl ? <a href={culqiReservaUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d9a51e] to-[#b98213] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(181,139,55,.22)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Separar vacante con Culqi · US$ 115 <ArrowRight className="size-4" /></a> : <button type="button" disabled className="mt-4 inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#c9b78a] px-5 text-sm font-bold text-white opacity-80">Pago con Culqi · enlace pendiente de configurar</button>}
+              {!culqiReservaUrl && <p className="mt-2 text-center text-[11px] leading-4 text-[#7a8793]">El checkout se habilitará cuando configuremos el enlace de pago oficial de Culqi.</p>}
+            </section>
+            <Link to="/auth" className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#d6bd7e] bg-white px-5 text-sm font-bold text-[#76591e] transition hover:bg-[#fff4d7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58b37]">Crear cuenta gratuita en AURUM LAB <ArrowRight className="size-4" /></Link>
+            <p className="mt-3 text-center text-[11px] leading-5 text-[#82909d]">Precio final: US$ 230. Reserva: US$ 115 (50%); saldo: US$ 115. Inicio previsto: 30 de noviembre de 2026. Cupos disponibles anunciados: 5 de 15.</p>
           </aside>
         </div>
       </section>
