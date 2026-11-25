@@ -156,6 +156,7 @@ const guias = [
     herramienta: "Calculadora de peso 3D",
     herramientaHref: "/herramientas-publicas/peso-joya-3d",
   },
+  {
     slug: "calcular-peso-joya-modelo-3d",
     categoria: "Diseño y fabricación",
     titulo: "Cómo estimar el peso de una joya a partir de un modelo 3D",
