@@ -5,13 +5,18 @@ import { Building2, BookOpen, GraduationCap, Search, Sparkles, ArrowRight, Store
 import { supabasePublic } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/catalogo-publico")({
-  head: () => ({ meta: [
-    { title: "Comunidad | Taller del Joyero" },
-    { name: "description", content: "Descubre talleres, joyerías y propuestas de formación de la comunidad de Taller del Joyero." },
-    { name: "robots", content: "index, follow" },
-    { property: "og:title", content: "Comunidad | Taller del Joyero" },
-    { property: "og:description", content: "Conecta con talleres y descubre catálogos y cursos publicados por la comunidad joyera." },
-  ]}),
+  head: () => ({
+    links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/catalogo-publico" }],
+    meta: [
+      { title: "Directorio público de talleres y formación | AURUM LAB" },
+      { name: "description", content: "Explora talleres, joyerías y propuestas de formación publicadas en el directorio público de AURUM LAB, la plataforma digital especializada en joyería." },
+      { name: "robots", content: "index, follow" },
+      { property: "og:title", content: "Directorio público de talleres y formación | AURUM LAB" },
+      { property: "og:description", content: "Descubre talleres, joyerías y cursos de la comunidad profesional joyera en AURUM LAB." },
+      { property: "og:url", content: "https://www.tallerdeljoyero.com/catalogo-publico" },
+      { property: "og:type", content: "website" },
+    ],
+  }),
   component: ComunidadPublicaPage,
 });
 
