@@ -627,11 +627,18 @@ function InicioPublico() {
             <Link to="/herramientas-publicas" className="transition hover:text-[#a77a00]">Herramientas</Link>
             <a href="#como-funciona" className="transition hover:text-[#a77a00]">Cómo funciona</a>
             <Link to="/guias" className="transition hover:text-[#a77a00]">Guías técnicas</Link>
-            <div className="relative">
-              <button type="button" aria-expanded={comunidadDropdownAbierto} aria-haspopup="true" onClick={() => setComunidadDropdownAbierto((abierto) => !abierto)} className="inline-flex items-center gap-1.5 rounded transition hover:text-[#a77a00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
-                Comunidad <ChevronDown className={"size-3.5 transition-transform " + (comunidadDropdownAbierto ? "rotate-180" : "")} />
+            <div
+              className="relative"
+              onMouseEnter={() => setComunidadDropdownAbierto(true)}
+              onMouseLeave={() => setComunidadDropdownAbierto(false)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setComunidadDropdownAbierto(false);
+              }}
+            >
+              <button type="button" aria-expanded={comunidadDropdownAbierto} aria-haspopup="true" onClick={() => setComunidadDropdownAbierto((abierto) => !abierto)} onKeyDown={(event) => { if (event.key === "Escape") setComunidadDropdownAbierto(false); }} className="inline-flex items-center gap-1.5 rounded transition hover:text-[#a77a00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
+                Comunidad <ChevronDown className={"size-3.5 transition-transform duration-200 " + (comunidadDropdownAbierto ? "rotate-180" : "")} />
               </button>
-              {comunidadDropdownAbierto && <div className="absolute left-1/2 top-full z-50 mt-3 w-[320px] -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_45px_rgba(15,23,42,.14)]" role="menu">
+              {comunidadDropdownAbierto && <div className="absolute left-1/2 top-full z-50 mt-2 w-[320px] -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_45px_rgba(15,23,42,.14)] animate-in fade-in slide-in-from-top-1 duration-150" role="menu">
                 <Link to="/directorio" onClick={() => setComunidadDropdownAbierto(false)} role="menuitem" className="flex items-center gap-3 rounded-xl p-3 transition hover:bg-[#fff9e8]">
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff4d5] text-[#9a7418]"><UsersRound className="size-5" /></span>
                   <span><span className="block text-sm font-semibold text-[#17232d]">Red de Joyería</span><span className="mt-0.5 block text-xs text-slate-500">Talleres, joyerías y profesionales</span></span>
