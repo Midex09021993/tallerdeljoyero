@@ -73,8 +73,6 @@ type Seccion = {
   grupo?: "principal" | "comercial" | "produccion" | "inventario" | "aurum" | "herramientas" | "aprendizaje" | "administracion";
 };
 
-type AtrasMovil = false | { to?: string; onClick?: () => void };
-
 const secciones: Seccion[] = [
   { to: "/inicio", label: "Inicio", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/agenda", label: "Agenda", roles: ["dueno", "gerente"], icono: CalendarDays, grupo: "principal" },
