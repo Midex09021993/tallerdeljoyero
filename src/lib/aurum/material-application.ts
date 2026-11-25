@@ -530,7 +530,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(currentMaterials.length){
       const selectedDiamondColor=Number(gemConfig?.color??0xffffff);
       const selectedDiamondParameters=resolveAurumDiamondCatalogParameters(gemConfig);
-      const selectedBoost=selectedDiamondParameters.boostFactors??{x:1,y:1,z:1};
+      const selectedBoost=selectedDiamondParameters["boostFactors"]??{x:1,y:1,z:1};
       currentMaterials.forEach((material:any)=>{
         if(!material) return;
         material.color?.setHex(selectedDiamondColor);

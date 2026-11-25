@@ -1125,7 +1125,7 @@ function GuiaTecnicaPage() {
               ["calcular-liga-oro-18k-14k", "Cómo calcular la liga que debes añadir"],
               ["diferencia-oro-14k-585-milesimas", "Diferencia entre 14K, 583 y 585"],
             ].map(([microSlug, label]) => (
-              <Link key={microSlug} to="/guias/$slug" params={{ slug: microSlug }} className="group flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm font-semibold text-slate-700 transition hover:border-[#d9bd70] hover:bg-[#fffaf0]">
+              <Link key={microSlug} to="/guias/$slug" params={{ slug: microSlug ?? "" }} className="group flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm font-semibold text-slate-700 transition hover:border-[#d9bd70] hover:bg-[#fffaf0]">
                 <span>{label}</span><ArrowRight className="mt-0.5 size-4 shrink-0 text-[#987400] transition group-hover:translate-x-1" />
               </Link>
             ))}

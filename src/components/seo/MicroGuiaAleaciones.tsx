@@ -115,7 +115,7 @@ export function MicroGuiaOro({ slug }: { slug: MicroGuiaOroSlug }) {
         <section className="mt-8 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p><h2 className="mt-2 text-xl font-bold">Calcula tu aleación de oro</h2><p className="mt-2 text-sm leading-6 text-slate-600">Introduce las leyes y masas de tus materiales para obtener una estimación de balance.</p></div>
-            <Link to="/herramientas-publicas/aleacion-oro" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><Calculator className="size-4" /> Abrir calculadora <ArrowRight className="size-4" /></Link>
+            <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "aleacion-oro" }} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><Calculator className="size-4" /> Abrir calculadora <ArrowRight className="size-4" /></Link>
           </div>
         </section>
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
