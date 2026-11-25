@@ -4,7 +4,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/directorio")({
   loader: async () => {
-    const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica");
+    const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica_ranking");
     if (error) {
       console.error("[Directorio] No se pudo obtener el listado público:", error);
       return undefined;
