@@ -66,7 +66,7 @@ export function ComunidadPublicaPage() {
   return <main className="min-h-screen bg-[#f8f9fb] text-[#17232d]">
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-        <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-[#17232d]"><span className="grid size-9 place-items-center rounded-xl bg-[#f8c928] text-[#17232d]"><Sparkles className="size-4" /></span>Taller del Joyero</Link>
+        <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-[#17232d]"><span className="grid size-9 place-items-center rounded-xl bg-[#f8c928] text-[#17232d]"><Sparkles className="size-4" /></span>AURUM LAB</Link>
         <div className="flex items-center gap-2"><Link to="/" className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d4aa19] bg-white px-4 py-2 text-xs font-semibold text-[#17232d] transition hover:bg-[#fff8d8]">Volver a AURUM LAB</Link><Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Ingresar</Link></div>
       </div>
     </header>
