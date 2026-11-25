@@ -27,7 +27,7 @@ export const Route = createFileRoute("/guias/$slug")({
         { property: "og:description", content: descripcion },
         { property: "og:type", content: "article" },
         { property: "og:url", content: `https://www.tallerdeljoyero.com/guias/${params.slug}` },
-        { property: "og:site_name", content: "AURUM LAB · Taller del Joyero" },
+        { property: "og:site_name", content: "AURUM LAB" },
         { property: "og:locale", content: "es_PE" },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: titulo },
@@ -46,7 +46,8 @@ export const Route = createFileRoute("/guias/$slug")({
           inLanguage: "es-PE",
           publisher: {
             "@type": "Organization",
-            name: "Taller del Joyero · AURUM LAB",
+            name: "AURUM LAB",
+            alternateName: "Taller del Joyero",
             url: "https://www.tallerdeljoyero.com/",
           },
         }),
