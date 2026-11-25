@@ -706,7 +706,8 @@ function InicioPublico() {
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <RegistroTaller className="hidden min-h-10 items-center justify-center rounded-xl bg-[#f8c928] px-4 text-xs font-bold text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] sm:inline-flex" />
-            <Link to="/auth" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 sm:px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <Link to="/auth" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:hidden"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <Link to="/auth" target="_blank" rel="noopener noreferrer" className="hidden min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:inline-flex sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
             <button
               type="button"
               onClick={() => setMenuMovilAbierto((abierto) => !abierto)}
