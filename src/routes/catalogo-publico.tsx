@@ -70,7 +70,8 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
   const entradasOrdenadas = useMemo(() => {
     const lista = entradas.filter(item => filtro !== "talleres" || paisFiltro === "todos" || item.identidad_pais?.trim() === paisFiltro);
     return [...lista].sort((a,b) => {
-      if (orden === "ranking") return Number(b.ranking_score ?? 0) - Number(a.ranking_score ?? 0);\n      if (orden === "productos" && a.tipo === "taller" && b.tipo === "taller") return b.productos_publicados - a.productos_publicados;
+      if (orden === "ranking") return Number(b.ranking_score ?? 0) - Number(a.ranking_score ?? 0);
+      if (orden === "productos" && a.tipo === "taller" && b.tipo === "taller") return b.productos_publicados - a.productos_publicados;
       const nameA = a.tipo === "curso" ? (a.formacion_titulo || a.nombre) : (a.identidad_nombre || a.nombre);
       const nameB = b.tipo === "curso" ? (b.formacion_titulo || b.nombre) : (b.identidad_nombre || b.nombre);
       return nameA.localeCompare(nameB,"es");
