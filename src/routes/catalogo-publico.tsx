@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, BookOpen, Search, ArrowRight, Award, Medal, Trophy, Sparkles } from "lucide-react";
+import { Building2, BookOpen, Search, ArrowRight, Award, Medal, Trophy, Sparkles, Crown } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/catalogo-publico")({
@@ -126,17 +126,21 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
             <p className="mt-4 line-clamp-2 min-h-[3rem] text-sm leading-6 text-slate-600">{descripcion?.trim() || "Descripción pendiente de completar."}</p>
             {(() => {
               const level = item.ranking_level ?? "none";
-              const isDiamond = Boolean(item.ranking_diamond_position);
-              const MedalIcon = isDiamond ? Trophy : level === "gold" ? Award : level === "silver" ? Medal : level === "bronze" ? Medal : Sparkles;
-              const medalLabel = isDiamond ? `DIAMANTE · TOP ${item.ranking_diamond_position}` : level === "gold" ? "ORO" : level === "silver" ? "PLATA" : level === "bronze" ? "BRONCE" : "EN EVALUACIÓN";
-              const medalTone = isDiamond ? "border-[#d4aa19] bg-[#fff3c7] text-[#8c6800]" : level === "gold" ? "border-[#d4aa19]/50 bg-[#fff8e7] text-[#8c6800]" : level === "silver" ? "border-slate-300 bg-slate-50 text-slate-600" : level === "bronze" ? "border-[#c68a56]/40 bg-[#fbf0e5] text-[#8a552b]" : "border-slate-200 bg-white text-slate-500";
-              return <div className={`mt-4 flex items-center gap-3 rounded-xl border p-3 ${medalTone}`}>
-                <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-current/20 bg-white/80 shadow-sm"><MedalIcon className="size-5" /></span>
+              const position = item.ranking_diamond_position ?? null;
+              const isDiamond = Boolean(position);
+              const isFirst = position === 1;
+              const isSecond = position === 2;
+              const isThird = position === 3;
+              const MedalIcon = isFirst ? Crown : isDiamond ? Medal : level === "gold" ? Award : level === "silver" ? Medal : level === "bronze" ? Medal : Sparkles;
+              const medalLabel = isFirst ? "LÍDER DEL RANKING · TOP 1" : isDiamond ? `DIAMANTE · TOP ${position}` : level === "gold" ? "ORO" : level === "silver" ? "PLATA" : level === "bronze" ? "BRONCE" : "EN EVALUACIÓN";
+              const medalTone = isFirst ? "border-[#c69200] bg-gradient-to-r from-[#fff0b8] via-[#ffe28a] to-[#fff5d1] text-[#765300] shadow-[0_4px_18px_rgba(212,170,25,0.18)]" : isSecond ? "border-slate-300 bg-gradient-to-r from-slate-100 to-white text-slate-600" : isThird ? "border-[#c68a56]/60 bg-gradient-to-r from-[#f8e5d3] to-[#fffaf5] text-[#8a552b]" : isDiamond ? "border-[#d4aa19]/60 bg-[#fff8e7] text-[#8c6800]" : level === "gold" ? "border-[#d4aa19]/50 bg-[#fff8e7] text-[#8c6800]" : level === "silver" ? "border-slate-300 bg-slate-50 text-slate-600" : level === "bronze" ? "border-[#c68a56]/40 bg-[#fbf0e5] text-[#8a552b]" : "border-slate-200 bg-white text-slate-500";
+              return <div className={`mt-4 flex items-center gap-3 rounded-xl border p-3 ${isFirst ? "p-3.5" : "p-3"} ${medalTone}`}>
+                <span className={`grid shrink-0 place-items-center rounded-lg border border-current/20 bg-white/85 shadow-sm ${isFirst ? "size-11" : "size-10"}`}><MedalIcon className={isFirst ? "size-6" : "size-5"} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[.14em]">{esCurso ? "Formación AURUM" : "Ranking AURUM"}</p>
-                  <p className="mt-0.5 text-xs font-semibold">{esCurso ? "Comunidad formativa" : medalLabel}</p>
+                  <p className={`text-[10px] font-bold uppercase tracking-[.14em] ${isFirst ? "text-[#6d4b00]" : ""}`}>{esCurso ? "Formación AURUM" : isFirst ? "Ranking AURUM · CAMPEÓN" : "Ranking AURUM"}</p>
+                  <p className={`mt-0.5 text-xs font-bold ${isFirst ? "text-[#765300]" : ""}`}>{esCurso ? "Comunidad formativa" : medalLabel}</p>
                 </div>
-                {!esCurso && <span className="shrink-0 rounded-full border border-current/25 bg-white/80 px-2.5 py-1 text-[10px] font-bold tabular-nums">{Number(item.ranking_score ?? 0).toFixed(0)}/100</span>}
+                {!esCurso && <span className={`shrink-0 rounded-full border border-current/25 bg-white/85 px-2.5 py-1 text-[10px] font-bold tabular-nums ${isFirst ? "px-3 py-1.5 text-[11px]" : ""}`}>{Number(item.ranking_score ?? 0).toFixed(0)}/100</span>}
               </div>;
             })()}
             <div className="mt-4 flex min-h-7 items-center justify-between gap-3 text-xs text-slate-500">
