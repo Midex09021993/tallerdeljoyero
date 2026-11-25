@@ -66,11 +66,11 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
   }, [data, busqueda, filtro]);
   const paises = [...new Set(data.filter(x => x.tipo === "taller").map(x => x.identidad_pais?.trim()).filter((x): x is string => Boolean(x)))].sort((a,b)=>a.localeCompare(b,"es"));
   const [paisFiltro, setPaisFiltro] = useState("todos");
-  const [orden, setOrden] = useState<"alfabetico"|"productos">("alfabetico");
+  const [orden, setOrden] = useState<"alfabetico"|"productos"|"ranking">("ranking");
   const entradasOrdenadas = useMemo(() => {
     const lista = entradas.filter(item => filtro !== "talleres" || paisFiltro === "todos" || item.identidad_pais?.trim() === paisFiltro);
     return [...lista].sort((a,b) => {
-      if (orden === "productos" && a.tipo === "taller" && b.tipo === "taller") return b.productos_publicados - a.productos_publicados;
+      if (orden === "ranking") return Number(b.ranking_score ?? 0) - Number(a.ranking_score ?? 0);\n      if (orden === "productos" && a.tipo === "taller" && b.tipo === "taller") return b.productos_publicados - a.productos_publicados;
       const nameA = a.tipo === "curso" ? (a.formacion_titulo || a.nombre) : (a.identidad_nombre || a.nombre);
       const nameB = b.tipo === "curso" ? (b.formacion_titulo || b.nombre) : (b.identidad_nombre || b.nombre);
       return nameA.localeCompare(nameB,"es");
@@ -91,7 +91,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {filtro === "talleres" ? <label className="flex items-center gap-2 text-xs text-slate-600">País<select value={paisFiltro} onChange={e=>setPaisFiltro(e.target.value)} className="min-h-10 rounded-full border border-slate-200 bg-white px-3 text-xs text-[#17232d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a227]"><option value="todos">Todos los países</option>{paises.map(p=><option key={p} value={p}>{p}</option>)}</select></label> : null}
-        <label className="flex items-center gap-2 text-xs text-slate-600">Ordenar<select value={orden} onChange={e=>setOrden(e.target.value as typeof orden)} className="min-h-10 rounded-full border border-slate-200 bg-white px-3 text-xs text-[#17232d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a227]"><option value="alfabetico">Nombre A–Z</option><option value="productos">Más productos</option></select></label>
+        <label className="flex items-center gap-2 text-xs text-slate-600">Ordenar<select value={orden} onChange={e=>setOrden(e.target.value as typeof orden)} className="min-h-10 rounded-full border border-slate-200 bg-white px-3 text-xs text-[#17232d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a227]"><option value="ranking">Mejor ranking</option><option value="alfabetico">Nombre A–Z</option><option value="productos">Más productos</option></select></label>
         <span className="ml-auto text-xs font-medium text-slate-500" aria-live="polite">{entradasOrdenadas.length} {entradasOrdenadas.length===1?"resultado":"resultados"}</span>
       </div>
       <div className="mt-7 flex flex-wrap gap-2 border-b border-slate-200 pb-5" role="group" aria-label="Filtrar comunidad">
