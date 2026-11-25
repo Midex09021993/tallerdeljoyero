@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, useCapacidadesMenu } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2, Cake } from "lucide-react";
+import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2, Cake, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { CumpleanosClientes } from "@/components/CumpleanosClientes";
@@ -382,7 +382,7 @@ function ClientesPage() {
     >
       <div className="mb-5 flex flex-wrap gap-2 rounded-[1.1rem] border border-[#293B4A]/10 bg-[#FFFEFC] p-2 shadow-[0_5px_18px_-14px_rgba(24,40,56,.28)]"><button type="button" onClick={()=>setVista("clientes")} className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${vista==="clientes"?"bg-[#C5A36B] text-[#182838] shadow-[0_3px_10px_rgba(146,115,75,.22)] ring-1 ring-[#92734B]/20":"text-[#687887] hover:bg-[#F0EDE6] hover:text-[#293B4A]"}`}>Clientes</button><button type="button" onClick={()=>setVista("cumpleanos")} className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${vista==="cumpleanos"?"bg-[#C5A36B] text-[#182838] shadow-[0_3px_10px_rgba(146,115,75,.22)] ring-1 ring-[#92734B]/20":"text-[#687887] hover:bg-[#F0EDE6] hover:text-[#293B4A]"}`}><Cake className="mr-2 inline size-4"/>Cumpleaños</button><button type="button" onClick={()=>setVista("campanas")} className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${vista==="campanas"?"bg-[#C5A36B] text-[#182838] shadow-[0_3px_10px_rgba(146,115,75,.22)] ring-1 ring-[#92734B]/20":"text-[#687887] hover:bg-[#F0EDE6] hover:text-[#293B4A]"}`}><Mail className="mr-2 inline size-4"/>Campañas</button></div>
       <div className={vista==="clientes"?"grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]":"hidden"}>
-        <section className="overflow-hidden rounded-[1.2rem] border border-[#293B4A]/10 bg-[#FFFEFC] shadow-[0_2px_5px_rgba(24,40,56,.035),0_16px_38px_-27px_rgba(24,40,56,.25)]">
+        <section className={`overflow-hidden rounded-[1.2rem] border border-[#293B4A]/10 bg-[#FFFEFC] shadow-[0_2px_5px_rgba(24,40,56,.035),0_16px_38px_-27px_rgba(24,40,56,.25)] ${seleccionado ? "hidden xl:block" : "block"}`}>
           <div className="border-b border-[#293B4A]/10 bg-[linear-gradient(110deg,#FFFEFC,#F8F5EF)] p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="flex-1">
@@ -414,9 +414,14 @@ function ClientesPage() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[1.2rem] border border-[#293B4A]/10 bg-[#FFFEFC] shadow-[0_2px_5px_rgba(24,40,56,.035),0_16px_38px_-27px_rgba(24,40,56,.25)]">
+        <section className={`overflow-hidden rounded-[1.2rem] border border-[#293B4A]/10 bg-[#FFFEFC] shadow-[0_2px_5px_rgba(24,40,56,.035),0_16px_38px_-27px_rgba(24,40,56,.25)] ${seleccionado ? "block" : "hidden xl:block"}`}>
           {seleccionado ? (
             <div>
+              <div className="border-b border-[#293B4A]/10 bg-[#FFFEFC] px-4 py-3 xl:hidden">
+                <button type="button" onClick={() => setSeleccionado(null)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#C5A36B]/30 bg-[#F5F1E8] px-3 text-sm font-semibold text-[#293B4A] transition hover:bg-[#EEE7D9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36B]">
+                  <ArrowLeft className="size-4" aria-hidden="true" /> Volver a clientes
+                </button>
+              </div>
               <div className="relative overflow-hidden border-b border-[#C5A36B]/25 bg-[linear-gradient(118deg,#182838_0%,#293B4A_72%,#354958_100%)] px-5 py-7 text-[#F5F1E8] sm:px-6">
                 <span className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-gold/10 blur-3xl" />
                 <span className="pointer-events-none absolute -bottom-20 left-1/3 size-40 rounded-full bg-gold/5 blur-3xl" />
