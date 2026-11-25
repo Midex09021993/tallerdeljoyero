@@ -113,7 +113,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
         const initials = titulo.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("es") || "").join("") || "AL";
         const category = esCurso ? "Curso y formación" : "Taller / joyería";
         const count = esCurso ? null : item.productos_publicados;
-        return <article key={`${item.tipo}-${item.participante_id}`} className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white shadow-[0_8px_28px_rgba(40,30,20,.045)] transition duration-300 motion-reduce:transition-none hover:-translate-y-1 hover:border-[#d4aa19] hover:shadow-[0_20px_45px_rgba(40,30,20,.10)]">
+        return <article key={`${item.tipo}-${item.participante_id}`} className={`group flex h-full flex-col overflow-hidden rounded-[1.35rem] border bg-white shadow-[0_8px_28px_rgba(40,30,20,.045)] transition duration-300 motion-reduce:transition-none hover:-translate-y-1 hover:border-[#d4aa19] hover:shadow-[0_20px_45px_rgba(40,30,20,.10)] ${item.ranking_diamond_position === 1 ? "border-[#d4aa19] shadow-[0_8px_30px_rgba(212,170,25,.13)]" : "border-slate-200"}`}>
           <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-[#fbfaf7] px-5 py-3">
             <span className="inline-flex items-center rounded-full border border-[#d4aa19]/35 bg-[#fff8e7] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-[#8c6800]">{esCurso ? "Formación" : "Comunidad"}</span>
             <span className="text-[10px] font-medium text-slate-500">{category}</span>
