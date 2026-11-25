@@ -333,10 +333,10 @@ function GuiasPage() {
   const categoryCount = (category: string) => category === "Todos" ? allCount : guias.filter((guide) => guide.categoria === category).length;
 
   const card = (guia: typeof guias[number], index: number, isFeatured = false) => {
-    const style = categoryStyles[guia.categoria] ?? categoryStyles["Metalurgia y materiales"];
+    const style = categoryStyles[guia.categoria] || categoryStyles["Metalurgia y materiales"]!;
     const Icon = style.icon;
-    const updateDate = "fechaActualizacion" in guia ? guia.fechaActualizacion : undefined;
-    const publishedDate = "fechaPublicacion" in guia ? guia.fechaPublicacion : undefined;
+    const updateDate = (guia as { fechaActualizacion?: string }).fechaActualizacion;
+    const publishedDate = (guia as { fechaPublicacion?: string }).fechaPublicacion;
     const isNew = typeof publishedDate === "string" && publishedDate !== "[COMPLETAR]" &&
       !Number.isNaN(Date.parse(publishedDate)) && Date.now() - Date.parse(publishedDate) <= 30 * 24 * 60 * 60 * 1000 &&
       Date.now() - Date.parse(publishedDate) >= 0;
