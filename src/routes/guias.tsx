@@ -444,7 +444,7 @@ function GuiasPage() {
           <label className="relative w-full lg:max-w-sm">
             <span className="sr-only">Buscar guía por título</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-            <input value={busqueda} onChange={(event) => setBusqueda(event.target.value)} type="search" placeholder="Buscar guías…" className="w-full rounded-xl border border-white/15 bg-white py-3 pl-10 pr-10 text-sm text-[#17232d] placeholder:text-slate-400" />
+            <input value={busqueda} onChange={(event) => setBusqueda(event.target.value)} type="search" placeholder="Buscar guías…" className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-[#17232d] placeholder:text-slate-400" />
             {busqueda && <button type="button" onClick={() => setBusqueda("")} aria-label="Limpiar búsqueda" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#17232d]"><X className="size-4" /></button>}
           </label>
         </div>
@@ -463,7 +463,7 @@ function GuiasPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-12 sm:px-8">
-        <div className="rounded-2xl border border-[#C9A227]/30 bg-[#1b1b1b] p-5 sm:p-7">
+        <div className="rounded-2xl border border-[#C9A227]/30 bg-white p-5 shadow-sm sm:p-7">
           <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#C9A227]">Preguntas frecuentes</p>
           <h2 className="mt-2 text-xl font-bold">Respuestas rápidas para el taller</h2>
           <div className="mt-4 divide-y divide-slate-200">
