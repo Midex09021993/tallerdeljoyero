@@ -13,6 +13,7 @@ import AuriTutorCurso from "@/components/aula/AuriTutorCurso";
 import LaboratorioCurveEditor from "@/components/aula/LaboratorioCurveEditor";
 import LaboratorioCurvasBasicas from "@/components/aula/LaboratorioCurvasBasicas";
 import RhinoObjectExplorer from "@/components/aula/RhinoObjectExplorer";
+import RhinoViewportTrainer3D from "@/components/aula/RhinoViewportTrainer3D";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -2643,7 +2644,25 @@ function AulaFormacionPage() {
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_340px]">
           <main className="min-h-0 overflow-hidden bg-[#0D131A] p-3 sm:p-4 lg:p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#C5A15A]">Espacio de modelado · Vistas ortogonales</p><p className="mt-1 text-[11px] text-slate-500">Órbita: botón derecho · Zoom: rueda · Desplazar: Shift + botón derecho · Doble clic para maximizar</p></div><div className="flex gap-2"><span className="rounded-md border border-white/10 px-2 py-1 text-[10px] text-slate-400">Zoom {retoNavZoom.toFixed(2)}×</span><span className="rounded-md border border-white/10 px-2 py-1 text-[10px] text-slate-400">Órbita {Math.round(retoNavOrbit)}°</span></div></div>
-            <div className={"grid gap-2 " + (retoNavVistaMaximizada ? "h-[min(72vh,720px)] min-h-[320px] grid-cols-1" : "grid-cols-2")}>{viewports.filter(v => !retoNavVistaMaximizada || v.id === retoNavVistaMaximizada).map(viewport)}</div>
+            <RhinoViewportTrainer3D
+              zoom={retoNavZoom}
+              orbit={retoNavOrbit}
+              pan={retoNavPan}
+              activeView={retoNavVistaActiva}
+              maximized={retoNavVistaMaximizada}
+              onActivate={setRetoNavVistaActiva}
+              onMaximize={(view) => setRetoNavVistaMaximizada(current => current === view ? null : view)}
+              onZoom={setRetoNavZoom}
+              onOrbit={setRetoNavOrbit}
+              onPan={setRetoNavPan}
+              onAction={(action) => {
+                if (action === "zoom" && retoNavPaso === 0) { setRetoNavZoom(v => Math.min(2.2, v + 0.15)); completar("Zoom aplicado a la joya en Perspective."); }
+                else if (action === "panTop" && retoNavPaso === 1) { setRetoNavPan(p => ({ x: p.x + 0.25, y: p.y + 0.15 })); completar("Desplazamiento aplicado en la vista Top."); }
+                else if (action === "orbit" && retoNavPaso === 2) { setRetoNavOrbit(v => v + 18); completar("La cámara Perspective ha orbitado alrededor de la joya."); }
+                else if (action === "panPerspective" && retoNavPaso === 3) { setRetoNavPan(p => ({ x: p.x + 0.2, y: p.y + 0.15 })); completar("Perspective desplazada sin cambiar la orientación."); }
+                else if (action === "maximize" && retoNavPaso === 4 && retoNavVistaMaximizada) completar("Vista maximizada y restaurada correctamente.");
+              }}
+            />
             <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-[#171B21] p-2.5"><span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Línea de comandos</span><code className="rounded bg-black/20 px-2 py-1 text-[10px] text-amber-200">_</code><input value={retoNavComando} onChange={e => setRetoNavComando(e.target.value)} onKeyDown={e => { if (e.key === "Enter") ejecutarComando(); }} placeholder="Escribe ZE, ZEA, ZS, UndoView, Pan o Zoom…" className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-white outline-none placeholder:text-slate-600"/><button type="button" onClick={ejecutarComando} className="rounded-md bg-[#C4A15A] px-3 py-2 text-xs font-bold text-[#17130B]">Ejecutar ↵</button></div>
             <p className="mt-2 text-[11px] text-slate-500">Simulación didáctica: los gestos se reproducen en este entorno; no se controla una instalación real de Rhino.</p>
           </main>
