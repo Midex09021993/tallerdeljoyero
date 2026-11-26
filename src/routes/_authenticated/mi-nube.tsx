@@ -317,7 +317,7 @@ function MiNubePage() {
         ?? imagenes[0];
       if (!portada) throw new Error("No encontramos una imagen en la carpeta del proyecto. Guarda primero el póster desde el visor 3D o añade una imagen JPG, PNG o WebP a esa carpeta.");
       const rutaImagen = carpetaRuta + "/" + portada.name;
-      const { data: firmada, error: firmaError } = await supabase.storage.from("mi-nube").createSignedUrl(rutaImagen, 600);
+      const { data: firmada, error: firmaError } = await supabase.storage.from("mi-nube").createSignedUrl(rutaImagen, 60);
       if (firmaError || !firmada?.signedUrl) throw firmaError ?? new Error("No se pudo leer la imagen desde Mi Nube.");
       const respuesta = await fetch(firmada.signedUrl);
       if (!respuesta.ok) throw new Error("No se pudo descargar la imagen de portada.");
@@ -620,7 +620,7 @@ function MiNubePage() {
         const lote = portadas.slice(inicio, inicio + concurrenciaVistas);
         await Promise.all(lote.map(async (archivo) => {
           try {
-            const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
+            const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60);
             if (signedError) console.warn("[Mi Nube] No se pudo generar vista previa.", archivo.nombre, signedError.message);
             urlPorRuta.set(archivo.ruta, data?.signedUrl ?? null);
           } catch (previewCause) {
