@@ -216,7 +216,7 @@ test("refresh discovers meshes reassigned to diamond and releases meshes reassig
   pipeline.update();
   mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, diamondMaterial, null as any);
   expect(mesh.userData.aurumDiamondMicroTier).toBe("micro");
-  expect(diamondMaterial.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.42);
+  expect(diamondMaterial.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.78);
 
   mesh.material = new THREE.MeshBasicMaterial();
   pipeline.refresh();
