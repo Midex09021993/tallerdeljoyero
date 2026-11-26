@@ -332,7 +332,7 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(post).toContain("requestDiagnostics(){");
   expect(post).toContain("cachedCenterMeshes:cachedGemMeshes.length,");
   expect(post).toContain("maskCoveragePercent:gemMaskCoveragePercent,");
-  expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(4_500_000/Math.max(1,basePixels)))");
+  expect(post).toContain("Math.min(diamondSupersampleActiveScaleCap,Math.sqrt(4_500_000/Math.max(1,basePixels)))");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
   expect(post).toContain("setDiamondSupersampleScaleCap");
 });
@@ -942,8 +942,8 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   expect(runtime).toContain('const diamondSourceParameters = (calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")');
   expect(runtime).toContain('diamondSourceParameters.environmentRotationOffset');
   expect(runtime).toContain('diamondSourceParameters.rayBounces');
-  expect(runtime).toContain("geometryFactor: Number(diamondSourceParameters?.geometryFactor ?? 0.5)");
-  expect(runtime).toContain("squashFactor: Number(diamondSourceParameters?.squashFactor ?? 0.98)");
+  expect(runtime).toContain("const geometryFactor = resolvedOptics.geometryFactor;");
+  expect(runtime).toContain("const squashFactor = resolvedOptics.squashFactor;");
   const bvhAdapter = readFileSync("src/lib/aurum/aurum-diamond-bvh-experimental.ts", "utf8");
   expect(bvhAdapter).toContain("geometryFactor: Number(options.geometryFactor ?? 0.5)");
   expect(bvhAdapter).toContain("squashFactor: Number(options.squashFactor ?? 0.98)");
