@@ -309,8 +309,6 @@ export default function RhinoViewportTrainer3D(props: Props) {
       controls?.addEventListener("change", onControlsChange);
       controls?.addEventListener("start", onControlsStart);
       controls?.addEventListener("end", onControlsEnd);
-      controls?.addEventListener("start", onControlsStart);
-      controls?.addEventListener("end", onControlsEnd);
       // Damping solo anima mientras el usuario manipula la cámara; no mantiene 4 render loops permanentes.
       let animationFrame = 0;
       const animateControls = () => {
