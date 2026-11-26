@@ -742,7 +742,7 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
   return (
     <div className="space-y-6">
       {errorGastos ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="text-sm font-semibold text-destructive">No se pudieron cargar los gastos</p><p className="mt-1 text-xs text-muted-foreground">{detalleGastos instanceof Error ? detalleGastos.message : "Los indicadores financieros están incompletos."}</p><button type="button" onClick={() => void recargarGastos()} className="mt-3 rounded-lg border px-3 py-1.5 text-sm">Reintentar</button></div> : null}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard etiqueta="Ingresos (entregados)" valor={eur.format(ingresos)} tono="positivo" />
         <StatCard etiqueta="Gastos" valor={eur.format(totalGastos)} tono="negativo" />
         <StatCard
@@ -1292,7 +1292,7 @@ function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
     <>
       <div className="space-y-4">
         {errorPedidos || errorInventario || errorGastos || errorSedes || errorUsuarios ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="font-semibold text-destructive">Respaldo incompleto: no todos los datos pudieron cargarse</p><p className="mt-1 text-sm text-muted-foreground">No descargues una copia como si estuviera completa hasta recuperar las consultas fallidas.</p><div className="mt-3 flex flex-wrap gap-2">{errorPedidos ? <button type="button" onClick={() => void recargarPedidos()} className="rounded-lg border px-3 py-1.5 text-sm">Pedidos</button> : null}{errorInventario ? <button type="button" onClick={() => void recargarInventario()} className="rounded-lg border px-3 py-1.5 text-sm">Inventario</button> : null}{errorGastos ? <button type="button" onClick={() => void recargarGastos()} className="rounded-lg border px-3 py-1.5 text-sm">Gastos</button> : null}{errorSedes ? <button type="button" onClick={() => void recargarSedes()} className="rounded-lg border px-3 py-1.5 text-sm">Sedes</button> : null}{errorUsuarios ? <button type="button" onClick={() => void recargarUsuarios()} className="rounded-lg border px-3 py-1.5 text-sm">Usuarios</button> : null}</div></div> : null}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <Panel titulo="Descargar respaldo">
           <div className="grid gap-3 p-5 sm:grid-cols-2">
             <BotonRespaldo
@@ -1641,7 +1641,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
   return (
     <div className="space-y-4">
       {errorListado ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="font-semibold text-destructive">No se pudo cargar el equipo</p><p className="mt-1 text-sm text-muted-foreground">{detalleListado instanceof Error ? detalleListado.message : "El listado de usuarios no está disponible."}</p><button type="button" onClick={() => void recargarListado()} className="mt-3 rounded-lg border px-3 py-1.5 text-sm">Reintentar</button></div> : null}
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
       <Panel titulo="Nuevo usuario">
         <form onSubmit={enviar} className="space-y-3 p-6">
           <input
