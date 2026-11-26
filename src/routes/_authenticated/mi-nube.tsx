@@ -225,7 +225,7 @@ function MiNubePage() {
         const { data: participante, error: errorParticipante } = await supabase.from("ecosistema_participantes").select("metadata").eq("id", participanteId).maybeSingle();
         if (errorParticipante) throw errorParticipante;
         const metadata = (participante?.metadata ?? {}) as Record<string, unknown>;
-        const plan = typeof metadata.plan_comercial === "string" && metadata.plan_comercial.trim() ? metadata.plan_comercial.trim() : "emprendedor";
+        const plan = typeof metadata["plan_comercial"] === "string" && metadata["plan_comercial"].trim() ? metadata["plan_comercial"].trim() : "emprendedor";
         const { data: cuota, error: errorPlan } = await supabase.from("aurum_plan_quotas").select("almacenamiento_mib,carpetas_mi_nube_max").eq("plan_id", plan).maybeSingle();
         if (errorPlan) throw errorPlan;
         if (!cuota) throw new Error("No se encontró la cuota del plan comercial.");
@@ -1300,7 +1300,7 @@ function MiNubePage() {
         throw new Error("Ya existe una carpeta con ese nombre en Mi Nube.");
       }
 
-      const entradas: Array<{ name: string; id?: string; metadata?: Record<string, unknown> | null }> = [];
+      const entradas: Array<{ name: string; id?: string | null; metadata?: Record<string, unknown> | null }> = [];
       for (let offset = 0; ; offset += 1000) {
         const { data: pagina, error: errorLista } = await supabase.storage.from(BUCKET).list(raizAnterior, {
           limit: 1000,

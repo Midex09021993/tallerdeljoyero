@@ -1290,7 +1290,6 @@ function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
   return (
     <>
-      <div className="space-y-4">
         {errorPedidos || errorInventario || errorGastos || errorSedes || errorUsuarios ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="font-semibold text-destructive">Respaldo incompleto: no todos los datos pudieron cargarse</p><p className="mt-1 text-sm text-muted-foreground">No descargues una copia como si estuviera completa hasta recuperar las consultas fallidas.</p><div className="mt-3 flex flex-wrap gap-2">{errorPedidos ? <button type="button" onClick={() => void recargarPedidos()} className="rounded-lg border px-3 py-1.5 text-sm">Pedidos</button> : null}{errorInventario ? <button type="button" onClick={() => void recargarInventario()} className="rounded-lg border px-3 py-1.5 text-sm">Inventario</button> : null}{errorGastos ? <button type="button" onClick={() => void recargarGastos()} className="rounded-lg border px-3 py-1.5 text-sm">Gastos</button> : null}{errorSedes ? <button type="button" onClick={() => void recargarSedes()} className="rounded-lg border px-3 py-1.5 text-sm">Sedes</button> : null}{errorUsuarios ? <button type="button" onClick={() => void recargarUsuarios()} className="rounded-lg border px-3 py-1.5 text-sm">Usuarios</button> : null}</div></div> : null}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <Panel titulo="Descargar respaldo">
@@ -1880,6 +1879,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
     </div>
   );
 }

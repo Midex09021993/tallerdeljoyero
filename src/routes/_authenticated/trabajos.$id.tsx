@@ -456,7 +456,8 @@ function TrabajoOperativoPage() {
       encabezadoMovilCompacto
       atrasMovil={false}
     >
-      <div className="mx-auto max-w-3xl space-y-4">\n        {(errorTiempos || errorArchivosTecnicos || errorIncidencias || errorTrabajo || errorEspecialidades || errorPedidoTrabajo || errorMateriales) ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">La ficha de trabajo contiene datos incompletos. <button type="button" onClick={() => { void recargarTiempos(); void recargarArchivosTecnicos(); void recargarIncidencias(); void recargarTrabajo(); void recargarEspecialidades(); void recargarPedidoTrabajo(); void recargarMateriales(); }} className="ml-2 underline font-semibold">Reintentar consultas</button></div> : null>
+      <div className="mx-auto max-w-3xl space-y-4">
+        {(errorTiempos || errorArchivosTecnicos || errorIncidencias || errorTrabajo || errorEspecialidades || errorPedidoTrabajo || errorMateriales) ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">La ficha de trabajo contiene datos incompletos. <button type="button" onClick={() => { void recargarTiempos(); void recargarArchivosTecnicos(); void recargarIncidencias(); void recargarTrabajo(); void recargarEspecialidades(); void recargarPedidoTrabajo(); void recargarMateriales(); }} className="ml-2 underline font-semibold">Reintentar consultas</button></div> : null}
         <nav aria-label="Ruta de navegación" className="flex items-center gap-3 px-1 pt-3 pb-1 sm:pt-4">
           <Link
             to="/operario"
