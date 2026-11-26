@@ -194,6 +194,8 @@ export default function RhinoViewportTrainer3D(props: Props) {
   const controlsRefs = useRef<Record<string, OrbitControls | null>>({});
   const cameraRefs = useRef<Record<string, THREE.Camera | null>>({});
   const viewStateRefs = useRef<Record<string, { position: [number, number, number]; target: [number, number, number]; zoom?: number }>>({});
+  const onZoomRef = useRef(props.onZoom);
+  onZoomRef.current = props.onZoom;
   useEffect(() => {
     const renderers: THREE.WebGLRenderer[] = [];
     const observers: ResizeObserver[] = [];
@@ -273,9 +275,9 @@ export default function RhinoViewportTrainer3D(props: Props) {
         draw();
         if (camera instanceof THREE.PerspectiveCamera && view.id === "Perspective") {
           const distance = camera.position.distanceTo(controls?.target ?? new THREE.Vector3());
-          props.onZoom(Math.max(0.35, Math.min(2.2, 5.6 / Math.max(0.001, distance))));
+          onZoomRef.current(Math.max(0.35, Math.min(2.2, 5.6 / Math.max(0.001, distance))));
         } else if (camera instanceof THREE.OrthographicCamera) {
-          props.onZoom(Math.max(0.35, Math.min(2.2, camera.zoom)));
+          onZoomRef.current(Math.max(0.35, Math.min(2.2, camera.zoom)));
         }
       };
       controls?.addEventListener("change", onControlsChange);
@@ -327,7 +329,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
         if (obj instanceof THREE.Mesh) { obj.geometry.dispose(); const m = obj.material; if (Array.isArray(m)) m.forEach(x => x.dispose()); else m.dispose(); }
       });
     };
-  }, [props.maximized, props.onZoom]);
+  }, [props.maximized]);
 
   useEffect(() => {
     const camera = cameraRefs.current["Perspective"];
