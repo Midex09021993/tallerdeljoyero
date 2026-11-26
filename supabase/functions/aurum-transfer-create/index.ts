@@ -72,40 +72,6 @@ function normalizeType(type: unknown): string | null {
 }
 type Meta = { name: string; size: number; type: string; path: string };
 
-async function sweepOrphanUploads(supabase: ReturnType<typeof createClient>) {
-  try {
-    const { data: folders, error: rootError } = await supabase.storage.from(BUCKET).list("", { limit: 100, offset: 0 });
-    if (rootError) throw rootError;
-    const candidates = (folders ?? []).filter((entry) => isTransferTokenFolder(entry.name)).slice(0, MAX_ORPHAN_FOLDERS_PER_SWEEP);
-    for (const folder of candidates) {
-      const tokenHash = await sha256(folder.name);
-      const { data: registered, error: lookupError } = await supabase
-        .from("aurum_transfers")
-        .select("id")
-        .eq("token_hash", tokenHash)
-        .maybeSingle();
-      if (lookupError) {
-        console.warn("[aurum-transfer-create] orphan lookup", lookupError);
-        continue;
-      }
-      if (registered) continue;
-
-      const { data: objects, error: listError } = await supabase.storage.from(BUCKET).list(folder.name, { limit: 100, offset: 0 });
-      if (listError) {
-        console.warn("[aurum-transfer-create] orphan list", listError);
-        continue;
-      }
-      const paths = staleUploadPaths(folder.name, objects ?? []);
-      if (paths.length) {
-        const { error: removeError } = await supabase.storage.from(BUCKET).remove(paths);
-        if (removeError) console.warn("[aurum-transfer-create] orphan remove", removeError);
-      }
-    }
-  } catch (error) {
-    // Limpieza preventiva: nunca debe bloquear una transferencia legítima.
-    console.warn("[aurum-transfer-create] orphan sweep", error);
-  }
-}
 
 function validate(files: unknown): InFile[] | string {
   if (!Array.isArray(files) || !files.length) return "Selecciona al menos un archivo.";
@@ -131,6 +97,41 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  async function sweepOrphanUploads() {
+    try {
+      const { data: folders, error: rootError } = await supabase.storage.from(BUCKET).list("", { limit: 100, offset: 0 });
+      if (rootError) throw rootError;
+      const candidates = (folders ?? []).filter((entry) => isTransferTokenFolder(entry.name)).slice(0, MAX_ORPHAN_FOLDERS_PER_SWEEP);
+      for (const folder of candidates) {
+        const tokenHash = await sha256(folder.name);
+        const { data: registered, error: lookupError } = await supabase
+          .from("aurum_transfers")
+          .select("id")
+          .eq("token_hash", tokenHash)
+          .maybeSingle();
+        if (lookupError) {
+          console.warn("[aurum-transfer-create] orphan lookup", lookupError);
+          continue;
+        }
+        if (registered) continue;
+  
+        const { data: objects, error: listError } = await supabase.storage.from(BUCKET).list(folder.name, { limit: 100, offset: 0 });
+        if (listError) {
+          console.warn("[aurum-transfer-create] orphan list", listError);
+          continue;
+        }
+        const paths = staleUploadPaths(folder.name, objects ?? []);
+        if (paths.length) {
+          const { error: removeError } = await supabase.storage.from(BUCKET).remove(paths);
+          if (removeError) console.warn("[aurum-transfer-create] orphan remove", removeError);
+        }
+      }
+    } catch (error) {
+      // Limpieza preventiva: nunca debe bloquear una transferencia legítima.
+      console.warn("[aurum-transfer-create] orphan sweep", error);
+    }
+  }
 
   try {
     const body = await req.json().catch(() => ({}));
