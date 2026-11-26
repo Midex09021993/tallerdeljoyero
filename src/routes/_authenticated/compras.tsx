@@ -22,7 +22,7 @@ function ComprasPage() {
   const [lineas, setLineas] = useState<Linea[]>([{ material_id: "", cantidad: "", costo_unitario: "", unidad: "" }]);
   const [guardando, setGuardando] = useState(false);
 
-  const { data: compras = [] } = useQuery({
+  const { data: compras = [], isError: errorCompras, refetch: recargarCompras } = useQuery({
     queryKey: ["compras", sesion?.participante?.id],
     staleTime: 60_000,
     enabled: Boolean(sesion?.participante?.id && sesion?.esAdmin),
@@ -36,7 +36,7 @@ function ComprasPage() {
       return data ?? [];
     },
   });
-  const { data: materiales = [] } = useQuery({
+  const { data: materiales = [], isError: errorMateriales, refetch: recargarMateriales } = useQuery({
     queryKey: ["compras-materiales", sesion?.participante?.id],
     staleTime: 60_000,
     enabled: Boolean(sesion?.participante?.id),
