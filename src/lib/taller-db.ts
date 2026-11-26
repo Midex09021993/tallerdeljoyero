@@ -930,7 +930,7 @@ export function useContratos(incluirFinanzas = true) {
       const filas = (data ?? []) as unknown as Array<Record<string, unknown>>;
       const cotizacionIds = [...new Set(filas.map((c) => textoCampo(c, "cotizacion_id")).filter(Boolean))];
       const sedeIds = [...new Set(filas.map((c) => textoCampo(c, "sede_id")).filter(Boolean))];
-      const [{ data: cotizacionesMoneda }, { data: identidadesMoneda }] = await Promise.all([
+      const [consultaCotizacionesMoneda, consultaIdentidadesMoneda] = await Promise.all([
         cotizacionIds.length
           ? supabase.from("cotizaciones").select("id,moneda").in("id", cotizacionIds)
           : Promise.resolve({ data: [] as Array<{ id: string; moneda: string }> }),
