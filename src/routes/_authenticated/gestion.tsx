@@ -414,7 +414,7 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
   return (
     <div className="space-y-6">
       {errorInventario || errorSedes || errorGastos ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm"><p className="font-semibold text-destructive">Resumen parcialmente disponible</p><p className="mt-1 text-muted-foreground">No se pudo verificar completamente inventario, sedes o gastos. Los indicadores afectados pueden estar incompletos.</p><div className="mt-3 flex flex-wrap gap-2">{errorInventario ? <button type="button" onClick={() => void recargarInventario()} className="rounded-lg border px-3 py-1.5">Reintentar inventario</button> : null}{errorSedes ? <button type="button" onClick={() => void recargarSedes()} className="rounded-lg border px-3 py-1.5">Reintentar sedes</button> : null}{errorGastos ? <button type="button" onClick={() => void recargarGastos()} className="rounded-lg border px-3 py-1.5">Reintentar gastos</button> : null}</div><p className="mt-2 text-xs text-muted-foreground">{[detalleInventario,detalleSedes,detalleGastos].filter(Boolean).map((e)=>e instanceof Error?e.message:"").filter(Boolean).join(" · ")}</p></div> : null}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <button type="button" onClick={() => window.location.assign("/pedidos?autorizacion=pendientes")} className="text-left">
           <StatCard
             etiqueta="Pendientes de autorización"
