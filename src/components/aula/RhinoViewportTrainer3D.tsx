@@ -114,9 +114,9 @@ function makeJewelryScene() {
     const v: number[] = [];
     const idx: number[] = [];
     // Table is a 16-sided flat polygon, with center vertex for clean triangulation.
-    v.push(0, rings[0].y, 0);
+    v.push(0, rings[0]!.y, 0);
     for (let r = 1; r <= 5; r++) {
-      const ring = rings[r];
+      const ring = rings[r]!;
       for (let k = 0; k < ring.count; k++) {
         const angle = (k / ring.count) * Math.PI * 2 + Math.PI / 16;
         v.push(Math.cos(angle) * ring.r, ring.y, Math.sin(angle) * ring.r);
@@ -139,7 +139,7 @@ function makeJewelryScene() {
     }
     const pavilionStart = 1 + 4 * 16;
     const culetIndex = v.length / 3;
-    v.push(0, rings[6].y, 0);
+    v.push(0, rings[6]!.y, 0);
     for (let k = 0; k < 16; k++) {
       const a = pavilionStart + k, b = pavilionStart + ((k + 1) % 16);
       idx.push(a, culetIndex, b);
@@ -193,7 +193,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
   const hostRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const controlsRefs = useRef<Record<string, OrbitControls | null>>({});
   const cameraRefs = useRef<Record<string, THREE.Camera | null>>({});
-  const viewStateRefs = useRef<Record<string, { position: [number, number, number]; target: [number, number, number]; zoom?: number }>>({});
+  const viewStateRefs = useRef<Record<string, { position: [number, number, number]; target: [number, number, number]; zoom?: number | undefined }>>({});
   const onZoomRef = useRef(props.onZoom);
   const onActionRef = useRef(props.onAction);
   onZoomRef.current = props.onZoom;
