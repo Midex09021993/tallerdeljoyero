@@ -66,5 +66,10 @@ export const Route = createFileRoute("/directorio")({
       scripts: [{ type: "application/ld+json", children: JSON.stringify(collectionSchema) }],
     };
   },
-  component: () => <ComunidadPublicaPage initialData={Route.useLoaderData() ?? undefined} />,
+  component: DirectorioComponent,
 });
+
+function DirectorioComponent() {
+  const data = Route.useLoaderData();
+  return <ComunidadPublicaPage initialData={data ?? undefined} />;
+}
