@@ -369,7 +369,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
       <button type="button" onClick={() => props.onActivate(item.id)} onDoubleClick={() => { const restoring = props.maximized === item.id; props.onMaximize(item.id); props.onAction(restoring ? "restore" : "maximize"); }} className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#242b35] px-3 py-2 text-left">
         <span className="text-[10px] font-bold tracking-[.13em] text-slate-200">{item.title}</span><span className="text-[9px] text-slate-500">{item.subtitle}</span>
       </button>
-      <div ref={el => { hostRefs.current[item.id] = el; }} onPointerDown={(e) => { props.onActivate(item.id); pointerStart.current[item.id] = { x: e.clientX, y: e.clientY, shift: e.shiftKey, button: e.button };
+      <div ref={el => { hostRefs.current[item.id] = el; }} onPointerDownCapture={(e) => { props.onActivate(item.id); pointerStart.current[item.id] = { x: e.clientX, y: e.clientY, shift: e.shiftKey, button: e.button };
           const controls = controlsRefs.current[item.id];
           if (controls && e.button === 2) {
             if (item.id === "Perspective") controls.mouseButtons.RIGHT = e.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
@@ -380,6 +380,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
             }
           } }} onContextMenu={(e) => e.preventDefault()} onPointerUp={(e) => { const start = pointerStart.current[item.id]; pointerStart.current[item.id] = null;
           const controls = controlsRefs.current[item.id];
+          if (controls && item.id === "Perspective") controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
           if (controls && item.id !== "Perspective") { controls.mouseButtons.RIGHT = THREE.MOUSE.PAN; controls.enableRotate = false; }
           if (!start || Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)<5) return; }} onDoubleClick={() => { const restoring = props.maximized === item.id; props.onMaximize(item.id); props.onAction(restoring ? "restore" : "maximize"); }} className="relative min-h-0 flex-1 bg-[#10161e]" style={{ touchAction: "none" }}>
         <div className="pointer-events-none absolute bottom-2 left-3 z-10 text-[10px] font-medium uppercase tracking-wider text-slate-500">{item.id === "Perspective" ? "PERSPECTIVE · ACTIVE CAMERA" : item.id.toUpperCase() + " · ORTHOGRAPHIC"}</div>
