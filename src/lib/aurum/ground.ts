@@ -14,12 +14,15 @@ export interface AurumGroundController {
 }
 
 export function createAurumGround(THREE: any, scene: any): AurumGroundController {
+  // Seamless studio floor: on the standard white presentation backdrop the
+  // finite plane must not reveal a hard polygon edge. Reflection presets can
+  // explicitly restore their authored floor appearance below.
   const material = new THREE.MeshStandardMaterial({
-    color: 0xe3e1dd,
-    metalness: .02,
-    roughness: .82,
+    color: 0xffffff,
+    metalness: 0,
+    roughness: 1,
     transparent: true,
-    opacity: .96,
+    opacity: .06,
     depthWrite: false
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), material);
@@ -130,19 +133,29 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     updateFromPreset(preset) {
       if (!preset) return;
       presetGroundVisible = preset.groundVisible !== false;
-      mesh.userData.aurumGroundReflectionRequested = preset.groundReflection === true;
+      const reflectionRequested = preset.groundReflection === true;
+      mesh.userData.aurumGroundReflectionRequested = reflectionRequested;
       // Match the authored iJewel floor footprint (8 for matte, 10 for reflective).
       const groundSize = Number(preset.groundSize);
       mesh.scale.setScalar(Number.isFinite(groundSize) && groundSize > 0 ? groundSize / 40 : 1);
       const shadowStrength = Number.isFinite(Number(preset.shadowIntensity)) ? Number(preset.shadowIntensity) : .22;
-      // Keep a subtle photographic contact shadow in every grounded product scene,
-      // not only the iJewel reference preset. Transparent scenes remain shadow-free.
+      // Contact shadow remains an independent photographic layer. Non-reflective
+      // scenes use a nearly invisible seamless floor instead of a gray polygon.
       bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + shadowStrength * .48));
       presetShadowVisible = shadowStrength > .03;
+      if (reflectionRequested) {
+        mesh.material.color.setHex(preset.ground ?? 0xffffff);
+        mesh.material.roughness = preset.groundRoughness ?? .82;
+        mesh.material.metalness = preset.groundMetalness ?? 0;
+        mesh.material.opacity = .96;
+      } else {
+        mesh.material.color.setHex(0xffffff);
+        mesh.material.roughness = 1;
+        mesh.material.metalness = 0;
+        mesh.material.opacity = .06;
+      }
+      mesh.material.needsUpdate = true;
       syncGroundVisibility();
-      if (preset.ground != null) mesh.material.color.setHex(preset.ground);
-      if (preset.groundRoughness != null) mesh.material.roughness = preset.groundRoughness;
-      if (preset.groundMetalness != null) mesh.material.metalness = preset.groundMetalness;
     },
     positionUnderModel(box) {
       if (!box) return;
