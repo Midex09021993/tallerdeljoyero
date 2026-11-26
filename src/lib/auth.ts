@@ -56,14 +56,15 @@ export function useSesion() {
     queryKey: ["sesion"], staleTime: 60_000, gcTime: 5 * 60 * 1000,
     // Reutiliza la sesión durante 60 s; al vencer, el foco vuelve a validar roles y acceso.
     // SIGNED_IN/USER_UPDATED invalidan explícitamente esta query y SIGNED_OUT limpia la caché.
-    refetchOnMount: true, refetchOnWindowFocus: true, refetchOnReconnect: true, retry: 1,
+    refetchOnMount: true, refetchOnWindowFocus: true, refetchOnReconnect: true, retry: 2,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 4_000),
     queryFn: async (): Promise<Sesion | null> => {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) console.warn("[auth] Error al leer sesión persistida", sessionError.message);
+      if (sessionError) throw sessionError;
       const user = sessionData.session?.user;
       if (!user) return null;
 
-      const [{ data: perfil }, { data: roles }, { data: areas }, { data: cuentas }] = await Promise.all([
+      const [perfilRes, rolesRes, areasRes, cuentasRes] = await Promise.all([
         supabase.from("profiles")
           .select("id, usuario, nombre, apellidos, dni, telefono, sede_id, participante_id, activo, acceso_desde, acceso_hasta")
           .eq("id", user.id).maybeSingle(),
@@ -73,6 +74,15 @@ export function useSesion() {
           .eq("user_id", user.id).eq("estado", "activo")
           .order("created_at", { ascending: true }),
       ]);
+
+      // Una consulta fallida no equivale a un perfil, rol o vínculo vacío.
+      // React Query reintenta el conjunto antes de exponer el error a la UI.
+      const errorDatosSesion = perfilRes.error ?? rolesRes.error ?? areasRes.error ?? cuentasRes.error;
+      if (errorDatosSesion) throw errorDatosSesion;
+      const perfil = perfilRes.data;
+      const roles = rolesRes.data;
+      const areas = areasRes.data;
+      const cuentas = cuentasRes.data;
 
       const listaRoles = (roles ?? []).map((r) => r.role as Rol);
       const hoy = new Date().toISOString().slice(0, 10);
@@ -91,11 +101,12 @@ export function useSesion() {
       ]));
       let participantes: Sesion["participantes"] = [];
       if (participanteIds.length > 0) {
-        const { data } = await supabase.from("ecosistema_participantes")
+        const { data, error } = await supabase.from("ecosistema_participantes")
           .select("id, nombre, ciudad, sede_id")
           .in("id", participanteIds)
           .eq("estado", "activo")
           .order("nombre");
+        if (error) throw error;
         participantes = (data ?? []) as Sesion["participantes"];
       }
 
@@ -106,7 +117,7 @@ export function useSesion() {
       let participanteResuelto = participantes[0] ?? null;
 
       if (!participanteResuelto && perfil?.sede_id) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("ecosistema_participantes")
           .select("id, nombre, ciudad, sede_id")
           .eq("sede_id", perfil.sede_id)
@@ -114,6 +125,7 @@ export function useSesion() {
           .order("nombre")
           .limit(1)
           .maybeSingle();
+        if (error) throw error;
         participanteResuelto = (data ?? null) as Sesion["participante"];
       }
 
