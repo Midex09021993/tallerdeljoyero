@@ -277,7 +277,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
           camera.left = -halfH * (w / h); camera.right = halfH * (w / h);
           camera.top = halfH; camera.bottom = -halfH;
         }
-        camera.updateProjectionMatrix();
+        if (camera instanceof THREE.PerspectiveCamera || camera instanceof THREE.OrthographicCamera) camera.updateProjectionMatrix();
         draw();
       });
       observer.observe(host);
@@ -297,7 +297,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
   }, [props.maximized]);
 
   useEffect(() => {
-    const camera = cameraRefs.current.Perspective;
+    const camera = cameraRefs.current["Perspective"];
     if (camera instanceof THREE.PerspectiveCamera) {
       const base = 5.6;
       camera.position.setLength(base / Math.max(0.5, props.zoom));
