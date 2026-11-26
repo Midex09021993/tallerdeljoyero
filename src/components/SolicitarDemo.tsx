@@ -19,7 +19,7 @@ const intereses = [
 
 const inputClass = "w-full min-h-[40px] rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25 lg:min-h-[36px] lg:py-1.5";
 
-export function SolicitarDemo({ className = "" }: Props) {
+export function SolicitarDemo({ className = "", origen = "homepage" }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [cargando, setCargando] = useState(false);
