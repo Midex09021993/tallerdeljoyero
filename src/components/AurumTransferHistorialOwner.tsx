@@ -53,7 +53,7 @@ export function AurumTransferHistorialOwner() {
   const [filtro, setFiltro] = useState<"todas" | "disponibles" | "descargadas" | "expiradas">("todas");
   const [busqueda, setBusqueda] = useState("");
 
-  const { data: metrics, isLoading: metricsLoading, error: metricsError } = useQuery({
+  const { data: metrics, isLoading: metricsLoading, error: metricsError, refetch: recargarMetrics } = useQuery({
     queryKey: ["aurum-transfer-usage-metrics"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_aurum_transfer_usage_metrics");
@@ -71,7 +71,7 @@ export function AurumTransferHistorialOwner() {
     staleTime: 30_000,
   });
 
-  const { data = [], isLoading: activityLoading, error: activityError } = useQuery({
+  const { data = [], isLoading: activityLoading, error: activityError, refetch: recargarActivity } = useQuery({
     queryKey: ["aurum-transfer-usage-owner"],
     queryFn: async () => {
       const { data, error } = await supabase.from("aurum_transfer_usage")
