@@ -30,7 +30,7 @@ export function EspecialidadesOwner() {
   const [form, setForm] = useState({ nombre: "", categoria: "", activa: true });
   const [asignar, setAsignar] = useState<Participante | null>(null);
 
-  const { data: especialidades = [], isLoading } = useQuery({
+  const { data: especialidades = [], isLoading, error: especialidadesError, refetch: recargarEspecialidades } = useQuery({
     queryKey: ["ecosistema-especialidades", "todas"],
     staleTime: 60_000,
     queryFn: async () => {
@@ -39,7 +39,7 @@ export function EspecialidadesOwner() {
       return (data ?? []) as Especialidad[];
     },
   });
-  const { data: participantes = [] } = useQuery({
+  const { data: participantes = [], error: participantesError, refetch: recargarParticipantes } = useQuery({
     // Comparte la caché del directorio del dueño para evitar una petición duplicada.
     queryKey: ["ecosistema-participantes"],
     // Las mutaciones del catálogo invalidan el prefijo ecosistema-participantes.
