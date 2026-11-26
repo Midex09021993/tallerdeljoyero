@@ -544,7 +544,6 @@ export interface FileRoutesByFullPath {
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/pizarra': typeof AuthenticatedPizarraRoute
-  '/pizarra': typeof AuthenticatedPizarraRoute
   '/compras': typeof AuthenticatedComprasRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
