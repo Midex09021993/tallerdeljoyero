@@ -1879,7 +1879,7 @@ export function useUsuarios() {
     queryKey: ["usuarios", "respaldo"],
     staleTime: 60_000,
     queryFn: async (): Promise<Usuario[]> => {
-      const [{ data: perfiles, error }, { data: roles }, { data: areas }] = await Promise.all([
+      const [{ data: perfiles, error: errorPerfiles }, { data: roles, error: errorRoles }, { data: areas, error: errorAreas }] = await Promise.all([
         supabase
           .from("profiles")
           .select(
@@ -1889,7 +1889,9 @@ export function useUsuarios() {
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("user_areas").select("user_id, area"),
       ]);
-      if (error) throw error;
+      if (errorPerfiles) throw errorPerfiles;
+      if (errorRoles) throw errorRoles;
+      if (errorAreas) throw errorAreas;
       return (perfiles ?? []).map((p) => ({
         ...p,
         roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as string),
@@ -1909,9 +1911,10 @@ export function useInventario() {
         .select("id, material, stock, unidad, minimo, categoria, activo, sede_id")
         .order("material");
       if (error) throw error;
-      const { data: asignaciones } = await supabase
+      const { data: asignaciones, error: errorAsignaciones } = await supabase
         .from("material_areas")
         .select("material_id, area");
+      if (errorAsignaciones) throw errorAsignaciones;
       return (data ?? []).map((m) => ({
         ...m,
         stock: Number(m.stock),
