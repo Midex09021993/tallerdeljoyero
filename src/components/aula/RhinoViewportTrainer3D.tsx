@@ -385,6 +385,15 @@ export default function RhinoViewportTrainer3D(props: Props) {
     else if (action === "fit") { endTarget.set(0, 0, 0); if (camera instanceof THREE.PerspectiveCamera) endPos.set(3.8, 2.65, 4.6); else endZoom = 1; }
     else if (action === "pan") { const shift = new THREE.Vector3(0.5, 0.15, -0.25); endTarget.add(shift); endPos.add(shift); }
     else if (action === "zoom") { if (camera instanceof THREE.PerspectiveCamera) endPos.copy(startTarget).add(startPos.clone().sub(startTarget).multiplyScalar(0.78)); else endZoom = startZoom * 1.25; }
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const originalDamping = controls.enableDamping;
+    controls.enableDamping = false;
+    if (reduceMotion) {
+      camera.position.copy(endPos); controls.target.copy(endTarget);
+      if (camera instanceof THREE.OrthographicCamera) { camera.zoom = endZoom; camera.updateProjectionMatrix(); }
+      camera.lookAt(controls.target); controls.update(); controls.enableDamping = originalDamping;
+      return;
+    }
     const duration = 1150;
     const started = performance.now();
     const tick = (now: number) => {
@@ -395,10 +404,10 @@ export default function RhinoViewportTrainer3D(props: Props) {
       if (camera instanceof THREE.OrthographicCamera) { camera.zoom = startZoom + (endZoom - startZoom) * t; camera.updateProjectionMatrix(); }
       camera.lookAt(controls.target);
       controls.update();
-      if (raw < 1) demoFrameRef.current = requestAnimationFrame(tick); else demoFrameRef.current = null;
+      if (raw < 1) demoFrameRef.current = requestAnimationFrame(tick); else { demoFrameRef.current = null; controls.enableDamping = originalDamping; }
     };
     demoFrameRef.current = requestAnimationFrame(tick);
-    return () => { if (demoFrameRef.current !== null) cancelAnimationFrame(demoFrameRef.current); demoFrameRef.current = null; };
+    return () => { if (demoFrameRef.current !== null) cancelAnimationFrame(demoFrameRef.current); demoFrameRef.current = null; controls.enableDamping = originalDamping; };
   }, [props.demoAction, props.demoToken]);
 
   // El zoom es informativo; no sincronizarlo entre viewports evita que el estado React
