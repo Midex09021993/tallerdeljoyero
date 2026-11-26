@@ -1050,7 +1050,7 @@ test("diamond-to-diamond profile synchronization keeps the BVH cache identity cu
   const entryBlock = runtime.slice(runtime.indexOf("entries.set(mesh, {"), runtime.indexOf("});", runtime.indexOf("entries.set(mesh, {")) + 3);
   const processBlock = runtime.slice(runtime.indexOf("const processMesh ="), runtime.indexOf("const materials = Array.isArray(mesh.material)", runtime.indexOf("const processMesh =")));
   expect(entryBlock).toContain("get gemId() { return entryGemId; }");
-  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>"));
+  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>")));
   expect(profileBlock).toContain("entryGemId = profileId");
   expect(processBlock).toContain("existing.gemId === activeGemId");
   expect(processBlock).toContain("existing.activeGemFamily === activeGemFamily");
@@ -1059,7 +1059,7 @@ test("diamond-to-diamond profile synchronization keeps the BVH cache identity cu
 
 test("white diamond 1 and 2 restore neutral catalog RGB boost on initialization and profile switches", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
-  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>"));
+  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>")));
   expect(runtime).toContain("Catalog .dmat values are authoritative for neutral/white diamonds.");
   expect(runtime).toContain("const boostFactors = parameters.boostFactors ?? profile?.boostFactors;");
   expect(runtime).toContain("rgbBoost: boostFactors");
@@ -1088,7 +1088,7 @@ test("diamond BVH logs complete effective optical state at initialization and af
 
 test("BVH diamond profile synchronization always resets RGB boost to catalog or neutral values", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
-  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>"));
+  const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>")));
   expect(profileBlock).toContain('const boost = profileId === "diamante_azul" ? [2, 2, 2]');
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).toContain("entryGemId = profileId");
