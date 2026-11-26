@@ -11,6 +11,8 @@ const corsHeaders = {
 const MAX_TOTAL_BYTES = 2 * 1024 * 1024 * 1024;
 const MAX_FILES = 10;
 const BUCKET = "aurum-transfer";
+// Cursor local por instancia para recorrer páginas del bucket sin una consulta ilimitada.
+let orphanSweepOffset = 0;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -100,10 +102,14 @@ Deno.serve(async (req) => {
 
   async function sweepOrphanUploads() {
     try {
-      const { data: folders, error: rootError } = await supabase.storage.from(BUCKET).list("", { limit: 100, offset: 0 });
+      const offset = orphanSweepOffset;
+      const { data: folders, error: rootError } = await supabase.storage.from(BUCKET).list("", { limit: 100, offset });
       if (rootError) throw rootError;
-      const candidates = (folders ?? []).filter((entry) => isTransferTokenFolder(entry.name)).slice(0, MAX_ORPHAN_FOLDERS_PER_SWEEP);
+      orphanSweepOffset = (folders ?? []).length === 100 ? offset + 100 : 0;
+      const candidates = (folders ?? []).filter((entry) => isTransferTokenFolder(entry.name)).slice(0, 25);
+      let cleanedFolders = 0;
       for (const folder of candidates) {
+        if (cleanedFolders >= MAX_ORPHAN_FOLDERS_PER_SWEEP) break;
         const tokenHash = await sha256(folder.name);
         const { data: registered, error: lookupError } = await supabase
           .from("aurum_transfers")
@@ -115,6 +121,7 @@ Deno.serve(async (req) => {
           continue;
         }
         if (registered) continue;
+        cleanedFolders += 1;
   
         const { data: objects, error: listError } = await supabase.storage.from(BUCKET).list(folder.name, { limit: 100, offset: 0 });
         if (listError) {
