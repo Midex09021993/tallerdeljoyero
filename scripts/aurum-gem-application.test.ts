@@ -310,7 +310,7 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
 
   expect(getAurumRuntimeBudget(500_001).diamondSupersampleScaleCap).toBe(1.65);
   expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.5);
-  expect(getAurumRuntimeBudget(900_001).diamondSupersampleScaleCap).toBe(1.7);
+  expect(getAurumRuntimeBudget(900_001).diamondSupersampleScaleCap).toBe(1.5);
   expect(getAurumRuntimeBudget(900_001).diamondLiveSupersampleScaleCap).toBe(1.5);
 
   const bvh = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
@@ -801,14 +801,14 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   expect(runtime).toContain('dispersion: family === "diamante"');
   expect(runtime).toContain('activeGemId === "diamante_vs"');
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
-  expect(runtime).toContain('reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? 0.46)');
+  expect(runtime).toContain('reflectivity: family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? (isWhiteDiamondProfile ? 0.5 : 0.46))');
   expect(runtime).toContain('calibrateSecondaryDiamonds === true');
   expect(runtime).toContain('setSourceDispersion: (nextDispersion: number) => {');
   expect(runtime).not.toContain('if (family !== "diamante" || isProtectedCenter()) return;');
   expect(runtime).toContain('const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;');
   expect(runtime).toContain('gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09))');
   expect(runtime).toContain('"catalog-dmat-secondary-profile"');
-  expect(runtime).toContain('const diamondSourceParameters = calibrateSecondaryDiamond');
+  expect(runtime).toContain('const diamondSourceParameters = (calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")');
   expect(runtime).toContain('diamondSourceParameters.absorptionFactor');
   expect(runtime).toContain('diamondSourceParameters.rayBounces');
   expect(tierBlock).toContain("packageApi.setDiamondOptions(prepared.material");
