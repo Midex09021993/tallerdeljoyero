@@ -42,8 +42,7 @@ export function RegistroTaller({ className = "" }: Props) {
     let tallerCreado = false;
 
     try {
-      const telefonoNormalizado = form.telefono.replace(/\D/g, "");
-      const resultado = await registrarTaller({ data: { ...form, telefono: telefonoNormalizado ? `${codigoPais}${telefonoNormalizado}` : "" } });
+      const resultado = await registrarTaller({ data: form });
       tallerCreado = true;
       registrarEvento("registration_completed", { source: "public_workshop_form" });
       setCorreoEnviado(resultado.correoEnviado === true);
