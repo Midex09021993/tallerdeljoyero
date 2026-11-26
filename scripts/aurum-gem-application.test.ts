@@ -811,7 +811,7 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   expect(runtime).toContain('const diamondSourceParameters = (calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")');
   expect(runtime).toContain('const absorption = resolvedOptics.absorptionFactor;');
   expect(runtime).toContain('diamondSourceParameters.rayBounces');
-  expect(tierBlock).toContain("packageApi.setDiamondOptions(prepared.material");
+  expect(tierBlock).toContain("applyDiamondTierOptics(nextTier)");
   expect(tierBlock).toContain("currentDiamondTier = effectiveTier");
   expect(runtime).toContain("diamondOpticalDiagnostics");
   expect(runtime).toContain('"white-shared-center-profile"');
