@@ -16,23 +16,9 @@ function cleanText(value: unknown, max = 1200) {
   return typeof value === "string" ? value.replace(/\u0000/g, "").trim().slice(0, max) : "";
 }
 
-const requestBuckets = new Map<string, { count: number; resetAt: number }>();
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT = 15;
+import { AuriRateLimiter, clientIpFromHeaders } from "../_shared/auri-rate-limit.ts";
 
-function isRateLimited(ip: string) {
-  const now = Date.now();
-  for (const [key, bucket] of requestBuckets) {
-    if (bucket.resetAt <= now) requestBuckets.delete(key);
-  }
-  const current = requestBuckets.get(ip);
-  if (!current || current.resetAt <= now) {
-    requestBuckets.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return false;
-  }
-  current.count += 1;
-  return current.count > RATE_LIMIT;
-}
+const requestLimiter = new AuriRateLimiter({ limit: 15, windowMs: 10 * 60 * 1000, maxKeys: 10_000 });
 
 const SYSTEM_INSTRUCTION = `Eres AURI, la guía virtual oficial de Taller del Joyero y AURUM LAB. Hablas español claro, amable, cercano y profesional. Tu lema es: "El arte de crear. La inteligencia de gestionar".
 
@@ -130,8 +116,10 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Solicitud no válida." }, 400);
     }
 
-    const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim().slice(0, 80);
-    if (isRateLimited(ip)) return json({ error: "Has enviado varias consultas seguidas. Espera unos minutos antes de volver a escribir." }, 429);
+    const clientIp = clientIpFromHeaders(req.headers);
+    if (requestLimiter.isLimited(clientIp)) {
+      return json({ error: "Has enviado varias consultas seguidas. Espera unos minutos antes de volver a escribir." }, 429);
+    }
 
     const message = cleanText(body.message);
     if (message.length < 2) return json({ error: "Escribe una pregunta para AURI." }, 400);

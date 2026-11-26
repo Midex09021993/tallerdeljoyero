@@ -32,7 +32,7 @@ jobs:
         run: bun run build
 
       - name: AURI assistant regression tests
-        run: bun test scripts/auri-interno.test.ts scripts/auri-tts.test.ts
+        run: bun test scripts/auri-interno.test.ts scripts/auri-tts.test.ts scripts/auri-public-rate-limit.test.ts
       - name: TypeScript
         run: bun run typecheck
       - name: Lint
