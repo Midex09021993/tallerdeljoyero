@@ -183,7 +183,19 @@ export default function RhinoViewportTrainer3D(props: Props) {
     };
   }, []);
 
-  useEffect(() => {\n    const camera = cameraRefs.current.Perspective;\n    if (camera instanceof THREE.PerspectiveCamera) {\n      const base = 7.5;\n      camera.position.setLength(base / Math.max(0.5, props.zoom));\n      camera.updateProjectionMatrix();\n    }\n    for (const id of ["Top", "Front", "Right"]) {\n      const ortho = cameraRefs.current[id];\n      if (ortho instanceof THREE.OrthographicCamera) { ortho.zoom = props.zoom; ortho.updateProjectionMatrix(); }\n    }\n  }, [props.zoom]);\n  const pointerStart = useRef<Record<string, { x: number; y: number; shift: boolean; button: number } | null>>({});
+  useEffect(() => {
+    const camera = cameraRefs.current.Perspective;
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const base = 7.5;
+      camera.position.setLength(base / Math.max(0.5, props.zoom));
+      camera.updateProjectionMatrix();
+    }
+    for (const id of ["Top", "Front", "Right"]) {
+      const ortho = cameraRefs.current[id];
+      if (ortho instanceof THREE.OrthographicCamera) { ortho.zoom = props.zoom; ortho.updateProjectionMatrix(); }
+    }
+  }, [props.zoom]);
+  const pointerStart = useRef<Record<string, { x: number; y: number; shift: boolean; button: number } | null>>({});
   const view = (item: (typeof VIEWS)[number]) => {
     const isActive = props.activeView === item.id;
     const isMax = props.maximized === item.id;
@@ -191,7 +203,9 @@ export default function RhinoViewportTrainer3D(props: Props) {
       <button type="button" onClick={() => props.onActivate(item.id)} onDoubleClick={() => { props.onMaximize(item.id); props.onAction("maximize"); }} className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#242b35] px-3 py-2 text-left">
         <span className="text-[10px] font-bold tracking-[.13em] text-slate-200">{item.title}</span><span className="text-[9px] text-slate-500">{item.subtitle}</span>
       </button>
-      <div ref={el => { hostRefs.current[item.id] = el; }} onWheel={(e) => { if (item.id === "Perspective") { props.onZoom(Math.min(2.2, props.zoom + (e.deltaY < 0 ? 0.12 : -0.08))); props.onAction("zoom"); } }} onPointerDown={(e) => { e.preventDefault(); props.onActivate(item.id); pointerStart.current[item.id] = { x: e.clientX, y: e.clientY, shift: e.shiftKey, button: e.button };\n          const controls = controlsRefs.current[item.id];\n          if (controls && item.id === "Perspective" && e.button === 2) controls.mouseButtons.RIGHT = e.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; }} onContextMenu={(e) => e.preventDefault()} onPointerUp={(e) => { const start = pointerStart.current[item.id]; pointerStart.current[item.id] = null; if (!start || Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)<5) return; if (item.id === "Top" && start.button === 2) props.onAction("panTop"); else if (item.id === "Perspective" && start.button === 2 && start.shift) props.onAction("panPerspective"); else if (item.id === "Perspective" && start.button === 2) { props.onOrbit(props.orbit + (e.clientX-start.x)*0.45); props.onAction("orbit"); } }} onDoubleClick={() => { props.onMaximize(item.id); props.onAction("maximize"); }} className="relative min-h-0 flex-1 bg-[#10161e]">
+      <div ref={el => { hostRefs.current[item.id] = el; }} onWheel={(e) => { if (item.id === "Perspective") { props.onZoom(Math.min(2.2, props.zoom + (e.deltaY < 0 ? 0.12 : -0.08))); props.onAction("zoom"); } }} onPointerDown={(e) => { e.preventDefault(); props.onActivate(item.id); pointerStart.current[item.id] = { x: e.clientX, y: e.clientY, shift: e.shiftKey, button: e.button };
+          const controls = controlsRefs.current[item.id];
+          if (controls && item.id === "Perspective" && e.button === 2) controls.mouseButtons.RIGHT = e.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; }} onContextMenu={(e) => e.preventDefault()} onPointerUp={(e) => { const start = pointerStart.current[item.id]; pointerStart.current[item.id] = null; if (!start || Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)<5) return; if (item.id === "Top" && start.button === 2) props.onAction("panTop"); else if (item.id === "Perspective" && start.button === 2 && start.shift) props.onAction("panPerspective"); else if (item.id === "Perspective" && start.button === 2) { props.onOrbit(props.orbit + (e.clientX-start.x)*0.45); props.onAction("orbit"); } }} onDoubleClick={() => { props.onMaximize(item.id); props.onAction("maximize"); }} className="relative min-h-0 flex-1 bg-[#10161e]">
         <div className="pointer-events-none absolute bottom-2 left-3 z-10 text-[10px] font-medium uppercase tracking-wider text-slate-500">{item.id === "Perspective" ? "PERSPECTIVE · ACTIVE CAMERA" : item.id.toUpperCase() + " · ORTHOGRAPHIC"}</div>
         {item.id === "Perspective" && <div className="pointer-events-none absolute right-2 top-2 z-10 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-[9px] text-slate-400">OrbitControls · zoom · pan</div>}
       </div>
