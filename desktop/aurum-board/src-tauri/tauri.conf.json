@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "AURUM BOARD",
+  "version": "0.1.0",
+  "identifier": "com.aurumlab.aurumboard",
+  "build": {
+    "frontendDist": "../web"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "AURUM BOARD — Aurum Lab",
+        "url": "https://www.tallerdeljoyero.com/pizarra?desktop=1",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "decorations": true,
+        "visible": true,
+        "alwaysOnTop": false,
+        "alwaysOnBottom": false,
+        "skipTaskbar": false
+      }
+    ],
+    "security": {
+      "capabilities": [
+        "aurum-board-remote"
+      ]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Pizarra visual de taller",
+    "longDescription": "AURUM BOARD Desktop: notas visuales sincronizadas con AURUM LAB.",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}
