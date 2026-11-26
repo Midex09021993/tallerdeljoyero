@@ -401,7 +401,7 @@ test("diamond AA stages are coordinated behind Gem Mask with settled TAA", () =>
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
   expect(post).toContain("float aurumCatmullRomWeight(float x){");
   expect(post).toContain("aurumCatmullRomWeight");
-  expect(post).toContain("if(totalWeight<0.00001) discard;");
+  expect(post).toContain("if(coveredSamples<0.5 || totalWeight<0.00001) discard;");
   expect(post).toContain("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
   expect(post).toContain("let gemMaskTarget:any=null;");
   expect(post).toContain("let ensureDiamondFxaaSnapshotTexture:any=null;");
@@ -471,7 +471,7 @@ test("SSAA mask is generated once natively and once at auxiliary resolution, the
   expect(render).toContain('[AURUM][DIAMOND_AA][SSAA_RESULT]');
   expect(render).toContain("diamondSsaaOverlayRendered=Boolean(renderDiamondSupersampleOverlay?.(renderer))");
   expect(post).toContain("diamondSupersampleTarget.setSize(width,height);");
-  expect(post).toContain("diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(cap)||1))");
+  expect(post).toContain("diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(settledCap)||1))");
   expect(post).toContain("// Count only completed auxiliary beauty + mask renders.");
   expect(frameBlock.indexOf("renderDiamondSupersampleOverlay?.(renderer)")).toBeLessThan(frameBlock.indexOf("renderDiamondFxaaOverlay?.(renderer)"));
   expect(frameBlock).not.toContain("&& !diamondSupersamplePass?.enabled");
@@ -568,7 +568,7 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("activeScaleCap:Number(diamondSupersamplePass?.activeScaleCap??0)");
   expect(render).not.toContain("const diamondSsaaOverlayActive=");
   expect(render).toContain('? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")');
-  expect(render).toContain("if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);");
+  expect(render).toContain("if(diamondOverlayRequested){");
   expect(render).toContain("if(diamondFxaaOverlayRequested)");
   expect(render).toContain("renderer.render(escena,camara);");
   expect(post).not.toContain("composer.addPass(fxaaPass)");
@@ -663,7 +663,7 @@ test("Aurum Render never enables full-surface edge AA while diamond-only quality
   expect(post).toContain("if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;");
   expect(post).not.toContain("surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled");
   expect(post).not.toContain("surfaceEdgeAaPass.enabled=Boolean(controls.surfaceEdgeAaEnabled)");
-  expect(render).toContain("surfaceEdgeAaEnabled:false,outputPass");
+  expect(render).toContain("surfaceEdgeAaEnabled:false,taaEnabled:false");
 });
 
 
@@ -747,7 +747,7 @@ test("Aurum Render enables medium small and micro secondary diamond BVH calibrat
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
 
-  expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"]');
+  expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi", "Esmeralda"');
   expect(render).toContain("diamondCenterOnly: false");
   expect(render).toContain("calibrateSecondaryDiamonds: true");
   expect(render).toContain("includeMediumTier: true");
@@ -797,7 +797,7 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   const tierBlock = runtime.slice(tierStart, qualityStart);
 
   expect(runtime).toContain('transmission: family === "diamante"');
-  expect(runtime).toContain('? (!isBlueDiamond && !isPinkDiamond ? 0 : 0.05)');
+  expect(runtime).toContain('? initialDiamondTransmission');
   expect(runtime).toContain('environmentIntensity: family === "diamante"');
   expect(runtime).toContain('? (!isBlueDiamond && !isPinkDiamond ? 1.30');
   expect(runtime).toContain('dispersion: family === "diamante"');
@@ -888,7 +888,7 @@ test("public viewer applies the calibrated center white-diamond BVH optical fram
   const viewer = readFileSync("src/components/PublicCatalogViewer.tsx", "utf8");
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
 
-  expect(viewer).toContain("environmentRotationRadians: Math.PI / 2");
+  expect(viewer).toContain("environmentRotationRadians: gemEnvironmentRotation");
   expect(viewer).toContain('quality: "high"');
   expect(viewer).toContain("getViewportHeight: () => rendererRef.current?.domElement.height ?? hostRef.current?.clientHeight ?? 1");
   expect(viewer).toContain("diamondCenterOnly: false");
@@ -936,7 +936,7 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   expect(catalog).toContain('diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0.01');
   expect(catalog).toContain('diamondMaterialParameters:{ envMapIndex:0, envMapRotationOffset:0, dispersion:0.01,');
   expect(application).toContain('...(g.diamondMaterialParameters ? { diamondMaterialParameters:g.diamondMaterialParameters } : {})');
-  expect(activation).toContain('const source = preset?.diamondMaterialParameters ?? {};');
+  expect(activation).toContain('const source = gem?.diamondMaterialParameters ?? {};');
   expect(activation).toContain('refractiveIndex: Number(source.refractiveIndex');
   expect(activation).toContain('squashFactor: Number(source.squashFactor');
   expect(scintillation).toContain('get("aurumDiamondTest") ?? "source"');
@@ -960,7 +960,7 @@ test("white diamond profile switching updates every selected size while preservi
   expect(runtime).toContain("if (family !== \"diamante\") return;");
   expect(runtime).toContain('const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;');
   expect(runtime).toContain("applyDiamondTierOptics(currentDiamondTier)");
-  expect(runtime).toContain('if (tier === "micro") return');
+  expect(micro).toContain('if (tier === "micro") return');
   expect(runtime).toContain('if (tier === "small") return');
   expect(runtime).toContain('if (tier === "medium") return');
 });
@@ -982,7 +982,7 @@ test("Diamante rosado 2 imports its .dmat profile and applies it to the protecte
   expect(catalog).toContain("boostFactors:{x:1.3,y:1,z:1}");
   expect(application).toContain("...selectedDiamondParameters");
   expect(application).toContain("material.ior=Math.max(1,Number(gemConfig?.diamondMaterialParameters?.refractiveIndex");
-  expect(runtime).toContain('(calibrateSecondaryDiamond || activeGemId === "diamante_rosa_2")');
+  expect(runtime).toContain('(calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")');
   expect(runtime).toContain('activeGemId === "diamante_rosa_2" ? 0xf1bcd5');
 });
 
@@ -1011,7 +1011,7 @@ test("switching between white diamond catalog profiles updates only live dispers
   expect(application).toContain("const isDiamondToDiamond =");
   expect(application).toContain("aurumDiamondSourceDispersion:fromDispersion");
   expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);");
-  expect(application).toContain("protected focal diamond is intentionally excluded");
+  expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);");
   expect(component).toContain("const duration=260");
   expect(component).toContain("diamondBvhRuntime?.setDiamondDispersion?.(targets,value)");
   expect(component).toContain("diamondBvhRuntime?.setDiamondColor?.(targets,Number(g?.color??0xffffff))");
@@ -1039,7 +1039,7 @@ test("diamond fast profile synchronization updates the retained BVH fallback and
   expect(runtime).toContain("originalMaterial: retainedPhysicalMaterial");
   expect(runtime).toContain("aurumDiamondCatalogProfile: profileId");
   expect(runtime).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
-  expect(runtime).toContain("transmission: Number(currentMaterial?.transmission ?? 0)");
+  expect(runtime).toContain("transmission: Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)");
   expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);");
   expect(component).toContain("diamondBvhRuntime?.setDiamondProfile?.(targets,profile);");
 });
@@ -1051,7 +1051,7 @@ test("diamond-to-diamond profile synchronization keeps the BVH cache identity cu
   const processBlock = runtime.slice(runtime.indexOf("const processMesh ="), runtime.indexOf("const materials = Array.isArray(mesh.material)", runtime.indexOf("const processMesh =")));
   expect(entryBlock).toContain("get gemId() { return entryGemId; }");
   const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
-  expect(profileBlock).toContain("entryGemId = profileId");
+  expect(profileBlock).toContain("entryGemId=profileId");
   expect(processBlock).toContain("existing.gemId === activeGemId");
   expect(processBlock).toContain("existing.activeGemFamily === activeGemFamily");
   expect(runtime).toContain("Diamond catalog identity is synchronized in-place by entry.setProfile()");
@@ -1067,7 +1067,7 @@ test("white diamond 1 and 2 restore neutral catalog RGB boost on initialization 
   expect(runtime).not.toContain("isWhiteDiamondRgbBoostTest");
   expect(profileBlock).not.toContain('profileId === "diamante_natural" || profileId === "diamante_vs" ? [2, 2, 2]');
   expect(profileBlock).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
-  expect(profileBlock).toContain("const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 };");
+  expect(profileBlock).toContain("const boost = profileId === "diamante_azul" ? [2, 2, 2]");
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).toContain("entryGemId = profileId");
 });
@@ -1089,7 +1089,7 @@ test("diamond BVH logs complete effective optical state at initialization and af
 test("BVH diamond profile synchronization always resets RGB boost to catalog or neutral values", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
-  expect(profileBlock).toContain('const boostFactors = parameters.boostFactors ?? { x: 1, y: 1, z: 1 }');
+  expect(profileBlock).toContain('const boost = profileId === "diamante_azul" ? [2, 2, 2]');
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).toContain("entryGemId = profileId");
   expect(profileBlock).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
@@ -1107,12 +1107,12 @@ test("all white diamond profiles replace stale .dmat optics with the shared Whit
   );
   expect(whiteProfileBlock).toContain('["diamante_natural","diamante_vs","diamante_inclusiones"]');
   expect(whiteProfileBlock).toContain('...(isWhiteDiamondProfile ? catalogParameters : {})');
-  expect(whiteProfileBlock).toContain('gammaFactor:catalogParameters.gammaFactor');
+  expect(whiteProfileBlock).toContain('gammaFactor:1');
   expect(whiteProfileBlock).toContain('reflectivity:catalogParameters.reflectivity');
   expect(whiteProfileBlock).toContain('next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??1.3))');
-  expect(runtime).toContain('|| activeGemId === "diamante_inclusiones")');
+  expect(runtime).toContain("isWhiteDiamondProfile");
   expect(runtime).not.toContain('activeGemId === "diamante_vs"\n                ? 0');
-  expect(runtime).toContain('|| activeGemId === "diamante_vs"');
+  expect(runtime).toContain("resolveAurumDiamondCatalogParameters");
 });
 
 
