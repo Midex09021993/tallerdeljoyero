@@ -35,6 +35,8 @@ jobs:
         run: bun test scripts/auri-interno.test.ts scripts/auri-tts.test.ts scripts/auri-public-rate-limit.test.ts
       - name: AURUM Transfer public rate limit tests
         run: bun test scripts/aurum-transfer-rate-limit.test.ts
+      - name: AURUM Transfer authenticated import rate limit tests
+        run: bun test scripts/aurum-transfer-import-rate-limit.test.ts
       - name: AURUM Transfer orphan upload cleanup tests
         run: bun test scripts/aurum-transfer-orphan-cleanup.test.ts
       - name: TypeScript
