@@ -27,60 +27,168 @@ const VIEWS: { id: ViewId; title: string; subtitle: string }[] = [
 function makeJewelryScene() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#10161e");
-  scene.fog = new THREE.Fog("#10161e", 13, 24);
+  scene.fog = new THREE.Fog("#10161e", 16, 30);
   const group = new THREE.Group();
   scene.add(group);
 
-  const gold = new THREE.MeshPhysicalMaterial({ color: "#d6a84d", metalness: 0.92, roughness: 0.22, clearcoat: 0.55, clearcoatRoughness: 0.18 });
-  const innerGold = new THREE.MeshPhysicalMaterial({ color: "#f1cf83", metalness: 0.9, roughness: 0.28 });
-  const diamond = new THREE.MeshPhysicalMaterial({ color: "#e7f5ff", metalness: 0.03, roughness: 0.08, transmission: 0.38, thickness: 0.65, ior: 2.1, clearcoat: 1, transparent: true, opacity: 0.94 });
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.65, 0.23, 28, 120), gold);
-  ring.rotation.x = Math.PI / 2;
-  group.add(ring);
-  const innerBand = new THREE.Mesh(new THREE.TorusGeometry(1.43, 0.055, 12, 120), innerGold);
-  innerBand.rotation.x = Math.PI / 2;
-  innerBand.position.y = -0.02;
-  group.add(innerBand);
+  const gold = new THREE.MeshPhysicalMaterial({
+    color: "#d9ad58", metalness: 0.92, roughness: 0.2,
+    clearcoat: 0.72, clearcoatRoughness: 0.12,
+  });
+  const warmGold = new THREE.MeshPhysicalMaterial({
+    color: "#f3d58c", metalness: 0.9, roughness: 0.23,
+    clearcoat: 0.65, clearcoatRoughness: 0.15,
+  });
+  const diamondMaterials = [
+    new THREE.MeshPhysicalMaterial({ color: "#f5fbff", metalness: 0.02, roughness: 0.07, transmission: 0.12, thickness: 0.8, ior: 2.35, clearcoat: 1 }),
+    new THREE.MeshPhysicalMaterial({ color: "#b8d9f3", metalness: 0.08, roughness: 0.12, clearcoat: 1 }),
+    new THREE.MeshPhysicalMaterial({ color: "#dcecff", metalness: 0.02, roughness: 0.08, clearcoat: 1 }),
+  ];
 
-  const crown = new THREE.Group();
-  crown.position.set(0, 0.18, 1.58);
-  group.add(crown);
-  const stone = new THREE.Mesh(new THREE.OctahedronGeometry(0.48, 0), diamond);
-  stone.scale.set(0.82, 1.18, 0.82);
-  crown.add(stone);
-  const girdle = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.39, 0.12, 8, 1), new THREE.MeshPhysicalMaterial({ color: "#d9e8f5", metalness: 0.22, roughness: 0.14 }));
-  girdle.position.y = -0.26;
-  crown.add(girdle);
-  const prongMaterial = new THREE.MeshPhysicalMaterial({ color: "#e4bf72", metalness: 0.88, roughness: 0.2 });
+  // An elegant tapered shank: slightly slimmer at the shoulders and fuller at the base.
+  const ringRadius = 1.48;
+  const radialSegments = 144;
+  const tubeSegments = 20;
+  const shankGeometry = new THREE.BufferGeometry();
+  const vertices: number[] = [];
+  const normals: number[] = [];
+  const indices: number[] = [];
+  for (let i = 0; i <= radialSegments; i++) {
+    const t = (i / radialSegments) * Math.PI * 2;
+    const x = Math.cos(t) * ringRadius;
+    const z = Math.sin(t) * ringRadius;
+    // Head/shoulder zone is at +Z. Taper toward the setting, keep the lower shank comfortable.
+    const shoulder = Math.pow(Math.max(0, Math.sin(t)), 5);
+    const tubeR = 0.19 - shoulder * 0.045;
+    for (let j = 0; j <= tubeSegments; j++) {
+      const a = (j / tubeSegments) * Math.PI * 2;
+      const radial = Math.cos(a);
+      const vertical = Math.sin(a);
+      vertices.push(x + radial * tubeR * Math.cos(t), vertical * tubeR, z + radial * tubeR * Math.sin(t));
+      normals.push(radial * Math.cos(t), vertical, radial * Math.sin(t));
+    }
+  }
+  for (let i = 0; i < radialSegments; i++) {
+    for (let j = 0; j < tubeSegments; j++) {
+      const a = i * (tubeSegments + 1) + j;
+      const b = a + tubeSegments + 1;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  shankGeometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+  shankGeometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  shankGeometry.setIndex(indices);
+  group.add(new THREE.Mesh(shankGeometry, gold));
+
+  // Fine inner comfort edge, not a second oversized ring.
+  const comfortEdge = new THREE.Mesh(new THREE.TorusGeometry(ringRadius, 0.035, 10, 144), warmGold);
+  comfortEdge.rotation.x = Math.PI / 2;
+  comfortEdge.position.y = -0.005;
+  group.add(comfortEdge);
+
+  // A raised basket with two delicate support rails, aligned with the ring's shoulders.
+  const setting = new THREE.Group();
+  setting.position.set(0, 0.12, ringRadius - 0.02);
+  group.add(setting);
+  const basketMaterial = new THREE.MeshStandardMaterial({ color: "#b98535", metalness: 0.82, roughness: 0.28 });
+  const basketRail = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.035, 10, 48), basketMaterial);
+  basketRail.rotation.x = Math.PI / 2;
+  basketRail.position.y = -0.13;
+  setting.add(basketRail);
+  const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.16, 12), basketMaterial);
+  bridge.position.y = -0.24;
+  setting.add(bridge);
+
+  // Round brilliant: table, crown, girdle, pavilion and culet are separate facet rings.
+  function createBrilliantCut() {
+    const geo = new THREE.BufferGeometry();
+    const rings = [
+      { y: 0.36, r: 0.26, count: 1 },   // table center
+      { y: 0.31, r: 0.36, count: 16 },  // table edge
+      { y: 0.13, r: 0.43, count: 16 },  // crown
+      { y: 0.05, r: 0.43, count: 16 },  // girdle
+      { y: -0.20, r: 0.30, count: 16 }, // upper pavilion
+      { y: -0.43, r: 0.12, count: 16 }, // lower pavilion
+      { y: -0.51, r: 0.025, count: 1 }, // culet
+    ];
+    const v: number[] = [];
+    const idx: number[] = [];
+    // Table is a 16-sided flat polygon, with center vertex for clean triangulation.
+    v.push(0, rings[0].y, 0);
+    for (let r = 1; r <= 5; r++) {
+      const ring = rings[r];
+      for (let k = 0; k < ring.count; k++) {
+        const angle = (k / ring.count) * Math.PI * 2 + Math.PI / 16;
+        v.push(Math.cos(angle) * ring.r, ring.y, Math.sin(angle) * ring.r);
+      }
+    }
+    const tableStart = 1;
+    for (let k = 0; k < 16; k++) idx.push(0, tableStart + k, tableStart + ((k + 1) % 16));
+    for (let r = 1; r < 5; r++) {
+      const aStart = 1 + (r - 1) * 16;
+      const bStart = aStart + 16;
+      for (let k = 0; k < 16; k++) {
+        const a = aStart + k, aNext = aStart + ((k + 1) % 16);
+        const b = bStart + k, bNext = bStart + ((k + 1) % 16);
+        if (r === 1) {
+          idx.push(a, b, aNext, aNext, b, bNext);
+        } else {
+          idx.push(a, b, aNext, aNext, b, bNext);
+        }
+      }
+    }
+    const pavilionStart = 1 + 4 * 16;
+    const culetIndex = v.length / 3;
+    v.push(0, rings[6].y, 0);
+    for (let k = 0; k < 16; k++) {
+      const a = pavilionStart + k, b = pavilionStart + ((k + 1) % 16);
+      idx.push(a, culetIndex, b);
+    }
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    return geo;
+  }
+  const stone = new THREE.Mesh(createBrilliantCut(), diamondMaterials);
+  stone.position.y = 0.16;
+  setting.add(stone);
+
+  // Four tapered claws sit around the girdle and finish just above the crown.
+  const clawMaterial = warmGold;
   for (let n = 0; n < 4; n++) {
-    const a = n * Math.PI / 2 + Math.PI / 4;
-    const prong = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.07, 0.52, 10), prongMaterial);
-    prong.position.set(Math.cos(a) * 0.34, 0.12, Math.sin(a) * 0.34);
-    prong.rotation.z = Math.cos(a) * -0.2;
-    prong.rotation.x = Math.sin(a) * 0.2;
-    crown.add(prong);
+    const angle = Math.PI / 4 + n * Math.PI / 2;
+    const x = Math.cos(angle) * 0.35;
+    const z = Math.sin(angle) * 0.35;
+    const claw = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.20, 4, 8), clawMaterial);
+    claw.position.set(x, 0.29, z);
+    claw.rotation.z = -x * 0.3;
+    claw.rotation.x = z * 0.3;
+    setting.add(claw);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.052, 12, 8), clawMaterial);
+    tip.position.set(x * 0.88, 0.39, z * 0.88);
+    setting.add(tip);
   }
 
-  const grid = new THREE.GridHelper(10, 40, "#56616f", "#293440");
-  grid.position.y = -0.55;
+  // Grid and axes remain visual aids, but sit lower and farther away from the piece.
+  const grid = new THREE.GridHelper(12, 48, "#56616f", "#293440");
+  grid.position.y = -0.58;
   scene.add(grid);
   const axes = new THREE.AxesHelper(2.3);
-  axes.position.set(-2.5, -0.48, -2.2);
+  axes.position.set(-2.5, -0.52, -2.2);
   scene.add(axes);
 
-  scene.add(new THREE.HemisphereLight("#dce8f8", "#28201a", 1.55));
-  const key = new THREE.DirectionalLight("#fff1d1", 3.1);
-  key.position.set(4, 6, 4);
+  scene.add(new THREE.HemisphereLight("#e5eefb", "#30251a", 1.35));
+  const key = new THREE.DirectionalLight("#fff2d5", 3.4);
+  key.position.set(4, 6, 5);
   scene.add(key);
-  const fill = new THREE.DirectionalLight("#a8c8f2", 1.7);
+  const fill = new THREE.DirectionalLight("#b6d4f6", 1.35);
   fill.position.set(-4, 3, -4);
   scene.add(fill);
-  const rim = new THREE.PointLight("#f0ca7b", 65, 12);
-  rim.position.set(0, 3, 2);
+  const rim = new THREE.PointLight("#f5d18a", 38, 14);
+  rim.position.set(0, 3.5, 2.5);
   scene.add(rim);
   return { scene, group };
 }
-
 export default function RhinoViewportTrainer3D(props: Props) {
   const hostRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const controlsRefs = useRef<Record<string, OrbitControls | null>>({});
