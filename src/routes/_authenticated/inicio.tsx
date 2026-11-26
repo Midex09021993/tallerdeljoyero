@@ -51,7 +51,7 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 
 function Inicio() {
   const { data: sesion, isLoading } = useSesion();
-  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
+  const { data: pedidos = [], isLoading: cargandoPedidos, isError: errorPedidos, refetch: recargarPedidos } = usePedidosSelector();
   const { data: capacidades = [] } = useCapacidadesMenu(sesion);
   const capacidadesSet = useMemo(() => new Set(capacidades), [capacidades]);
   const { esDueno, sedeFiltro, setSedeFiltro, sedes } = useSedeFiltroDueno();
@@ -98,7 +98,7 @@ function Inicio() {
     },
   });
 
-  const { data: preparacion, isLoading: cargandoPreparacion } = useQuery({
+  const { data: preparacion, isLoading: cargandoPreparacion, isError: errorPreparacion, refetch: recargarPreparacion } = useQuery({
     queryKey: ["inicio-preparacion", esDueno, sedeContextoId, sesion?.participante?.id],
     enabled: Boolean(sesion?.esAdmin && sedeContextoId),
     queryFn: async () => {
@@ -171,7 +171,7 @@ function Inicio() {
     },
   });
 
-  const { data: resumenComercial, isLoading: cargandoResumenComercial, isError: errorResumenComercial } = useQuery({
+  const { data: resumenComercial, isLoading: cargandoResumenComercial, isError: errorResumenComercial, refetch: recargarResumenComercial } = useQuery({
     queryKey: ["inicio-resumen-comercial", sesion?.participante?.id, sedeContextoId, esDueno],
     enabled: Boolean(sesion?.esAdmin && sesion?.participante?.id && (!esDueno || sedeContextoId)),
     staleTime: 60_000,
@@ -458,8 +458,9 @@ function Inicio() {
             </div>
 
             {errorResumenComercial ? (
-              <div role="status" className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-xs text-muted-foreground">
-                No se pudo cargar el resumen comercial e inventario. Los indicadores operativos siguen disponibles.
+              <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-xs text-muted-foreground">
+                <span>No se pudo cargar el resumen comercial e inventario. No mostramos cifras parciales como si fueran datos reales.</span>
+                <button type="button" onClick={() => void recargarResumenComercial()} className="rounded-lg border px-3 py-1.5 font-semibold hover:bg-background">Reintentar</button>
               </div>
             ) : (
               <>
@@ -553,6 +554,11 @@ function Inicio() {
             </div>
             {cargandoPedidos ? (
               <p className="p-5 text-sm text-muted-foreground">Cargando operaciones…</p>
+            ) : errorPedidos ? (
+              <div role="status" className="flex flex-wrap items-center justify-between gap-3 p-5 text-sm text-destructive">
+                <span>No se pudo cargar la bandeja de pedidos. No es posible confirmar si hay pendientes.</span>
+                <button type="button" onClick={() => void recargarPedidos()} className="rounded-lg border px-3 py-1.5 text-xs font-semibold">Reintentar</button>
+              </div>
             ) : pedidosAtencion.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <CheckCircle2 className="mx-auto size-7 text-emerald-600" />
@@ -648,9 +654,15 @@ function Inicio() {
               <div className="border-t border-border p-4">
                 {esDueno && !sedeContextoId ? (
                   <p className="text-xs text-muted-foreground">Selecciona una sede para consultar su configuración.</p>
+                ) : errorPreparacion ? (
+                  <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">
+                    <span>No se pudo consultar la configuración de esta sede.</span>
+                    <button type="button" onClick={() => void recargarPreparacion()} className="rounded-lg border px-3 py-1.5 font-semibold hover:bg-background">Reintentar</button>
+                  </div>
                 ) : (
-                  <InicioPreparacion preparacion={preparacion ? preparacion : undefined} cargando={cargandoPreparacion} tienePedido={pedidosSede.length > 0} destinoGestion="/gestion" destinoPedidos="/pedidos/nuevo" />
+                  <InicioPreparacion preparacion={preparacion ? preparacion : undefined} cargando={cargandoPreparacion} tienePedido={errorPedidos ? undefined : pedidosSede.length > 0} destinoGestion="/gestion" destinoPedidos="/pedidos/nuevo" />
                 )}
+                {errorPrimerosPasos ? <p role="status" className="mt-3 text-xs text-destructive">No se pudieron consultar los datos iniciales. Reintenta cargar la página más tarde.</p> : null}
                 {!errorPrimerosPasos && !cargandoPrimerosPasos && primerosPasos ? (
                   <p className="mt-3 text-xs text-muted-foreground">Clientes registrados: {primerosPasos.clientes} · Cotizaciones: {primerosPasos.cotizaciones}</p>
                 ) : null}
