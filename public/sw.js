@@ -1,4 +1,4 @@
-const CACHE_NAME = "taller-del-joyero-pwa-v3";
+const CACHE_NAME = "taller-del-joyero-pwa-v4";
 const CACHE_PREFIX = "taller-del-joyero-pwa-";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/pwa-icon.svg"];
 
