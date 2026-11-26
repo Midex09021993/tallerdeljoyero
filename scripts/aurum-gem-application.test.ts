@@ -1052,7 +1052,7 @@ test("diamond-to-diamond profile synchronization keeps the BVH cache identity cu
   const processBlock = runtime.slice(runtime.indexOf("const processMesh ="), runtime.indexOf("const materials = Array.isArray(mesh.material)", runtime.indexOf("const processMesh =")));
   expect(entryBlock).toContain("get gemId() { return entryGemId; }");
   const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setTier: (nextTier:"));
-  expect(profileBlock).toContain("entryGemId=profileId");
+  expect(profileBlock).toContain("entryGemId = profileId");
   expect(processBlock).toContain("existing.gemId === activeGemId");
   expect(processBlock).toContain("existing.activeGemFamily === activeGemFamily");
   expect(runtime).toContain("Diamond catalog identity is synchronized in-place by entry.setProfile()");
