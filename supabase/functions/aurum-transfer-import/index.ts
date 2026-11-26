@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     if (Date.now() - new Date(transfer.consumed_at).getTime() > DOWNLOAD_WINDOW_MS) {
       return json({ error: "La ventana de importación terminó. Pide que vuelvan a compartirte los archivos." }, 410);
     }
-    if (transfer.imported_at) {
+    if (transfer.imported_at && transfer.imported_by) {
       return json({ error: transfer.imported_by === user.id ? "Estos archivos ya se guardaron en tu Mi Nube." : "Esta transferencia ya fue importada por otra cuenta." }, 409);
     }
     const files = Array.isArray(transfer.files) ? transfer.files as FileMeta[] : [];
