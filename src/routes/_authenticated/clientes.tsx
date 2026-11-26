@@ -55,7 +55,7 @@ function ClientesPage() {
   const puedeVer = Boolean(sesion?.esAdmin) || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   // RLS de clientes permite escrituras al dueño o gerente autorizado para la sede; el área ventas consulta, pero no escribe por sí sola.
   const puedeGestionarClientes = Boolean(sesion?.esAdmin);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);\n  const [errorClientes, setErrorClientes] = useState(false);
   const [seleccionado, setSeleccionado] = useState<Cliente | null>(null);
   const [pedidos, setPedidos] = useState<PedidoRef[]>([]);
   const [cotizaciones, setCotizaciones] = useState<CotRef[]>([]);
@@ -187,7 +187,7 @@ function ClientesPage() {
   };
 
   useEffect(() => {
-    if (puedeVer) void cargar().catch((error) => console.error("No se pudieron cargar los clientes de la sede seleccionada", error));
+    if (puedeVer) void cargar().catch((error) => { console.error("No se pudieron cargar los clientes de la sede seleccionada", error); setErrorClientes(true); });
     else { cargaClientesRef.current += 1; setClientes([]); setSeleccionado(null); }
     return () => { cargaClientesRef.current += 1; };
   }, [puedeVer, sesion?.participante?.id, esDueno, sedeContextoId]);
@@ -400,7 +400,7 @@ function ClientesPage() {
             </div>
             <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar nombre, documento, teléfono, WhatsApp, correo o ciudad..." className="mt-4 h-11 w-full rounded-lg border border-[#293B4A]/15 bg-white px-4 text-sm text-[#293B4A] outline-none placeholder:text-[#87939D] transition focus:border-[#C5A36B] focus:ring-2 focus:ring-[#C5A36B]/15" />
           </div>
-          <div className="max-h-[min(72vh,780px)] divide-y divide-[#293B4A]/[0.07] overflow-y-auto">
+          <div className="max-h-[min(72vh,780px)] divide-y divide-[#293B4A]/[0.07] overflow-y-auto">\n            {errorClientes ? <div role="alert" className="m-4 rounded-xl border border-amber-300/60 bg-amber-50 p-4 text-sm text-amber-900"><p>No se pudo cargar el directorio. Los clientes no se mostrarán como una lista vacía.</p><button type="button" onClick={() => void cargar().catch(() => setErrorClientes(true))} className="mt-2 rounded-lg border border-amber-400/50 px-3 py-1.5 text-xs font-semibold">Reintentar</button></div> : null}
             {filtrados.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">No encontramos clientes con esos filtros.</p> : filtrados.map((cliente) => (
               <button key={cliente.id} type="button" onClick={() => setSeleccionado(cliente)} className={`relative flex w-full items-center gap-3 px-4 py-4 text-left transition-all hover:bg-[#F5F1E8]/75 sm:px-5 ${seleccionado?.id === cliente.id ? "bg-[#F5F1E8] shadow-[inset_3px_0_0_#C5A36B]" : ""}`}>
                 <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#C5A36B]/30 bg-[#F3EBDD] text-sm font-semibold text-[#92734B]">{cliente.nombre.charAt(0).toUpperCase()}</span>
