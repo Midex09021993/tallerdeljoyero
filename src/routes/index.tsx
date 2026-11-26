@@ -714,8 +714,7 @@ function InicioPublico() {
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <RegistroTaller className="hidden min-h-10 items-center justify-center rounded-xl bg-[#f8c928] px-4 text-xs font-bold text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] sm:inline-flex" />
-            <Link to="/auth" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] lg:hidden"><MonitorSmartphone className="size-4" /> Ingresar</Link>
-            <a href="/auth" target="_blank" rel="noopener noreferrer" className="hidden min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] lg:inline-flex lg:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</a>
+            <a href="/auth" onClick={(event) => { const esDispositivoTactil = navigator.maxTouchPoints > 0 || /Android|iPad|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); const esPC = !esDispositivoTactil && window.innerWidth >= 1024 && window.matchMedia("(pointer: fine)").matches; if (esPC) { event.preventDefault(); window.open("/auth", "_blank", "noopener,noreferrer"); } }} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] lg:px-4 lg:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</a>
             <button
               type="button"
               onClick={() => setMenuMovilAbierto((abierto) => !abierto)}
