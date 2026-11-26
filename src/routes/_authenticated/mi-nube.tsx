@@ -1403,7 +1403,7 @@ function MiNubePage() {
       toast.error("No se encontró tu taller activo.");
       return;
     }
-    if (subiendo || compartiendo !== null) {
+    if (subiendo || compartiendo !== null || guardandoNombreCarpeta) {
       toast.error("Espera a que termine la operación en curso.");
       return;
     }
@@ -1411,8 +1411,8 @@ function MiNubePage() {
     try {
       const raizProyecto = `${participanteId}/${usuarioId}/${proyecto.nombre}`;
       const rutasWeb: string[] = [];
-      // Supabase se verifica y gestiona de forma independiente del NAS.
-      // La operación web nunca debe quedar bloqueada por la disponibilidad de Nextcloud.
+      // Enumeración completa y verificable: no usar extensiones para distinguir
+      // archivos de carpetas, porque nombres como "Proyecto.V2" pueden ser carpetas.
       for (let offset = 0; ; offset += 1000) {
         const { data, error } = await supabase.storage.from(BUCKET).list(raizProyecto, {
           limit: 1000,
@@ -1425,13 +1425,26 @@ function MiNubePage() {
         }
         const entradas = data ?? [];
         rutasWeb.push(...entradas
-          .filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")))
+          .filter((entrada) => Boolean(entrada.id || entrada.metadata))
           .map((entrada) => `${raizProyecto}/${entrada.name}`));
         if (entradas.length < 1000) break;
       }
 
-      // Consultar el NAS es opcional para completar la operación web.
-      // Si no responde, se preservan sus archivos y se informa claramente al usuario.
+      // Revocar accesos compartidos antes de borrar datos. Si no se puede,
+      // abortar para no dejar enlaces activos durante una eliminación parcial.
+      const { error: errorRevocarComparticiones } = await supabase
+        .from("mi_nube_compartidas")
+        .update({ revoked_at: new Date().toISOString() })
+        .eq("propietario_usuario_id", usuarioId)
+        .eq("propietario_participante_id", participanteId)
+        .eq("carpeta", proyecto.nombre)
+        .is("revoked_at", null);
+      if (errorRevocarComparticiones) {
+        toast.error("No se pudo revocar el acceso compartido. Se canceló la eliminación para proteger los archivos.");
+        return;
+      }
+
+      // NAS no disponible: se preserva y se informa; nunca se asume que está vacío.
       let archivosNas: Array<{ name: string; folder: string }> = [];
       let nasPendiente = estadoNas !== "online" || nasPausado;
       if (!nasPendiente) {
@@ -1439,19 +1452,13 @@ function MiNubePage() {
           const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
             body: { action: "list", participantId: participanteId },
           });
-          if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
-            nasPendiente = true;
-          } else {
-            archivosNas = (nasData.files as Array<{ name: string; folder: string }>)
-              .filter((archivo) => archivo.folder === proyecto.nombre);
-          }
+          if (nasError || nasData?.error || !Array.isArray(nasData?.files)) nasPendiente = true;
+          else archivosNas = (nasData.files as Array<{ name: string; folder: string }>).filter((archivo) => archivo.folder === proyecto.nombre);
         } catch {
           nasPendiente = true;
         }
       }
 
-      // Limpiar el NAS solo cuando está disponible. Un fallo del NAS no bloquea
-      // la eliminación web; se detiene únicamente el lote NAS y se informa al final.
       let videosNasEliminados = 0;
       if (!nasPendiente) {
         for (const archivo of archivosNas) {
@@ -1459,10 +1466,7 @@ function MiNubePage() {
             const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
               body: { action: "delete", folder: proyecto.nombre, name: archivo.name, participantId: participanteId },
             });
-            if (error || data?.error || data?.ok !== true) {
-              nasPendiente = true;
-              break;
-            }
+            if (error || data?.error || data?.ok !== true) { nasPendiente = true; break; }
             videosNasEliminados += 1;
           } catch {
             nasPendiente = true;
@@ -1471,40 +1475,34 @@ function MiNubePage() {
         }
       }
 
+      let webEliminados = 0;
       if (rutasWeb.length > 0) {
-        // Storage remove acepta lotes; dividir evita exceder límites de petición.
         for (let i = 0; i < rutasWeb.length; i += 100) {
-          const { error } = await supabase.storage.from(BUCKET).remove(rutasWeb.slice(i, i + 100));
+          const lote = rutasWeb.slice(i, i + 100);
+          const { error } = await supabase.storage.from(BUCKET).remove(lote);
           if (error) {
-            toast.error("No se pudieron eliminar todos los archivos web. Detalle: " + error.message);
+            toast.error(`Eliminación parcial: ${webEliminados} de ${rutasWeb.length} archivos web eliminados. Los accesos compartidos ya fueron revocados. Revisa Mi Nube y vuelve a intentarlo. Detalle: ${error.message}`);
             await cargarBiblioteca();
+            await cargarCompartidas();
             return;
           }
+          webEliminados += lote.length;
         }
       }
 
       setProyectoAbierto(null);
       setModoEdicion(null);
-      const { error: errorRevocarComparticiones } = await supabase
-        .from("mi_nube_compartidas")
-        .update({ revoked_at: new Date().toISOString() })
-        .eq("propietario_usuario_id", usuarioId)
-        .eq("propietario_participante_id", participanteId)
-        .eq("carpeta", proyecto.nombre)
-        .is("revoked_at", null);
-
-      if (errorRevocarComparticiones) {
-        toast.warning(`Archivos web eliminados, pero no se pudo revocar automáticamente el permiso compartido de “${proyecto.nombre}”. Revisa Compartir proyecto.`);
-      } else if (nasPendiente) {
-        toast.warning(`Archivos web eliminados. Limpieza del NAS incompleta: ${videosNasEliminados} de ${archivosNas.length} vídeo(s) eliminados. Revisa Mi Nube cuando el NAS vuelva a estar disponible.`);
-      } else {
-        toast.success(`Proyecto “${proyecto.nombre}” eliminado: ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS.`);
-      }
       await cargarBiblioteca();
       await cargarCompartidas();
+      if (nasPendiente) {
+        toast.warning(`Proyecto eliminado de Mi Nube: ${webEliminados} archivo(s) web. Limpieza NAS incompleta (${videosNasEliminados}/${archivosNas.length}); revisa cuando vuelva a estar disponible.`);
+      } else {
+        toast.success(`Proyecto “${proyecto.nombre}” eliminado: ${webEliminados} archivo(s) web y ${videosNasEliminados} vídeo(s) NAS.`);
+      }
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudo eliminar el proyecto completo.");
       await cargarBiblioteca();
+      await cargarCompartidas();
     }
   };
 
