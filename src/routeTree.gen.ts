@@ -39,6 +39,7 @@ import { Route as AuthenticatedAurumRenderPluginRouteImport } from './routes/_au
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedPizarraRouteImport } from './routes/_authenticated/pizarra'
 import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated/compras'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
@@ -237,6 +238,11 @@ const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
 const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPizarraRoute = AuthenticatedPizarraRouteImport.update({
+  id: '/pizarra',
+  path: '/pizarra',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
@@ -537,6 +543,8 @@ export interface FileRoutesByFullPath {
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/pizarra': typeof AuthenticatedPizarraRoute
+  '/pizarra': typeof AuthenticatedPizarraRoute
   '/compras': typeof AuthenticatedComprasRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
@@ -696,6 +704,7 @@ export interface FileRoutesById {
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/pizarra': typeof AuthenticatedPizarraRoute
   '/_authenticated/compras': typeof AuthenticatedComprasRoute
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
@@ -1631,6 +1640,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedPizarraRoute: typeof AuthenticatedPizarraRoute
   AuthenticatedComprasRoute: typeof AuthenticatedComprasRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRouteWithChildren
@@ -1672,6 +1682,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedPizarraRoute: AuthenticatedPizarraRoute,
   AuthenticatedComprasRoute: AuthenticatedComprasRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRouteWithChildren,
