@@ -230,5 +230,6 @@ export function useTrabajosDelOperario() {
     trabajos: query.data ?? [],
     isLoading: query.isLoading,
     error: query.error instanceof Error ? query.error.message : query.error ? String(query.error) : null,
+    refetch: query.refetch,
   };
 }
