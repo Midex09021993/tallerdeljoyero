@@ -538,7 +538,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
     return (
       <div className="flex min-h-[320px] h-full flex-col justify-center gap-4 bg-white p-6 text-[#394653] sm:rounded-2xl">
         <div className="mx-auto grid size-16 place-items-center rounded-2xl border border-[#dfc98e] bg-[#fbf8ef] text-[#ad8a3d]"><Bot className="size-8" /></div>
-        <div className="text-center"><p className="font-display text-xl text-[#263746]">Activa tu espacio AURI</p><p className="mt-2 text-sm leading-6 text-[#687580]">AURI solo consulta información que tu cuenta ya puede ver. En Gemini, tu consulta y los campos mínimos necesarios para responder se envían al proveedor de IA; si buscas clientes, puede incluir sus nombres, pero nunca teléfonos, correos, documentos ni direcciones. AURI Directo realiza consultas predeterminadas sin IA. Ambos modos son de solo lectura.</p></div>
+        <div className="text-center"><p className="font-display text-xl text-[#263746]">Activa tu espacio AURI</p><p className="mt-2 text-sm leading-6 text-[#687580]">AURI solo consulta información que tu cuenta ya puede ver. En el modo IA, tu consulta y los campos mínimos necesarios para responder se envían a un proveedor de inteligencia artificial; si buscas clientes, puede incluir sus nombres, pero nunca teléfonos, correos, documentos ni direcciones. AURI Directo realiza consultas predeterminadas sin IA. Ambos modos son de solo lectura.</p></div>
         <button type="button" onClick={() => { window.localStorage.setItem(CONSENT_KEY, "1"); setAutorizado(true); }} className="mx-auto min-h-11 rounded-xl bg-[#263746] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-[#344d62]">Autorizar acceso</button>
       </div>
     );
@@ -563,7 +563,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
           </div>
           <div className="auri-header__controls flex shrink-0 items-center gap-1.5 sm:gap-2">
             {interno && <div className="auri-desktop-modes hidden items-center gap-1 rounded-full bg-[#f7f5f0] p-1 sm:flex">
-              <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition ${!modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790] hover:text-[#263746]"}`}>Gemini</button>
+              <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition ${!modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790] hover:text-[#263746]"}`}>IA</button>
               <button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition ${modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790] hover:text-[#263746]"}`}>Directo</button>
             </div>}
             <div className="flex items-center rounded-full border border-[#e9e3d7] bg-white p-1">
@@ -575,7 +575,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
         {interno && <div className="auri-mobile-modes mt-2 flex items-center justify-between sm:hidden">
           <span className="text-[10px] text-[#8b949b]">Motor de consulta</span>
           <div className="flex items-center gap-1 rounded-full bg-[#f7f5f0] p-1">
-            <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1 text-[10px] font-semibold ${!modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790]"}`}>Gemini</button>
+            <button type="button" onClick={() => setModoDirecto(false)} aria-pressed={!modoDirecto} className={`rounded-full px-3 py-1 text-[10px] font-semibold ${!modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790]"}`}>IA</button>
             <button type="button" onClick={() => setModoDirecto(true)} aria-pressed={modoDirecto} className={`rounded-full px-3 py-1 text-[10px] font-semibold ${modoDirecto ? "bg-white text-[#263746] shadow-sm" : "text-[#7d8790]"}`}>Directo</button>
           </div>
         </div>}
@@ -657,9 +657,9 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
                       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[#eee8dc] pt-2 text-[9px] leading-4 text-[#87919a]" aria-label="Origen de la respuesta">
                         <span className="inline-flex items-center gap-1 rounded-full border border-[#e8dfca] bg-[#fbf8ef] px-2 py-0.5 font-bold uppercase tracking-[0.1em] text-[#9b7936]">
                           <span className={`size-1.5 rounded-full ${message.source.motor === "directo" ? "bg-[#4b9b79]" : "bg-[#4b9fc1]"}`} />
-                          {message.source.motor === "directo" ? "AURI Directo · Sin IA" : "Gemini · IA"}
+                          {message.source.motor === "directo" ? "AURI Directo · Sin IA" : "AURI IA"}
                         </span>
-                        {message.source.modelo && <span>Modelo: {message.source.modelo}</span>}
+                        <span>Motor: IA</span>
                         <span>{message.source.herramientas.length ? `Consultó: ${message.source.herramientas.map(etiquetaHerramienta).join(", ")}` : "Sin consulta a datos del taller"}</span>
                         <span>· {horaConsulta(message.source.consultadoEn)}</span>
                       </div>
@@ -679,7 +679,7 @@ async function sendMessage(event?: FormEvent<HTMLFormElement>, messageOverride?:
               <button type="submit" disabled={!draft.trim() || loading} aria-label="Enviar mensaje" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#263746] text-white transition hover:bg-[#3b5367] disabled:cursor-not-allowed disabled:opacity-35"><Send className="size-4" /></button>
             </form>
             <div className="mt-2 flex items-center justify-between gap-2 px-1">
-              <p className="min-w-0 truncate text-[9px] text-[#9aa1a5]">{interno ? (modoDirecto ? "AURI Directo · Consultas de solo lectura" : "Gemini · Datos según tus permisos") : "No compartas información privada."}</p>
+              <p className="min-w-0 truncate text-[9px] text-[#9aa1a5]">{interno ? (modoDirecto ? "AURI Directo · Consultas de solo lectura" : "IA · Datos según tus permisos") : "No compartas información privada."}</p>
               <div className="flex shrink-0 items-center gap-3">
                 <button type="button" onClick={() => { setVoiceEnabled((value) => !value); stopSpeaking(); }} aria-label={voiceEnabled ? "Silenciar respuestas" : "Activar voz"} className="text-[#9b7a36] hover:text-[#72551e]">{voiceEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}</button>
                 {interno ? <button type="button" onClick={() => { window.localStorage.removeItem(CONSENT_KEY); setAutorizado(false); }} className="text-[9px] font-semibold text-[#96732e] underline underline-offset-2">Desactivar acceso</button> : <button type="button" onClick={onContact} className="text-[9px] font-semibold text-[#96732e] underline underline-offset-2">Contactar</button>}
