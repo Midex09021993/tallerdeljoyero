@@ -248,7 +248,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             // Match the approved AURUM Render gem EXR orientation: 0° base
             // plus the same per-family correction used by its gem controller.
             const gemEnvironmentProfile = getAurumGemEnvironmentProfile(gem.familia);
-            const gemEnvironmentRotation = gemEnvironmentProfile.rotationOffset; // El catálogo público usa la orientación aprobada de AURUM Render: 0° base.
+            const gemEnvironmentRotation = gemEnvironmentProfile.rotationOffset + Math.PI / 2; // Alineación maestra EXR compartida con AURUM Render: +90°.
             if (material.envMapRotation?.set) material.envMapRotation.set(0, gemEnvironmentRotation, 0);
             else if (material.envMapRotation) material.envMapRotation.y = gemEnvironmentRotation;
             material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(), aurumGemEnvIntensity: gem.envMapIntensity, aurumGemEnvironmentRotation: gemEnvironmentRotation };
