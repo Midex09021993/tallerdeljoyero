@@ -184,7 +184,10 @@ export function CatalogoProductoPublicoPage() {
   };
 
   if (isLoading) return <Estado titulo="Cargando ficha…" texto="Estamos preparando la información de la pieza." />;
-  if (error || !config || !item?.producto_id || !item.nombre || !item.codigo) {
+  if (error) {
+    return <main className="grid min-h-screen place-items-center bg-[#f7f4ef] px-6 text-center text-[#1f1b18]"><section className="max-w-md"><Sparkles className="mx-auto size-9 text-[#8a6b36]" /><h1 className="mt-5 font-display text-4xl">No se pudo cargar la joya</h1><p className="mt-3 text-sm leading-6 text-[#746b62]">Hubo un error de conexión al consultar el catálogo.</p><button type="button" onClick={() => void refetch()} className="mt-4 rounded-xl border border-[#8a6b36]/30 px-4 py-2 text-sm font-semibold">Reintentar</button></section></main>;
+  }
+  if (!config || !item?.producto_id || !item.nombre || !item.codigo) {
     return <Estado titulo="Joya no disponible" texto="La pieza no existe, no está publicada o el enlace ya no es válido." />;
   }
 
