@@ -297,12 +297,12 @@ export default function RhinoViewportTrainer3D(props: Props) {
         const targetMoved = start.target.distanceTo(controls.target) > 0.035;
         if (camera instanceof THREE.PerspectiveCamera && view.id === "Perspective") {
           const distance = camera.position.distanceTo(controls.target);
-          if (Math.abs(distance - start.distance) > 0.08) onActionRef.current("zoom");
+          if (Math.abs(distance - start.distance) > 0.08) onActionRef.current("zoomPerspective");
           else if (start.position.clone().sub(start.target).normalize().angleTo(camera.position.clone().sub(controls.target).normalize()) > 0.04) onActionRef.current("orbit");
           else if (targetMoved) onActionRef.current("panPerspective");
         } else if (camera instanceof THREE.OrthographicCamera) {
-          if (Math.abs(camera.zoom - start.zoom) > 0.03) onActionRef.current("zoom");
-          else if (targetMoved || camera.position.distanceTo(start.position) > 0.035) onActionRef.current("panTop");
+          if (Math.abs(camera.zoom - start.zoom) > 0.03) onActionRef.current("zoomOrtho");
+          else if (targetMoved || camera.position.distanceTo(start.position) > 0.035) onActionRef.current(view.id === "Top" ? "panTop" : "panOrtho");
         }
         interactionStartRef.current[view.id] = null;
       };
