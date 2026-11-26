@@ -18,11 +18,11 @@ function Ventas2Page() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const puedeGestionar = Boolean(sesion?.esAdmin || sesion?.areas.some((a) => areaCoincide(a, "Área ventas")));
-  const { data: pedidos = [], isLoading: loadingPedidos } = usePedidos();
-  const { data: contratos = [], isLoading: loadingContratos } = useContratos(puedeGestionar);
+  const { data: pedidos = [], isLoading: loadingPedidos, isError: errorPedidos, refetch: recargarPedidos } = usePedidos();
+  const { data: contratos = [], isLoading: loadingContratos, isError: errorContratos, refetch: recargarContratos } = useContratos(puedeGestionar);
   const { filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const contratosSede = filtrarPedidos(contratos);
-  const { data: pagos = [] } = usePagosContratos(contratosSede, puedeGestionar);
+  const { data: pagos = [], isError: errorPagos, refetch: recargarPagos } = usePagosContratos(contratosSede, puedeGestionar);
   const [vista, setVista] = useState<Vista>("cartera");
   const [busqueda, setBusqueda] = useState("");
 
@@ -71,6 +71,7 @@ function Ventas2Page() {
       titulo="Ventas"
       subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : `Control comercial y cierre de pedidos · ${etiquetaSede}`}
     >
+      {(errorPedidos || errorContratos || errorPagos) ? <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900"><div className="flex items-start gap-2"><AlertCircle className="mt-0.5 size-4 shrink-0"/><span>Hay consultas que no respondieron. Los indicadores y listas pueden estar incompletos; no se consideran datos vacíos como resultados confirmados.</span></div><button type="button" onClick={() => { void recargarPedidos(); void recargarContratos(); void recargarPagos(); }} className="rounded-lg border border-amber-400/50 px-3 py-1.5 text-xs font-semibold">Reintentar consultas</button></div> : null}
       <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
         <div className="relative p-6 sm:p-8">
           <div className="pointer-events-none absolute -right-24 -top-32 size-80 rounded-full bg-gold/10 blur-3xl" />
