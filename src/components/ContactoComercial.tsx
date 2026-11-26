@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Bot, CheckCircle2, LoaderCircle, MessageCircle, X } from "lucide-react";
+import { TelefonoInternacional } from "@/components/TelefonoInternacional";
 import { AuriChat } from "@/components/auri/AuriChat";
 import { enviarConsultaComercial } from "@/lib/contacto.functions";
 import { registrarEvento } from "@/lib/analytics";
@@ -79,9 +80,15 @@ export function ContactoComercial({ className = "" }: { className?: string }) {
                       <input required type="email" maxLength={160} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dedbd3] bg-white px-3.5 py-3 text-sm text-[#303943] outline-none focus:border-[#b99642] focus:ring-2 focus:ring-[#c7a65b]/15" placeholder="tu@correo.com" />
                     </label>
                   </div>
-                  <label className="block text-xs text-[#596571]">Teléfono o WhatsApp (opcional)
-                    <input type="tel" maxLength={40} autoComplete="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dedbd3] bg-white px-3.5 py-3 text-sm text-[#303943] outline-none focus:border-[#b99642] focus:ring-2 focus:ring-[#c7a65b]/15" placeholder="Tu número de contacto" />
-                  </label>
+                  <div>
+                    <TelefonoInternacional
+                      value={telefono}
+                      onChange={setTelefono}
+                      label="Teléfono o WhatsApp"
+                      optional
+                      id="contacto-comercial-telefono"
+                    />
+                  </div>
                   <label className="block text-xs text-[#596571]">¿Sobre qué te gustaría conversar? *
                     <select required value={interes} onChange={(e) => setInteres(e.target.value as typeof interes)} className="mt-2.5 min-h-12 w-full rounded-xl border border-[#dedbd3] bg-white px-4 py-3 text-sm text-[#303943] outline-none transition hover:border-[#c7a65b] focus:border-[#b99642] focus:ring-2 focus:ring-[#c7a65b]/15">
                       {INTERESES.map((item) => <option key={item.value} value={item.value}>{item.label} — {item.detail}</option>)}
