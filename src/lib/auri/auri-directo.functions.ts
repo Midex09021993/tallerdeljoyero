@@ -23,6 +23,7 @@ function limitado(userId: string) {
 
 function textoSeguro(value: unknown, max = 180): string {
   if (typeof value !== "string" && typeof value !== "number") return "";
+  // eslint-disable-next-line no-control-regex -- Sanitizes user text by removing control characters.
   return String(value).replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
 }
 
