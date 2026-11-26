@@ -1039,7 +1039,7 @@ test("diamond fast profile synchronization updates the retained BVH fallback and
   expect(runtime).toContain("originalMaterial: retainedPhysicalMaterial");
   expect(runtime).toContain("aurumDiamondCatalogProfile: profileId");
   expect(runtime).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
-  expect(runtime).toContain("transmission: resolvedOptics.transmission");
+  expect(runtime).toContain("const transmission = resolvedOptics.transmission;");
   expect(application).toContain("onDiamondDispersionTransition?.(targets.slice(),fromDispersion,targetDispersion,gemConfig);");
   expect(component).toContain("diamondBvhRuntime?.setDiamondProfile?.(targets,profile);");
 });
@@ -1061,9 +1061,9 @@ test("white diamond 1 and 2 restore neutral catalog RGB boost on initialization 
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const profileBlock = runtime.slice(runtime.indexOf("setProfile: (nextProfile: any) =>"), runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>"));
   expect(runtime).toContain("Catalog .dmat values are authoritative for neutral/white diamonds.");
-  expect(runtime).toContain("Number(diamondSourceParameters?.boostFactors?.x ?? 1)");
-  expect(runtime).toContain("Number(diamondSourceParameters?.boostFactors?.y ?? 1)");
-  expect(runtime).toContain("Number(diamondSourceParameters?.boostFactors?.z ?? 1)");
+  expect(runtime).toContain("const boostFactors = parameters.boostFactors ?? profile?.boostFactors;");
+  expect(runtime).toContain("rgbBoost: boostFactors");
+  expect(runtime).toContain("profileId === \"diamante_rosa\" ? [1.3, 1, 1]");
   expect(runtime).not.toContain("isWhiteDiamondRgbBoostTest");
   expect(profileBlock).not.toContain('profileId === "diamante_natural" || profileId === "diamante_vs" ? [2, 2, 2]');
   expect(profileBlock).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
