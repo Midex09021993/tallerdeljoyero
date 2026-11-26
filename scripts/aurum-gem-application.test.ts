@@ -954,6 +954,7 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
 test("white diamond profile switching updates every selected size while preserving brilliant and melee tiers", () => {
   const application = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const micro = readFileSync("src/lib/aurum/diamond-micro-pipeline.ts", "utf8");
   expect(application).toContain("Catalog profile switching applies to every selected diamond");
   expect(application).not.toContain("The protected focal diamond is intentionally excluded");
   expect(runtime).toContain("if (family !== \"diamante\") return;");
