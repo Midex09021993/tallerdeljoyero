@@ -540,14 +540,14 @@ function MiNubePage() {
       const raiz = `${participanteId}/${usuarioId}`;
       const listarStorage = async (ruta: string, etapa: string) => {
         let ultimoError: Error | null = null;
-        for (let intento = 0; intento < 2; intento++) {
+        for (let intento = 0; intento < 3; intento++) {
           const { data, error: errorLista } = await supabase.storage
             .from(BUCKET)
             .list(ruta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
           if (!errorLista) return data ?? [];
           ultimoError = new Error(errorLista.message);
-          if (intento === 0 && /timeout|timed out|temporar|fetch/i.test(errorLista.message)) {
-            await new Promise((resolve) => window.setTimeout(resolve, 700));
+          if (intento < 2 && /timeout|timed out|temporar|fetch|network|connection|503|502|500|429|rate limit|service unavailable/i.test(errorLista.message)) {
+            await new Promise((resolve) => window.setTimeout(resolve, 600 * (intento + 1)));
             continue;
           }
           break;
