@@ -17,11 +17,11 @@ import heroColgante from "@/assets/diseno-colgante.jpg";
 function esPCDeEscritorio() {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
-  const esTablet =
-    /iPad|Tablet|Android(?!.*Mobile)/i.test(ua) ||
+  const esTablet = /iPad|Tablet|Android(?!.*Mobile)/i.test(ua) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
     (/Windows/i.test(ua) && navigator.maxTouchPoints > 1 && window.innerWidth <= 1366);
-  return !esTablet && window.innerWidth >= 1024 && window.matchMedia("(pointer: fine)").matches;
+  const esSistemaPC = /Windows NT|Macintosh|X11|Linux x86_64/i.test(ua);
+  return !esTablet && esSistemaPC && window.innerWidth >= 900;
 }
 
 export const Route = createFileRoute("/")({
