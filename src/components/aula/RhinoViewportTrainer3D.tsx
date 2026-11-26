@@ -193,6 +193,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
   const hostRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const controlsRefs = useRef<Record<string, OrbitControls | null>>({});
   const cameraRefs = useRef<Record<string, THREE.Camera | null>>({});
+  const viewStateRefs = useRef<Record<string, { position: [number, number, number]; target: [number, number, number]; zoom?: number }>>({});
   useEffect(() => {
     const renderers: THREE.WebGLRenderer[] = [];
     const observers: ResizeObserver[] = [];
@@ -224,11 +225,14 @@ export default function RhinoViewportTrainer3D(props: Props) {
         controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
         controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
         controls.enableDamping = true;
-        controls.dampingFactor = 0.08;
+        controls.dampingFactor = 0.075;
         controls.enablePan = true;
+        controls.enableZoom = true;
+        controls.zoomToCursor = true;
         controls.screenSpacePanning = true;
-        controls.minDistance = 2.1;
-        controls.maxDistance = 18;
+        controls.minDistance = 1.25;
+        controls.maxDistance = 24;
+        controls.target.set(0, 0, 0);
         controlsRefs.current[view.id] = controls;
       } else {
         const ortho = new THREE.OrthographicCamera(-2.8 * aspect, 2.8 * aspect, 2.8, -2.8, 0.1, 100);
@@ -241,11 +245,23 @@ export default function RhinoViewportTrainer3D(props: Props) {
         const controls = new OrbitControls(ortho, renderer.domElement);
         controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
         controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
-        controls.enableRotate = false;
+        controls.enableRotate = true;
         controls.enablePan = true;
         controls.enableZoom = true;
+        controls.zoomToCursor = true;
         controls.screenSpacePanning = true;
+        controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+        controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
         controlsRefs.current[view.id] = controls;
+      }
+      const savedView = viewStateRefs.current[view.id];
+      if (savedView) {
+        camera.position.set(...savedView.position);
+        if (camera instanceof THREE.OrthographicCamera && savedView.zoom) camera.zoom = savedView.zoom;
+        const savedTarget = new THREE.Vector3(...savedView.target);
+        camera.lookAt(savedTarget);
+        controlsRefs.current[view.id]?.target.copy(savedTarget);
+        controlsRefs.current[view.id]?.update();
       }
       cameras[view.id] = camera;
       cameraRefs.current[view.id] = camera;
@@ -253,7 +269,16 @@ export default function RhinoViewportTrainer3D(props: Props) {
         if (host.clientWidth > 0 && host.clientHeight > 0) renderer.render(sceneData.scene, camera);
       };
       const controls = controlsRefs.current[view.id];
-      controls?.addEventListener("change", draw);
+      const onControlsChange = () => {
+        draw();
+        if (camera instanceof THREE.PerspectiveCamera && view.id === "Perspective") {
+          const distance = camera.position.distanceTo(controls?.target ?? new THREE.Vector3());
+          props.onZoom(Math.max(0.35, Math.min(2.2, 5.6 / Math.max(0.001, distance))));
+        } else if (camera instanceof THREE.OrthographicCamera) {
+          props.onZoom(Math.max(0.35, Math.min(2.2, camera.zoom)));
+        }
+      };
+      controls?.addEventListener("change", onControlsChange);
       // Damping solo anima mientras el usuario manipula la cámara; no mantiene 4 render loops permanentes.
       let animationFrame = 0;
       const animateControls = () => {
@@ -285,6 +310,14 @@ export default function RhinoViewportTrainer3D(props: Props) {
       (observer as ResizeObserver & { __cancel?: () => void }).__cancel = () => cancelAnimationFrame(animationFrame);
     }
     return () => {
+      Object.entries(cameraRefs.current).forEach(([id, camera]) => {
+        const controls = controlsRefs.current[id];
+        if (camera) viewStateRefs.current[id] = {
+          position: [camera.position.x, camera.position.y, camera.position.z],
+          target: controls ? [controls.target.x, controls.target.y, controls.target.z] : [0, 0, 0],
+          zoom: camera instanceof THREE.OrthographicCamera ? camera.zoom : undefined,
+        };
+      });
       observers.forEach(o => { (o as ResizeObserver & { __cancel?: () => void }).__cancel?.(); o.disconnect(); });
       Object.values(controlsRefs.current).forEach(c => c?.dispose());
       controlsRefs.current = {};
@@ -294,14 +327,17 @@ export default function RhinoViewportTrainer3D(props: Props) {
         if (obj instanceof THREE.Mesh) { obj.geometry.dispose(); const m = obj.material; if (Array.isArray(m)) m.forEach(x => x.dispose()); else m.dispose(); }
       });
     };
-  }, [props.maximized]);
+  }, [props.maximized, props.onZoom]);
 
   useEffect(() => {
     const camera = cameraRefs.current["Perspective"];
     if (camera instanceof THREE.PerspectiveCamera) {
-      const base = 5.6;
-      camera.position.setLength(base / Math.max(0.5, props.zoom));
+      const controls = controlsRefs.current["Perspective"];
+      const target = controls?.target ?? new THREE.Vector3(0, 0, 0);
+      const direction = camera.position.clone().sub(target).normalize();
+      camera.position.copy(target).add(direction.multiplyScalar(5.6 / Math.max(0.35, props.zoom)));
       camera.updateProjectionMatrix();
+      controls?.update();
     }
     for (const id of ["Top", "Front", "Right"]) {
       const ortho = cameraRefs.current[id];
@@ -316,11 +352,25 @@ export default function RhinoViewportTrainer3D(props: Props) {
       <button type="button" onClick={() => props.onActivate(item.id)} onDoubleClick={() => { props.onMaximize(item.id); props.onAction("maximize"); }} className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#242b35] px-3 py-2 text-left">
         <span className="text-[10px] font-bold tracking-[.13em] text-slate-200">{item.title}</span><span className="text-[9px] text-slate-500">{item.subtitle}</span>
       </button>
-      <div ref={el => { hostRefs.current[item.id] = el; }} onWheel={(e) => { if (item.id === "Perspective") { props.onZoom(Math.min(2.2, props.zoom + (e.deltaY < 0 ? 0.12 : -0.08))); props.onAction("zoom"); } }} onPointerDown={(e) => { e.preventDefault(); props.onActivate(item.id); pointerStart.current[item.id] = { x: e.clientX, y: e.clientY, shift: e.shiftKey, button: e.button };
+      <div ref={el => { hostRefs.current[item.id] = el; }} onPointerDown={(e) => { props.onActivate(item.id); pointerStart.current[item.id] = { x: e.clientX, y: e.clientY, shift: e.shiftKey, button: e.button };
           const controls = controlsRefs.current[item.id];
-          if (controls && item.id === "Perspective" && e.button === 2) controls.mouseButtons.RIGHT = e.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; }} onContextMenu={(e) => e.preventDefault()} onPointerUp={(e) => { const start = pointerStart.current[item.id]; pointerStart.current[item.id] = null; if (!start || Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)<5) return; if (item.id === "Top" && start.button === 2) props.onAction("panTop"); else if (item.id === "Perspective" && start.button === 2 && start.shift) props.onAction("panPerspective"); else if (item.id === "Perspective" && start.button === 2) { props.onOrbit(props.orbit + (e.clientX-start.x)*0.45); props.onAction("orbit"); } }} onDoubleClick={() => { props.onMaximize(item.id); props.onAction("maximize"); }} className="relative min-h-0 flex-1 bg-[#10161e]">
+          if (controls && e.button === 2) {
+            if (item.id === "Perspective") controls.mouseButtons.RIGHT = e.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+            else {
+              const rotateParallel = e.ctrlKey && e.shiftKey;
+              controls.mouseButtons.RIGHT = rotateParallel ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
+              controls.enableRotate = rotateParallel;
+            }
+          } }} onContextMenu={(e) => e.preventDefault()} onPointerUp={(e) => { const start = pointerStart.current[item.id]; pointerStart.current[item.id] = null;
+          const controls = controlsRefs.current[item.id];
+          if (controls && item.id !== "Perspective") { controls.mouseButtons.RIGHT = THREE.MOUSE.PAN; controls.enableRotate = false; }
+          if (!start || Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)<5) return;
+          if (item.id === "Top" && start.button === 2 && !start.shift) props.onAction("panTop");
+          else if (item.id === "Perspective" && start.button === 2 && start.shift) props.onAction("panPerspective");
+          else if (item.id === "Perspective" && start.button === 2) props.onAction("orbit");
+          else if (item.id !== "Perspective" && start.button === 2 && start.shift && e.ctrlKey) props.onAction("orbit"); }} onDoubleClick={() => { props.onMaximize(item.id); props.onAction("maximize"); }} className="relative min-h-0 flex-1 bg-[#10161e]" style={{ touchAction: "none" }}>
         <div className="pointer-events-none absolute bottom-2 left-3 z-10 text-[10px] font-medium uppercase tracking-wider text-slate-500">{item.id === "Perspective" ? "PERSPECTIVE · ACTIVE CAMERA" : item.id.toUpperCase() + " · ORTHOGRAPHIC"}</div>
-        {item.id === "Perspective" && <div className="pointer-events-none absolute right-2 top-2 z-10 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-[9px] text-slate-400">OrbitControls · zoom · pan</div>}
+        {item.id === "Perspective" && <div className="pointer-events-none absolute right-2 top-2 z-10 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-[9px] text-slate-400">Rhino gestures · RMB orbit · Shift+RMB pan · wheel zoom</div>}
       </div>
     </section>;
   };
