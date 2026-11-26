@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isTransferRateLimited } from "../_shared/aurum-transfer-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,6 +98,15 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+    if (body.action === "prepare" || body.action === "finalize") {
+      const action = body.action;
+      if (isTransferRateLimited(action, req.headers)) {
+        return new Response(JSON.stringify({ error: "Has alcanzado el límite temporal de solicitudes de AURUM Transfer. Inténtalo más tarde." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Retry-After": action === "prepare" ? "900" : "900" },
+        });
+      }
+    }
 
     // Paso 1: preparar URLs firmadas de subida directa (permite hasta 2 GB).
     if (body.action === "prepare") {
