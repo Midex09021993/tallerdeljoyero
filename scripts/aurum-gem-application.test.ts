@@ -790,7 +790,7 @@ test("diamond BVH quality is authoritative and independent of screen-space tier"
 
 test("editor secondary diamonds use separate calibrated profiles while the protected center remains unchanged", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
-  const tierStart = runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>");
+  const tierStart = runtime.indexOf("setTier: (nextTier:");
   const qualityStart = runtime.indexOf("setQuality: (quality) => {", tierStart);
   const tierBlock = runtime.slice(tierStart, qualityStart);
 
