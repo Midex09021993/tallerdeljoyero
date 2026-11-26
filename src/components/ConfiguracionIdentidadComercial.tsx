@@ -6,7 +6,7 @@ import { Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
-type Participante = { id: string; nombre: string; ciudad: string | null; sede_id: string | null };
+type Participante = { id: string; tipo_participante: string; nombre: string; ciudad: string | null; sede_id: string | null };
 type Identidad = {
   id: string; sede_id: string | null; participante_id: string | null; nombre_comercial: string; razon_social: string | null; ruc: string | null;
   logo_url: string | null; email: string | null; telefono: string | null; whatsapp: string | null;
@@ -194,7 +194,7 @@ export function ConfiguracionIdentidadComercial() {
     if (sesion?.esDueno) {
       const { data, error } = await supabase
         .from("ecosistema_participantes")
-        .select("id,nombre,ciudad,sede_id")
+        .select("id,tipo_participante,nombre,ciudad,sede_id")
         .eq("estado", "activo")
         .order("nombre");
       if (error) { toast.error(error.message); setCargando(false); return; }
@@ -431,7 +431,7 @@ export function ConfiguracionIdentidadComercial() {
   if (cargando && !form) return <Panel titulo="Identidad del taller"><div className="p-6 text-sm text-muted-foreground">Cargando configuración…</div></Panel>;
 
   const estadoIdentidadesOwner = participantes
-    .filter((p) => Boolean(p.sede_id))
+    .filter((p) => p.tipo_participante === "organizacion" && Boolean(p.sede_id))
     .map((p) => {
       const identidad = identidades.find((x) => x.participante_id === p.id);
       const pendiente = !identidad || !identidad.razon_social?.trim() || !identidad.ruc?.trim() || !identidad.email?.trim();
