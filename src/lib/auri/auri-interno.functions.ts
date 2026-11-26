@@ -23,6 +23,7 @@ function limitado(userId: string) {
 }
 
 function limpiar(value: unknown, max = 1200) {
+  // eslint-disable-next-line no-control-regex -- Removes NUL from untrusted text.
   return typeof value === "string" ? value.replace(/\u0000/g, "").trim().slice(0, max) : "";
 }
 
