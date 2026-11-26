@@ -1,0 +1,19 @@
+{
+  "$schema": "../gen/schemas/remote-schema.json",
+  "identifier": "aurum-board-remote",
+  "description": "Permite a AURUM BOARD controlar únicamente el orden de su ventana desktop.",
+  "windows": [
+    "main"
+  ],
+  "remote": {
+    "urls": [
+      "https://www.tallerdeljoyero.com",
+      "https://tallerdeljoyero.com"
+    ]
+  },
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-always-on-bottom"
+  ]
+}
