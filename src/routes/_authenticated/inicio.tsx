@@ -759,7 +759,7 @@ function InicioPreparacion({
 }: {
   preparacion: PreparacionInicio | undefined;
   cargando: boolean;
-  tienePedido: boolean;
+  tienePedido: boolean | undefined;
   destinoGestion: string;
   destinoPedidos: string;
 }) {
