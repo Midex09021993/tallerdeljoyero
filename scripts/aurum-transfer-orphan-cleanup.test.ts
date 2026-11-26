@@ -4,6 +4,8 @@ import {
   isStaleUploadObject,
   staleUploadPaths,
   ORPHAN_UPLOAD_RETENTION_MS,
+  isTransferFileCleanupDue,
+  TRANSFER_FILE_CLEANUP_WINDOW_MS,
 } from "../supabase/functions/_shared/aurum-transfer-orphan-cleanup";
 
 const validToken = "A".repeat(43);
@@ -44,5 +46,31 @@ describe("AURUM Transfer orphan upload cleanup", () => {
       { name: "", created_at: stale },
     ], now)).toEqual([validToken + "/old-file.glb"]);
     expect(staleUploadPaths("invalid-token", [{ name: "old-file", created_at: stale }], now)).toEqual([]);
+  });
+});
+
+describe("AURUM Transfer registered file retention", () => {
+  test("expires available and stuck processing transfers after their expiry", () => {
+    const expired = new Date(now - 1000).toISOString();
+    const future = new Date(now + 1000).toISOString();
+    expect(isTransferFileCleanupDue("available", expired, null, now)).toBe(true);
+    expect(isTransferFileCleanupDue("processing", expired, null, now)).toBe(true);
+    expect(isTransferFileCleanupDue("available", future, null, now)).toBe(false);
+    expect(isTransferFileCleanupDue("processing", null, null, now)).toBe(false);
+  });
+
+  test("keeps consumed transfer files for the six-hour import/download window", () => {
+    const old = new Date(now - TRANSFER_FILE_CLEANUP_WINDOW_MS - 1).toISOString();
+    const boundary = new Date(now - TRANSFER_FILE_CLEANUP_WINDOW_MS).toISOString();
+    const fresh = new Date(now - TRANSFER_FILE_CLEANUP_WINDOW_MS + 1).toISOString();
+    expect(isTransferFileCleanupDue("consumed", old, old, now)).toBe(true);
+    expect(isTransferFileCleanupDue("consumed", boundary, boundary, now)).toBe(true);
+    expect(isTransferFileCleanupDue("consumed", fresh, fresh, now)).toBe(false);
+  });
+
+  test("retries already-expired rows and fails safe on unknown status or dates", () => {
+    expect(isTransferFileCleanupDue("expired", null, null, now)).toBe(true);
+    expect(isTransferFileCleanupDue("unknown", now.toString(), null, now)).toBe(false);
+    expect(isTransferFileCleanupDue("consumed", null, "invalid-date", now)).toBe(false);
   });
 });
