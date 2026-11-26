@@ -2578,7 +2578,7 @@ function AulaFormacionPage() {
               onOrbit={setRetoNavOrbit}
               onPan={setRetoNavPan}
               onAction={(action) => {
-                if (action === "zoom" && retoNavPaso === 0) { setRetoNavZoom(v => Math.min(2.2, v + 0.15)); completar("Zoom aplicado a la joya en Perspective."); }
+                if (action === "zoom" && retoNavPaso === 0) completar("Zoom aplicado a la joya en Perspective.");
                 else if (action === "panTop" && retoNavPaso === 1) { setRetoNavPan(p => ({ x: p.x + 0.25, y: p.y + 0.15 })); completar("Desplazamiento aplicado en la vista Top."); }
                 else if (action === "orbit" && retoNavPaso === 2) { setRetoNavOrbit(v => v + 18); completar("La cámara Perspective ha orbitado alrededor de la joya."); }
                 else if (action === "panPerspective" && retoNavPaso === 3) { setRetoNavPan(p => ({ x: p.x + 0.2, y: p.y + 0.15 })); completar("Perspective desplazada sin cambiar la orientación."); }
