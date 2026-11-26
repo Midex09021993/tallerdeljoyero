@@ -772,7 +772,7 @@ test("all BVH diamond tiers share the same central EXR environment texture", () 
 
 test("diamond BVH quality is authoritative and independent of screen-space tier", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
-  const tierStart = runtime.indexOf("setQuality: (quality) => {", runtime.indexOf("setProfile: (nextProfile: any) =>");
+  const tierStart = runtime.indexOf("setTier: (nextTier:");
   const qualityStart = runtime.indexOf("setQuality: (quality) => {", tierStart);
   const qualityEnd = runtime.indexOf("dispose: prepared.dispose", qualityStart);
   const tierBlock = runtime.slice(tierStart, qualityStart);
