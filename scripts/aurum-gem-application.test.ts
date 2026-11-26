@@ -1068,7 +1068,7 @@ test("white diamond 1 and 2 restore neutral catalog RGB boost on initialization 
   expect(runtime).not.toContain("isWhiteDiamondRgbBoostTest");
   expect(profileBlock).not.toContain('profileId === "diamante_natural" || profileId === "diamante_vs" ? [2, 2, 2]');
   expect(profileBlock).toContain('profileId === "diamante_azul" ? [2, 2, 2]');
-  expect(profileBlock).toContain("const boost = profileId === "diamante_azul" ? [2, 2, 2]");
+  expect(profileBlock).toContain('const boost = profileId === "diamante_azul" ? [2, 2, 2]');
   expect(profileBlock).toContain("rgbBoost: boost");
   expect(profileBlock).toContain("entryGemId = profileId");
 });
