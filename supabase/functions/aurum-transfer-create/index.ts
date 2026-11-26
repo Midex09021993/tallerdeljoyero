@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
 
     // Paso 1: preparar URLs firmadas de subida directa (permite hasta 2 GB).
     if (body.action === "prepare") {
-      await sweepOrphanUploads(supabase);
+      await sweepOrphanUploads();
       const files = validate(body.files);
       if (typeof files === "string") return json({ error: files }, 400);
       const token = randomToken();
