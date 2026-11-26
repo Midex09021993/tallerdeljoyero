@@ -84,6 +84,7 @@ function makeJewelryScene() {
 export default function RhinoViewportTrainer3D(props: Props) {
   const hostRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const controlsRefs = useRef<Record<string, OrbitControls | null>>({});
+  const cameraRefs = useRef<Record<string, THREE.Camera | null>>({});
   useEffect(() => {
     const renderers: THREE.WebGLRenderer[] = [];
     const observers: ResizeObserver[] = [];
@@ -125,7 +126,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
         if (view.id === "Top") ortho.position.set(0, 10, 0.01);
         if (view.id === "Front") ortho.position.set(0, 0.01, 10);
         if (view.id === "Right") ortho.position.set(10, 0.01, 0);
-        ortho.up.set(0, 0, 1);
+        if (view.id === "Top") ortho.up.set(0, 0, 1);
         ortho.lookAt(0, 0, 0);
         camera = ortho;
         const controls = new OrbitControls(ortho, renderer.domElement);
@@ -138,6 +139,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
         controlsRefs.current[view.id] = controls;
       }
       cameras[view.id] = camera;
+      cameraRefs.current[view.id] = camera;
       const draw = () => renderer.render(sceneData.scene, camera);
       const controls = controlsRefs.current[view.id];
       controls?.addEventListener("change", draw);
@@ -173,6 +175,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
       observers.forEach(o => o.disconnect());
       Object.values(controlsRefs.current).forEach(c => c?.dispose());
       controlsRefs.current = {};
+      cameraRefs.current = {};
       renderers.forEach(r => { r.dispose(); r.domElement.remove(); });
       sceneData.scene.traverse(obj => {
         if (obj instanceof THREE.Mesh) { obj.geometry.dispose(); const m = obj.material; if (Array.isArray(m)) m.forEach(x => x.dispose()); else m.dispose(); }
@@ -180,7 +183,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
     };
   }, []);
 
-  const pointerStart = useRef<Record<string, { x: number; y: number; shift: boolean; button: number } | null>>({});
+  useEffect(() => {\n    const camera = cameraRefs.current.Perspective;\n    if (camera instanceof THREE.PerspectiveCamera) {\n      const base = 7.5;\n      camera.position.setLength(base / Math.max(0.5, props.zoom));\n      camera.updateProjectionMatrix();\n    }\n    for (const id of ["Top", "Front", "Right"]) {\n      const ortho = cameraRefs.current[id];\n      if (ortho instanceof THREE.OrthographicCamera) { ortho.zoom = props.zoom; ortho.updateProjectionMatrix(); }\n    }\n  }, [props.zoom]);\n  const pointerStart = useRef<Record<string, { x: number; y: number; shift: boolean; button: number } | null>>({});
   const view = (item: (typeof VIEWS)[number]) => {
     const isActive = props.activeView === item.id;
     const isMax = props.maximized === item.id;
