@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Building2, Eye, EyeOff, MapPin, Mail, Phone, UserRound, X } from "lucide-react";
+import { Building2, Eye, EyeOff, MapPin, Mail, UserRound, X } from "lucide-react";
+import { TelefonoInternacional, PAISES_TELEFONO } from "@/components/TelefonoInternacional";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarTaller } from "@/lib/cuentas.functions";
 import { registrarEvento } from "@/lib/analytics";
@@ -16,7 +17,6 @@ export function RegistroTaller({ className = "" }: Props) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
-  const [codigoPais, setCodigoPais] = useState("+51");
   const [form, setForm] = useState({
     nombre: "",
     taller: "",
@@ -151,48 +151,16 @@ export function RegistroTaller({ className = "" }: Props) {
                     </span>
                   </label>
 
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 sm:col-span-2">
-                    WhatsApp / teléfono
-                    <span className="mt-2 flex gap-2">
-                      <span className="relative w-[132px] shrink-0">
-                        <select aria-label="Código telefónico del país" value={codigoPais} onChange={(e) => setCodigoPais(e.target.value)} className="h-full min-h-[46px] w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-7 text-sm font-semibold text-[#17232d] outline-none transition focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25">
-                          <option value="+51">🇵🇪 +51</option>
-                          <option value="+1">🇺🇸 +1</option>
-                          <option value="+54">🇦🇷 +54</option>
-                          <option value="+591">🇧🇴 +591</option>
-                          <option value="+55">🇧🇷 +55</option>
-                          <option value="+56">🇨🇱 +56</option>
-                          <option value="+57">🇨🇴 +57</option>
-                          <option value="+506">🇨🇷 +506</option>
-                          <option value="+53">🇨🇺 +53</option>
-                          <option value="+593">🇪🇨 +593</option>
-                          <option value="+503">🇸🇻 +503</option>
-                          <option value="+34">🇪🇸 +34</option>
-                          <option value="+1">🇨🇦 +1</option>
-                          <option value="+502">🇬🇹 +502</option>
-                          <option value="+504">🇭🇳 +504</option>
-                          <option value="+52">🇲🇽 +52</option>
-                          <option value="+505">🇳🇮 +505</option>
-                          <option value="+507">🇵🇦 +507</option>
-                          <option value="+595">🇵🇾 +595</option>
-                          <option value="+1">🇵🇷 +1</option>
-                          <option value="+1">🇩🇴 +1</option>
-                          <option value="+598">🇺🇾 +598</option>
-                          <option value="+58">🇻🇪 +58</option>
-                          <option value="+33">🇫🇷 +33</option>
-                          <option value="+49">🇩🇪 +49</option>
-                          <option value="+39">🇮🇹 +39</option>
-                          <option value="+44">🇬🇧 +44</option>
-                          <option value="+81">🇯🇵 +81</option>
-                        </select>
-                      </span>
-                      <span className="relative min-w-0 flex-1">
-                        <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                        <input type="tel" inputMode="numeric" maxLength={20} autoComplete="tel-national" placeholder="Número sin código de país" value={form.telefono} onChange={(e) => setForm((v) => ({ ...v, telefono: e.target.value.replace(/[^0-9\s()-]/g, "") }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
-                      </span>
-                    </span>
-                    <span className="mt-1.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">Selecciona el prefijo internacional de tu país.</span>
-                  </label>
+                  <div className="sm:col-span-2">
+                    <TelefonoInternacional
+                      value={form.telefono}
+                      onChange={(telefono) => setForm((v) => ({ ...v, telefono }))}
+                      defaultCountry={PAISES_TELEFONO.find((item) => item.nombre === form.pais)?.iso ?? "PE"}
+                      label="WhatsApp / teléfono"
+                      optional
+                      id="registro-taller-telefono"
+                    />
+                  </div>
 
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Ciudad
