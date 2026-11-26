@@ -256,7 +256,8 @@ function AfiliadosPage() {
 
   return (
     <AppShell titulo="AURUM LAB · Afiliados" subtitulo={esAdmin ? "Administración del programa de recomendación" : "Comparte tu experiencia y genera comisiones por matrículas confirmadas"}>
-      <div className="space-y-6 pb-8">\n        {(configuracionQuery.isError || actividadQuery.isError) ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">Configuración o actividad financiera incompleta. No uses los importes mostrados como confirmados. <button type="button" onClick={() => { void configuracionQuery.refetch(); void actividadQuery.refetch(); }} className="ml-2 underline font-semibold">Reintentar</button></div> : null>
+      <div className="space-y-6 pb-8">
+        {(configuracionQuery.isError || actividadQuery.isError) ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">Configuración o actividad financiera incompleta. No uses los importes mostrados como confirmados. <button type="button" onClick={() => { void configuracionQuery.refetch(); void actividadQuery.refetch(); }} className="ml-2 underline font-semibold">Reintentar</button></div> : null}
         <header className="overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-zinc-950 via-zinc-900 to-amber-950 p-6 text-white shadow-sm md:p-8">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div className="max-w-2xl">
