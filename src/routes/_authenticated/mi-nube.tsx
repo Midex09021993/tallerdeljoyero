@@ -207,11 +207,35 @@ function MiNubePage() {
   const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<ArchivoNube[]>([]);
+  const [cuotaMiNube, setCuotaMiNube] = useState<{ plan: string; almacenamientoMiB: number; carpetasMax: number } | null>(null);
+  const [errorCuotaMiNube, setErrorCuotaMiNube] = useState<string | null>(null);
+  const [bytesSupabaseUsados, setBytesSupabaseUsados] = useState<number | null>(null);
+  const [carpetasSupabaseUsadas, setCarpetasSupabaseUsadas] = useState<number | null>(null);
   const cargaBibliotecaEnCurso = useRef(false);
   const cargaBibliotecaPendiente = useRef(false);
   useEffect(() => {
     setCarpetas([...new Set(archivos.map((archivo) => archivo.carpeta))]);
   }, [archivos]);
+
+  useEffect(() => {
+    let cancelado = false;
+    if (!participanteId) { setCuotaMiNube(null); setErrorCuotaMiNube(null); return; }
+    void (async () => {
+      try {
+        const { data: participante, error: errorParticipante } = await supabase.from("ecosistema_participantes").select("metadata").eq("id", participanteId).maybeSingle();
+        if (errorParticipante) throw errorParticipante;
+        const metadata = (participante?.metadata ?? {}) as Record<string, unknown>;
+        const plan = typeof metadata.plan_comercial === "string" && metadata.plan_comercial.trim() ? metadata.plan_comercial.trim() : "emprendedor";
+        const { data: cuota, error: errorPlan } = await supabase.from("aurum_plan_quotas").select("almacenamiento_mib,carpetas_mi_nube_max").eq("plan_id", plan).maybeSingle();
+        if (errorPlan) throw errorPlan;
+        if (!cuota) throw new Error("No se encontró la cuota del plan comercial.");
+        if (!cancelado) { setCuotaMiNube({ plan, almacenamientoMiB: cuota.almacenamiento_mib, carpetasMax: cuota.carpetas_mi_nube_max }); setErrorCuotaMiNube(null); }
+      } catch (cause) {
+        if (!cancelado) { setCuotaMiNube(null); setErrorCuotaMiNube(cause instanceof Error ? cause.message : "No se pudo consultar la cuota del plan."); }
+      }
+    })();
+    return () => { cancelado = true; };
+  }, [participanteId]);
 
 
   const cargarMisVentas = useCallback(async () => {
@@ -567,6 +591,11 @@ function MiNubePage() {
         }));
         resultados.push(...respuestas);
       }
+
+      // Métricas de cuota: sumar todos los objetos listados, incluidos artefactos
+      // internos de Aurum que se ocultan del explorador visual. El NAS queda excluido.
+      setBytesSupabaseUsados(resultados.flat().reduce((total, archivo) => total + Math.max(0, archivo.bytes), 0));
+      setCarpetasSupabaseUsadas(nombresCarpetas.length);
 
       // Archivos internos de Aurum: permanecen en Supabase Storage y se usan
       // al reabrir/actualizar proyectos, pero no se muestran como archivos del usuario.
@@ -1698,6 +1727,17 @@ function MiNubePage() {
             </div>
           </div>
           {error && <p className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"><AlertCircle className="mt-0.5 size-3.5 shrink-0" /> No se pudo completar la comprobación: {error}</p>}
+          <div className="mt-4 rounded-xl border border-gold/25 bg-gold/[0.045] p-3.5">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div><h3 className="text-sm font-semibold">Cuota de Mi Nube · {cuotaMiNube?.plan ? cuotaMiNube.plan.charAt(0).toUpperCase() + cuotaMiNube.plan.slice(1) : "Plan comercial"}</h3><p className="mt-1 text-xs text-muted-foreground">Solo Supabase Storage. Los vídeos del NAS no consumen esta cuota.</p></div>
+              {cuotaMiNube && <span className="rounded-full border border-gold/25 bg-background px-2.5 py-1 text-[10px] font-semibold">{cuotaMiNube.almacenamientoMiB === -1 ? "Sin límite de espacio" : `${etiquetaTamano(cuotaMiNube.almacenamientoMiB * 1024 * 1024)} disponibles en plan`}</span>}
+            </div>
+            {errorCuotaMiNube ? <p className="mt-3 text-xs text-destructive">No se pudo leer la cuota: {errorCuotaMiNube}</p> : !cuotaMiNube || bytesSupabaseUsados === null || carpetasSupabaseUsadas === null ? <p className="mt-3 text-xs text-muted-foreground">Calculando uso y límites…</p> : <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-border bg-background p-3"><div className="flex items-center justify-between gap-2 text-xs"><span className="font-medium">Espacio utilizado</span><span className="font-semibold tabular-nums">{etiquetaTamano(bytesSupabaseUsados)}{cuotaMiNube.almacenamientoMiB === -1 ? " · ilimitado" : ` / ${etiquetaTamano(cuotaMiNube.almacenamientoMiB * 1024 * 1024}`}</span></div>{cuotaMiNube.almacenamientoMiB !== -1 && <><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${bytesSupabaseUsados / Math.max(1, cuotaMiNube.almacenamientoMiB * 1024 * 1024) >= 0.9 ? "bg-red-500" : bytesSupabaseUsados / Math.max(1, cuotaMiNube.almacenamientoMiB * 1024 * 1024) >= 0.75 ? "bg-amber-500" : "bg-gold"}`} style={{ width: `${Math.min(100, Math.max(0, bytesSupabaseUsados / Math.max(1, cuotaMiNube.almacenamientoMiB * 1024 * 1024) * 100))}%` }} /></div><p className="mt-1.5 text-[10px] text-muted-foreground">Restante: {etiquetaTamano(Math.max(0, cuotaMiNube.almacenamientoMiB * 1024 * 1024 - bytesSupabaseUsados))}</p></>}</div>
+              <div className="rounded-lg border border-border bg-background p-3"><div className="flex items-center justify-between gap-2 text-xs"><span className="font-medium">Carpetas de proyectos</span><span className="font-semibold tabular-nums">{carpetasSupabaseUsadas}{cuotaMiNube.carpetasMax === -1 ? " · ilimitadas" : ` / ${cuotaMiNube.carpetasMax}`}</span></div>{cuotaMiNube.carpetasMax !== -1 && <><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${carpetasSupabaseUsadas >= cuotaMiNube.carpetasMax ? "bg-red-500" : carpetasSupabaseUsadas / Math.max(1, cuotaMiNube.carpetasMax) >= 0.75 ? "bg-amber-500" : "bg-gold"}`} style={{ width: `${Math.min(100, Math.max(0, carpetasSupabaseUsadas / Math.max(1, cuotaMiNube.carpetasMax) * 100))}%` }} /></div><p className="mt-1.5 text-[10px] text-muted-foreground">Restantes: {Math.max(0, cuotaMiNube.carpetasMax - carpetasSupabaseUsadas)}</p></>}</div>
+            </div>}
+            {error && <p className="mt-2 text-[10px] text-amber-700 dark:text-amber-400">Uso parcial: algunas carpetas no pudieron consultarse; el total puede ser menor al real.</p>}
+          </div>
           </div>
         </details>
 
