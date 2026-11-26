@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isTransferImportRateLimited } from "../_shared/aurum-transfer-import-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,11 +40,13 @@ Deno.serve(async (req) => {
 
   let cleanupCopiedFiles: (() => Promise<void>) | null = null;
   let copiedPaths: string[] = [];
+  let importClaim: { transferId: string; claimAt: string } | null = null;
   try {
     const authClient = createClient(url, anonKey, { global: { headers: { Authorization: `Bearer ${bearer}` } }, auth: { persistSession: false } });
     const { data: authData, error: authError } = await authClient.auth.getUser();
     if (authError || !authData.user) return json({ error: "La sesión no es válida. Inicia sesión e inténtalo de nuevo." }, 401);
     const user = authData.user;
+    if (isTransferImportRateLimited(user.id)) return json({ error: "Has alcanzado el límite temporal de importaciones. Inténtalo más tarde." }, 429);
     const body = await req.json().catch(() => ({}));
     const token = typeof body.token === "string" ? body.token : "";
     if (!token || token.length > 256) return json({ error: "Transferencia no válida." }, 400);
@@ -51,6 +54,14 @@ Deno.serve(async (req) => {
     const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
     cleanupCopiedFiles = async () => {
       if (copiedPaths.length) await admin.storage.from(CLOUD_BUCKET).remove(copiedPaths);
+      if (importClaim) {
+        await admin.from("aurum_transfers")
+          .update({ imported_at: null, imported_by: null })
+          .eq("id", importClaim.transferId)
+          .eq("imported_at", importClaim.claimAt)
+          .is("imported_by", null);
+        importClaim = null;
+      }
     };
     const { data: accounts, error: accountError } = await admin
       .from("participante_cuentas")
@@ -99,6 +110,20 @@ Deno.serve(async (req) => {
     if (participantError) throw participantError;
     if (!participant) return json({ error: "Tu taller no está activo para Mi Nube." }, 403);
 
+    // Reservar la importación de forma atómica antes de copiar, evitando dos usuarios/cargas simultáneas.
+    // Las reservas abandonadas pueden recuperarse tras 30 minutos; los imports completos tienen imported_by.
+    const claimAt = new Date().toISOString();
+    const staleClaimCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { data: claim, error: claimError } = await admin.from("aurum_transfers")
+      .update({ imported_at: claimAt, imported_by: null })
+      .eq("id", transfer.id)
+      .or(`imported_at.is.null,and(imported_by.is.null,imported_at.lt.${staleClaimCutoff})`)
+      .select("id")
+      .maybeSingle();
+    if (claimError) throw claimError;
+    if (!claim) return json({ error: "Esta transferencia está siendo importada o ya fue importada. Inténtalo más tarde." }, 409);
+    importClaim = { transferId: transfer.id, claimAt };
+
     const folder = `AURUM-Transfer-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}`;
     const storage = admin.storage;
     for (const file of files) {
@@ -117,13 +142,15 @@ Deno.serve(async (req) => {
       .from("aurum_transfers")
       .update({ imported_at: new Date().toISOString(), imported_by: user.id })
       .eq("id", transfer.id)
-      .is("imported_at", null)
+      .eq("imported_at", claimAt)
+      .is("imported_by", null)
       .select("id")
       .maybeSingle();
     if (updateError || !updated) {
       await storage.from(CLOUD_BUCKET).remove(copiedPaths);
       return json({ error: "La transferencia ya fue importada o cambió de estado. No se guardaron duplicados." }, 409);
     }
+    importClaim = null; // Ya se confirmó imported_by: no liberar la reserva.
     return json({ ok: true, file_count: copiedPaths.length, folder, message: "Archivos guardados en Mi Nube." });
   } catch (error) {
     if (cleanupCopiedFiles) {
