@@ -146,6 +146,9 @@ begin
 end;
 $$;
 
+revoke all on function public.provision_identidad_comercial_taller(uuid) from public, anon, authenticated;
+revoke all on function public.trigger_provision_identidad_comercial_taller() from public, anon, authenticated;
+
 commit;
 
 notify pgrst, 'reload schema';
