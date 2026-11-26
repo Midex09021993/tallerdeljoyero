@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isTransferRateLimited } from "../_shared/aurum-transfer-rate-limit.ts";
+import { isTransferFileCleanupDue, TRANSFER_FILE_CLEANUP_WINDOW_MS } from "../_shared/aurum-transfer-orphan-cleanup.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,15 +48,28 @@ Deno.serve(async (req) => {
   // Limpieza oportunista local al handler: evita incompatibilidades de tipos genéricos
   // entre versiones de SupabaseClient sin cambiar el comportamiento de limpieza.
   const sweep = async () => {
-    const cutoff = new Date(Date.now() - DOWNLOAD_WINDOW_SECONDS * 1000).toISOString();
     const now = new Date().toISOString();
-    const { data } = await supabase
-      .from("aurum_transfers")
-      .select("id,files,status")
-      .or(`and(status.eq.consumed,consumed_at.lt.${cutoff}),and(status.eq.available,expires_at.lt.${now}),and(status.eq.processing,expires_at.lt.${now}),and(status.eq.expired,files.neq.[])`)
-      .neq("files", "[]")
-      .limit(20);
-    for (const row of (data ?? []) as Array<{ id: string; files: FileMeta[]; status: string }>) {
+    const cutoff = new Date(Date.now() - TRANSFER_FILE_CLEANUP_WINDOW_MS).toISOString();
+    const [activeResult, expiredResult] = await Promise.all([
+      supabase
+        .from("aurum_transfers")
+        .select("id,files,status,expires_at,consumed_at")
+        .or(`and(status.eq.consumed,consumed_at.lt.${cutoff}),and(status.eq.available,expires_at.lt.${now}),and(status.eq.processing,expires_at.lt.${now})`)
+        .neq("files", "[]")
+        .limit(20),
+      supabase
+        .from("aurum_transfers")
+        .select("id,files,status,expires_at,consumed_at")
+        .eq("status", "expired")
+        .neq("files", "[]")
+        .limit(20),
+    ]);
+    if (activeResult.error) throw activeResult.error;
+    if (expiredResult.error) throw expiredResult.error;
+    const rows = [...(activeResult.data ?? []), ...(expiredResult.data ?? [])]
+      .filter((row, index, all) => all.findIndex((candidate) => candidate.id === row.id) === index)
+      .filter((row) => isTransferFileCleanupDue(row.status, row.expires_at, row.consumed_at));
+    for (const row of rows as Array<{ id: string; files: FileMeta[]; status: string; expires_at: string; consumed_at: string | null }>) {
       const paths = (row.files ?? []).map((f) => f.path).filter(Boolean);
       if (paths.length) {
         const { error: removeError } = await supabase.storage.from(BUCKET).remove(paths);
