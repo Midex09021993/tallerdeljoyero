@@ -809,7 +809,7 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   expect(runtime).toContain('gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09))');
   expect(runtime).toContain('"catalog-dmat-secondary-profile"');
   expect(runtime).toContain('const diamondSourceParameters = (calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")');
-  expect(runtime).toContain('diamondSourceParameters.absorptionFactor');
+  expect(runtime).toContain('const absorption = resolvedOptics.absorptionFactor;');
   expect(runtime).toContain('diamondSourceParameters.rayBounces');
   expect(tierBlock).toContain("packageApi.setDiamondOptions(prepared.material");
   expect(tierBlock).toContain("currentDiamondTier = effectiveTier");
