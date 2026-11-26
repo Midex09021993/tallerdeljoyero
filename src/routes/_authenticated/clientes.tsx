@@ -55,7 +55,8 @@ function ClientesPage() {
   const puedeVer = Boolean(sesion?.esAdmin) || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   // RLS de clientes permite escrituras al dueño o gerente autorizado para la sede; el área ventas consulta, pero no escribe por sí sola.
   const puedeGestionarClientes = Boolean(sesion?.esAdmin);
-  const [clientes, setClientes] = useState<Cliente[]>([]);\n  const [errorClientes, setErrorClientes] = useState(false);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [errorClientes, setErrorClientes] = useState(false);
   const [seleccionado, setSeleccionado] = useState<Cliente | null>(null);
   const [pedidos, setPedidos] = useState<PedidoRef[]>([]);
   const [cotizaciones, setCotizaciones] = useState<CotRef[]>([]);
