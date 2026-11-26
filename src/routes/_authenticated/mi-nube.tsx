@@ -1644,7 +1644,7 @@ function MiNubePage() {
       }
       return;
     }
-    const { data, error: errorUrl } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10, {
+    const { data, error: errorUrl } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60, {
       download: nombreVisible(archivo.nombre),
     });
     if (errorUrl || !data?.signedUrl) {
