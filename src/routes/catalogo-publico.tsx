@@ -45,7 +45,7 @@ export type EntradaPublica = {
 export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPublica[] }) {
   const [busqueda, setBusqueda] = useState("");
   const [filtro, setFiltro] = useState<"talleres" | "cursos">("talleres");
-  const { data = [], isLoading, isError } = useQuery({
+  const { data = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["directorio-comunidad-publica"],
     queryFn: async () => {
       const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica_ranking");
@@ -99,7 +99,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
         {([{id:"talleres",label:"Talleres y joyerías"},{id:"cursos",label:"Cursos y formación"}] as const).map((item)=><button key={item.id} type="button" onClick={()=>setFiltro(item.id)} aria-pressed={filtro===item.id} className={"rounded-full border px-5 py-3 text-xs font-semibold transition duration-200 " + (filtro===item.id ? "border-[#17232d] bg-[#17232d] text-white shadow-[0_4px_14px_rgba(23,35,45,.12)]" : "border-slate-200 bg-white/70 text-slate-600 hover:border-[#d4aa19] hover:bg-white")}>{item.label}</button>)}
       </div>
       {isLoading ? <div className="grid gap-5 py-8 sm:grid-cols-2 lg:grid-cols-3">{[0,1,2].map(n=><div key={n} className="h-64 animate-pulse rounded-2xl border border-[#211d1910] bg-white/70" />)}</div>
-      : isError ? <div className="mt-8 rounded-2xl border border-[#b453091f] bg-white p-6"><h3 className="font-semibold">No pudimos cargar la comunidad</h3><p className="mt-2 text-sm text-slate-600">La interfaz está preparada; falta habilitar la consulta pública segura en la base de datos. No se muestran datos inventados.</p></div>
+      : isError ? <div className="mt-8 rounded-2xl border border-[#b453091f] bg-white p-6"><h3 className="font-semibold">No pudimos cargar la comunidad</h3><p className="mt-2 text-sm text-slate-600">La interfaz está preparada; falta habilitar la consulta pública segura en la base de datos. No se muestran datos inventados.</p><button type="button" onClick={() => void refetch()} className="mt-3 rounded-lg border border-[#b453091f] px-3 py-2 text-xs font-semibold">Reintentar</button></div>
       : entradasOrdenadas.length===0 ? <div className="mt-8 rounded-2xl border border-slate-200 bg-white/75 px-6 py-12 text-center"><BookOpen className="mx-auto size-8 text-[#987400]" /><h3 className="mt-4 text-lg font-semibold">Aún no hay resultados para mostrar</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">{busqueda?"Prueba con otro término de búsqueda.":"Los talleres y profesores aparecerán aquí cuando haya información pública disponible."}</p></div>
       : <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{entradasOrdenadas.map(item=>{
         const esCurso = item.tipo === "curso";
