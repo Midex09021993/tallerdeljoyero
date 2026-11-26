@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 import { toast } from "sonner";
-import { StickyNote, Plus, Search, Pin, PinOff, Archive, Trash2, LayoutGrid, List, Sparkles, CalendarClock, Users, Lightbulb, Wrench, ShoppingCart, X, GripVertical } from "lucide-react";
+import { Plus, Search, Pin, PinOff, Archive, Trash2, LayoutGrid, List, CalendarClock, Users, Lightbulb, Wrench, ShoppingCart, X, GripVertical } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pizarra")({
   head: () => ({ meta: [{ title: "AURUM BOARD — Aurum Lab" }, { name: "description", content: "Pizarra visual de ideas, recordatorios y pendientes del taller." }] }),
