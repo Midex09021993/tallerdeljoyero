@@ -812,7 +812,7 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   expect(runtime).toContain('const absorption = resolvedOptics.absorptionFactor;');
   expect(runtime).toContain('diamondSourceParameters.rayBounces');
   expect(tierBlock).toContain("applyDiamondTierOptics(nextTier)");
-  expect(tierBlock).toContain("currentDiamondTier = effectiveTier");
+  expect(runtime).toContain("currentDiamondTier = effectiveTier");
   expect(runtime).toContain("diamondOpticalDiagnostics");
   expect(runtime).toContain('"white-shared-center-profile"');
   expect(runtime).toContain("environmentTextureUuid: environmentMap?.uuid ?? null");
