@@ -569,7 +569,7 @@ function MiNubePage() {
           try {
             const data = await listarStorage(`${raiz}/${nombreCarpeta}`, `carpeta "${nombreCarpeta}"`);
             return (data ?? [])
-              .filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")))
+              .filter((entrada) => Boolean(entrada.id || entrada.metadata))
               .map((entrada): ArchivoNube => {
                 const nombre = entrada.name;
                 return {
@@ -1300,11 +1300,21 @@ function MiNubePage() {
         throw new Error("Ya existe una carpeta con ese nombre en Mi Nube.");
       }
 
-      const { data: entradas, error: errorLista } = await supabase.storage.from(BUCKET).list(raizAnterior, { limit: 1000, sortBy: { column: "name", order: "asc" } });
-      if (errorLista) throw new Error("No se pudo verificar el contenido de la carpeta. No se cambió el nombre.");
+      const entradas: Array<{ name: string; id?: string; metadata?: Record<string, unknown> | null }> = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data: pagina, error: errorLista } = await supabase.storage.from(BUCKET).list(raizAnterior, {
+          limit: 1000,
+          offset,
+          sortBy: { column: "name", order: "asc" },
+        });
+        if (errorLista) throw new Error("No se pudo verificar todo el contenido de la carpeta. No se cambió el nombre.");
+        const items = pagina ?? [];
+        entradas.push(...items);
+        if (items.length < 1000) break;
+      }
       // Solo mover objetos reales. Una carpeta puede contener un punto en el nombre
-      // sin ser un archivo; el fallback por extensión provocaba falsos positivos.
-      const archivosWeb = (entradas ?? []).filter((entrada) => Boolean(entrada.id || entrada.metadata));
+      // sin ser un archivo; no se usa el nombre/extensión como heurística.
+      const archivosWeb = entradas.filter((entrada) => Boolean(entrada.id || entrada.metadata));
       for (const entrada of archivosWeb) {
         const origen = `${raizAnterior}/${entrada.name}`;
         const destino = `${raizNueva}/${entrada.name}`;
