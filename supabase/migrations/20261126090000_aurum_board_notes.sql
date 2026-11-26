@@ -21,23 +21,31 @@ create table if not exists public.aurum_board_notes (
 create index if not exists aurum_board_notes_participante_idx on public.aurum_board_notes(participante_id,sede_id,estado,updated_at desc);
 create index if not exists aurum_board_notes_user_idx on public.aurum_board_notes(user_id,updated_at desc);
 alter table public.aurum_board_notes enable row level security;
-drop policy if exists "aurum_board_select_member" on public.aurum_board_notes;\ncreate policy "aurum_board_select_member" on public.aurum_board_notes for select to authenticated using (
+drop policy if exists "aurum_board_select_member" on public.aurum_board_notes;
+create policy "aurum_board_select_member" on public.aurum_board_notes for select to authenticated using (
   user_id=auth.uid() or (visibilidad='taller' and participante_id in (
     select p.participante_id from public.profiles p where p.id=auth.uid() and p.participante_id is not null
     union select pc.participante_id from public.participante_cuentas pc where pc.user_id=auth.uid() and pc.estado='activo'
   ))
 );
-drop policy if exists "aurum_board_insert_own" on public.aurum_board_notes;\ncreate policy "aurum_board_insert_own" on public.aurum_board_notes for insert to authenticated with check (
+drop policy if exists "aurum_board_insert_own" on public.aurum_board_notes;
+create policy "aurum_board_insert_own" on public.aurum_board_notes for insert to authenticated with check (
   user_id=auth.uid() and participante_id in (
     select p.participante_id from public.profiles p where p.id=auth.uid() and p.participante_id is not null
     union select pc.participante_id from public.participante_cuentas pc where pc.user_id=auth.uid() and pc.estado='activo'
   )
 );
-drop policy if exists "aurum_board_update_own" on public.aurum_board_notes;\ncreate policy "aurum_board_update_own" on public.aurum_board_notes for update to authenticated using (user_id=auth.uid()) with check (
+drop policy if exists "aurum_board_update_own" on public.aurum_board_notes;
+create policy "aurum_board_update_own" on public.aurum_board_notes for update to authenticated using (user_id=auth.uid()) with check (
   user_id=auth.uid() and participante_id in (
     select p.participante_id from public.profiles p where p.id=auth.uid() and p.participante_id is not null
     union select pc.participante_id from public.participante_cuentas pc where pc.user_id=auth.uid() and pc.estado='activo'
   )
 );
-drop policy if exists "aurum_board_delete_own" on public.aurum_board_notes;\ncreate policy "aurum_board_delete_own" on public.aurum_board_notes for delete to authenticated using (user_id=auth.uid());
+drop policy if exists "aurum_board_delete_own" on public.aurum_board_notes;
+create policy "aurum_board_delete_own" on public.aurum_board_notes for delete to authenticated using (user_id=auth.uid());
 grant select,insert,update,delete on public.aurum_board_notes to authenticated;
+
+
+-- Refresca la caché del esquema de PostgREST/Supabase.
+notify pgrst, 'reload schema';
