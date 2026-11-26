@@ -492,7 +492,6 @@ function TrabajoOperativoPage() {
             <span className="flex items-center gap-3">
               <span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold-deep"><Menu className="size-5" aria-hidden="true" /></span>
               <span className="min-w-0"><span className="block text-sm font-bold">Secciones de la ficha</span><span className="mt-0.5 block text-xs font-normal text-muted-foreground">Instrucciones, archivos, materiales y seguimiento</span></span>
-            </span>
             <ChevronDown className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
           </summary>
           <div className="space-y-3 border-t border-border p-3 sm:p-4">
