@@ -862,6 +862,7 @@ export type Database = {
           file_count: number
           files: Json
           id: string
+          import_claimed_at: string | null
           status: string
           token_hash: string
           total_bytes: number
@@ -873,6 +874,7 @@ export type Database = {
           file_count?: number
           files?: Json
           id?: string
+          import_claimed_at?: string | null
           status?: string
           token_hash: string
           total_bytes?: number
@@ -884,6 +886,7 @@ export type Database = {
           file_count?: number
           files?: Json
           id?: string
+          import_claimed_at?: string | null
           status?: string
           token_hash?: string
           total_bytes?: number
@@ -2192,6 +2195,145 @@ export type Database = {
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      directorio_ranking_config: {
+        Row: {
+          actividad_dias: number
+          actualizado_en: string
+          diamantes_por_categoria: number
+          gracia_degradacion_dias: number
+          id: boolean
+          nivel_bronce: number
+          nivel_oro: number
+          nivel_plata: number
+          peso_actividad: number
+          peso_perfil: number
+          peso_productos: number
+          peso_verificacion: number
+        }
+        Insert: {
+          actividad_dias?: number
+          actualizado_en?: string
+          diamantes_por_categoria?: number
+          gracia_degradacion_dias?: number
+          id?: boolean
+          nivel_bronce?: number
+          nivel_oro?: number
+          nivel_plata?: number
+          peso_actividad?: number
+          peso_perfil?: number
+          peso_productos?: number
+          peso_verificacion?: number
+        }
+        Update: {
+          actividad_dias?: number
+          actualizado_en?: string
+          diamantes_por_categoria?: number
+          gracia_degradacion_dias?: number
+          id?: boolean
+          nivel_bronce?: number
+          nivel_oro?: number
+          nivel_plata?: number
+          peso_actividad?: number
+          peso_perfil?: number
+          peso_productos?: number
+          peso_verificacion?: number
+        }
+        Relationships: []
+      }
+      directorio_ranking_historial: {
+        Row: {
+          calculado_en: string
+          id: string
+          nivel: string
+          participante_id: string
+          periodo_actividad_dias: number
+          posicion_diamante: number | null
+          puntuacion_actividad: number
+          puntuacion_perfil: number
+          puntuacion_productos: number
+          puntuacion_total: number
+          puntuacion_verificacion: number
+        }
+        Insert: {
+          calculado_en?: string
+          id?: string
+          nivel?: string
+          participante_id: string
+          periodo_actividad_dias?: number
+          posicion_diamante?: number | null
+          puntuacion_actividad?: number
+          puntuacion_perfil?: number
+          puntuacion_productos?: number
+          puntuacion_total?: number
+          puntuacion_verificacion?: number
+        }
+        Update: {
+          calculado_en?: string
+          id?: string
+          nivel?: string
+          participante_id?: string
+          periodo_actividad_dias?: number
+          posicion_diamante?: number | null
+          puntuacion_actividad?: number
+          puntuacion_perfil?: number
+          puntuacion_productos?: number
+          puntuacion_total?: number
+          puntuacion_verificacion?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directorio_ranking_historial_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      directorio_ranking_verificaciones: {
+        Row: {
+          actualizado_en: string
+          creado_en: string
+          id: string
+          observaciones: string | null
+          participante_id: string
+          tipo_verificacion: string | null
+          verificado: boolean
+          verificado_en: string | null
+          verificado_por: string | null
+        }
+        Insert: {
+          actualizado_en?: string
+          creado_en?: string
+          id?: string
+          observaciones?: string | null
+          participante_id: string
+          tipo_verificacion?: string | null
+          verificado?: boolean
+          verificado_en?: string | null
+          verificado_por?: string | null
+        }
+        Update: {
+          actualizado_en?: string
+          creado_en?: string
+          id?: string
+          observaciones?: string | null
+          participante_id?: string
+          tipo_verificacion?: string | null
+          verificado?: boolean
+          verificado_en?: string | null
+          verificado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directorio_ranking_verificaciones_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: true
+            referencedRelation: "ecosistema_participantes"
             referencedColumns: ["id"]
           },
         ]
@@ -5556,6 +5698,18 @@ export type Database = {
         Args: { _visitante_hash: string }
         Returns: string
       }
+      calcular_score_directorio: {
+        Args: {
+          p_actividad: number
+          p_perfil: number
+          p_productos: number
+          p_verificacion: number
+        }
+        Returns: {
+          nivel_calculado: string
+          score_total: number
+        }[]
+      }
       cambiar_estado_cotizacion: {
         Args: { _cotizacion_id: string; _nuevo_estado: string }
         Returns: undefined
@@ -5600,6 +5754,7 @@ export type Database = {
           file_count: number
           files: Json
           id: string
+          import_claimed_at: string | null
           status: string
           token_hash: string
           total_bytes: number
@@ -5687,6 +5842,7 @@ export type Database = {
         Args: { _cotizacion_id: string }
         Returns: string
       }
+      directorio_ranking_registrar_snapshot: { Args: never; Returns: number }
       enviar_intento_formacion: {
         Args: { _examen_id: string; _respuestas: Json }
         Returns: string
@@ -5924,6 +6080,30 @@ export type Database = {
           participante_id: string
           productos_destacados: Json
           productos_publicados: number
+          slug: string
+          tipo: string
+        }[]
+      }
+      obtener_directorio_comunidad_publica_ranking: {
+        Args: never
+        Returns: {
+          catalogo_visible: boolean
+          descripcion: string
+          formacion_descripcion: string
+          formacion_titulo: string
+          identidad_ciudad: string
+          identidad_logo: string
+          identidad_nombre: string
+          identidad_pais: string
+          identidad_sitio_web: string
+          imagen_url: string
+          nombre: string
+          participante_id: string
+          productos_destacados: Json
+          productos_publicados: number
+          ranking_diamond_position: number
+          ranking_level: string
+          ranking_score: number
           slug: string
           tipo: string
         }[]
