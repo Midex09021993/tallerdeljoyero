@@ -8,15 +8,13 @@ describe("AURUM Transfer import claim recovery", () => {
     const old = new Date(now - TRANSFER_IMPORT_CLAIM_TIMEOUT_MS - 1).toISOString();
     const boundary = new Date(now - TRANSFER_IMPORT_CLAIM_TIMEOUT_MS).toISOString();
     const fresh = new Date(now - TRANSFER_IMPORT_CLAIM_TIMEOUT_MS + 1).toISOString();
-    expect(isTransferImportClaimRecoverable(old, null, now)).toBe(true);
-    expect(isTransferImportClaimRecoverable(boundary, null, now)).toBe(true);
-    expect(isTransferImportClaimRecoverable(fresh, null, now)).toBe(false);
+    expect(isTransferImportClaimRecoverable(old, now)).toBe(true);
+    expect(isTransferImportClaimRecoverable(boundary, now)).toBe(true);
+    expect(isTransferImportClaimRecoverable(fresh, now)).toBe(false);
   });
 
-  test("never reclaims completed imports or invalid timestamps", () => {
-    const old = new Date(now - TRANSFER_IMPORT_CLAIM_TIMEOUT_MS * 2).toISOString();
-    expect(isTransferImportClaimRecoverable(old, "user-a", now)).toBe(false);
-    expect(isTransferImportClaimRecoverable("invalid-date", null, now)).toBe(false);
-    expect(isTransferImportClaimRecoverable(null, null, now)).toBe(false);
+  test("fails safe on invalid or missing claim timestamps", () => {
+    expect(isTransferImportClaimRecoverable("invalid-date", now)).toBe(false);
+    expect(isTransferImportClaimRecoverable(null, now)).toBe(false);
   });
 });
