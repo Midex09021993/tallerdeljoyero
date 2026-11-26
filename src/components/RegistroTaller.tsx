@@ -150,7 +150,27 @@ export function RegistroTaller({ className = "" }: Props) {
                     </span>
                   </label>
 
-                  <div className="sm:col-span-2">
+                  
+
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    País
+                    <span className="relative mt-2 block">
+                      <select required autoComplete="country-name" value={form.pais} onChange={(e) => setForm((v) => ({ ...v, pais: e.target.value }))} className="w-full min-h-[46px] appearance-none rounded-xl border border-slate-200 bg-white px-3 text-sm text-[#17232d] outline-none transition focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25">
+                        {PAISES_TELEFONO.map((item) => <option key={item.iso} value={item.nombre}>{item.bandera} {item.nombre}</option>)}
+                        <option value="Otro país">🌐 Otro país</option>
+                      </select>
+                    </span>
+                  </label>
+
+<label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    Ciudad
+                    <span className="relative mt-2 block">
+                      <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <input maxLength={80} placeholder="Tu ciudad" value={form.ciudad} onChange={(e) => setForm((v) => ({ ...v, ciudad: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                    </span>
+                  </label>
+
+<div className="sm:col-span-2">
                     <TelefonoInternacional
                       value={form.telefono}
                       onChange={(telefono) => setForm((v) => ({ ...v, telefono }))}
@@ -160,51 +180,6 @@ export function RegistroTaller({ className = "" }: Props) {
                       id="registro-taller-telefono"
                     />
                   </div>
-
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                    Ciudad
-                    <span className="relative mt-2 block">
-                      <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <input maxLength={80} placeholder="Tu ciudad" value={form.ciudad} onChange={(e) => setForm((v) => ({ ...v, ciudad: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
-                    </span>
-                  </label>
-
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                    País
-                    <span className="relative mt-2 block">
-                      <select required autoComplete="country-name" value={form.pais} onChange={(e) => setForm((v) => ({ ...v, pais: e.target.value }))} className="w-full min-h-[46px] appearance-none rounded-xl border border-slate-200 bg-white px-3 text-sm text-[#17232d] outline-none transition focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25">
-                        <option value="Perú">🇵🇪 Perú</option>
-                        <option value="Argentina">🇦🇷 Argentina</option>
-                        <option value="Bolivia">🇧🇴 Bolivia</option>
-                        <option value="Brasil">🇧🇷 Brasil</option>
-                        <option value="Canadá">🇨🇦 Canadá</option>
-                        <option value="Chile">🇨🇱 Chile</option>
-                        <option value="Colombia">🇨🇴 Colombia</option>
-                        <option value="Costa Rica">🇨🇷 Costa Rica</option>
-                        <option value="Cuba">🇨🇺 Cuba</option>
-                        <option value="Ecuador">🇪🇨 Ecuador</option>
-                        <option value="El Salvador">🇸🇻 El Salvador</option>
-                        <option value="España">🇪🇸 España</option>
-                        <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
-                        <option value="Guatemala">🇬🇹 Guatemala</option>
-                        <option value="Honduras">🇭🇳 Honduras</option>
-                        <option value="México">🇲🇽 México</option>
-                        <option value="Nicaragua">🇳🇮 Nicaragua</option>
-                        <option value="Panamá">🇵🇦 Panamá</option>
-                        <option value="Paraguay">🇵🇾 Paraguay</option>
-                        <option value="Puerto Rico">🇵🇷 Puerto Rico</option>
-                        <option value="República Dominicana">🇩🇴 República Dominicana</option>
-                        <option value="Uruguay">🇺🇾 Uruguay</option>
-                        <option value="Venezuela">🇻🇪 Venezuela</option>
-                        <option value="Alemania">🇩🇪 Alemania</option>
-                        <option value="Francia">🇫🇷 Francia</option>
-                        <option value="Italia">🇮🇹 Italia</option>
-                        <option value="Reino Unido">🇬🇧 Reino Unido</option>
-                        <option value="Japón">🇯🇵 Japón</option>
-                        <option value="Otro">Otro país</option>
-                      </select>
-                    </span>
-                  </label>
                 </div>
 
                 <div className="rounded-2xl border border-[#eadca8] bg-[#fffaf0] p-4 text-sm leading-relaxed text-slate-700">
