@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
     if (body.action === "finalize") {
       const token = typeof body.token === "string" ? body.token : "";
       const files = validate(body.files);
-      if (!token || typeof files === "string") return json({ error: typeof files === "string" ? files : "Enlace inválido." }, 400);
+      if (!/^[A-Za-z0-9_-]{43}$/.test(token) || typeof files === "string") return json({ error: typeof files === "string" ? files : "Enlace inválido." }, 400);
 
       const { data: listed, error: listError } = await supabase.storage.from(BUCKET).list(token, { limit: 100 });
       if (listError) throw listError;
@@ -138,7 +138,8 @@ Deno.serve(async (req) => {
       let total = 0;
       for (const f of files as Array<InFile & { path?: string }>) {
         const path = String(f.path ?? "");
-        if (!path.startsWith(`${token}/`) || !sizes.has(path)) return json({ error: `Falta subir ${f.name}.` }, 400);
+        const basename = path.slice(token.length + 1);
+        if (!path.startsWith(token + "/") || path.split("/").length !== 2 || !/^[a-zA-Z0-9._-]{1,180}$/.test(basename) || !sizes.has(path)) return json({ error: `Falta subir ${f.name}.` }, 400);
         const size = sizes.get(path)!;
         // Comprobar también el tipo con el que realmente se guardó el archivo.
         const storedType = storedTypes.get(path) ?? "";
