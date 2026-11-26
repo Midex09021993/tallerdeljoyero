@@ -98,7 +98,7 @@ export function AurumTransferHistorialOwner() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6">\n      {(metricsError || activityError) ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">Los datos de transferencias están incompletos. <button type="button" onClick={() => { void recargarMetrics(); void recargarActivity(); }} className="ml-2 underline font-semibold">Reintentar</button></div> : null}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-primary">AURUM Transfers</p>
