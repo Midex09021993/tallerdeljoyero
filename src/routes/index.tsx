@@ -12,6 +12,18 @@ import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Me
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 
+
+// Enlaces públicos: solo PC de escritorio abre accesos en una pestaña nueva.
+function esPCDeEscritorio() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const esTablet =
+    /iPad|Tablet|Android(?!.*Mobile)/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+    (/Windows/i.test(ua) && navigator.maxTouchPoints > 1 && window.innerWidth <= 1366);
+  return !esTablet && window.innerWidth >= 1024 && window.matchMedia("(pointer: fine)").matches;
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -707,7 +719,7 @@ function InicioPublico() {
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <RegistroTaller className="hidden min-h-10 items-center justify-center rounded-xl bg-[#f8c928] px-4 text-xs font-bold text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] sm:inline-flex" />
             <Link to="/auth" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:hidden"><MonitorSmartphone className="size-4" /> Ingresar</Link>
-            <Link to="/auth" target="_blank" rel="noopener noreferrer" className="hidden min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:inline-flex sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <Link to="/auth" target={esPCDeEscritorio() ? "_blank" : undefined} rel="noopener noreferrer" className="hidden min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:inline-flex sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
             <button
               type="button"
               onClick={() => setMenuMovilAbierto((abierto) => !abierto)}
@@ -775,7 +787,7 @@ function InicioPublico() {
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Crea imágenes 3D de tus modelos de joyería. Explora metales, gemas e iluminación con <strong>AURUM RENDER</strong>.</p>
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Conecta Rhino 7 u 8 con <strong>AURUM CONNECT</strong> y lleva tus modelos al estudio de visualización.</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Descubrir AURUM RENDER <ArrowRight className="size-4" /></Link>
+              <Link to="/auth" target={esPCDeEscritorio() ? "_blank" : undefined} rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Descubrir AURUM RENDER <ArrowRight className="size-4" /></Link>
               <Link to="/aurum-render-public" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]">Probar el visor público 3D</Link>
             </div>
             <p className="mt-4 text-xs leading-5 text-slate-400">Prepara la presentación de tu joya con <strong>AURUM RENDER</strong> y comparte el modelo con el visor público 3D.</p>
@@ -985,7 +997,7 @@ function InicioPublico() {
               <div className="min-w-0">
                 <h3 className="text-base font-bold text-[#17232d]">Lleva el control del taller</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">Organiza clientes, cotizaciones y pedidos.</p>
-                <Link to="/auth" target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Acceder a mi taller <ArrowRight className="size-3.5" /></Link>
+                <Link to="/auth" target={esPCDeEscritorio() ? "_blank" : undefined} rel="noreferrer" className="mt-4 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Acceder a mi taller <ArrowRight className="size-3.5" /></Link>
               </div>
             </article>
           </div>
@@ -1094,7 +1106,7 @@ function InicioPublico() {
               <ul className="mt-3 space-y-3 text-xs">
                 <li><Link to="/herramientas-publicas" className="transition hover:text-[#f8c928]">Herramientas para joyeros</Link></li>
                 <li><Link to="/aurum-render-public" className="transition hover:text-[#f8c928]">Visor 3D</Link></li>
-                <li><Link to="/auth" target="_blank" rel="noreferrer" className="transition hover:text-[#f8c928]">Ingresar a AURUM LAB</Link></li>
+                <li><Link to="/auth" target={esPCDeEscritorio() ? "_blank" : undefined} rel="noreferrer" className="transition hover:text-[#f8c928]">Ingresar a AURUM LAB</Link></li>
               </ul>
             </div>
             <div>
