@@ -191,7 +191,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
   useEffect(() => {
     const camera = cameraRefs.current.Perspective;
     if (camera instanceof THREE.PerspectiveCamera) {
-      const base = 7.5;
+      const base = 5.6;
       camera.position.setLength(base / Math.max(0.5, props.zoom));
       camera.updateProjectionMatrix();
     }
