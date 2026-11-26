@@ -745,7 +745,7 @@ function MiNubePage() {
     try {
       let imagenPrincipalUrl = "";
       if (imagen) {
-        const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(imagen.ruta, 600);
+        const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(imagen.ruta, 60);
         if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo leer la imagen original.");
         const response = await fetch(signed.signedUrl);
         if (!response.ok) throw new Error("No se pudo descargar la imagen desde Mi Nube.");
@@ -764,7 +764,7 @@ function MiNubePage() {
       if (pdfParaCatalogo && pdfParaCatalogo.origen !== "nas") {
         const prefijoPrivado = `${participanteId}/${usuarioId}/`;
         if (!pdfParaCatalogo.ruta.startsWith(prefijoPrivado)) {
-          const { data: signedPdf, error: signedPdfError } = await supabase.storage.from(BUCKET).createSignedUrl(pdfParaCatalogo.ruta, 600);
+          const { data: signedPdf, error: signedPdfError } = await supabase.storage.from(BUCKET).createSignedUrl(pdfParaCatalogo.ruta, 60);
           if (signedPdfError || !signedPdf?.signedUrl) throw signedPdfError ?? new Error("No se pudo leer el PDF compartido.");
           const respuestaPdf = await fetch(signedPdf.signedUrl);
           if (!respuestaPdf.ok) throw new Error("No se pudo descargar el PDF compartido.");
