@@ -123,6 +123,8 @@ function CotizacionesPage() {
   const [solicitudEnConversion, setSolicitudEnConversion] = useState<SolicitudCatalogo | null>(null);
   const [actualizandoSolicitudId, setActualizandoSolicitudId] = useState<string | null>(null);
   const [errorSolicitud, setErrorSolicitud] = useState("");
+  const [errorCargaCotizaciones, setErrorCargaCotizaciones] = useState("");
+  const [reintentoCargaCotizaciones, setReintentoCargaCotizaciones] = useState(0);
   const [cargandoSolicitudes, setCargandoSolicitudes] = useState(false);
   const [sedes, setSedes] = useState<Sede[]>([]);
   const [identidad, setIdentidad] = useState<IdentidadComercial | null>(null);
@@ -145,7 +147,7 @@ function CotizacionesPage() {
   const cargar = async () => {
     const participanteIdActual = sesion?.participante?.id;
     setCargandoSolicitudes(Boolean(participanteIdActual));
-    const [{ data: q }, { data: s }, { data: identidadData }, solicitudesResult] = await Promise.all([
+    const [{ data: q, error: qError }, { data: s, error: sedesError }, { data: identidadData }, solicitudesResult] = await Promise.all([
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
       (async () => {
@@ -180,6 +182,11 @@ function CotizacionesPage() {
             .limit(100)
         : Promise.resolve({ data: [], error: null }),
     ]);
+    if (qError || sedesError) {
+      setErrorCargaCotizaciones(qError?.message ?? sedesError?.message ?? "No se pudo sincronizar la información comercial.");
+    } else {
+      setErrorCargaCotizaciones("");
+    }
     if (q) setCotizaciones(q);
     if (s) setSedes(s);
     setCargandoSolicitudes(false);
@@ -202,7 +209,7 @@ function CotizacionesPage() {
 
   useEffect(() => {
     if (puedeGestionarCotizaciones) void cargar();
-  }, [puedeGestionarCotizaciones, sesion?.participante?.id, esDueno, sedeFiltro]);
+  }, [puedeGestionarCotizaciones, sesion?.participante?.id, esDueno, sedeFiltro, reintentoCargaCotizaciones]);
 
   // Cambiar de sede invalida la selección de cliente anterior para no mezclar talleres.
   useEffect(() => {
@@ -601,13 +608,14 @@ function CotizacionesPage() {
               <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar por número, cliente o estado..." className="h-11 w-full rounded-xl border border-border bg-background pl-9 pr-4 text-sm outline-none transition focus:border-gold/40 focus:ring-1 focus:ring-gold/15" />
             </label>
           </div>
+          {errorCargaCotizaciones ? <div role="alert" className="mx-4 my-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/20 bg-danger-soft px-3 py-3 text-xs text-danger"><span>No se pudo sincronizar la lista de cotizaciones: {errorCargaCotizaciones}</span><button type="button" onClick={() => setReintentoCargaCotizaciones((actual) => actual + 1)} className="rounded-lg border border-danger/25 px-3 py-2 font-semibold hover:bg-danger/10">Reintentar carga</button></div> : null}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead><tr className="border-y border-border bg-surface-muted/45 text-[10px] uppercase tracking-wider text-muted-foreground">
                 {["Cotización","Cliente","Taller","Estado","Emisión","Total",...(sesion?.esDueno ? ["Acciones"] : [])].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
               </tr></thead>
               <tbody className="divide-y divide-border">
-                {filtradas.map(q => {
+                {!errorCargaCotizaciones && filtradas.map(q => {
                   const cliente = q.cliente;
                   return <tr key={q.id} className="group transition-colors hover:bg-gold/[0.06]">
                     <td className="p-0 font-medium">
