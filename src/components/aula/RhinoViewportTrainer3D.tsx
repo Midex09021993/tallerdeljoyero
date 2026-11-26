@@ -372,7 +372,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
       <div ref={el => { hostRefs.current[item.id] = el; }} onPointerDownCapture={(e) => { props.onActivate(item.id); pointerStart.current[item.id] = { x: e.clientX, y: e.clientY, shift: e.shiftKey, button: e.button };
           const controls = controlsRefs.current[item.id];
           if (controls && e.button === 2) {
-            if (item.id === "Perspective") controls.mouseButtons.RIGHT = e.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+            if (item.id === "Perspective") controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
             else {
               const rotateParallel = e.ctrlKey && e.shiftKey;
               controls.mouseButtons.RIGHT = rotateParallel ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
