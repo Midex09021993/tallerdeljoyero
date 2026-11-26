@@ -37,6 +37,8 @@ jobs:
         run: bun test scripts/aurum-transfer-rate-limit.test.ts
       - name: AURUM Transfer authenticated import rate limit tests
         run: bun test scripts/aurum-transfer-import-rate-limit.test.ts
+      - name: AURUM Transfer import claim recovery tests
+        run: bun test scripts/aurum-transfer-import-claim.test.ts
       - name: AURUM Transfer orphan upload cleanup tests
         run: bun test scripts/aurum-transfer-orphan-cleanup.test.ts
       - name: TypeScript
