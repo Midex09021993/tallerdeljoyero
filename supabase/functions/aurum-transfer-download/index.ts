@@ -52,16 +52,25 @@ Deno.serve(async (req) => {
     const { data } = await supabase
       .from("aurum_transfers")
       .select("id,files,status")
-      .or(`and(status.eq.consumed,consumed_at.lt.${cutoff}),and(status.eq.available,expires_at.lt.${now})`)
+      .or(`and(status.eq.consumed,consumed_at.lt.${cutoff}),and(status.eq.available,expires_at.lt.${now}),and(status.eq.processing,expires_at.lt.${now}),and(status.eq.expired,files.neq.[])`)
       .neq("files", "[]")
       .limit(20);
     for (const row of (data ?? []) as Array<{ id: string; files: FileMeta[]; status: string }>) {
       const paths = (row.files ?? []).map((f) => f.path).filter(Boolean);
-      if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
-      await supabase
+      if (paths.length) {
+        const { error: removeError } = await supabase.storage.from(BUCKET).remove(paths);
+        // Retain DB paths when Storage fails so cleanup can retry.
+        if (removeError) {
+          console.warn("[aurum-transfer-download] remove expired files", row.id, removeError);
+          continue;
+        }
+      }
+      const expiredStatus = row.status === "available" || row.status === "processing" ? "expired" : row.status;
+      const { error: updateError } = await supabase
         .from("aurum_transfers")
-        .update({ files: [], status: row.status === "available" ? "expired" : row.status })
+        .update({ files: [], status: expiredStatus })
         .eq("id", row.id);
+      if (updateError) console.warn("[aurum-transfer-download] clear expired metadata", row.id, updateError);
     }
   };
   try { await sweep(); } catch (e) { console.error("[aurum-transfer-download] sweep", e); }
