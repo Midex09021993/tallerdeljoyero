@@ -287,6 +287,7 @@ function HerramientaPublicaPage() {
   }
 
   const Icono = pagina.id === "oro" ? Coins : pagina.id === "peso" ? Scale : pagina.id === "yeso" ? FlaskConical : pagina.id === "tallas" ? Ruler : pagina.id === "gemas" ? CircleDot : Sparkles;
+  const guiaSlug = pagina.guiaSlug;
 
   return (
     <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
@@ -369,13 +370,13 @@ function HerramientaPublicaPage() {
               </div>
             </section>
           ) : null}
-          {pagina.guiaSlug ? (
+          {guiaSlug ? (
             <div className="rounded-2xl border border-[#e8dfc7] bg-[#fffaf0] p-5 sm:flex sm:items-center sm:justify-between sm:gap-5">
               <div>
                 <h2 className="text-base font-semibold text-[#17232d]">Profundiza con la guía técnica relacionada</h2>
                 <p className="mt-1 text-sm leading-6 text-slate-600">Amplía los conceptos y consulta recomendaciones para aplicar el cálculo en tu taller.</p>
               </div>
-              <Link to="/guias/$slug" params={{ slug: pagina.guiaSlug }} className="mt-4 inline-flex min-h-10 shrink-0 items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900] sm:mt-0">Leer guía técnica <ArrowLeft className="size-4 rotate-180" /></Link>
+              <Link to="/guias/$slug" params={{ slug: guiaSlug }} className="mt-4 inline-flex min-h-10 shrink-0 items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900] sm:mt-0">Leer guía técnica <ArrowLeft className="size-4 rotate-180" /></Link>
             </div>
           ) : null}
         </section>
