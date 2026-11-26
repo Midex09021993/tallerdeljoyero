@@ -1817,7 +1817,24 @@ function AulaFormacionPage() {
   async function descargarMaterial(m: Material) {
     const { data, error } = await supabase.storage.from("formacion-academica").createSignedUrl(m.ruta_storage, 60);
     if (error || !data?.signedUrl) { setMensaje(error?.message || "No se pudo generar el enlace del archivo."); return; }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+
+    // Solo escritorio PC abre el material en pestaña aparte.
+    // Tablets (incluido iPadOS y tablets Windows táctiles) y móviles conservan la navegación actual.
+    const ua = navigator.userAgent;
+    const esTablet =
+      /iPad|Tablet|Android(?!.*Mobile)/i.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+      (/Windows/i.test(ua) && navigator.maxTouchPoints > 1 && window.innerWidth <= 1366);
+    const esPC =
+      !esTablet &&
+      window.innerWidth >= 1024 &&
+      window.matchMedia("(pointer: fine)").matches;
+
+    if (esPC) {
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } else {
+      window.location.assign(data.signedUrl);
+    }
   }
 
   if (cargandoSesion) return <AppShell titulo="Aula de formación" subtitulo="Cargando acceso"><Panel titulo="Verificando cuenta"><p className="p-5 text-sm text-muted-foreground">Comprobando tu sesión…</p></Panel></AppShell>;
