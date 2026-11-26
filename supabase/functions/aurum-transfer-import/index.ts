@@ -53,14 +53,21 @@ Deno.serve(async (req) => {
 
     const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
     cleanupCopiedFiles = async () => {
-      if (copiedPaths.length) await admin.storage.from(CLOUD_BUCKET).remove(copiedPaths);
+      if (copiedPaths.length) {
+        const { error: removeError } = await admin.storage.from(CLOUD_BUCKET).remove(copiedPaths);
+        if (removeError) {
+          console.warn("cleanup copied files failed", removeError);
+          return;
+        }
+      }
       if (importClaim) {
-        await admin.from("aurum_transfers")
+        const { error: releaseError } = await admin.from("aurum_transfers")
           .update({ imported_at: null, imported_by: null })
           .eq("id", importClaim.transferId)
           .eq("imported_at", importClaim.claimAt)
           .is("imported_by", null);
-        importClaim = null;
+        if (releaseError) console.warn("release import claim failed", releaseError);
+        else importClaim = null;
       }
     };
     const { data: accounts, error: accountError } = await admin
@@ -147,7 +154,7 @@ Deno.serve(async (req) => {
       .select("id")
       .maybeSingle();
     if (updateError || !updated) {
-      await storage.from(CLOUD_BUCKET).remove(copiedPaths);
+      await cleanupCopiedFiles();
       return json({ error: "La transferencia ya fue importada o cambió de estado. No se guardaron duplicados." }, 409);
     }
     importClaim = null; // Ya se confirmó imported_by: no liberar la reserva.
