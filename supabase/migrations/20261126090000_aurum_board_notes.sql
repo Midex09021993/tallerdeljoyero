@@ -33,6 +33,11 @@ create policy "aurum_board_insert_own" on public.aurum_board_notes for insert to
     union select pc.participante_id from public.participante_cuentas pc where pc.user_id=auth.uid() and pc.estado='activo'
   )
 );
-create policy "aurum_board_update_own" on public.aurum_board_notes for update to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
+create policy "aurum_board_update_own" on public.aurum_board_notes for update to authenticated using (user_id=auth.uid()) with check (
+  user_id=auth.uid() and participante_id in (
+    select p.participante_id from public.profiles p where p.id=auth.uid() and p.participante_id is not null
+    union select pc.participante_id from public.participante_cuentas pc where pc.user_id=auth.uid() and pc.estado='activo'
+  )
+);
 create policy "aurum_board_delete_own" on public.aurum_board_notes for delete to authenticated using (user_id=auth.uid());
 grant select,insert,update,delete on public.aurum_board_notes to authenticated;
