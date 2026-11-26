@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isTransferRateLimited } from "../_shared/aurum-transfer-rate-limit.ts";
+import { isTransferTokenFolder, staleUploadPaths, MAX_ORPHAN_FOLDERS_PER_SWEEP } from "../_shared/aurum-transfer-orphan-cleanup.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +72,41 @@ function normalizeType(type: unknown): string | null {
 }
 type Meta = { name: string; size: number; type: string; path: string };
 
+async function sweepOrphanUploads(supabase: ReturnType<typeof createClient>) {
+  try {
+    const { data: folders, error: rootError } = await supabase.storage.from(BUCKET).list("", { limit: 100, offset: 0 });
+    if (rootError) throw rootError;
+    const candidates = (folders ?? []).filter((entry) => isTransferTokenFolder(entry.name)).slice(0, MAX_ORPHAN_FOLDERS_PER_SWEEP);
+    for (const folder of candidates) {
+      const tokenHash = await sha256(folder.name);
+      const { data: registered, error: lookupError } = await supabase
+        .from("aurum_transfers")
+        .select("id")
+        .eq("token_hash", tokenHash)
+        .maybeSingle();
+      if (lookupError) {
+        console.warn("[aurum-transfer-create] orphan lookup", lookupError);
+        continue;
+      }
+      if (registered) continue;
+
+      const { data: objects, error: listError } = await supabase.storage.from(BUCKET).list(folder.name, { limit: 100, offset: 0 });
+      if (listError) {
+        console.warn("[aurum-transfer-create] orphan list", listError);
+        continue;
+      }
+      const paths = staleUploadPaths(folder.name, objects ?? []);
+      if (paths.length) {
+        const { error: removeError } = await supabase.storage.from(BUCKET).remove(paths);
+        if (removeError) console.warn("[aurum-transfer-create] orphan remove", removeError);
+      }
+    }
+  } catch (error) {
+    // Limpieza preventiva: nunca debe bloquear una transferencia legítima.
+    console.warn("[aurum-transfer-create] orphan sweep", error);
+  }
+}
+
 function validate(files: unknown): InFile[] | string {
   if (!Array.isArray(files) || !files.length) return "Selecciona al menos un archivo.";
   if (files.length > MAX_FILES) return `Máximo ${MAX_FILES} archivos por transferencia.`;
@@ -110,6 +146,7 @@ Deno.serve(async (req) => {
 
     // Paso 1: preparar URLs firmadas de subida directa (permite hasta 2 GB).
     if (body.action === "prepare") {
+      await sweepOrphanUploads(supabase);
       const files = validate(body.files);
       if (typeof files === "string") return json({ error: files }, 400);
       const token = randomToken();
