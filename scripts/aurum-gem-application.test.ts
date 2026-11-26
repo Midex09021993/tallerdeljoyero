@@ -311,7 +311,7 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(getAurumRuntimeBudget(500_001).diamondSupersampleScaleCap).toBe(1.65);
   expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.5);
   expect(getAurumRuntimeBudget(900_001).diamondSupersampleScaleCap).toBe(1.5);
-  expect(getAurumRuntimeBudget(900_001).diamondLiveSupersampleScaleCap).toBe(1.5);
+  expect(getAurumRuntimeBudget(900_001).diamondLiveSupersampleScaleCap).toBe(1.2);
 
   const bvh = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const micro = readFileSync("src/lib/aurum/diamond-micro-pipeline.ts", "utf8");
@@ -806,7 +806,7 @@ test("editor secondary diamonds use separate calibrated profiles while the prote
   expect(runtime).toContain('setSourceDispersion: (nextDispersion: number) => {');
   expect(runtime).not.toContain('if (family !== "diamante" || isProtectedCenter()) return;');
   expect(runtime).toContain('const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;');
-  expect(runtime).toContain('gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isPinkDiamond ? 0.90 : 1.09))');
+  expect(runtime).toContain('gamma: family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09))');
   expect(runtime).toContain('"catalog-dmat-secondary-profile"');
   expect(runtime).toContain('const diamondSourceParameters = (calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")');
   expect(runtime).toContain('diamondSourceParameters.absorptionFactor');
@@ -939,7 +939,7 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   expect(activation).toContain('refractiveIndex: Number(source["refractiveIndex"]');
   expect(activation).toContain('squashFactor: Number(source["squashFactor"]');
   expect(scintillation).toContain('get("aurumDiamondTest") ?? "source"');
-  expect(runtime).toContain('const diamondSourceParameters = calibrateSecondaryDiamond');
+  expect(runtime).toContain('const diamondSourceParameters = (calibrateSecondaryDiamond || isWhiteDiamondProfile || activeGemId === "diamante_rosa_2")');
   expect(runtime).toContain('diamondSourceParameters.environmentRotationOffset');
   expect(runtime).toContain('diamondSourceParameters.rayBounces');
   expect(runtime).toContain("geometryFactor: Number(diamondSourceParameters?.geometryFactor ?? 0.5)");
