@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isTransferImportRateLimited } from "../_shared/aurum-transfer-import-rate-limit.ts";
+import { isTransferImportClaimRecoverable, TRANSFER_IMPORT_CLAIM_TIMEOUT_MS } from "../_shared/aurum-transfer-import-claim.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,6 +95,9 @@ Deno.serve(async (req) => {
     if (transfer.imported_at && transfer.imported_by) {
       return json({ error: transfer.imported_by === user.id ? "Estos archivos ya se guardaron en tu Mi Nube." : "Esta transferencia ya fue importada por otra cuenta." }, 409);
     }
+    if (transfer.imported_at && !isTransferImportClaimRecoverable(transfer.imported_at, transfer.imported_by)) {
+      return json({ error: "Esta transferencia está siendo importada. Inténtalo más tarde." }, 409);
+    }
     const files = Array.isArray(transfer.files) ? transfer.files as FileMeta[] : [];
     if (!files.length) return json({ error: "Los archivos temporales ya fueron eliminados. No se pueden importar." }, 410);
     if (files.some((f) => !f.path || f.size > MAX_FILE_BYTES)) {
@@ -120,7 +124,7 @@ Deno.serve(async (req) => {
     // Reservar la importación de forma atómica antes de copiar, evitando dos usuarios/cargas simultáneas.
     // Las reservas abandonadas pueden recuperarse tras 30 minutos; los imports completos tienen imported_by.
     const claimAt = new Date().toISOString();
-    const staleClaimCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const staleClaimCutoff = new Date(Date.now() - TRANSFER_IMPORT_CLAIM_TIMEOUT_MS).toISOString();
     const { data: claim, error: claimError } = await admin.from("aurum_transfers")
       .update({ imported_at: claimAt, imported_by: null })
       .eq("id", transfer.id)
