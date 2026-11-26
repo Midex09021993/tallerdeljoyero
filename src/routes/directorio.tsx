@@ -71,5 +71,5 @@ export const Route = createFileRoute("/directorio")({
 
 function DirectorioComponent() {
   const data = Route.useLoaderData();
-  return <ComunidadPublicaPage initialData={data ?? undefined} />;
+  return <ComunidadPublicaPage {...(data ? { initialData: data } : {})} />;
 }
