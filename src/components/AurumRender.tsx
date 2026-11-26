@@ -58,7 +58,7 @@ import { configureAurumEdgeQuality, getAurumEdgeAaProfile } from "../lib/aurum/e
 import { getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
-import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon, Lock, LockOpen, Maximize2, Minimize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, FolderOpen, Cloud, ArrowUpRight } from "lucide-react";
+import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon, Lock, LockOpen, Maximize2, Minimize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, FolderOpen, Cloud, ArrowUpRight, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
@@ -193,6 +193,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [sharedLink, setSharedLink] = useState<string | null>(null);
   const [exportBusy, setExportBusy] = useState(false);
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
+  const [bibliotecaVisualAbierta, setBibliotecaVisualAbierta] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const guardado = window.localStorage.getItem("aurum-render-biblioteca-visual");
+    if (guardado !== null) return guardado === "open";
+    return window.innerWidth >= 1280 && window.matchMedia("(pointer: fine)").matches;
+  });
+  useEffect(() => {
+    window.localStorage.setItem("aurum-render-biblioteca-visual", bibliotecaVisualAbierta ? "open" : "closed");
+  }, [bibliotecaVisualAbierta]);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
   const [videoCountdown, setVideoCountdown] = useState<number | null>(null);
@@ -6315,7 +6324,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && videoOpen && archivo && videoAspect && <div className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center overflow-hidden [container-type:size]" aria-hidden="true"><div className="relative border border-[#e5c76a] shadow-[0_0_0_200vmax_rgba(0,0,0,0.55)]" style={getAurumAspectFrameStyle(getAurumAspectRatio(videoAspect))}><div className="absolute inset-0 border border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute -top-6 left-0 rounded-t-md border border-[#e5c76a] bg-[#292824]/90 px-2 py-1 text-[9px] font-semibold tracking-wide text-[#f5e6b5]">{videoAspect} · ENCUADRE MP4</div></div></div>}
           </div>
         </main>
-         {!embedded && <aside className="hidden w-[min(22vw,360px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col">
+         {!embedded && <aside className={"hidden shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col transition-[width] duration-300 ease-out " + (exportOpen || bibliotecaVisualAbierta ? "w-[min(22vw,360px)]" : "w-12")}>
+{!exportOpen && !bibliotecaVisualAbierta && <div className="flex h-full flex-col items-center gap-2 py-3"><button type="button" onClick={()=>setBibliotecaVisualAbierta(true)} title="Mostrar biblioteca visual" aria-label="Mostrar biblioteca visual" className="grid size-9 place-items-center rounded-xl border border-[#e6e1d8] bg-white text-[#92743b] shadow-sm transition hover:bg-[#f5f0e5]"><PanelRightOpen className="size-4"/></button><span className="mt-2 text-[9px] font-semibold uppercase tracking-[.12em] text-[#92743b] [writing-mode:vertical-rl]">Biblioteca</span></div>
 {exportOpen&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#faf9f6] p-3 text-[#292824]">
       <div>
         <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
@@ -6472,10 +6482,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </div>
         {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
       </div></div>}
-{!exportOpen && <>
+{!exportOpen && bibliotecaVisualAbierta && <>
           {<div className="flex h-full flex-col overflow-y-auto">
-            <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
-              <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
+            <div className="border-b border-[#e7e2d9] bg-white/55 px-3 py-3">
+              <div className="flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div><button type="button" onClick={()=>setBibliotecaVisualAbierta(false)} title="Ocultar biblioteca visual" aria-label="Ocultar biblioteca visual" className="grid size-8 place-items-center rounded-lg border border-[#e6e1d8] bg-white text-[#77756f] transition hover:bg-[#f3efe7] hover:text-[#92743b]"><PanelRightClose className="size-4"/></button></div>
               
               
             </div>
