@@ -19,6 +19,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install Tauri CLI
         run: cargo install tauri-cli --version "^2" --locked
+      - name: Generate Windows app icons
+        working-directory: desktop/aurum-board/src-tauri
+        run: cargo tauri icon ../icon.svg --output icons
       - name: Build NSIS installer
         working-directory: desktop/aurum-board/src-tauri
         run: cargo tauri build
