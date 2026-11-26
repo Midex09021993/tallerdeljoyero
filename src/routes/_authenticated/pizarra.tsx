@@ -40,18 +40,7 @@ function PizarraPage() {
       toast.success(modo === "flotante" ? "AURUM BOARD siempre encima" : "AURUM BOARD detrás de las ventanas");
     } catch { toast.error("No se pudo cambiar el modo de ventana"); }
   };
-  const [modoDesktop,setModoDesktop] = useState<"normal"|"flotante"|"escritorio">("normal");
-  const esDesktopTauri = typeof window !== "undefined" && Boolean((window as any).__TAURI__?.window?.getCurrentWindow);
-  const cambiarModoDesktop = async (modo: "flotante"|"escritorio") => {
-    const api = (window as any).__TAURI__?.window?.getCurrentWindow?.();
-    if (!api) { toast.info("Los modos de ventana están disponibles en AURUM BOARD Desktop."); return; }
-    try {
-      if (modo === "flotante") { await api.setAlwaysOnBottom(false); await api.setAlwaysOnTop(true); }
-      else { await api.setAlwaysOnTop(false); await api.setAlwaysOnBottom(true); }
-      setModoDesktop(modo);
-      toast.success(modo === "flotante" ? "AURUM BOARD siempre encima" : "AURUM BOARD detrás de las ventanas");
-    } catch { toast.error("No se pudo cambiar el modo de ventana"); }
-  };
+
   const [crearAbierto,setCrearAbierto] = useState(false);
   const [nuevaCategoria,setNuevaCategoria] = useState("idea");
   const [nuevaColor,setNuevaColor] = useState("#FFF3C4");
