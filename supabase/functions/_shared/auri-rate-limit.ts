@@ -62,3 +62,6 @@ export class AuriRateLimiter {
     return this.buckets.size;
   }
 }
+
+/** Shared, bounded limiter for public AURUM Transfer endpoints. */
+export class TransferRateLimiter extends AuriRateLimiter {}
