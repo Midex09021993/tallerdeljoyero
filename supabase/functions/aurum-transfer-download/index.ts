@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isTransferRateLimited } from "../_shared/aurum-transfer-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,6 +30,15 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "GET" && req.method !== "POST") return json({ error: "Método no permitido." }, 405);
 
+  const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+  const action = req.method === "GET" ? "info" : body.action === "finish" ? "finish" : "claim";
+  if (isTransferRateLimited(action, req.headers)) {
+    return new Response(JSON.stringify({ error: "Has alcanzado el límite temporal de solicitudes de AURUM Transfer. Inténtalo más tarde." }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Retry-After": "600" },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -56,7 +66,6 @@ Deno.serve(async (req) => {
   };
   try { await sweep(); } catch (e) { console.error("[aurum-transfer-download] sweep", e); }
 
-  const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const token = req.method === "GET"
     ? new URL(req.url).searchParams.get("token") ?? ""
     : typeof body.token === "string" ? body.token : "";
