@@ -22,6 +22,7 @@ From this directory:
 ```powershell
 cd src-tauri
 cargo install tauri-cli --version "^2"
+cargo tauri icon ../icon.svg --output icons
 cargo tauri build
 ```
 
