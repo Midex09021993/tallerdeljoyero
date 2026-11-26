@@ -27,5 +27,20 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "AURUM BOARD",
+      "short_name": "Board",
+      "description": "Abrir directamente la pizarra visual de tu taller",
+      "url": "/pizarra",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
