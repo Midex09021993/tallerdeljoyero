@@ -251,7 +251,7 @@ function AfiliadosPage() {
   }
 
   if (afiliadosQuery.isError) {
-    return <AppShell titulo="AURUM LAB · Afiliados" subtitulo="Programa de recomendación"><div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">No se pudieron cargar los datos de afiliación: {(afiliadosQuery.error as any)?.message}</div></AppShell>;
+    return <AppShell titulo="AURUM LAB · Afiliados" subtitulo="Programa de recomendación"><div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">No se pudieron cargar los datos de afiliación: {(afiliadosQuery.error as any)?.message}<button type="button" onClick={() => void afiliadosQuery.refetch()} className="ml-2 underline font-semibold">Reintentar</button></div></AppShell>;
   }
 
   return (
