@@ -8,6 +8,13 @@ import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 
+const guiasOroRelacionadas: ReadonlyArray<readonly [string, string]> = [
+  ["calcular-oro-fino-18k-14k-9k", "Oro fino en 18K, 14K y 9K"],
+  ["calcular-liga-oro-18k-14k", "Calcular la liga que debes añadir"],
+  ["diferencia-oro-14k-585-milesimas", "14K, 583 y 585 milésimas"],
+  ["bajar-oro-24k-a-18k", "Bajar oro de 24K a 18K"],
+];
+
 const paginas = {
   "aleacion-oro": {
     titulo: "Calculadora de aleación de oro: calcula la liga en gramos",
@@ -361,12 +368,7 @@ function HerramientaPublicaPage() {
               <h2 id="guia-oro-relacionada" className="text-lg font-bold text-[#17232d]">Guías relacionadas para calcular oro y aleaciones</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">Amplía el cálculo con equivalencias de quilataje, contenido de oro fino y ejemplos de balance de masa.</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {[
-                  ["calcular-oro-fino-18k-14k-9k", "Oro fino en 18K, 14K y 9K"],
-                  ["calcular-liga-oro-18k-14k", "Calcular la liga que debes añadir"],
-                  ["diferencia-oro-14k-585-milesimas", "14K, 583 y 585 milésimas"],
-                  ["bajar-oro-24k-a-18k", "Bajar oro de 24K a 18K"],
-                ].map(([slug, label]) => <Link key={slug} to="/guias/$slug" params={{ slug }} className="inline-flex rounded-full border border-[#e8dfc7] bg-[#fffaf0] px-3 py-2 text-xs font-semibold text-[#876500] transition hover:bg-[#fff2cf]">{label}</Link>)}
+                {guiasOroRelacionadas.map(([slug, label]) => <Link key={slug} to="/guias/$slug" params={{ slug }} className="inline-flex rounded-full border border-[#e8dfc7] bg-[#fffaf0] px-3 py-2 text-xs font-semibold text-[#876500] transition hover:bg-[#fff2cf]">{label}</Link>)}
               </div>
             </section>
           ) : null}
