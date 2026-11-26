@@ -107,8 +107,9 @@ export default function RhinoViewportTrainer3D(props: Props) {
       const aspect = Math.max(1, host.clientWidth / Math.max(1, host.clientHeight));
       let camera: THREE.Camera;
       if (view.id === "Perspective") {
-        const perspective = new THREE.PerspectiveCamera(42, aspect, 0.1, 100);
-        perspective.position.set(4.2, 3.1, 5.3);
+        // Framing inicial más cercano: el modelo debe ocupar el viewport incluso al maximizar.
+        const perspective = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
+        perspective.position.set(3.8, 2.65, 4.6);
         perspective.lookAt(0, 0, 0);
         camera = perspective;
         const controls = new OrbitControls(perspective, renderer.domElement);
@@ -118,11 +119,11 @@ export default function RhinoViewportTrainer3D(props: Props) {
         controls.dampingFactor = 0.08;
         controls.enablePan = true;
         controls.screenSpacePanning = true;
-        controls.minDistance = 2.4;
-        controls.maxDistance = 12;
+        controls.minDistance = 2.1;
+        controls.maxDistance = 18;
         controlsRefs.current[view.id] = controls;
       } else {
-        const ortho = new THREE.OrthographicCamera(-4 * aspect, 4 * aspect, 4, -4, 0.1, 100);
+        const ortho = new THREE.OrthographicCamera(-2.8 * aspect, 2.8 * aspect, 2.8, -2.8, 0.1, 100);
         if (view.id === "Top") ortho.position.set(0, 10, 0.01);
         if (view.id === "Front") ortho.position.set(0, 0.01, 10);
         if (view.id === "Right") ortho.position.set(10, 0.01, 0);
@@ -140,16 +141,31 @@ export default function RhinoViewportTrainer3D(props: Props) {
       }
       cameras[view.id] = camera;
       cameraRefs.current[view.id] = camera;
-      const draw = () => renderer.render(sceneData.scene, camera);
+      const draw = () => {
+        if (host.clientWidth > 0 && host.clientHeight > 0) renderer.render(sceneData.scene, camera);
+      };
       const controls = controlsRefs.current[view.id];
       controls?.addEventListener("change", draw);
+      // Damping solo anima mientras el usuario manipula la cámara; no mantiene 4 render loops permanentes.
+      let animationFrame = 0;
+      const animateControls = () => {
+        animationFrame = 0;
+        if (controls?.update()) {
+          draw();
+          animationFrame = requestAnimationFrame(animateControls);
+        }
+      };
+      const startDamping = () => {
+        if (!animationFrame) animationFrame = requestAnimationFrame(animateControls);
+      };
+      controls?.addEventListener("start", startDamping);
       draw();
       const observer = new ResizeObserver(() => {
         const w = Math.max(1, host.clientWidth), h = Math.max(1, host.clientHeight);
         renderer.setSize(w, h, false);
         if (camera instanceof THREE.PerspectiveCamera) camera.aspect = w / h;
         if (camera instanceof THREE.OrthographicCamera) {
-          const halfH = 4;
+          const halfH = 2.8;
           camera.left = -halfH * (w / h); camera.right = halfH * (w / h);
           camera.top = halfH; camera.bottom = -halfH;
         }
@@ -158,21 +174,10 @@ export default function RhinoViewportTrainer3D(props: Props) {
       });
       observer.observe(host);
       observers.push(observer);
+      (observer as ResizeObserver & { __cancel?: () => void }).__cancel = () => cancelAnimationFrame(animationFrame);
     }
-    let frame = 0;
-    const animate = () => {
-      for (const controls of Object.values(controlsRefs.current)) controls?.update();
-      for (const view of VIEWS) {
-        const renderer = renderers[VIEWS.findIndex(v => v.id === view.id)];
-        const camera = cameras[view.id];
-        if (renderer && camera) renderer.render(sceneData.scene, camera);
-      }
-      frame = requestAnimationFrame(animate);
-    };
-    animate();
     return () => {
-      cancelAnimationFrame(frame);
-      observers.forEach(o => o.disconnect());
+      observers.forEach(o => { (o as ResizeObserver & { __cancel?: () => void }).__cancel?.(); o.disconnect(); });
       Object.values(controlsRefs.current).forEach(c => c?.dispose());
       controlsRefs.current = {};
       cameraRefs.current = {};
@@ -181,7 +186,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
         if (obj instanceof THREE.Mesh) { obj.geometry.dispose(); const m = obj.material; if (Array.isArray(m)) m.forEach(x => x.dispose()); else m.dispose(); }
       });
     };
-  }, []);
+  }, [props.maximized]);
 
   useEffect(() => {
     const camera = cameraRefs.current.Perspective;
@@ -211,5 +216,5 @@ export default function RhinoViewportTrainer3D(props: Props) {
       </div>
     </section>;
   };
-  return <div className={"grid min-h-0 gap-2 " + (props.maximized ? "h-[min(72vh,720px)] grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>{VIEWS.filter(v => !props.maximized || v.id === props.maximized).map(view)}</div>;
+  return <div className={"grid min-h-0 gap-2 " + (props.maximized ? "h-[min(84vh,calc(100dvh-150px))] min-h-[360px] grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>{VIEWS.filter(v => !props.maximized || v.id === props.maximized).map(view)}</div>;
 }
