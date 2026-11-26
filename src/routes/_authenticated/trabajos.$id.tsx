@@ -404,7 +404,7 @@ function TrabajoOperativoPage() {
   }
 
   if (!trabajo) {
-    return <AppShell titulo="Trabajo no disponible" subtitulo="Acceso operativo" ocultarNavegacion encabezadoMovilCompacto><p className="text-sm text-muted-foreground">Este trabajo no está disponible para tu usuario.</p></AppShell>;
+    return <AppShell titulo="Trabajo no disponible" subtitulo="Acceso operativo" ocultarNavegacion encabezadoMovilCompacto><p className="text-sm text-muted-foreground">{errorTrabajo ? "No se pudo cargar el trabajo por un error de consulta." : "Este trabajo no está disponible para tu usuario."}</p>{errorTrabajo ? <button type="button" onClick={() => void recargarTrabajo()} className="mt-3 rounded-lg border border-border px-3 py-2 text-sm font-semibold">Reintentar</button> : null}</AppShell>;
   }
 
   const esResponsable = trabajo.responsable_user_id === sesion?.user.id;
