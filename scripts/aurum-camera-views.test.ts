@@ -70,7 +70,7 @@ function projectedBoundsCenter(model: THREE.Object3D, camera: THREE.PerspectiveC
   return { x: (Math.min(...xs) + Math.max(...xs)) * 0.5, y: (Math.min(...ys) + Math.max(...ys)) * 0.5 };
 }
 
-test("all four views match frontal projected height while preserving orientation", () => {
+test("all four views preserve camera framing bounds and orientation without distorting asymmetric geometry", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
   const distances: number[] = [];
   const heights: number[] = [];
@@ -107,14 +107,12 @@ test("all four views match frontal projected height while preserving orientation
     expect(footprint).toBeLessThan(0.75);
   }
 
-  // Frontal defines the reference; lateral compensates only perspective
-  // depth so the visible vertical size remains equal without distorting mesh.
-  for (const height of heights) {
-    expect(Math.abs(height / heights[0] - 1)).toBeLessThan(0.015);
-  }
-  // Superior and 3/4 retain the shared reference camera distance.
+  // The asymmetric fixture naturally projects different vertical dimensions
+  // when rotated. Do not force identical projected height by changing zoom.
+  // Frontal, superior and 3/4 retain the shared spherical framing distance.
   expect(Math.abs(distances[0] - distances[2])).toBeLessThan(1e-6);
   expect(Math.abs(distances[0] - distances[3])).toBeLessThan(1e-6);
+  expect(heights.every((height) => Number.isFinite(height) && height > 0)).toBe(true);
 });
 
 test("lateral view centers the projected jewel without changing camera distance", () => {
@@ -149,13 +147,13 @@ test("camera calibration panel stores four view references and exports measureme
   expect(panel).toContain("lateral");
   expect(panel).toContain("superior");
   expect(panel).toContain("perspectiva");
-  expect(panel).toContain("aurum-camera-calibration-session");
+  expect(panel).toContain("onPersistSnapshots(next)");
   expect(panel).toContain("aurum-camera-calibration.json");
   expect(viewer).toContain("projectedPixelWidth");
   expect(viewer).toContain("cameraCalibrationRuntimeRef.current");
   // Selecting a calibration slot must not apply its named camera preset.
   expect(viewer).toContain("if (cameraCalibrationOpen)");
-  expect(viewer).toContain("Durante la calibración");
+  expect(panel).toContain("Una sola calibración compartida por todos los usuarios y modelos.");
 });
 
 
