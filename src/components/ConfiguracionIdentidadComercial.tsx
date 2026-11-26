@@ -375,8 +375,8 @@ export function ConfiguracionIdentidadComercial() {
     setGuardando(false);
   }
 
-  async function crearIdentidad() {
-    const participanteObjetivo = participantes.find((p) => p.id === participanteNuevo);
+  async function crearIdentidad(participanteId?: string) {
+    const participanteObjetivo = participantes.find((p) => p.id === (participanteId ?? participanteNuevo));
     if (!participanteObjetivo) { toast.error("No se pudo resolver el taller propietario."); return; }
     if (!sesion?.esDueno && participanteObjetivo.id !== sesion?.participante?.id) {
       { toast.error("No puedes crear una identidad para otro taller."); return; }
@@ -430,8 +430,69 @@ export function ConfiguracionIdentidadComercial() {
   if (!puedeEditar) return null;
   if (cargando && !form) return <Panel titulo="Identidad del taller"><div className="p-6 text-sm text-muted-foreground">Cargando configuración…</div></Panel>;
 
+  const estadoIdentidadesOwner = participantes
+    .filter((p) => Boolean(p.sede_id))
+    .map((p) => {
+      const identidad = identidades.find((x) => x.participante_id === p.id);
+      const pendiente = !identidad || !identidad.razon_social?.trim() || !identidad.ruc?.trim() || !identidad.email?.trim();
+      return { participante: p, identidad, pendiente };
+    });
+
   return (
     <div className="space-y-6">
+      {sesion?.esDueno ? (
+        <Panel titulo="Identidades comerciales de todos los talleres">
+          <div className="space-y-3 p-4">
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">Talleres registrados</p>
+                <p className="mt-1 text-2xl font-semibold">{estadoIdentidadesOwner.length}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">Identidad creada</p>
+                <p className="mt-1 text-2xl font-semibold">{estadoIdentidadesOwner.filter(x => x.identidad).length}</p>
+              </div>
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="text-xs text-muted-foreground">Pendientes de completar</p>
+                <p className="mt-1 text-2xl font-semibold">{estadoIdentidadesOwner.filter(x => x.pendiente).length}</p>
+              </div>
+            </div>
+            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+              {estadoIdentidadesOwner.length === 0 ? (
+                <p className="p-4 text-sm text-muted-foreground">No hay talleres activos vinculados a una sede.</p>
+              ) : estadoIdentidadesOwner.map(({ participante, identidad, pendiente }) => (
+                <div key={participante.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{participante.nombre}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {identidad ? `${identidad.pais_nombre} · ${identidad.moneda_codigo} · ${identidad.impuesto_nombre} ${identidad.impuesto_tasa}%` : "Identidad comercial no creada"}
+                    </p>
+                    <p className="mt-1 text-xs">
+                      {identidad ? (
+                        <span className={pendiente ? "text-amber-700" : "text-emerald-700"}>
+                          {pendiente ? "Identidad automática · datos fiscales/contacto pendientes" : "Identidad comercial completa"}
+                        </span>
+                      ) : <span className="text-rose-700">Falta crear identidad comercial</span>}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    {identidad ? (
+                      <button type="button" onClick={() => setIdentidadId(identidad.id)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                        Ver identidad
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => void crearIdentidad(participante.id)} disabled={creando} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
+                        {creando ? "Creando…" : "Crear identidad"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs leading-5 text-muted-foreground">La identidad se crea automáticamente con los datos básicos y la configuración fiscal/monetaria del país. Cada taller completa después su razón social, identificador fiscal, contactos y logo.</p>
+          </div>
+        </Panel>
+      ) : null}
       {!form ? (
         <Panel titulo="Identidad del taller">
           <div className="space-y-4 p-6">
