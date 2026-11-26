@@ -63,10 +63,9 @@ Deno.serve(async (req) => {
       }
       if (importClaim) {
         const { error: releaseError } = await admin.from("aurum_transfers")
-          .update({ imported_at: null, imported_by: null })
+          .update({ import_claimed_at: null })
           .eq("id", importClaim.transferId)
-          .eq("imported_at", importClaim.claimAt)
-          .is("imported_by", null);
+          .eq("import_claimed_at", importClaim.claimAt);
         if (releaseError) console.warn("release import claim failed", releaseError);
         else importClaim = null;
       }
@@ -82,7 +81,7 @@ Deno.serve(async (req) => {
 
     const { data: transfer, error: transferError } = await admin
       .from("aurum_transfers")
-      .select("id,status,files,consumed_at,expires_at,imported_at,imported_by")
+      .select("id,status,files,consumed_at,expires_at,imported_at,imported_by,import_claimed_at")
       .eq("token_hash", await sha256(token))
       .maybeSingle();
     if (transferError) throw transferError;
@@ -95,7 +94,7 @@ Deno.serve(async (req) => {
     if (transfer.imported_at && transfer.imported_by) {
       return json({ error: transfer.imported_by === user.id ? "Estos archivos ya se guardaron en tu Mi Nube." : "Esta transferencia ya fue importada por otra cuenta." }, 409);
     }
-    if (transfer.imported_at && !isTransferImportClaimRecoverable(transfer.imported_at, transfer.imported_by)) {
+    if (transfer.import_claimed_at && !isTransferImportClaimRecoverable(transfer.import_claimed_at)) {
       return json({ error: "Esta transferencia está siendo importada. Inténtalo más tarde." }, 409);
     }
     const files = Array.isArray(transfer.files) ? transfer.files as FileMeta[] : [];
@@ -126,9 +125,10 @@ Deno.serve(async (req) => {
     const claimAt = new Date().toISOString();
     const staleClaimCutoff = new Date(Date.now() - TRANSFER_IMPORT_CLAIM_TIMEOUT_MS).toISOString();
     const { data: claim, error: claimError } = await admin.from("aurum_transfers")
-      .update({ imported_at: claimAt, imported_by: null })
+      .update({ import_claimed_at: claimAt })
       .eq("id", transfer.id)
-      .or(`imported_at.is.null,and(imported_by.is.null,imported_at.lt.${staleClaimCutoff})`)
+      .or(`import_claimed_at.is.null,import_claimed_at.lt.${staleClaimCutoff}`)
+      .is("imported_at", null)
       .select("id")
       .maybeSingle();
     if (claimError) throw claimError;
@@ -151,10 +151,9 @@ Deno.serve(async (req) => {
 
     const { data: updated, error: updateError } = await admin
       .from("aurum_transfers")
-      .update({ imported_at: new Date().toISOString(), imported_by: user.id })
+      .update({ imported_at: new Date().toISOString(), imported_by: user.id, import_claimed_at: null })
       .eq("id", transfer.id)
-      .eq("imported_at", claimAt)
-      .is("imported_by", null)
+      .eq("import_claimed_at", claimAt)
       .select("id")
       .maybeSingle();
     if (updateError || !updated) {
