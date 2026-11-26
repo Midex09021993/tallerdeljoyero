@@ -125,6 +125,9 @@ export function usePedidosDeArea(area: string) {
     enTrabajo: lista.filter((pedido) => pedidoEnAreaActual(pedido, area)),
     programados: lista.filter((pedido) => !pedidoEnAreaActual(pedido, area)),
     isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
