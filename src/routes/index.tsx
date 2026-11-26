@@ -13,15 +13,11 @@ import heroColgante from "@/assets/diseno-colgante.jpg";
 
 
 
-// Enlaces públicos: solo PC de escritorio abre accesos en una pestaña nueva.
+// En PC de escritorio (pantalla amplia + puntero preciso) los accesos
+// se abren en una pestaña independiente. Tablets y móviles conservan la pestaña.
 function esPCDeEscritorio() {
-  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent;
-  const esTablet = /iPad|Tablet|Android(?!.*Mobile)/i.test(ua) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
-    (/Windows/i.test(ua) && navigator.maxTouchPoints > 1 && window.innerWidth <= 1366);
-  const esSistemaPC = /Windows NT|Macintosh|X11|Linux x86_64/i.test(ua);
-  return !esTablet && esSistemaPC && window.innerWidth >= 900;
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)").matches;
 }
 
 export const Route = createFileRoute("/")({
