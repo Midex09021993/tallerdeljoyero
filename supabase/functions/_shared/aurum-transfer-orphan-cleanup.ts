@@ -33,3 +33,23 @@ export function staleUploadPaths(
       isStaleUploadObject(object.created_at, object.updated_at, now))
     .map((object) => token + "/" + String(object.name));
 }
+
+export const TRANSFER_FILE_CLEANUP_WINDOW_MS = 6 * 60 * 60 * 1000;
+
+export function isTransferFileCleanupDue(
+  status: unknown,
+  expiresAt: unknown,
+  consumedAt: unknown,
+  now = Date.now(),
+): boolean {
+  if (status === "expired") return true;
+  if ((status === "available" || status === "processing") && typeof expiresAt === "string") {
+    const expiry = Date.parse(expiresAt);
+    return Number.isFinite(expiry) && expiry <= now;
+  }
+  if (status === "consumed" && typeof consumedAt === "string") {
+    const consumed = Date.parse(consumedAt);
+    return Number.isFinite(consumed) && now - consumed >= TRANSFER_FILE_CLEANUP_WINDOW_MS;
+  }
+  return false;
+}
