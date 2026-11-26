@@ -57,7 +57,7 @@ function areasAsignadasUnicas(areas: string[]) {
 function OperarioPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidosSelector();
-  const { trabajos, isLoading: isLoadingTrabajos, error: errorTrabajos } = useTrabajosDelOperario();
+  const { trabajos, isLoading: isLoadingTrabajos, error: errorTrabajos, refetch: refetchTrabajos } = useTrabajosDelOperario();
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
 
@@ -141,7 +141,7 @@ function OperarioPage() {
             <div className="rounded-2xl border border-danger/30 bg-danger-soft p-5 text-sm text-danger">
               <p className="font-semibold">No se pudieron cargar tus trabajos</p>
               <p className="mt-1 break-words text-xs opacity-90">{errorTrabajos}</p>
-              <button type="button" onClick={() => void window.location.reload()} className="mt-3 rounded-lg border border-danger/30 bg-card px-3 py-2 text-xs font-semibold text-foreground">Reintentar carga</button>
+              <button type="button" onClick={() => void refetchTrabajos()} className="mt-3 rounded-lg border border-danger/30 bg-card px-3 py-2 text-xs font-semibold text-foreground">Reintentar carga</button>
             </div>
           ) : null}
 
