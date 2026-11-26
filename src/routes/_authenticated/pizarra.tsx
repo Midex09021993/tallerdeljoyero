@@ -38,7 +38,7 @@ function PizarraPage() {
   const query = useQuery({
     queryKey:["aurum-board-notes",participanteId,sedeId,sesion?.user.id],
     enabled:Boolean(participanteId && sesion?.user.id),
-    queryFn:async()=>{const {data,error}=await db.from("aurum_board_notes").select("*").eq("participante_id",participanteId).or(`sede_id.is.null,sede_id.eq.${sedeId??"null"}`).order("fijada",{ascending:false}).order("updated_at",{ascending:false});if(error)throw error;return(data??[]) as Nota[];}
+    queryFn:async()=>{let q=db.from("aurum_board_notes").select("*").eq("participante_id",participanteId);q=sedeId?q.or(`sede_id.is.null,sede_id.eq.${sedeId}`):q.is("sede_id",null);const {data,error}=await q.order("fijada",{ascending:false}).order("updated_at",{ascending:false});if(error)throw error;return(data??[]) as Nota[];}
   });
   const invalidate=()=>qc.invalidateQueries({queryKey:["aurum-board-notes",participanteId]});
   const crear=useMutation({mutationFn:async()=>{if(!participanteId||!sesion?.user.id)throw new Error("Tu cuenta no está vinculada a un taller.");const count=query.data?.length??0;const {error}=await db.from("aurum_board_notes").insert({participante_id:participanteId,sede_id:sedeId,user_id:sesion.user.id,titulo:tituloNuevo.trim()||"Nota nueva",contenido:contenidoNuevo,color:nuevaColor,categoria:nuevaCategoria,visibilidad:nuevaVisibilidad,posicion_x:24+(count%3)*290,posicion_y:24+Math.floor(count/3)*250});if(error)throw error;},onSuccess:()=>{invalidate();setCrearAbierto(false);setTituloNuevo("");setContenidoNuevo("");toast.success("Nota creada");},onError:(e:Error)=>toast.error(e.message||"No se pudo crear la nota")});
