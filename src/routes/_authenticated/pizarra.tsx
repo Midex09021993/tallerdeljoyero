@@ -38,7 +38,7 @@ function PizarraPage() {
   const [dragging,setDragging] = useState<{id:string;startX:number;startY:number;baseX:number;baseY:number;x:number;y:number}|null>(null);
   const iniciarArrastre=(e:ReactPointerEvent<HTMLButtonElement>,n:Nota)=>{if(e.button!==0)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);setDragging({id:n.id,startX:e.clientX,startY:e.clientY,baseX:n.posicion_x,baseY:n.posicion_y,x:n.posicion_x,y:n.posicion_y});};
   const moverArrastre=(e:ReactPointerEvent<HTMLButtonElement>)=>{if(!dragging)return;setDragging(d=>d?{...d,x:Math.max(12,d.baseX+e.clientX-d.startX),y:Math.max(12,d.baseY+e.clientY-d.startY)}:null);};
-  const finalizarArrastre=(e:ReactPointerEvent<HTMLButtonElement>)=>{if(!dragging)return;e.currentTarget.releasePointerCapture(e.pointerId);mover({id:dragging.id,x:dragging.x,y:dragging.y});setDragging(null);};
+  const finalizarArrastre=(e:ReactPointerEvent<HTMLButtonElement>)=>{if(!dragging)return;e.currentTarget.releasePointerCapture(e.pointerId);actualizar.mutate({id:dragging.id,cambios:{posicion_x:dragging.x,posicion_y:dragging.y,updated_at:new Date().toISOString()}});setDragging(null);};
 
   const query = useQuery({
     queryKey:["aurum-board-notes",participanteId,sedeId,sesion?.user.id],
