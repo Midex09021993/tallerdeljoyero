@@ -78,7 +78,7 @@ function PublicidadFormacionPage() {
       setMensajeCompartir("No se pudo compartir automáticamente. Copia el enlace desde la barra del navegador.");
     }
   };
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["publicidad-formacion-publica", slug],
     queryFn: async () => {
       const { data, error } = await supabasePublic.rpc(
