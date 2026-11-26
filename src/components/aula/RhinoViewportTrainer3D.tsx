@@ -15,6 +15,8 @@ type Props = {
   onZoom: (zoom: number) => void;
   onOrbit: (orbit: number) => void;
   onPan: (pan: { x: number; y: number }) => void;
+  demoAction?: string | null;
+  demoToken?: number;
 };
 
 const VIEWS: { id: ViewId; title: string; subtitle: string }[] = [
@@ -359,13 +361,53 @@ export default function RhinoViewportTrainer3D(props: Props) {
     };
   }, [props.maximized]);
 
+  // Demonstración guiada: animación breve de cámara, sin validar ni completar la misión.
+  const demoFrameRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!props.demoAction || !props.demoToken) return;
+    if (demoFrameRef.current !== null) cancelAnimationFrame(demoFrameRef.current);
+    const viewId = props.demoAction === "panTop" || props.demoAction === "zoomOrtho" ? "Top" : "Perspective";
+    const camera = cameraRefs.current[viewId];
+    const controls = controlsRefs.current[viewId];
+    if (!camera || !controls) return;
+    const startPos = camera.position.clone();
+    const startTarget = controls.target.clone();
+    const startZoom = camera instanceof THREE.OrthographicCamera ? camera.zoom : 1;
+    const endPos = startPos.clone();
+    const endTarget = startTarget.clone();
+    let endZoom = startZoom;
+    const action = props.demoAction;
+    if (action === "zoomPerspective") endPos.copy(startTarget).add(startPos.clone().sub(startTarget).multiplyScalar(0.62));
+    else if (action === "orbit") { const offset = startPos.clone().sub(startTarget); offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI * 0.48); offset.y += 0.45; endPos.copy(startTarget).add(offset); }
+    else if (action === "panPerspective") { const shift = new THREE.Vector3(-0.55, 0.12, 0.25); endTarget.add(shift); endPos.add(shift); }
+    else if (action === "panTop") { const shift = new THREE.Vector3(0.55, 0, 0.38); endTarget.add(shift); endPos.add(shift); }
+    else if (action === "zoomOrtho") endZoom = startZoom * 1.65;
+    else if (action === "fit") { endTarget.set(0, 0, 0); if (camera instanceof THREE.PerspectiveCamera) endPos.set(3.8, 2.65, 4.6); else endZoom = 1; }
+    else if (action === "pan") { const shift = new THREE.Vector3(0.5, 0.15, -0.25); endTarget.add(shift); endPos.add(shift); }
+    else if (action === "zoom") { if (camera instanceof THREE.PerspectiveCamera) endPos.copy(startTarget).add(startPos.clone().sub(startTarget).multiplyScalar(0.78)); else endZoom = startZoom * 1.25; }
+    const duration = 1150;
+    const started = performance.now();
+    const tick = (now: number) => {
+      const raw = Math.min(1, (now - started) / duration);
+      const t = raw * raw * (3 - 2 * raw);
+      camera.position.lerpVectors(startPos, endPos, t);
+      controls.target.lerpVectors(startTarget, endTarget, t);
+      if (camera instanceof THREE.OrthographicCamera) { camera.zoom = startZoom + (endZoom - startZoom) * t; camera.updateProjectionMatrix(); }
+      camera.lookAt(controls.target);
+      controls.update();
+      if (raw < 1) demoFrameRef.current = requestAnimationFrame(tick); else demoFrameRef.current = null;
+    };
+    demoFrameRef.current = requestAnimationFrame(tick);
+    return () => { if (demoFrameRef.current !== null) cancelAnimationFrame(demoFrameRef.current); demoFrameRef.current = null; };
+  }, [props.demoAction, props.demoToken]);
+
   // El zoom es informativo; no sincronizarlo entre viewports evita que el estado React
   // reposicione la cámara durante un gesto y produzca saltos o pérdida de control.
   const pointerStart = useRef<Record<string, { x: number; y: number; shift: boolean; button: number } | null>>({});
   const view = (item: (typeof VIEWS)[number]) => {
     const isActive = props.activeView === item.id;
     const isMax = props.maximized === item.id;
-    return <section key={item.id} className={"group flex min-h-[210px] min-w-0 flex-col overflow-hidden rounded-xl border bg-[#171d25] transition " + (isActive ? "border-[#c9a15c] ring-1 ring-[#c9a15c]/20" : "border-white/10")}>
+    return <section key={item.id} className={"group flex min-h-[210px] min-w-0 flex-col overflow-hidden rounded-xl border bg-[#171d25] transition " + (isActive ? "border-[#c9a15c] ring-1 ring-[#c9a15c]/20" : "border-white/10") + (props.demoAction && ((props.demoAction === "panTop" || props.demoAction === "zoomOrtho") ? item.id === "Top" : item.id === "Perspective") ? " shadow-[0_0_0_2px_rgba(217,182,111,.45)]" : "")}>
       <button type="button" onClick={() => props.onActivate(item.id)} onDoubleClick={() => { const restoring = props.maximized === item.id; props.onMaximize(item.id); props.onAction(restoring ? "restore" : "maximize"); }} className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#242b35] px-3 py-2 text-left">
         <span className="text-[10px] font-bold tracking-[.13em] text-slate-200">{item.title}</span><span className="text-[9px] text-slate-500">{item.subtitle}</span>
       </button>
@@ -384,7 +426,7 @@ export default function RhinoViewportTrainer3D(props: Props) {
           if (controls && item.id !== "Perspective") { controls.mouseButtons.RIGHT = THREE.MOUSE.PAN; controls.enableRotate = false; }
           if (!start || Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)<5) return; }} onDoubleClick={() => { const restoring = props.maximized === item.id; props.onMaximize(item.id); props.onAction(restoring ? "restore" : "maximize"); }} className="relative min-h-0 flex-1 bg-[#10161e]" style={{ touchAction: "none" }}>
         <div className="pointer-events-none absolute bottom-2 left-3 z-10 text-[10px] font-medium uppercase tracking-wider text-slate-500">{item.id === "Perspective" ? "PERSPECTIVE · ACTIVE CAMERA" : item.id.toUpperCase() + " · ORTHOGRAPHIC"}</div>
-        {item.id === "Perspective" && <div className="pointer-events-none absolute right-2 top-2 z-10 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-[9px] text-slate-400">Rhino gestures · RMB orbit · Shift+RMB pan · wheel zoom</div>}
+        {item.id === "Perspective" && <div className="pointer-events-none absolute right-2 top-2 z-10 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-[9px] text-slate-400">Rhino gestures · RMB orbit · Shift+RMB pan · wheel zoom</div>}{props.demoAction && ((props.demoAction === "panTop" || props.demoAction === "zoomOrtho") ? item.id === "Top" : item.id === "Perspective") && <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center"><div className="rounded-full border border-amber-200/50 bg-[#c5a15a]/15 px-4 py-2 text-[10px] font-semibold uppercase tracking-[.16em] text-amber-100 backdrop-blur-sm">Demostración · observa el movimiento</div></div>}
       </div>
     </section>;
   };
