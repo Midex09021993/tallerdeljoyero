@@ -391,9 +391,9 @@ function GestionNav({
 function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva: string | null }) {
   const { data: sesion } = useSesion();
   const navigate = useNavigate();
-  const { data: materiales = [] } = useInventario();
-  const { data: sedes = [] } = useSedes();
-  const { data: gastos = [] } = useGastos();
+  const { data: materiales = [], isError: errorInventario, error: detalleInventario, refetch: recargarInventario } = useInventario();
+  const { data: sedes = [], isError: errorSedes, error: detalleSedes, refetch: recargarSedes } = useSedes();
+  const { data: gastos = [], isError: errorGastos, error: detalleGastos, refetch: recargarGastos } = useGastos();
   const materialesVisibles = sedeActiva
     ? materiales.filter((m) => m.sede_id == null || m.sede_id === sedeActiva)
     : materiales;
@@ -413,7 +413,8 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {errorInventario || errorSedes || errorGastos ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm"><p className="font-semibold text-destructive">Resumen parcialmente disponible</p><p className="mt-1 text-muted-foreground">No se pudo verificar completamente inventario, sedes o gastos. Los indicadores afectados pueden estar incompletos.</p><div className="mt-3 flex flex-wrap gap-2">{errorInventario ? <button type="button" onClick={() => void recargarInventario()} className="rounded-lg border px-3 py-1.5">Reintentar inventario</button> : null}{errorSedes ? <button type="button" onClick={() => void recargarSedes()} className="rounded-lg border px-3 py-1.5">Reintentar sedes</button> : null}{errorGastos ? <button type="button" onClick={() => void recargarGastos()} className="rounded-lg border px-3 py-1.5">Reintentar gastos</button> : null}</div><p className="mt-2 text-xs text-muted-foreground">{[detalleInventario,detalleSedes,detalleGastos].filter(Boolean).map((e)=>e instanceof Error?e.message:"").filter(Boolean).join(" · ")}</p></div> : null}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3>
         <button type="button" onClick={() => window.location.assign("/pedidos?autorizacion=pendientes")} className="text-left">
           <StatCard
             etiqueta="Pendientes de autorización"
@@ -720,7 +721,7 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
 
 function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia: string | null }) {
   const actualizar = useActualizarPedido();
-  const { data: gastos = [] } = useGastos();
+  const { data: gastos = [], isError: errorGastos, error: detalleGastos, refetch: recargarGastos } = useGastos();
   const crearGasto = useCrearGasto();
   const borrarGasto = useBorrarGasto();
   const [gastoPorEliminar, setGastoPorEliminar] = useState<Gasto | null>(null);
@@ -740,7 +741,8 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {errorGastos ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="text-sm font-semibold text-destructive">No se pudieron cargar los gastos</p><p className="mt-1 text-xs text-muted-foreground">{detalleGastos instanceof Error ? detalleGastos.message : "Los indicadores financieros están incompletos."}</p><button type="button" onClick={() => void recargarGastos()} className="mt-3 rounded-lg border px-3 py-1.5 text-sm">Reintentar</button></div> : null}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4>
         <StatCard etiqueta="Ingresos (entregados)" valor={eur.format(ingresos)} tono="positivo" />
         <StatCard etiqueta="Gastos" valor={eur.format(totalGastos)} tono="negativo" />
         <StatCard
@@ -1238,11 +1240,11 @@ async function importarInventarioCsv(registros: CsvRegistro[]) {
 
 function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia: string | null }) {
   const qc = useQueryClient();
-  const { data: pedidos = [] } = usePedidos();
-  const { data: inventario = [] } = useInventario();
-  const { data: gastos = [] } = useGastos();
-  const { data: sedes = [] } = useSedes();
-  const { data: usuarios = [] } = useUsuarios();
+  const { data: pedidos = [], isError: errorPedidos, refetch: recargarPedidos } = usePedidos();
+  const { data: inventario = [], isError: errorInventario, refetch: recargarInventario } = useInventario();
+  const { data: gastos = [], isError: errorGastos, refetch: recargarGastos } = useGastos();
+  const { data: sedes = [], isError: errorSedes, refetch: recargarSedes } = useSedes();
+  const { data: usuarios = [], isError: errorUsuarios, refetch: recargarUsuarios } = useUsuarios();
   const [importando, setImportando] = useState<string | null>(null);
   const [importacionPendiente, setImportacionPendiente] = useState<{
     archivo: File;
@@ -1288,7 +1290,9 @@ function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
   return (
     <>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+      <div className="space-y-4">
+        {errorPedidos || errorInventario || errorGastos || errorSedes || errorUsuarios ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="font-semibold text-destructive">Respaldo incompleto: no todos los datos pudieron cargarse</p><p className="mt-1 text-sm text-muted-foreground">No descargues una copia como si estuviera completa hasta recuperar las consultas fallidas.</p><div className="mt-3 flex flex-wrap gap-2">{errorPedidos ? <button type="button" onClick={() => void recargarPedidos()} className="rounded-lg border px-3 py-1.5 text-sm">Pedidos</button> : null}{errorInventario ? <button type="button" onClick={() => void recargarInventario()} className="rounded-lg border px-3 py-1.5 text-sm">Inventario</button> : null}{errorGastos ? <button type="button" onClick={() => void recargarGastos()} className="rounded-lg border px-3 py-1.5 text-sm">Gastos</button> : null}{errorSedes ? <button type="button" onClick={() => void recargarSedes()} className="rounded-lg border px-3 py-1.5 text-sm">Sedes</button> : null}{errorUsuarios ? <button type="button" onClick={() => void recargarUsuarios()} className="rounded-lg border px-3 py-1.5 text-sm">Usuarios</button> : null}</div></div> : null}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]>
         <Panel titulo="Descargar respaldo">
           <div className="grid gap-3 p-5 sm:grid-cols-2">
             <BotonRespaldo
@@ -1459,7 +1463,7 @@ function ModuloAutomatizacion({
   pedidos: Pedido[];
   sedePropia: string | null;
 }) {
-  const { data: config = [] } = useConfigAreas();
+  const { data: config = [], isError: errorConfig, error: detalleConfig, refetch: recargarConfig } = useConfigAreas();
   const guardar = useGuardarConfigArea();
 
   const porArea = useMemo(() => {
@@ -1486,7 +1490,9 @@ function ModuloAutomatizacion({
     .filter(Boolean) as { pedido: Pedido; horas: number; objetivo: number }[];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-4">
+      {errorConfig ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="font-semibold text-destructive">No se pudo cargar la configuración de alertas</p><p className="mt-1 text-sm text-muted-foreground">{detalleConfig instanceof Error ? detalleConfig.message : "Se muestran valores de referencia, no la configuración confirmada."}</p><button type="button" onClick={() => void recargarConfig()} className="mt-3 rounded-lg border px-3 py-1.5 text-sm">Reintentar</button></div> : null}
+      <div className="grid gap-6 lg:grid-cols-2">
       <Panel titulo="Tiempos objetivo por área">
         <ul className="divide-y divide-border">
           {porArea.map((c) => (
@@ -1548,6 +1554,7 @@ function ModuloAutomatizacion({
           ) : null}
         </ul>
       </Panel>
+      </div>
     </div>
   );
 }
@@ -1557,7 +1564,7 @@ function ModuloAutomatizacion({
 function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia: string | null }) {
   const qc = useQueryClient();
   const listar = useServerFn(listarUsuarios);
-  const { data: todos = [] } = useQuery({
+  const { data: todos = [], isError: errorListado, error: detalleListado, refetch: recargarListado } = useQuery({
     queryKey: ["usuarios"],
     queryFn: () => listar(),
   });
@@ -1632,7 +1639,9 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
+    <div className="space-y-4">
+      {errorListado ? <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"><p className="font-semibold text-destructive">No se pudo cargar el equipo</p><p className="mt-1 text-sm text-muted-foreground">{detalleListado instanceof Error ? detalleListado.message : "El listado de usuarios no está disponible."}</p><button type="button" onClick={() => void recargarListado()} className="mt-3 rounded-lg border px-3 py-1.5 text-sm">Reintentar</button></div> : null}
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]>
       <Panel titulo="Nuevo usuario">
         <form onSubmit={enviar} className="space-y-3 p-6">
           <input
