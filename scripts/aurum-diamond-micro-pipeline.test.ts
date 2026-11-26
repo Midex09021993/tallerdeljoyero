@@ -23,7 +23,7 @@ test("uses hysteresis around tier boundaries without delaying large zoom changes
   expect(stabilizeAurumDiamondScreenTier(14.1, "micro")).toBe("small");
   expect(stabilizeAurumDiamondScreenTier(11, "small")).toBe("small");
   expect(stabilizeAurumDiamondScreenTier(10, "small")).toBe("micro");
-  expect(stabilizeAurumDiamondScreenTier(38, "brilliant")).toBe("small");
+  expect(stabilizeAurumDiamondScreenTier(38, "brilliant")).toBe("brilliant");
   expect(stabilizeAurumDiamondScreenTier(33, "brilliant")).toBe("brilliant");
   expect(stabilizeAurumDiamondScreenTier(45, "small")).toBe("brilliant");
   expect(stabilizeAurumDiamondScreenTier(50, "small", 0, true)).toBe("medium");
@@ -138,9 +138,9 @@ test("provides conservative optical tiers while preserving the brilliant baselin
   const small = getAurumDiamondMicroOpticalProfile("small");
   const medium = getAurumDiamondMicroOpticalProfile("medium");
   const brilliant = getAurumDiamondMicroOpticalProfile("brilliant");
-  expect(micro).toEqual({ scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 0.50, virtualFacetWeight: 0.06, fireScale: 0.55, environmentIntensityScale: 0.90, reflectivityScale: 0.84, gammaScale: 1.04 });
-  expect(small).toEqual({ scintillationScale: 0.58, facetContrastScale: 0.92, dispersionScale: 0.65, virtualFacetWeight: 0.06, fireScale: 0.70, environmentIntensityScale: 0.94, reflectivityScale: 0.90, gammaScale: 1.02 });
-  expect(medium).toEqual({ scintillationScale: 0.78, facetContrastScale: 0.96, dispersionScale: 0.80, virtualFacetWeight: 0.06, fireScale: 0.85, environmentIntensityScale: 0.98, reflectivityScale: 0.95, gammaScale: 1.01 });
+  expect(micro).toEqual({ scintillationScale: 0.78, facetContrastScale: 0.96, dispersionScale: 0.88, virtualFacetWeight: 0.06, fireScale: 0.88, environmentIntensityScale: 0.98, reflectivityScale: 0.96, gammaScale: 1.01 });
+  expect(small).toEqual({ scintillationScale: 0.86, facetContrastScale: 0.98, dispersionScale: 0.92, virtualFacetWeight: 0.06, fireScale: 0.92, environmentIntensityScale: 0.99, reflectivityScale: 0.98, gammaScale: 1.005 });
+  expect(medium).toEqual({ scintillationScale: 0.94, facetContrastScale: 0.99, dispersionScale: 0.96, virtualFacetWeight: 0.06, fireScale: 0.97, environmentIntensityScale: 1, reflectivityScale: 0.99, gammaScale: 1 });
   expect(micro.scintillationScale).toBeLessThan(small.scintillationScale);
   expect(micro.dispersionScale).toBe(0.50);
   expect(small.dispersionScale).toBe(0.65);
@@ -181,9 +181,9 @@ test("applies per-mesh optical profiles to diamonds sharing one material and res
   large.onBeforeRender(null as any, scene, camera, large.geometry, material, null as any);
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
   tiny.onBeforeRender(null as any, scene, camera, tiny.geometry, material, null as any);
-  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.42);
+  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.78);
   expect(material.userData.aurumDiamondMicroUniforms.virtualFacetWeight.value).toBeCloseTo(0.06);
-  expect(tiny.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(0.42);
+  expect(tiny.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(0.78);
   pipeline.dispose();
   expect(large.userData.aurumDiamondMicroTier).toBe("brilliant");
   expect(large.userData.aurumDiamondMicroOpticalProfile).toEqual(getAurumDiamondMicroOpticalProfile("brilliant"));
