@@ -51,6 +51,13 @@ describe("AURI public rate limiter", () => {
   });
 
   test("ignores malformed or excessively long IP header values and falls back", () => {
-    expect(clientIpFromHeaders(new Headers({ "cf-connecting-ip": "bad\r\nvalue", "x-real-ip": "x".repeat(81) }))).toBe("unknown");
+    const malformedHeaders = {
+      get(name: string) {
+        if (name === "cf-connecting-ip") return "bad\r\nvalue";
+        if (name === "x-real-ip") return "x".repeat(81);
+        return null;
+      },
+    } as Headers;
+    expect(clientIpFromHeaders(malformedHeaders)).toBe("unknown");
   });
 });

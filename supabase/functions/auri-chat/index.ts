@@ -1,3 +1,4 @@
+import { AuriRateLimiter, clientIpFromHeaders } from "../_shared/auri-rate-limit.ts";
 import { AURI_PUBLIC_TOOLS_CONTEXT, AURI_PUBLIC_TOOLS_LINKS } from "../_shared/auri-public-catalog.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,8 +16,6 @@ function json(body: unknown, status = 200) {
 function cleanText(value: unknown, max = 1200) {
   return typeof value === "string" ? value.replace(/\u0000/g, "").trim().slice(0, max) : "";
 }
-
-import { AuriRateLimiter, clientIpFromHeaders } from "../_shared/auri-rate-limit.ts";
 
 const requestLimiter = new AuriRateLimiter({ limit: 15, windowMs: 10 * 60 * 1000, maxKeys: 10_000 });
 
