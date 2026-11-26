@@ -58,15 +58,8 @@ export function AurumTransferHistorialOwner() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_aurum_transfer_usage_metrics");
       if (error) throw error;
-      return (data?.[0] ?? {
-        transfer_count: 0,
-        downloaded_count: 0,
-        total_bytes: 0,
-        available_count: 0,
-        expired_count: 0,
-        file_count: 0,
-        last_activity: null,
-      }) as TransferMetrics;
+      if (!data?.[0]) throw new Error("No se recibieron métricas de transferencias");
+      return data[0] as TransferMetrics;
     },
     staleTime: 30_000,
   });
