@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/monitor")({
 });
 
 function MonitorPage() {
-  const { data: pedidos = [], isLoading } = usePedidosSelector();
+  const { data: pedidos = [], isLoading, isError, error, refetch } = usePedidosSelector();
   const { data: sesion } = useSesion();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
     useSedeFiltroDueno();
@@ -226,7 +226,15 @@ function MonitorPage() {
         })}
       </div>
 
-      {!isLoading && totalActivos === 0 ? (
+      {isError ? (
+        <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-8 text-center">
+          <p className="text-sm font-semibold text-destructive">No se pudo sincronizar la producción.</p>
+          <p className="mt-1 text-xs text-muted-foreground">{error instanceof Error ? error.message : "Error temporal al consultar pedidos."}</p>
+          <button type="button" onClick={() => void refetch()} className="mt-3 rounded-lg border bg-card px-4 py-2 text-xs font-semibold hover:bg-accent">Reintentar</button>
+        </div>
+      ) : null}
+
+      {!isLoading && !isError && totalActivos === 0 ? (
         <div className="mt-6 rounded-2xl border border-border bg-card px-6 py-8 text-center">
           <Sparkles className="mx-auto size-5 text-gold" />
           <p className="mt-3 text-sm font-medium">El taller está despejado.</p>
