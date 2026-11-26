@@ -126,7 +126,7 @@ function horasEn(desde: string) {
 
 function GestionPage() {
   const { data: sesion } = useSesion();
-  const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: pedidos = [], isLoading, isError: pedidosError, error: errorPedidos, refetch: recargarPedidos } = usePedidos();
   const { sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const [modulo, setModulo] = useState<Modulo | null>(null);
   const [sedeAbierta, setSedeAbierta] = useState(true);
@@ -184,6 +184,15 @@ function GestionPage() {
       }
     >
       <div className="space-y-6">
+        {pedidosError ? (
+          <div role="alert" className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-destructive">No se pudo cargar el resumen de pedidos</p>
+              <p className="mt-1 text-xs text-muted-foreground">{errorPedidos instanceof Error ? errorPedidos.message : "Error temporal de conexión o permisos."} Los datos mostrados pueden estar incompletos.</p>
+            </div>
+            <button type="button" onClick={() => void recargarPedidos()} className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-muted">Reintentar</button>
+          </div>
+        ) : null}
         <header className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
             <div>
