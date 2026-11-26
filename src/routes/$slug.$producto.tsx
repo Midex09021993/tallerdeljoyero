@@ -75,7 +75,7 @@ type CatalogoRow = {
 
 export function CatalogoProductoPublicoPage() {
   const { slug, producto: productoSlug } = Route.useParams();
-  const { data: rows = [], isLoading, error } = useQuery({
+  const { data: rows = [], isLoading, error, refetch } = useQuery({
     queryKey: ["portal-publico-productos", slug.trim().toLowerCase()],
     queryFn: async () => {
       const { data, error: rpcError } = await supabase.rpc("obtener_catalogo_publico", { _slug: slug.trim().toLowerCase() });
