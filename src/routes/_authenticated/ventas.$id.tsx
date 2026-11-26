@@ -20,14 +20,14 @@ function Venta2Detalle() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: sesion } = useSesion();
-  const { data: pedidos = [] } = usePedidos();
+  const { data: pedidos = [], isError: errorPedidos, refetch: recargarPedidos } = usePedidos();
   const { filtrarPedidos } = useSedeFiltroDueno();
   const pedidosSede = filtrarPedidos(pedidos);
   const pedido = pedidosSede.find((p) => p.id === id);
   const puede = Boolean(sesion?.esAdmin || sesion?.areas.some((a) => areaCoincide(a, "Área ventas")));
-  const { data: contratos = [] } = useContratos(puede);
+  const { data: contratos = [], isError: errorContratos, refetch: recargarContratos } = useContratos(puede);
   const contratosSede = filtrarPedidos(contratos);
-  const { data: pagos = [] } = usePagosContratos(contratosSede, puede);
+  const { data: pagos = [], isError: errorPagos, refetch: recargarPagos } = usePagosContratos(contratosSede, puede);
   const contrato = pedido?.contrato_id ? contratosSede.find((c) => c.id === pedido.contrato_id) : pedido?.contrato ? contratosSede.find((c) => c.numero === pedido.contrato) : undefined;
   const pagosPedido = contrato ? pagos.filter((p) => p.contrato_id === contrato.id) : [];
   const resumen = resumenFinancieroContrato(contrato, pagosPedido);
@@ -103,7 +103,7 @@ function Venta2Detalle() {
       subtitulo={`${pedido.cliente || "Cliente pendiente"} · ${pedido.sede_nombre || "Taller no asignado"}`}
       acciones={<div className="flex flex-wrap gap-2"><button type="button" onClick={()=>navigate({to:"/ventas"})} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4"/> Ventas</button><Link to="/pedidos/$id" params={{id}} className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold">Ver pedido operativo</Link></div>}
     >
-      <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
+      {(errorPedidos || errorContratos || errorPagos) ? <div role="alert" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">La ficha comercial puede estar incompleta por un error de consulta. <button type="button" onClick={() => { void recargarPedidos(); void recargarContratos(); void recargarPagos(); }} className="ml-2 underline font-semibold">Reintentar</button></div> : null}\n      <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
         <div className="relative p-6 sm:p-8">
           <div className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-gold/10 blur-3xl" />
           <div className="relative grid gap-7 xl:grid-cols-[1fr_460px]">
