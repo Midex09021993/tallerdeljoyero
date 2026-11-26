@@ -33,7 +33,7 @@ function estadoClase(estado: string) {
 }
 
 export function ServiciosExternosEnviadosAdmin({ sedeId }: { sedeId: string | null }) {
-  const { data: servicios = [], isLoading, error } = useQuery({
+  const { data: servicios = [], isLoading, error, refetch } = useQuery({
     queryKey: ["servicios-externos-enviados-admin", sedeId],
     queryFn: async () => {
       const rpcListar = supabase.rpc as unknown as (
@@ -88,7 +88,7 @@ export function ServiciosExternosEnviadosAdmin({ sedeId }: { sedeId: string | nu
         ) : error ? (
           <div className="p-6">
             <p className="text-sm font-semibold text-danger">No se pudieron cargar los servicios externos.</p>
-            <p className="mt-1 text-xs text-danger/80">{error instanceof Error ? error.message : "Error de comunicación"}</p>
+            <p className="mt-1 text-xs text-danger/80">{error instanceof Error ? error.message : "Error de comunicación"}</p><button type="button" onClick={() => void refetch()} className="mt-3 rounded-lg border border-danger/30 px-3 py-1.5 text-xs font-semibold">Reintentar</button>
           </div>
         ) : servicios.length === 0 ? (
           <div className="p-8 text-center">
