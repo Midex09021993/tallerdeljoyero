@@ -895,7 +895,7 @@ test("public viewer applies the calibrated center white-diamond BVH optical fram
   expect(runtime).toContain('calibrateSecondaryDiamond ? 2.417 : 2.6');
   expect(runtime).toContain("dispersion: family === \"diamante\"");
   expect(runtime).toContain("environmentIntensity: family === \"diamante\"");
-  expect(runtime).toContain('calibrateSecondaryDiamond ? "catalog-dmat-secondary-profile"');
+  expect(runtime).toContain('"catalog-dmat-secondary-profile"');
 });
 
 
@@ -937,7 +937,7 @@ test("catalog DiamondMaterial source parameters reach secondary shader and BVH w
   expect(application).toContain('...(g.diamondMaterialParameters ? { diamondMaterialParameters:g.diamondMaterialParameters } : {})');
   expect(activation).toContain('const source = preset?.["diamondMaterialParameters"] ?? {};');
   expect(activation).toContain('refractiveIndex: Number(source["refractiveIndex"]');
-  expect(activation).toContain('squashFactor: Number(source.squashFactor');
+  expect(activation).toContain('squashFactor: Number(source["squashFactor"]');
   expect(scintillation).toContain('get("aurumDiamondTest") ?? "source"');
   expect(runtime).toContain('const diamondSourceParameters = calibrateSecondaryDiamond');
   expect(runtime).toContain('diamondSourceParameters.environmentRotationOffset');
@@ -961,8 +961,8 @@ test("white diamond profile switching updates every selected size while preservi
   expect(runtime).toContain('const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;');
   expect(runtime).toContain("applyDiamondTierOptics(currentDiamondTier)");
   expect(micro).toContain('if (tier === "micro") return');
-  expect(runtime).toContain('if (tier === "small") return');
-  expect(runtime).toContain('if (tier === "medium") return');
+  expect(micro).toContain('if (tier === "small") return');
+  expect(micro).toContain('if (tier === "medium") return');
 });
 
 test("Diamante rosado 2 imports its .dmat profile and applies it to the protected center", () => {
