@@ -794,9 +794,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         EXRLoader,
         url: getAurumGemHdriUrl("ijewelGem"),
         ...(sharedEnvironmentMap ? { environmentMap: sharedEnvironmentMap, ownsEnvironmentMap: false } : {}),
-        // Match the approved AURUM Render gem EXR orientation: 0° base.
+        // Match the approved AURUM Render gem EXR master orientation: +90°.
         // The BVH runtime retains its geometry-derived per-stone optical-frame correction.
-        environmentRotationRadians: 0, // Misma orientación de EXR que la calibración aprobada de AURUM Render.
+        environmentRotationRadians: Math.PI / 2,
         camera,
         getViewportHeight: () => rendererRef.current?.domElement.height ?? hostRef.current?.clientHeight ?? 1,
         quality: "high",
