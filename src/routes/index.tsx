@@ -467,12 +467,14 @@ function InicioPublico() {
     };
     resize();
     start();
+    const handleVisibilityChange = () => document.hidden ? pause() : start();
     window.addEventListener("resize", resize, { passive: true });
-    document.addEventListener("visibilitychange", () => document.hidden ? pause() : start());
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       pause();
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       canvas.remove();
     };
   }, []);
