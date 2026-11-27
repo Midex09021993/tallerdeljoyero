@@ -60,7 +60,11 @@ export function createAurumSceneController(
                   ? "/backgrounds/rojo-rubi-radial.svg"
                   : id === "verdeRadial"
                     ? "/backgrounds/verde-radial.svg"
-                    : id === "auroraBlue"
+                    : id === "navidadAzulOro"
+                      ? "/backgrounds/navidad-azul-oro.svg"
+                      : id === "navidadRojoOro"
+                        ? "/backgrounds/navidad-rojo-oro.svg"
+                        : id === "auroraBlue"
               ? AURORA_BLUE_DATA_URL
               : id === "degradadoGrisBlanco"
                 ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
