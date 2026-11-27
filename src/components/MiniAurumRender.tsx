@@ -258,7 +258,7 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
   }, []);
 
   return (
-    <div className={`relative isolate overflow-hidden rounded-xl border border-white/[.08] bg-[#031a14] bg-[url(/backgrounds/navidad-esmeralda.svg)] bg-cover bg-center ${className}`}>
+    <div className={`relative isolate overflow-hidden rounded-xl border border-white/[.08] bg-[#2a0a0c] bg-[url(/backgrounds/navidad-rojo-oro.svg)] bg-cover bg-center ${className}`}>
       <div ref={hostRef} className="absolute inset-0" />
       {estadoModelo !== "listo" && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6 text-center">
@@ -269,15 +269,9 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
           </div>
         </div>
       )}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_36%,rgba(248,201,40,.18),transparent_48%),linear-gradient(145deg,rgba(3,26,20,.12),rgba(3,26,20,.38))]" />
       <div className="pointer-events-none absolute inset-5 rounded-xl border border-white/[.06]" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/10 sm:size-60" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/15 sm:size-44" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#090d11]/95 via-[#090d11]/70 to-transparent px-4 pb-4 pt-16 text-center sm:px-6 sm:pb-5">
-        <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#f3d66e]">Tu estudio de joyería digital</p>
-        <h3 className="mt-1 text-xl font-semibold tracking-wide text-white sm:text-2xl">AURUM RENDER</h3>
-        <p className="mx-auto mt-1 max-w-sm text-[10px] leading-4 text-slate-300 sm:text-xs">Arrastra la joya para girarla · Rueda del ratón para acercar</p>
-      </div>
     </div>
   );
 }
