@@ -388,6 +388,34 @@ function InicioPublico() {
 
 
   useEffect(() => {
+    // Máquina de escribir: revela la frase turquesa carácter por carácter.
+    const frase = FRASE_HERO_TURQUESA;
+    let caracteres = 0;
+    let intervalo: number | undefined;
+    let pausa: number | undefined;
+    setLetrasTurquesa(0);
+    const inicio = window.setTimeout(() => {
+      intervalo = window.setInterval(() => {
+        caracteres += 1;
+        setLetrasTurquesa(caracteres);
+        if (caracteres >= frase.length && intervalo !== undefined) {
+          window.clearInterval(intervalo);
+          intervalo = undefined;
+          pausa = window.setTimeout(() => {
+            caracteres = 0;
+            setLetrasTurquesa(0);
+          }, 1800);
+        }
+      }, 120);
+    }, 500);
+    return () => {
+      window.clearTimeout(inicio);
+      if (intervalo !== undefined) window.clearInterval(intervalo);
+      if (pausa !== undefined) window.clearTimeout(pausa);
+    };
+  }, []);
+
+  useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const canvas = document.createElement("canvas");
