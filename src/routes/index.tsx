@@ -677,35 +677,6 @@ function InicioPublico() {
     };
   }, []);
 
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setLetrasTurquesa(FRASE_HERO_TURQUESA.length);
-      return;
-    }
-    let indice = 0;
-    let escribiendo = true;
-    let timer: number | undefined;
-    setLetrasTurquesa(0);
-    const escribir = () => {
-      if (escribiendo) {
-        indice += 1;
-        setLetrasTurquesa(indice);
-        if (indice >= FRASE_HERO_TURQUESA.length) {
-          escribiendo = false;
-          timer = window.setTimeout(escribir, 1800);
-        } else timer = window.setTimeout(escribir, 95);
-      } else {
-        indice -= 1;
-        setLetrasTurquesa(indice);
-        if (indice <= 0) {
-          escribiendo = true;
-          timer = window.setTimeout(escribir, 450);
-        } else timer = window.setTimeout(escribir, 48);
-      }
-    };
-    timer = window.setTimeout(escribir, 450);
-    return () => { if (timer !== undefined) window.clearTimeout(timer); };
-  }, []);
 
   return (
     <>
