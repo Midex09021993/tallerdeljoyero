@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1190.55 841.89" preserveAspectRatio="none">
+  <defs>
+    <radialGradient id="ruby-red" cx="53.62%" cy="8.72%" r="100%" fx="53.54%" fy="8.82%">
+      <stop offset="0%" stop-color="#E31118"/>
+      <stop offset="75.12%" stop-color="#3E1214"/>
+    </radialGradient>
+  </defs>
+  <rect width="1190.55" height="841.89" fill="url(#ruby-red)"/>
+</svg>
