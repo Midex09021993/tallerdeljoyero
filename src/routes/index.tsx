@@ -398,15 +398,49 @@ function InicioPublico() {
     let escribiendo = true;
     let timer: number | undefined;
     let activo = true;
+    let audioContext: AudioContext | undefined;
+    let sonidoDesbloqueado = false;
+
+    // Audio se activa solo tras una interacción real del usuario.
+    const desbloquearSonido = () => {
+      if (sonidoDesbloqueado) return;
+      try {
+        audioContext = new AudioContext();
+        if (audioContext.state === "suspended") void audioContext.resume();
+        sonidoDesbloqueado = true;
+      } catch {
+        sonidoDesbloqueado = false;
+      }
+    };
+
+    const tick = () => {
+      if (!audioContext || audioContext.state !== "running") return;
+      const ahora = audioContext.currentTime;
+      const oscilador = audioContext.createOscillator();
+      const ganancia = audioContext.createGain();
+      oscilador.type = "sine";
+      oscilador.frequency.setValueAtTime(1150 + Math.random() * 180, ahora);
+      ganancia.gain.setValueAtTime(0.0001, ahora);
+      ganancia.gain.exponentialRampToValueAtTime(0.018, ahora + 0.004);
+      ganancia.gain.exponentialRampToValueAtTime(0.0001, ahora + 0.028);
+      oscilador.connect(ganancia);
+      ganancia.connect(audioContext.destination);
+      oscilador.start(ahora);
+      oscilador.stop(ahora + 0.032);
+    };
+
+    const interaccion = () => desbloquearSonido();
+    window.addEventListener("pointerdown", interaccion, { once: true });
+    window.addEventListener("keydown", interaccion, { once: true });
     setLetrasTurquesa(0);
 
     const avanzar = () => {
       if (!activo) return;
-
       if (escribiendo) {
         if (indice < frase.length) {
           indice += 1;
           setLetrasTurquesa(indice);
+          tick();
           timer = window.setTimeout(avanzar, 210);
         } else {
           timer = window.setTimeout(() => {
@@ -428,6 +462,9 @@ function InicioPublico() {
     return () => {
       activo = false;
       if (timer !== undefined) window.clearTimeout(timer);
+      window.removeEventListener("pointerdown", interaccion);
+      window.removeEventListener("keydown", interaccion);
+      if (audioContext) void audioContext.close();
     };
   }, []);
 
