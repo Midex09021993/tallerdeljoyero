@@ -388,24 +388,27 @@ function InicioPublico() {
 
 
   useEffect(() => {
-    // Máquina de escribir: revela la frase turquesa carácter por carácter.
+    // Máquina de escribir en ciclo, siguiendo el comportamiento del título del curso.
     const frase = FRASE_HERO_TURQUESA;
     let caracteres = 0;
+    let pausaActiva = false;
     let intervalo: number | undefined;
     let pausa: number | undefined;
     setLetrasTurquesa(0);
     const inicio = window.setTimeout(() => {
       intervalo = window.setInterval(() => {
-        caracteres += 1;
-        setLetrasTurquesa(caracteres);
-        if (caracteres >= frase.length && intervalo !== undefined) {
-          window.clearInterval(intervalo);
-          intervalo = undefined;
-          pausa = window.setTimeout(() => {
-            caracteres = 0;
-            setLetrasTurquesa(0);
-          }, 1800);
+        if (pausaActiva) return;
+        if (caracteres < frase.length) {
+          caracteres += 1;
+          setLetrasTurquesa(caracteres);
+          return;
         }
+        pausaActiva = true;
+        pausa = window.setTimeout(() => {
+          caracteres = 0;
+          setLetrasTurquesa(0);
+          pausaActiva = false;
+        }, 1800);
       }, 120);
     }, 500);
     return () => {
