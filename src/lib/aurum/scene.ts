@@ -52,7 +52,11 @@ export function createAurumSceneController(
           ? "/backgrounds/aurum-estudio-fotografico.svg"
           : id === "jadeRadial"
             ? "/backgrounds/jade-radial.svg"
-            : id === "auroraBlue"
+            : id === "marfilBone"
+              ? "/backgrounds/marfil-bone.svg"
+              : id === "turquesaBlanco"
+                ? "/backgrounds/turquesa-a-blanco.svg"
+                : id === "auroraBlue"
               ? AURORA_BLUE_DATA_URL
               : id === "degradadoGrisBlanco"
                 ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
