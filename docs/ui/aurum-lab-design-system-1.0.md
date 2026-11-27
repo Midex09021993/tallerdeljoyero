@@ -15,9 +15,9 @@ Una identidad de lujo contemporáneo que combina precisión tecnológica, calide
 | Ivory | `#F6F4EF` | Fondo general del ERP |
 | Warm white | `#FFFEFC` | Tarjetas, formularios y superficies elevadas |
 | Stone | `#EAE6DE` | Superficies secundarias |
-| Steel | `#687887` | Texto secundario |
+| Steel | `#687887` | Texto secundario |\n| Turquesa Surf | `#00C2B5` | Acento digital/creativo, destacados puntuales y elementos de innovación; no sustituye al Champagne |
 
-## Estados funcionales
+## Acento complementario — Turquesa Surf\n\n- HEX: `#00C2B5`\n- RGB: `0, 194, 181`\n- CMYK: `100, 0, 7, 24`\n- Uso: destacar elementos creativos, tecnología, innovación y frases clave de la identidad pública.\n- Mantenerlo como acento complementario; Midnight Champagne sigue siendo la paleta institucional principal.\n\n## Estados funcionales
 Los estados semánticos de éxito, información, advertencia y error conservan colores diferenciados. No se reemplazan por dorado: el usuario debe distinguir el significado del estado sin depender del color de marca.
 
 ## Reglas de aplicación
