@@ -388,29 +388,54 @@ function InicioPublico() {
 
 
   useEffect(() => {
-    // Máquina de escribir en ciclo, siguiendo el comportamiento del título del curso.
+    // Escritura más pausada y con la frase en una línea propia para evitar saltos de posición.
     const frase = FRASE_HERO_TURQUESA;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setLetrasTurquesa(frase.length);
+      return;
+    }
     let caracteres = 0;
-    let pausaActiva = false;
     let intervalo: number | undefined;
     let pausa: number | undefined;
     setLetrasTurquesa(0);
     const inicio = window.setTimeout(() => {
       intervalo = window.setInterval(() => {
-        if (pausaActiva) return;
         if (caracteres < frase.length) {
           caracteres += 1;
           setLetrasTurquesa(caracteres);
           return;
         }
-        pausaActiva = true;
+        if (intervalo !== undefined) {
+          window.clearInterval(intervalo);
+          intervalo = undefined;
+        }
         pausa = window.setTimeout(() => {
           caracteres = 0;
           setLetrasTurquesa(0);
-          pausaActiva = false;
-        }, 1800);
-      }, 120);
-    }, 500);
+          intervalo = window.setInterval(() => {
+            caracteres += 1;
+            setLetrasTurquesa(caracteres);
+            if (caracteres >= frase.length && intervalo !== undefined) {
+              window.clearInterval(intervalo);
+              intervalo = undefined;
+              pausa = window.setTimeout(() => {
+                caracteres = 0;
+                setLetrasTurquesa(0);
+                // La siguiente escritura se inicia pausadamente.
+                intervalo = window.setInterval(() => {
+                  caracteres += 1;
+                  setLetrasTurquesa(caracteres);
+                  if (caracteres >= frase.length && intervalo !== undefined) {
+                    window.clearInterval(intervalo);
+                    intervalo = undefined;
+                  }
+                }, 190);
+              }, 2200);
+            }
+          }, 190);
+        }, 2200);
+      }, 190);
+    }, 900);
     return () => {
       window.clearTimeout(inicio);
       if (intervalo !== undefined) window.clearInterval(intervalo);
@@ -934,7 +959,7 @@ function InicioPublico() {
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
           <div className="aurum-hero-enter relative z-10 max-w-[650px]">
             <span className="aurum-hero-badge inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
-            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Gestiona tu taller de joyería y presenta <span className="inline-block whitespace-nowrap text-[#00C2B5]"><span aria-hidden="true">{FRASE_HERO_TURQUESA.slice(0, letrasTurquesa)}</span><span className="ml-[1px] inline-block h-[0.82em] w-[2px] translate-y-[0.08em] bg-[#00C2B5] align-baseline motion-safe:animate-pulse" aria-hidden="true" /><span className="sr-only">{FRASE_HERO_TURQUESA}</span></span></h1>
+            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Gestiona tu taller de joyería y presenta <span className="mt-1 block min-h-[1.08em] whitespace-nowrap text-[#00C2B5]"><span aria-hidden="true">{FRASE_HERO_TURQUESA.slice(0, letrasTurquesa)}</span><span className="ml-[1px] inline-block h-[0.82em] w-[2px] translate-y-[0.08em] bg-[#00C2B5] align-baseline motion-safe:animate-pulse" aria-hidden="true" /><span className="sr-only">{FRASE_HERO_TURQUESA}</span></span></h1>
 
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Calcula cuánto metal necesitas para cada pieza.</span></li>
