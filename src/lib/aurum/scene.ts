@@ -56,7 +56,9 @@ export function createAurumSceneController(
               ? "/backgrounds/marfil-bone.svg"
               : id === "turquesaBlanco"
                 ? "/backgrounds/turquesa-a-blanco.svg"
-                : id === "auroraBlue"
+                : id === "rojoRubiRadial"
+                  ? "/backgrounds/rojo-rubi-radial.svg"
+                  : id === "auroraBlue"
               ? AURORA_BLUE_DATA_URL
               : id === "degradadoGrisBlanco"
                 ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
