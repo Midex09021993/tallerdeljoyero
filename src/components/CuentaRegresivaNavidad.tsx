@@ -21,7 +21,7 @@ const UNIDADES = [
   { key: "dias", etiqueta: "DÍAS" },
   { key: "horas", etiqueta: "H" },
   { key: "minutos", etiqueta: "MIN" },
-  { key: "segundos", etiqueta: "SEG" },
+  { key: "segundos", etiqueta: "S" },
 ] as const;
 
 export function CuentaRegresivaNavidad() {
@@ -33,22 +33,34 @@ export function CuentaRegresivaNavidad() {
   }, []);
 
   return (
-    <aside aria-label="Cuenta regresiva para Navidad" className="fixed right-3 top-[78px] z-20 rounded-2xl border border-[#e5c66c] bg-[#17232d]/95 px-3 py-2 text-white shadow-lg shadow-[#17232d]/15 backdrop-blur-sm sm:right-5 sm:px-4">
-      <div className="mb-1 flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-[.2em] text-[#f5d77d]">
-        <span aria-hidden="true">✦</span> {tiempo.terminado ? "¡Feliz Navidad!" : "Cuenta regresiva · Navidad"}
+    <aside
+      aria-label="Cuenta regresiva para Navidad"
+      className="fixed right-3 top-[76px] z-40 select-none sm:right-5"
+    >
+      <div className="relative rounded-[13px] bg-[#ff3038] px-2.5 py-1.5 text-white shadow-[0_5px_0_rgba(196,25,38,.18),0_8px_18px_rgba(255,48,56,.16)] sm:px-3">
+        {/* Side scallops inspired by the reference countdown badge */}
+        <span aria-hidden="true" className="absolute -left-[5px] top-1/2 size-3 -translate-y-1/2 rounded-full bg-[#ff3038]" />
+        <span aria-hidden="true" className="absolute -right-[5px] top-1/2 size-3 -translate-y-1/2 rounded-full bg-[#ff3038]" />
+        {tiempo.terminado ? (
+          <div className="relative px-2 py-2 text-center">
+            <span className="block text-[11px] font-extrabold tracking-wide">¡FELIZ NAVIDAD!</span>
+            <span className="mt-0.5 block text-[9px] font-semibold text-white/85">Que tengas una hermosa Navidad</span>
+          </div>
+        ) : (
+          <div className="relative flex items-center divide-x divide-white/30">
+            {UNIDADES.map(({ key, etiqueta }) => (
+              <div key={key} className="flex min-w-[37px] flex-col items-center justify-center px-1.5 sm:min-w-[43px] sm:px-2">
+                <span className="font-serif text-[23px] font-bold leading-[1] tracking-tight tabular-nums sm:text-[25px]">
+                  {String(tiempo[key]).padStart(2, "0")}
+                </span>
+                <span className="mt-1 text-[7px] font-bold uppercase leading-none tracking-[.12em] text-white/90 sm:text-[8px]">
+                  {etiqueta}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      {tiempo.terminado ? (
-        <p className="px-2 py-1 text-center text-sm font-semibold text-[#fff3cc]">¡Que tengas una hermosa Navidad!</p>
-      ) : (
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {UNIDADES.map(({ key, etiqueta }) => (
-            <div key={key} className="min-w-[34px] rounded-lg bg-white/10 px-1.5 py-1 text-center sm:min-w-[42px] sm:px-2">
-              <span className="block font-serif text-lg font-bold leading-none tabular-nums text-white sm:text-xl">{String(tiempo[key]).padStart(2, "0")}</span>
-              <span className="mt-1 block text-[8px] font-semibold tracking-[.12em] text-[#f5d77d]">{etiqueta}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </aside>
   );
 }
