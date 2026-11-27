@@ -378,7 +378,6 @@ function TalleresDeLaComunidad() {
 }
 
 function InicioPublico() {
-  const [letrasTurquesa, setLetrasTurquesa] = useState(0);
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
   const [videoDemoAurumAbierto, setVideoDemoAurumAbierto] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -388,84 +387,7 @@ function InicioPublico() {
 
 
   useEffect(() => {
-    const frase = FRASE_HERO_TURQUESA;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) {
-      setLetrasTurquesa(frase.length);
-      return;
-    }
-
-    let indice = 0;
-    let escribiendo = true;
-    let timer: number | undefined;
-    let activo = true;
-    let audioContext: AudioContext | undefined;
-    let sonidoDesbloqueado = false;
-
-    const desbloquearSonido = () => {
-      if (sonidoDesbloqueado) return;
-      try {
-        audioContext = new AudioContext();
-        if (audioContext.state === "suspended") void audioContext.resume();
-        sonidoDesbloqueado = true;
-      } catch {
-        sonidoDesbloqueado = false;
-      }
-    };
-
-    const tick = () => {
-      if (!audioContext || audioContext.state !== "running") return;
-      const now = audioContext.currentTime;
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(1150 + Math.random() * 180, now);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.012, now + 0.004);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
-      oscillator.connect(gain);
-      gain.connect(audioContext.destination);
-      oscillator.start(now);
-      oscillator.stop(now + 0.04);
-    };
-
-    const unlockOnInteraction = () => desbloquearSonido();
-    window.addEventListener("pointerdown", unlockOnInteraction, { once: true });
-    window.addEventListener("keydown", unlockOnInteraction, { once: true });
-    setLetrasTurquesa(0);
-
-    const avanzar = () => {
-      if (!activo) return;
-      if (escribiendo) {
-        if (indice < frase.length) {
-          indice += 1;
-          setLetrasTurquesa(indice);
-          tick();
-          timer = window.setTimeout(avanzar, 460);
-        } else {
-          timer = window.setTimeout(() => {
-            escribiendo = false;
-            avanzar();
-          }, 2600);
-        }
-      } else if (indice > 0) {
-        indice -= 1;
-        setLetrasTurquesa(indice);
-        timer = window.setTimeout(avanzar, 190);
-      } else {
-        escribiendo = true;
-        timer = window.setTimeout(avanzar, 900);
-      }
-    };
-
-    timer = window.setTimeout(avanzar, 1200);
-    return () => {
-      activo = false;
-      if (timer !== undefined) window.clearTimeout(timer);
-      window.removeEventListener("pointerdown", unlockOnInteraction);
-      window.removeEventListener("keydown", unlockOnInteraction);
-      if (audioContext) void audioContext.close();
-    };
+    // La animación del titular se controla por CSS, sin depender del ciclo de React.
   }, []);
 
   useEffect(() => {
@@ -955,7 +877,7 @@ function InicioPublico() {
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
           <div className="aurum-hero-enter relative z-10 max-w-[650px]">
             <span className="aurum-hero-badge inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
-            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Gestiona tu taller de joyería y presenta <span className="mt-1 block min-h-[1.08em] whitespace-nowrap text-[#00C2B5]"><span aria-hidden="true">{FRASE_HERO_TURQUESA.slice(0, letrasTurquesa)}</span><span className="ml-[1px] inline-block h-[0.82em] w-[2px] translate-y-[0.08em] bg-[#00C2B5] align-baseline motion-safe:animate-pulse" aria-hidden="true" /><span className="sr-only">{FRASE_HERO_TURQUESA}</span></span></h1>
+            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Gestiona tu taller de joyería y presenta <style>{`@keyframes aurum-typewriter-write-erase { 0%, 5% { width: 0; } 42%, 53% { width: 14ch; } 91%, 100% { width: 0; } } @keyframes aurum-typewriter-caret { 0%, 48%, 100% { border-color: transparent; } 24%, 72% { border-color: #00C2B5; } } .aurum-typewriter-text { display: inline-block; width: 14ch; max-width: 14ch; overflow: hidden; white-space: nowrap; vertical-align: bottom; border-right: 2px solid #00C2B5; animation: aurum-typewriter-write-erase 6.8s steps(14, end) infinite, aurum-typewriter-caret 0.8s step-end infinite; } @media (prefers-reduced-motion: reduce) { .aurum-typewriter-text { width: 14ch; max-width: none; overflow: visible; border-right: 0; animation: none; } }`}</style><span className="mt-1 block min-h-[1.08em] whitespace-nowrap text-[#00C2B5]"><span className="aurum-typewriter-text" aria-hidden="true">{FRASE_HERO_TURQUESA}</span><span className="sr-only">{FRASE_HERO_TURQUESA}</span></span></h1>
 
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Calcula cuánto metal necesitas para cada pieza.</span></li>
