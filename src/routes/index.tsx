@@ -8,7 +8,7 @@ import { AuriPublicoBoton } from "@/components/auri/AuriPublicoBoton";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, Camera, X, ChevronDown, UsersRound, GraduationCap } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Facebook, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, Camera, X, ChevronDown, UsersRound, GraduationCap } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 
@@ -1094,6 +1094,7 @@ function InicioPublico() {
               </Link>
               <p className="mt-3 max-w-xs text-xs leading-5 text-slate-300"><strong>Software para talleres de joyería</strong> con cálculo, diseño 3D y gestión comercial.</p>
               <a href="mailto:noreply@tallerdeljoyero.com" className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-white transition hover:text-[#f8c928]">noreply@tallerdeljoyero.com <ArrowRight className="size-3.5" /></a>
+              <a href="https://www.facebook.com/profile.php?id=61596634979205" target="_blank" rel="noopener noreferrer" aria-label="Facebook oficial de AURUM LAB" className="mt-4 inline-flex items-center gap-2.5 rounded-full border border-white/10 px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-[#C5A36B]/50 hover:text-white"><Facebook className="size-4 text-[#C5A36B]" /> Facebook oficial</a>
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Plataforma</h2>
