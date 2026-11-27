@@ -53,7 +53,7 @@
   --color-ring-offset-background: var(--background);
   --color-gold: var(--gold);
   --color-gold-bright: var(--gold-bright);
-  --color-gold-deep: var(--gold-deep);
+  --color-gold-deep: var(--gold-deep);\n  --color-turquoise-surf: var(--turquoise-surf);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
   --color-surface: var(--surface);
@@ -102,7 +102,7 @@
 
   --gold: oklch(0.712 0.083 84);
   --gold-bright: oklch(0.836 0.077 84);
-  --gold-deep: oklch(0.52 0.088 82);
+  --gold-deep: oklch(0.52 0.088 82);\n  --turquoise-surf: #00C2B5;
   --ink: oklch(0.223 0.006 250);
   --ink-foreground: oklch(0.985 0.002 95);
   --surface: oklch(1 0 0);
@@ -162,7 +162,7 @@
 
   --gold: #C5A36B;
   --gold-bright: #D9BD8B;
-  --gold-deep: #92734B;
+  --gold-deep: #92734B;\n  --turquoise-surf: #00C2B5;
   --ink: #182838;
   --ink-foreground: #F5F1E8;
   --surface: #FFFEFC;
