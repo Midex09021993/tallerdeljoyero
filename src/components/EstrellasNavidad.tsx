@@ -13,19 +13,23 @@ export function EstrellasNavidad() {
     if (!lienzo || !ctx) return;
 
     const movimientoReducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const velocidadMovimiento = movimientoReducido ? 0.65 : 1;
     let ancho = 0, alto = 0, cuadro = 0, antes = 0;
     let estrellas: Estrella[] = [];
 
     const dibujar = (ahora: number, animado: boolean) => {
       ctx.clearRect(0, 0, ancho, alto);
+      const dt = animado ? Math.max(0, Math.min((ahora - (antes || ahora)) / 1000, 0.05)) : 0;
       for (const e of estrellas) {
         if (animado) {
-          const dt = Math.max(0, Math.min((ahora - (antes || ahora)) / 1000, 0.05));
-          e.y += e.v * dt;
-          e.x += Math.sin(ahora / 1000 + e.fase) * 10 * dt;
-          if (e.y > alto + e.r) { e.y = -e.r; e.x = Math.random() * ancho; }
+          e.y += e.v * velocidadMovimiento * dt;
+          e.x += Math.sin(ahora / 1000 + e.fase) * 12 * dt;
+          if (e.y > alto + e.r) {
+            e.y = -e.r;
+            e.x = Math.random() * ancho;
+          }
         }
-        ctx.globalAlpha = animado ? 0.72 + 0.28 * Math.sin(ahora / 420 + e.fase) : 0.9;
+        ctx.globalAlpha = animado ? 0.78 + 0.22 * Math.sin(ahora / 500 + e.fase) : 0.9;
         ctx.fillStyle = e.color;
         ctx.shadowColor = e.color;
         ctx.shadowBlur = 10;
@@ -56,7 +60,7 @@ export function EstrellasNavidad() {
       ctx.setTransform(escala, 0, 0, escala, 0, 0);
       estrellas = Array.from({ length: ancho < 700 ? 26 : 54 }, () => ({
         x: Math.random() * ancho, y: Math.random() * alto, r: 3.5 + Math.random() * 5.5,
-        v: 18 + Math.random() * 30, fase: Math.random() * Math.PI * 2,
+        v: 30 + Math.random() * 45, fase: Math.random() * Math.PI * 2,
         color: COLORES[Math.floor(Math.random() * COLORES.length)],
       }));
       dibujar(0, false);
@@ -64,10 +68,12 @@ export function EstrellasNavidad() {
 
     const animar = (ahora: number) => {
       if (document.hidden) { cuadro = 0; return; }
-      dibujar(ahora, true); antes = ahora; cuadro = requestAnimationFrame(animar);
+      dibujar(ahora, true);
+      antes = ahora;
+      cuadro = requestAnimationFrame(animar);
     };
     const iniciar = () => {
-      if (!movimientoReducido && !document.hidden && cuadro === 0) { antes = 0; cuadro = requestAnimationFrame(animar); }
+      if (!document.hidden && cuadro === 0) { antes = 0; cuadro = requestAnimationFrame(animar); }
     };
     const pausar = () => { if (cuadro) cancelAnimationFrame(cuadro); cuadro = 0; antes = 0; };
     const visibilidad = () => document.hidden ? pausar() : iniciar();
