@@ -1,5 +1,6 @@
 import { NavDropdown } from "@/components/nav/NavDropdown";
 import { EstrellasNavidad } from "@/components/EstrellasNavidad";
+import { CuentaRegresivaNavidad } from "@/components/CuentaRegresivaNavidad";
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -595,6 +596,7 @@ function InicioPublico() {
   return (
     <>
       <EstrellasNavidad />
+      <CuentaRegresivaNavidad />
       <main ref={mainRef} className="min-h-screen bg-white text-[#17232d]">
       <style>{`
         @keyframes aurum-hero-enter {
