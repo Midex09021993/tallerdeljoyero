@@ -30,6 +30,11 @@ import {
   X,
   UploadCloud,
   Video,
+  Play,
+  Pause,
+  ChevronLeft,
+  ChevronRight,
+  Timer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -181,6 +186,8 @@ function MiNubePage() {
   const participanteId = sesion?.participante?.id ?? null;
   const usuarioId = sesion?.user.id ?? null;
   const [busqueda, setBusqueda] = useState("");
+  const [presentacionGLB, setPresentacionGLB] = useState<Array<{ nombre: string; url: string }>>([]);
+  const [preparandoPresentacion, setPreparandoPresentacion] = useState(false);
   const [mostrarMisVentas, setMostrarMisVentas] = useState(false);
   const [filtroMisVentas, setFiltroMisVentas] = useState<"todas" | "borrador" | "publicado" | "pausado">("todas");
   const [misVentas, setMisVentas] = useState<Array<{ id: string; titulo: string; categoria: string; formatos: string[]; precio: number; moneda: string; estado: string; created_at: string; nombre_archivo: string; ruta_archivo: string; imagen_portada_url: string | null }>>([]);
@@ -1939,11 +1946,29 @@ function MiNubePage() {
               <p className="mt-1 text-sm text-muted-foreground">{archivos.length} archivo(s) · {carpetas.length} carpeta(s)</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link to="/marketplace-mis-compras" className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted">
+              {false && (              <Link to="/marketplace-mis-compras" className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted">
                 <HardDrive className="size-4" /> Mis compras
-              </Link>
-              <button type="button" onClick={() => { const siguiente = !mostrarMisVentas; setMostrarMisVentas(siguiente); if (siguiente) void cargarMisVentas(); }} className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted">
+              </Link>)}
+              {false && (              <button type="button" onClick={() => { const siguiente = !mostrarMisVentas; setMostrarMisVentas(siguiente); if (siguiente) void cargarMisVentas(); }} className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted">
                 <Store className="size-4" /> Mis ventas
+              </button>)}
+              <button type="button" disabled={preparandoPresentacion} onClick={async () => {
+                const glbs = archivos.filter(a => a.origen === "supabase" && a.nombre.toLowerCase().endsWith(".glb"));
+                if (!glbs.length) { toast.info("Todavía no hay GLB listos para presentar."); return; }
+                setPreparandoPresentacion(true);
+                try {
+                  const items: Array<{ nombre: string; url: string }> = [];
+                  for (const archivo of glbs) {
+                    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 15);
+                    if (error || !data?.signedUrl) { console.warn("GLB omitido:", archivo.nombre, error); continue; }
+                    items.push({ nombre: nombreVisible(archivo.nombre), url: data.signedUrl });
+                  }
+                  if (!items.length) throw new Error("No se pudo preparar ningún GLB para la presentación.");
+                  setPresentacionGLB(items);
+                } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo preparar la presentación."); }
+                finally { setPreparandoPresentacion(false); }
+              }} className="inline-flex items-center gap-2 rounded-xl border border-[#c5a15d]/60 bg-[#c5a15d]/10 px-3 py-2 text-xs font-semibold text-foreground hover:bg-[#c5a15d]/15 disabled:opacity-50">
+                <Play className="size-4" /> {preparandoPresentacion ? "Preparando GLB…" : "Presentar colección"}
               </button>
               <label className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -1961,7 +1986,7 @@ function MiNubePage() {
             </div>
           </div>
 
-          {mostrarMisVentas ? (
+          {false && mostrarMisVentas ? (
             <section className="mt-5 rounded-xl border border-gold/25 bg-background p-4 sm:p-5" aria-label="Mis ventas">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -2547,6 +2572,23 @@ function MiNubePage() {
           </div>
         </div>
       )}
+      {presentacionGLB.length > 0 && <PresentacionColeccionGLB modelos={presentacionGLB} onClose={() => setPresentacionGLB([])} />}
+
+function PresentacionColeccionGLB({ modelos, onClose }: { modelos: Array<{ nombre: string; url: string }>; onClose: () => void }) {
+  const [indice, setIndice] = useState(0);
+  const [auto, setAuto] = useState(false);
+  const [segundos, setSegundos] = useState(30);
+  useEffect(() => { if (!auto || modelos.length < 2) return; const id = window.setInterval(() => setIndice(actual => (actual + 1) % modelos.length), segundos * 1000); return () => window.clearInterval(id); }, [auto, segundos, modelos.length]);
+  const modelo = modelos[indice];
+  return createPortal(<div className="fixed inset-0 z-[120] flex flex-col bg-[#f7f6f2]" role="dialog" aria-modal="true" aria-label="Presentación de colección">
+    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e6dfd2] bg-white px-4 py-3 sm:px-6">
+      <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987538]">AURUM SHOWCASE</p><h2 className="truncate text-sm font-semibold sm:text-base">{modelo.nombre.replace(/\\.(glb|gltf)$/i, "")}</h2><p className="text-xs text-muted-foreground">{indice + 1} de {modelos.length} modelos listos</p></div>
+      <div className="flex items-center gap-2"><label className="hidden items-center gap-1.5 text-xs sm:flex"><Timer className="size-4"/><select value={segundos} onChange={e => setSegundos(Number(e.target.value))} className="rounded-lg border px-2 py-1.5"><option value={10}>10 s</option><option value={20}>20 s</option><option value={30}>30 s</option><option value={60}>1 min</option><option value={120}>2 min</option><option value={300}>5 min</option></select></label><button type="button" onClick={() => setAuto(v => !v)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/10 px-3 py-2 text-xs font-semibold">{auto ? <Pause className="size-4"/> : <Play className="size-4"/>}{auto ? "Pausar" : "Automático"}</button><button type="button" onClick={onClose} className="grid size-9 place-items-center rounded-lg border hover:bg-muted" aria-label="Cerrar presentación"><X className="size-4"/></button></div>
+    </header>
+    <div className="relative min-h-0 flex-1 overflow-hidden"><Suspense fallback={<div className="grid h-full place-items-center text-sm text-muted-foreground">Cargando visor público AURUM…</div>}><PublicJewelConfigurator key={modelo.url} sharedModelUrl={modelo.url} sharedModelName={modelo.nombre.endsWith(".glb") ? modelo.nombre : modelo.nombre+".glb"} embedded /></Suspense></div>
+    <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[#e6dfd2] bg-white px-4 py-3 sm:px-6"><button type="button" onClick={() => setIndice(v => (v - 1 + modelos.length) % modelos.length)} disabled={modelos.length < 2} className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-40"><ChevronLeft className="size-4"/>Anterior</button><div className="flex max-w-[55vw] items-center gap-1 overflow-x-auto">{modelos.map((item,i)=><button key={item.url} type="button" onClick={()=>{setIndice(i);setAuto(false);}} title={item.nombre} aria-label={"Mostrar "+item.nombre} className={`size-2.5 shrink-0 rounded-full ${i===indice?"bg-[#c5a15d]":"bg-[#d8d4cb]"}`} />)}</div><button type="button" onClick={() => setIndice(v => (v+1)%modelos.length)} disabled={modelos.length<2} className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-40">Siguiente<ChevronRight className="size-4"/></button></footer>
+  </div>, document.body);
+}
     </AppShell>
   );
 }
