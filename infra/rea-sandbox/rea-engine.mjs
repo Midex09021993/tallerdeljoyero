@@ -33,8 +33,8 @@ function runRea(args) {
       env: {
         PATH: process.env.PATH || "/usr/local/bin:/usr/bin:/bin",
         HOME: "/tmp",
-        JAVA_HOME: process.env.JAVA_HOME || "/usr/lib/jvm/java-21-openjdk-amd64",
-        GHIDRA_INSTALL_DIR: process.env.GHIDRA_INSTALL_DIR || "/opt/ghidra_12.1.4_PUBLIC",
+        JAVA_HOME: process.env.JAVA_HOME || "/opt/java/openjdk",
+        GHIDRA_INSTALL_DIR: process.env.GHIDRA_INSTALL_DIR || "/opt/ghidra_12.2_PUBLIC",
         LANG: "C.UTF-8",
         LC_ALL: "C.UTF-8",
       },
