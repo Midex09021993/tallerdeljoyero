@@ -959,7 +959,7 @@ function InicioPublico() {
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> DISEÑO CAD Y VISUALIZACIÓN PROFESIONAL</p>
-            <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">Del diseño CAD a una presentación profesional.</h2>
+            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">Del diseño CAD a una presentación profesional.</h2>
 
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Conecta Rhino 7 u 8 con <strong>AURUM CONNECT</strong> y lleva tus modelos al estudio de visualización.</p>
             <div className="mt-7">
