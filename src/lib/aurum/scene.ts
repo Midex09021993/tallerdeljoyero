@@ -50,11 +50,13 @@ export function createAurumSceneController(
       backgroundImageOverride =
         id === "estudioFotografico"
           ? "/backgrounds/aurum-estudio-fotografico.svg"
-          : id === "auroraBlue"
-            ? AURORA_BLUE_DATA_URL
-          : id === "degradadoGrisBlanco"
-            ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
-            : null;
+          : id === "jadeRadial"
+            ? "/backgrounds/jade-radial.svg"
+            : id === "auroraBlue"
+              ? AURORA_BLUE_DATA_URL
+              : id === "degradadoGrisBlanco"
+                ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
+                : null;
       backgroundOverride = id === "escena" ? null : (backgrounds[id] ?? (backgroundImageOverride ? "#f4f4f2" : null));
       applyBackground(backgroundOverride, backgroundImageOverride);
     },
