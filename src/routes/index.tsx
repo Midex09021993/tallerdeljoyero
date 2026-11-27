@@ -1132,10 +1132,7 @@ function InicioPublico() {
               <button type="button" onClick={() => setVideoDemoAurumAbierto(false)} aria-label="Cerrar demostración" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/15 text-white transition hover:border-[#f8c928] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]"><X className="size-5" /></button>
             </div>
             <video className="max-h-[72vh] w-full bg-black object-contain" src="/Galaxy-Tab-S7-tallerdeljoyero.com-dwn_j3tja-mr2y.webm" controls autoPlay muted playsInline preload="metadata" />
-            <div className="flex flex-col gap-3 border-t border-white/10 bg-[#101820] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
-              <p className="text-xs leading-5 text-slate-300">Descubre cómo presentar tus diseños con metales, gemas e iluminación de estudio.</p>
-              <Link to="/aurum-render-public" onClick={() => setVideoDemoAurumAbierto(false)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-extrabold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Ver AURUM RENDER en acción <ArrowRight className="size-4" /></Link>
-            </div>
+            <div className="border-t border-white/10 bg-[#101820] px-4 py-5 sm:px-6 sm:py-6"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="text-sm font-semibold text-white">¿Quieres probar AURUM RENDER con tus propios diseños?</p><p className="mt-1 text-xs leading-5 text-slate-300">Regístrate gratis en AURUM LAB y comienza a explorar desde el plan gratuito.</p></div><Link to="/auth" onClick={() => setVideoDemoAurumAbierto(false)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-extrabold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Crear cuenta gratuita <ArrowRight className="size-4" /></Link></div></div>
           </div>
         </div>
       )}
