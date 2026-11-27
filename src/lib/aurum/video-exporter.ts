@@ -131,17 +131,45 @@ function paintAurumCssGradient(context: CanvasRenderingContext2D, css: string, w
   return true;
 }
 
-async function fetchAurumBackgroundImage(source: string): Promise<ImageBitmap> {
+/** SVG blobs are decoded through HTMLImageElement for browser compatibility. */
+export async function isAurumSvgBlob(blob: Blob): Promise<boolean> {
+  if (/image\\/svg\\+xml/i.test(blob.type)) return true;
+  const sample = (await blob.slice(0, 512).text()).trimStart().replace(/^<\\?xml[^>]*>\\s*/i, "");
+  return /^<(?:svg|!doctype\\s+svg)\\b/i.test(sample) || /<svg\\b/i.test(sample);
+}
+
+async function decodeAurumImageElement(blob: Blob): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(blob);
+  const image = new Image();
+  try {
+    image.src = url;
+    if (typeof image.decode === "function") await image.decode();
+    else await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error("El navegador no pudo decodificar el fondo.")); });
+    if (!(image.naturalWidth > 0 && image.naturalHeight > 0)) throw new Error("La imagen de fondo se decodificó sin dimensiones válidas.");
+    return image;
+  } catch (error) {
+    throw new Error("El navegador no pudo decodificar el fondo SVG o imagen para el vídeo.", { cause: error });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function fetchAurumBackgroundImage(source: string): Promise<CanvasImageSource> {
   let response: Response;
   try {
     response = await fetch(new URL(source, document.baseURI).href, { mode: "cors", credentials: "omit", cache: "force-cache" });
   } catch (error) {
     throw new Error("No se pudo cargar el fondo con permisos CORS. El recurso debe ser local o permitir el origen de AURUM LAB.", { cause: error });
   }
-  if (!response.ok || response.type === "opaque") {
-    throw new Error("El fondo no permite captura segura. Aloja la imagen en AURUM o habilita CORS en su servidor.");
+  if (!response.ok || response.type === "opaque") throw new Error("El fondo no permite captura segura. Aloja la imagen en AURUM o habilita CORS en su servidor.");
+  const blob = await response.blob();
+  if (await isAurumSvgBlob(blob)) return decodeAurumImageElement(blob);
+  try {
+    return await createImageBitmap(blob);
+  } catch (bitmapError) {
+    try { return await decodeAurumImageElement(blob); }
+    catch (imageError) { throw new Error("The source image could not be decoded. El fondo no pudo decodificarse con los métodos compatibles.", { cause: imageError ?? bitmapError }); }
   }
-  return createImageBitmap(await response.blob());
 }
 
 function drawAurumBackgroundImage(context: CanvasRenderingContext2D, image: CanvasImageSource, width: number, height: number, size: string): void {
@@ -188,9 +216,9 @@ async function loadAurumBackgroundSnapshot(element: HTMLElement | null | undefin
         throw new Error("El degradado del fondo usa una sintaxis no compatible con la captura MP4.");
       }
     } else {
-      const bitmap = await fetchAurumBackgroundImage(layer.value);
-      try { drawAurumBackgroundImage(context, bitmap, width, height, backgroundSize || "cover"); }
-      finally { bitmap.close(); }
+      const imageSource = await fetchAurumBackgroundImage(layer.value);
+      drawAurumBackgroundImage(context, imageSource, width, height, backgroundSize || "cover");
+      if (imageSource instanceof ImageBitmap) imageSource.close();
     }
   }
   try { context.getImageData(0, 0, 1, 1); }
