@@ -41,7 +41,8 @@ import { AppShell } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 import { encolarArchivo, listarColaArchivos, quitarDeCola, type ArchivoEnCola } from "@/lib/cola-subidas-local";
-import { supabase } from "@/integrations/supabase/client";\nconst PublicJewelConfigurator = lazy(() => import("@/components/PublicJewelConfigurator").then((m) => ({ default: m.PublicJewelConfigurator })));
+import { supabase } from "@/integrations/supabase/client";
+const PublicJewelConfigurator = lazy(() => import("@/components/PublicJewelConfigurator").then((m) => ({ default: m.PublicJewelConfigurator })));
 
 type EnlaceVisor3d = { token: string; expira_en: string; nombre: string };
 const rpcObtenerEnlaceVisor3d = (args: { _modelo_ruta: string; _nombre: string }) =>
