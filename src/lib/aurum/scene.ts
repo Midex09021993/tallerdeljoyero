@@ -64,6 +64,8 @@ export function createAurumSceneController(
                       ? "/backgrounds/navidad-azul-oro.svg"
                       : id === "navidadRojoOro"
                         ? "/backgrounds/navidad-rojo-oro.svg"
+                        : id === "navidadEsmeralda"
+                          ? "/backgrounds/navidad-esmeralda.svg"
                         : id === "auroraBlue"
               ? AURORA_BLUE_DATA_URL
               : id === "degradadoGrisBlanco"
