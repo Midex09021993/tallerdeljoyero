@@ -17,6 +17,8 @@ import heroColgante from "@/assets/diseno-colgante.jpg";
 
 // En PC de escritorio (pantalla amplia + puntero preciso) los accesos
 // se abren en una pestaña independiente. Tablets y móviles conservan la pestaña.
+const FRASE_HERO_TURQUESA = "diseños en 3D.";
+
 function esPCDeEscritorio() {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)").matches;
@@ -376,6 +378,7 @@ function TalleresDeLaComunidad() {
 }
 
 function InicioPublico() {
+  const [letrasTurquesa, setLetrasTurquesa] = useState(FRASE_HERO_TURQUESA.length);
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
   const [videoDemoAurumAbierto, setVideoDemoAurumAbierto] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -591,6 +594,36 @@ function InicioPublico() {
       observer?.disconnect();
       mediaQuery.removeEventListener("change", observarDemo3D);
     };
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setLetrasTurquesa(FRASE_HERO_TURQUESA.length);
+      return;
+    }
+    let indice = 0;
+    let escribiendo = true;
+    let timer: number | undefined;
+    setLetrasTurquesa(0);
+    const escribir = () => {
+      if (escribiendo) {
+        indice += 1;
+        setLetrasTurquesa(indice);
+        if (indice >= FRASE_HERO_TURQUESA.length) {
+          escribiendo = false;
+          timer = window.setTimeout(escribir, 1800);
+        } else timer = window.setTimeout(escribir, 95);
+      } else {
+        indice -= 1;
+        setLetrasTurquesa(indice);
+        if (indice <= 0) {
+          escribiendo = true;
+          timer = window.setTimeout(escribir, 450);
+        } else timer = window.setTimeout(escribir, 48);
+      }
+    };
+    timer = window.setTimeout(escribir, 450);
+    return () => { if (timer !== undefined) window.clearTimeout(timer); };
   }, []);
 
   return (
@@ -870,7 +903,7 @@ function InicioPublico() {
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
           <div className="aurum-hero-enter relative z-10 max-w-[650px]">
             <span className="aurum-hero-badge inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
-            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Gestiona tu taller de joyería y presenta <span className="text-[#00C2B5]">diseños en 3D.</span></h1>
+            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Gestiona tu taller de joyería y presenta <span className="inline-block whitespace-nowrap text-[#00C2B5]"><span aria-hidden="true">{FRASE_HERO_TURQUESA.slice(0, letrasTurquesa)}</span><span className="ml-[1px] inline-block h-[0.82em] w-[2px] translate-y-[0.08em] bg-[#00C2B5] align-baseline motion-safe:animate-pulse" aria-hidden="true" /><span className="sr-only">{FRASE_HERO_TURQUESA}</span></span></h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Con <strong>AURUM LAB</strong> organizas clientes y pedidos, calculas materiales y presentas tus modelos de joyería con metales, gemas e iluminación profesional.</p>
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Calcula cuánto metal necesitas para cada pieza.</span></li>
