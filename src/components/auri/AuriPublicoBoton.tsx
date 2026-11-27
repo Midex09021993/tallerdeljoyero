@@ -15,7 +15,7 @@ export function AuriPublicoBoton() {
             type="button"
             onClick={() => setAbierto(false)}
             aria-label="Cerrar asistente AURI"
-            className="absolute right-3 top-[calc(env(safe-area-inset-top)+10px)] z-30 grid size-9 place-items-center rounded-full border border-[#e8dfcc] bg-white/95 text-[#69737b] shadow-sm transition hover:border-[#c7a65b] hover:text-[#96732e] sm:right-3 sm:top-3"
+            className="absolute right-3 top-[calc(env(safe-area-inset-top)+10px)] z-30 grid size-9 place-items-center rounded-full border border-[#e8dfcc] bg-white/95 text-[#69737b] shadow-sm transition hover:border-[#00C2B5] hover:text-[#96732e] sm:right-3 sm:top-3"
           >
             <X className="size-4" />
           </button>
@@ -26,16 +26,16 @@ export function AuriPublicoBoton() {
           type="button"
           onClick={() => setAbierto(true)}
           aria-label="Conversar con AURI, guía virtual de Taller del Joyero"
-          className="fixed bottom-5 right-4 z-[80] flex min-h-16 items-center gap-2.5 rounded-full border border-[#d8c28b] bg-white/95 py-2 pl-2 pr-4 text-left shadow-[0_10px_35px_rgba(38,55,70,.18)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_14px_40px_rgba(38,55,70,.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a65b] sm:bottom-6 sm:right-6"
+          className="fixed bottom-5 right-4 z-[80] flex min-h-16 items-center gap-2.5 rounded-full border border-[#00C2B5] bg-white/95 py-2 pl-2 pr-4 text-left shadow-[0_10px_35px_rgba(38,55,70,.18)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_14px_40px_rgba(38,55,70,.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C2B5] sm:bottom-6 sm:right-6"
         >
-          <span className="grid size-12 place-items-center rounded-full bg-gradient-to-br from-[#fffdf7] to-[#f1e6c9]">
+          <span className="grid size-12 place-items-center rounded-full bg-gradient-to-br from-[#eafffd] to-[#d2f6f2]">
             <AuriMascota compact />
           </span>
           <span className="flex flex-col">
             <span className="text-xs font-bold text-[#263746]">¿Hablamos?</span>
-            <span className="text-[10px] text-[#8a7548]">Pregunta a AURI</span>
+            <span className="text-[10px] font-medium text-[#008f86]">Pregunta a AURI</span>
           </span>
-          <span className="ml-1 size-2 rounded-full bg-[#4b9b79]" />
+          <span className="ml-1 size-2 rounded-full bg-[#00C2B5]" />
         </button>
       )}
     </>
