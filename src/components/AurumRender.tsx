@@ -1419,6 +1419,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             EXRLoader,
             url: requestedEnvironmentUrl,
             environmentRotationRadians: gemEnvironmentRotation,
+            // Match Mini AURUM RENDER diamond optics (0° reference), canceling only the shared +90° diagnostic offset.
+            diamondEnvironmentRotationOffsetRadians: -Math.PI / 2,
             camera: camara,
             getViewportHeight: () => renderer.domElement.height,
             quality: "interactive",
