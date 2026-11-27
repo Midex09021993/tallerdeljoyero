@@ -389,7 +389,8 @@ function InicioPublico() {
 
   useEffect(() => {
     const frase = FRASE_HERO_TURQUESA;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) {
       setLetrasTurquesa(frase.length);
       return;
     }
@@ -401,7 +402,6 @@ function InicioPublico() {
     let audioContext: AudioContext | undefined;
     let sonidoDesbloqueado = false;
 
-    // Audio se activa solo tras una interacción real del usuario.
     const desbloquearSonido = () => {
       if (sonidoDesbloqueado) return;
       try {
@@ -415,23 +415,23 @@ function InicioPublico() {
 
     const tick = () => {
       if (!audioContext || audioContext.state !== "running") return;
-      const ahora = audioContext.currentTime;
-      const oscilador = audioContext.createOscillator();
-      const ganancia = audioContext.createGain();
-      oscilador.type = "sine";
-      oscilador.frequency.setValueAtTime(1150 + Math.random() * 180, ahora);
-      ganancia.gain.setValueAtTime(0.0001, ahora);
-      ganancia.gain.exponentialRampToValueAtTime(0.018, ahora + 0.004);
-      ganancia.gain.exponentialRampToValueAtTime(0.0001, ahora + 0.028);
-      oscilador.connect(ganancia);
-      ganancia.connect(audioContext.destination);
-      oscilador.start(ahora);
-      oscilador.stop(ahora + 0.032);
+      const now = audioContext.currentTime;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(1150 + Math.random() * 180, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.012, now + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.04);
     };
 
-    const interaccion = () => desbloquearSonido();
-    window.addEventListener("pointerdown", interaccion, { once: true });
-    window.addEventListener("keydown", interaccion, { once: true });
+    const unlockOnInteraction = () => desbloquearSonido();
+    window.addEventListener("pointerdown", unlockOnInteraction, { once: true });
+    window.addEventListener("keydown", unlockOnInteraction, { once: true });
     setLetrasTurquesa(0);
 
     const avanzar = () => {
@@ -441,29 +441,29 @@ function InicioPublico() {
           indice += 1;
           setLetrasTurquesa(indice);
           tick();
-          timer = window.setTimeout(avanzar, 210);
+          timer = window.setTimeout(avanzar, 460);
         } else {
           timer = window.setTimeout(() => {
             escribiendo = false;
             avanzar();
-          }, 2200);
+          }, 2600);
         }
       } else if (indice > 0) {
         indice -= 1;
         setLetrasTurquesa(indice);
-        timer = window.setTimeout(avanzar, 95);
+        timer = window.setTimeout(avanzar, 190);
       } else {
         escribiendo = true;
-        timer = window.setTimeout(avanzar, 650);
+        timer = window.setTimeout(avanzar, 900);
       }
     };
 
-    timer = window.setTimeout(avanzar, 900);
+    timer = window.setTimeout(avanzar, 1200);
     return () => {
       activo = false;
       if (timer !== undefined) window.clearTimeout(timer);
-      window.removeEventListener("pointerdown", interaccion);
-      window.removeEventListener("keydown", interaccion);
+      window.removeEventListener("pointerdown", unlockOnInteraction);
+      window.removeEventListener("keydown", unlockOnInteraction);
       if (audioContext) void audioContext.close();
     };
   }, []);
