@@ -891,7 +891,7 @@ function InicioPublico() {
 
       <section ref={demo3DSectionRef} id="aurum-render" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 760px" }} className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
-          <div className="max-w-2xl">
+          <div className="order-2 max-w-2xl lg:order-2">
             <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> DISEÑO CAD Y VISUALIZACIÓN PROFESIONAL</p>
             <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">Del diseño CAD a una presentación profesional.</h2>
 
@@ -901,7 +901,7 @@ function InicioPublico() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[560px]">
+          <div className="order-1 relative mx-auto w-full max-w-[560px] lg:order-1">
             <div className="absolute inset-8 rounded-full bg-[#b58b00]/20 blur-3xl" />
             <div className="relative overflow-visible rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#29343e] via-[#171f27] to-[#090d11] p-5 shadow-[0_25px_80px_rgba(0,0,0,.35)] sm:p-7">
               <img
