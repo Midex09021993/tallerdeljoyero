@@ -797,7 +797,7 @@ function InicioPublico() {
                 height={275}
                 loading="lazy"
                 decoding="async"
-                className="pointer-events-none absolute -left-9 bottom-[5.5rem] z-20 h-24 w-28 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,.55)] sm:-left-12 sm:bottom-24 sm:h-28 sm:w-32"
+                className="pointer-events-none absolute -left-9 bottom-[8rem] z-30 h-24 w-28 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,.55)] sm:-left-12 sm:bottom-32 sm:h-28 sm:w-32"
               />
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
