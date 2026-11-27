@@ -1094,7 +1094,7 @@ function InicioPublico() {
               </Link>
               <p className="mt-3 max-w-xs text-xs leading-5 text-slate-300"><strong>Software para talleres de joyería</strong> con cálculo, diseño 3D y gestión comercial.</p>
               <a href="mailto:noreply@tallerdeljoyero.com" className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-white transition hover:text-[#f8c928]">noreply@tallerdeljoyero.com <ArrowRight className="size-3.5" /></a>
-              <a href="https://www.facebook.com/profile.php?id=61596634979205" target="_blank" rel="noopener noreferrer" aria-label="Facebook oficial de AURUM LAB" className="mt-4 inline-flex items-center gap-2.5 rounded-full border border-white/10 px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-[#C5A36B]/50 hover:text-white"><Facebook className="size-4 text-[#C5A36B]" /> Facebook oficial</a>
+              <div className="mt-5 flex items-center gap-3"><span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">Redes</span><a href="https://www.facebook.com/profile.php?id=61596634979205" target="_blank" rel="noopener noreferrer" aria-label="AURUM LAB en Facebook" title="Facebook" className="inline-flex size-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-[#C5A36B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36B]"><Facebook aria-hidden="true" className="size-[18px]" /></a></div>
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Plataforma</h2>
