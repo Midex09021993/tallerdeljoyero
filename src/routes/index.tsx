@@ -378,7 +378,7 @@ function TalleresDeLaComunidad() {
 }
 
 function InicioPublico() {
-  const [letrasTurquesa, setLetrasTurquesa] = useState(FRASE_HERO_TURQUESA.length);
+  const [letrasTurquesa, setLetrasTurquesa] = useState(0);
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
   const [videoDemoAurumAbierto, setVideoDemoAurumAbierto] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -388,58 +388,37 @@ function InicioPublico() {
 
 
   useEffect(() => {
-    // Escritura más pausada y con la frase en una línea propia para evitar saltos de posición.
     const frase = FRASE_HERO_TURQUESA;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setLetrasTurquesa(frase.length);
       return;
     }
-    let caracteres = 0;
-    let intervalo: number | undefined;
-    let pausa: number | undefined;
+
+    let indice = 0;
+    let timer: number | undefined;
+    let mounted = true;
     setLetrasTurquesa(0);
-    const inicio = window.setTimeout(() => {
-      intervalo = window.setInterval(() => {
-        if (caracteres < frase.length) {
-          caracteres += 1;
-          setLetrasTurquesa(caracteres);
-          return;
-        }
-        if (intervalo !== undefined) {
-          window.clearInterval(intervalo);
-          intervalo = undefined;
-        }
-        pausa = window.setTimeout(() => {
-          caracteres = 0;
+
+    const escribir = () => {
+      if (!mounted) return;
+      if (indice < frase.length) {
+        indice += 1;
+        setLetrasTurquesa(indice);
+        timer = window.setTimeout(escribir, 260);
+      } else {
+        timer = window.setTimeout(() => {
+          if (!mounted) return;
+          indice = 0;
           setLetrasTurquesa(0);
-          intervalo = window.setInterval(() => {
-            caracteres += 1;
-            setLetrasTurquesa(caracteres);
-            if (caracteres >= frase.length && intervalo !== undefined) {
-              window.clearInterval(intervalo);
-              intervalo = undefined;
-              pausa = window.setTimeout(() => {
-                caracteres = 0;
-                setLetrasTurquesa(0);
-                // La siguiente escritura se inicia pausadamente.
-                intervalo = window.setInterval(() => {
-                  caracteres += 1;
-                  setLetrasTurquesa(caracteres);
-                  if (caracteres >= frase.length && intervalo !== undefined) {
-                    window.clearInterval(intervalo);
-                    intervalo = undefined;
-                  }
-                }, 190);
-              }, 2200);
-            }
-          }, 190);
-        }, 2200);
-      }, 190);
-    }, 900);
+          timer = window.setTimeout(escribir, 650);
+        }, 2400);
+      }
+    };
+
+    timer = window.setTimeout(escribir, 1000);
     return () => {
-      window.clearTimeout(inicio);
-      if (intervalo !== undefined) window.clearInterval(intervalo);
-      if (pausa !== undefined) window.clearTimeout(pausa);
+      mounted = false;
+      if (timer !== undefined) window.clearTimeout(timer);
     };
   }, []);
 
