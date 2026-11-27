@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1190.55 841.89" preserveAspectRatio="none">
+<radialGradient id="jade" cx="611.1496" cy="223.0866" r="1276.1951" fx="610.1494" fy="223.9998" gradientTransform="matrix(0.98 0.1989 -0.179 0.882 52.1518 -95.2483)" gradientUnits="userSpaceOnUse">
+<stop offset="0.0223" stop-color="#C2E1DB"/>
+<stop offset="0.1234" stop-color="#ADCCC4"/>
+<stop offset="0.1927" stop-color="#9CBBB2"/>
+<stop offset="0.334" stop-color="#749D8F"/>
+<stop offset="0.5419" stop-color="#3D7A68"/>
+<stop offset="0.6453" stop-color="#266E5A"/>
+</radialGradient>
+<rect width="1190.55" height="841.89" fill="url(#jade)"/>
+</svg>
