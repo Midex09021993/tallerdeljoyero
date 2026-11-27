@@ -395,29 +395,38 @@ function InicioPublico() {
     }
 
     let indice = 0;
+    let escribiendo = true;
     let timer: number | undefined;
-    let mounted = true;
+    let activo = true;
     setLetrasTurquesa(0);
 
-    const escribir = () => {
-      if (!mounted) return;
-      if (indice < frase.length) {
-        indice += 1;
+    const avanzar = () => {
+      if (!activo) return;
+
+      if (escribiendo) {
+        if (indice < frase.length) {
+          indice += 1;
+          setLetrasTurquesa(indice);
+          timer = window.setTimeout(avanzar, 210);
+        } else {
+          timer = window.setTimeout(() => {
+            escribiendo = false;
+            avanzar();
+          }, 2200);
+        }
+      } else if (indice > 0) {
+        indice -= 1;
         setLetrasTurquesa(indice);
-        timer = window.setTimeout(escribir, 260);
+        timer = window.setTimeout(avanzar, 95);
       } else {
-        timer = window.setTimeout(() => {
-          if (!mounted) return;
-          indice = 0;
-          setLetrasTurquesa(0);
-          timer = window.setTimeout(escribir, 650);
-        }, 2400);
+        escribiendo = true;
+        timer = window.setTimeout(avanzar, 650);
       }
     };
 
-    timer = window.setTimeout(escribir, 1000);
+    timer = window.setTimeout(avanzar, 900);
     return () => {
-      mounted = false;
+      activo = false;
       if (timer !== undefined) window.clearTimeout(timer);
     };
   }, []);
