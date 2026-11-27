@@ -962,9 +962,6 @@ function InicioPublico() {
                       <span className="rounded-full border border-[#d4aa19]/35 px-2 py-0.5 text-[9px] font-semibold text-[#f3d66e]">.RHP</span>
                     </div>
                     <p className="text-[10px] leading-4 text-slate-300">Conecta tu entorno Rhino 7 con AURUM RENDER.</p>
-                    <Link to="/auth" className="group/rhino inline-flex min-h-8 items-center justify-center gap-2 rounded-lg bg-[#f8c928] px-3 py-2 text-[10px] font-extrabold text-[#17232d] transition-colors hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                      Conocer complemento <ArrowRight className="size-3.5 transition-transform group-hover/rhino:translate-x-0.5" />
-                    </Link>
                   </div>
                   <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-[#d4aa19]/35 bg-[#d4aa19]/[.08] p-3">
                     <div className="flex items-center justify-between gap-2">
@@ -972,9 +969,6 @@ function InicioPublico() {
                       <span className="rounded-full border border-[#d4aa19]/35 px-2 py-0.5 text-[9px] font-semibold text-[#f3d66e]">.RHP</span>
                     </div>
                     <p className="text-[10px] leading-4 text-slate-300">Complemento nativo independiente para Rhino 8.</p>
-                    <Link to="/auth" className="group/rhino inline-flex min-h-8 items-center justify-center gap-2 rounded-lg border border-[#d4aa19]/45 bg-[#f8c928] px-3 py-2 text-[10px] font-extrabold text-[#17232d] transition-colors hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                      Conocer complemento <ArrowRight className="size-3.5 transition-transform group-hover/rhino:translate-x-0.5" />
-                    </Link>
                   </div>
                 </div>
                 <div className="pointer-events-none absolute inset-x-3 bottom-0 h-px overflow-hidden bg-white/10" aria-hidden="true">
