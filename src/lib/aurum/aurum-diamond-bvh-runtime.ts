@@ -236,6 +236,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   environmentMap?: THREE.Texture;
   /** Global gem EXR rotation selected by the scene controller. */
   environmentRotationRadians?: number;
+  /** Optional diamond-only correction, independent from other gemstone families. */
+  diamondEnvironmentRotationOffsetRadians?: number;
   /** Defaults to true for internally loaded maps; external maps remain caller-owned. */
   ownsEnvironmentMap?: boolean;
   camera: THREE.Camera;
@@ -292,6 +294,10 @@ export async function createAurumDiamondBvhRuntime(options: {
   const requestedEnvironmentRotationRadians = Number.isFinite(options.environmentRotationRadians)
     ? Number(options.environmentRotationRadians)
     : 0;
+  const requestedDiamondEnvironmentRotationRadians = requestedEnvironmentRotationRadians
+    + (Number.isFinite(options.diamondEnvironmentRotationOffsetRadians)
+      ? Number(options.diamondEnvironmentRotationOffsetRadians)
+      : 0);
 
   // Camera uniforms are shared by all BVH gems. Avoid rewriting them when
   // multiple invalidations/API calls occur without an actual camera change.
@@ -477,8 +483,8 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (!frame || !centerOpticalFrame) {
         return {
           offsetRadians: 0,
-          rotationRadians: requestedEnvironmentRotationRadians,
-          rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians),
+          rotationRadians: requestedDiamondEnvironmentRotationRadians,
+          rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedDiamondEnvironmentRotationRadians),
           correctionQuaternion: null,
           opticalAxisAlignmentDegrees: null,
           inPlaneTwistDegrees: null,
@@ -507,8 +513,8 @@ export async function createAurumDiamondBvhRuntime(options: {
       );
       return {
         offsetRadians: -referenceAngle,
-        rotationRadians: requestedEnvironmentRotationRadians - referenceAngle,
-        rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians, correctionQuaternion),
+        rotationRadians: requestedDiamondEnvironmentRotationRadians - referenceAngle,
+        rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedDiamondEnvironmentRotationRadians, correctionQuaternion),
         correctionQuaternion: correctionQuaternion.toArray() as [number, number, number, number],
         opticalAxisAlignmentDegrees: normalAlignmentDegrees,
         inPlaneTwistDegrees: THREE_NS.MathUtils.radToDeg(referenceAngle),
@@ -1263,7 +1269,9 @@ export async function createAurumDiamondBvhRuntime(options: {
       for (const entry of entries.values()) {
         const rotationEuler = entry.family === "diamante"
           ? getAurumDiamondEnvironmentRotationEuler(
-              requestedRotation,
+              requestedRotation + (Number.isFinite(options.diamondEnvironmentRotationOffsetRadians)
+                ? Number(options.diamondEnvironmentRotationOffsetRadians)
+                : 0),
               entry.environmentRotationCorrection,
             )
           : { x: 0, y: THREE_NS.MathUtils.radToDeg(requestedRotation), z: 0 };
