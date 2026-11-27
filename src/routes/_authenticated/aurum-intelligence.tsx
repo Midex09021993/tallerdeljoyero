@@ -447,7 +447,7 @@ function AurumIntelligencePage() {
             </div>
             <h3 className="text-lg font-semibold">Motor REA</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              REA 6.8.0 y Ghidra 12.1.4 están incorporados al runner para inspección estática. El servicio no inicia los archivos analizados, aplica autenticación de corta duración y protección anti-repetición. Aurum Render y los secretos del ERP permanecen fuera de este entorno.
+              REA 6.8.0 y Ghidra 12.2 están incorporados al runner para inspección estática. El servicio no inicia los archivos analizados, aplica autenticación de corta duración y protección anti-repetición. Aurum Render y los secretos del ERP permanecen fuera de este entorno.
             </p>
             <span className="mt-5 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300">
               REA + Ghidra · Análisis estático
