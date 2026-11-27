@@ -1,4 +1,5 @@
 import { NavDropdown } from "@/components/nav/NavDropdown";
+import { EstrellasNavidad } from "@/components/EstrellasNavidad";
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -381,7 +382,7 @@ function InicioPublico() {
   const [comunidadMovilAbierta, setComunidadMovilAbierta] = useState(false);
   const demo3DSectionRef = useRef<HTMLElement | null>(null);
 
-  // Seasonal gold sparkle overlay for the public homepage only.
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -592,7 +593,9 @@ function InicioPublico() {
   }, []);
 
   return (
-    <main ref={mainRef} className="min-h-screen bg-white text-[#17232d]">
+    <>
+      <EstrellasNavidad />
+      <main ref={mainRef} className="min-h-screen bg-white text-[#17232d]">
       <style>{`
         @keyframes aurum-hero-enter {
           from { opacity: 0; transform: translate3d(0, 26px, 0) scale(.985); filter: blur(5px); }
@@ -1244,5 +1247,6 @@ function InicioPublico() {
       )}
           <AuriPublicoBoton />
 </main>
+    </>
   );
 }
