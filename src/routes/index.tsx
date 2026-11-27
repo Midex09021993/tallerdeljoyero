@@ -387,7 +387,7 @@ function InicioPublico() {
 
     const canvas = document.createElement("canvas");
     canvas.setAttribute("aria-hidden", "true");
-    canvas.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;opacity:.72";
+    canvas.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:1";
     document.body.appendChild(canvas);
     const context = canvas.getContext("2d");
     if (!context) {
@@ -395,7 +395,7 @@ function InicioPublico() {
       return;
     }
 
-    const colors = ["#D4AF37", "#F6DC93", "#FFF8E6", "#FFFFFF"];
+    const colors = ["#D4AF37", "#F6DC93", "#FFF8E6", "#FFFFFF", "#C99A28"];
     let width = 0;
     let height = 0;
     let frame = 0;
@@ -409,14 +409,14 @@ function InicioPublico() {
       canvas.width = Math.round(width * scale);
       canvas.height = Math.round(height * scale);
       context.setTransform(scale, 0, 0, scale, 0, 0);
-      const count = width < 700 ? 18 : 42;
+      const count = width < 700 ? 32 : 64;
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        size: 1.2 + Math.random() * 2.2,
-        speed: 12 + Math.random() * 22,
+        size: 2.2 + Math.random() * 3.3,
+        speed: 18 + Math.random() * 32,
         phase: Math.random() * Math.PI * 2,
-        drift: 5 + Math.random() * 10,
+        drift: 8 + Math.random() * 18,
         color: colors[Math.floor(Math.random() * colors.length)],
       }));
     };
@@ -431,23 +431,32 @@ function InicioPublico() {
       context.clearRect(0, 0, width, height);
       particles.forEach((particle) => {
         particle.y += particle.speed * delta;
-        particle.x += Math.sin(now / 1300 + particle.phase) * particle.drift * delta;
-        if (particle.y > height + particle.size) {
-          particle.y = -particle.size;
+        particle.x += Math.sin(now / 1100 + particle.phase) * particle.drift * delta;
+        if (particle.y > height + particle.size * 2) {
+          particle.y = -particle.size * 2;
           particle.x = Math.random() * width;
         }
-        const twinkle = 0.22 + 0.42 * (0.5 + 0.5 * Math.sin(now / 900 + particle.phase));
+        const twinkle = 0.45 + 0.5 * (0.5 + 0.5 * Math.sin(now / 650 + particle.phase));
         context.globalAlpha = twinkle;
         context.fillStyle = particle.color;
         context.shadowColor = "#D4AF37";
-        context.shadowBlur = particle.size * 2.5;
+        context.shadowBlur = particle.size * 3.5;
+        const x = particle.x;
+        const y = particle.y;
+        const r = particle.size;
         context.beginPath();
-        context.moveTo(particle.x, particle.y - particle.size);
-        context.lineTo(particle.x + particle.size * 0.45, particle.y);
-        context.lineTo(particle.x, particle.y + particle.size);
-        context.lineTo(particle.x - particle.size * 0.45, particle.y);
-        context.closePath();
+        context.moveTo(x, y - r);
+        context.quadraticCurveTo(x, y, x + r * 0.65, y);
+        context.quadraticCurveTo(x, y, x, y + r);
+        context.quadraticCurveTo(x, y, x - r * 0.65, y);
+        context.quadraticCurveTo(x, y, x, y - r);
         context.fill();
+        // A restrained cross-ray on larger particles makes the sparkle visible.
+        if (r > 4) {
+          context.globalAlpha = twinkle * 0.42;
+          context.fillRect(x - 0.5, y - r * 1.6, 1, r * 3.2);
+          context.fillRect(x - r * 1.6, y - 0.5, r * 3.2, 1);
+        }
       });
       context.globalAlpha = 1;
       context.shadowBlur = 0;
