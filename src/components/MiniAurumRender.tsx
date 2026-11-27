@@ -277,11 +277,6 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
         <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#f3d66e]">Tu estudio de joyería digital</p>
         <h3 className="mt-1 text-xl font-semibold tracking-wide text-white sm:text-2xl">AURUM RENDER</h3>
         <p className="mx-auto mt-1 max-w-sm text-[10px] leading-4 text-slate-300 sm:text-xs">Arrastra la joya para girarla · Rueda del ratón para acercar</p>
-        <div className="mt-3 flex flex-wrap justify-center gap-2">
-          <span className="rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-[9px] font-medium text-slate-200">Oro · Plata · Platino</span>
-          <span className="rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-[9px] font-medium text-slate-200">Gemas e iluminación</span>
-          <span className="rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-[9px] font-medium text-slate-200">Modo fotográfico</span>
-        </div>
       </div>
     </div>
   );
