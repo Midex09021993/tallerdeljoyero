@@ -133,9 +133,9 @@ function paintAurumCssGradient(context: CanvasRenderingContext2D, css: string, w
 
 /** SVG blobs are decoded through HTMLImageElement for browser compatibility. */
 export async function isAurumSvgBlob(blob: Blob): Promise<boolean> {
-  if (/image\\/svg\\+xml/i.test(blob.type)) return true;
-  const sample = (await blob.slice(0, 512).text()).trimStart().replace(/^<\\?xml[^>]*>\\s*/i, "");
-  return /^<(?:svg|!doctype\\s+svg)\\b/i.test(sample) || /<svg\\b/i.test(sample);
+  if (/image\/svg\+xml/i.test(blob.type)) return true;
+  const sample = (await blob.slice(0, 512).text()).trimStart().replace(/^<\?xml[^>]*>\s*/i, "");
+  return /^<(?:svg|!doctype\s+svg)\b/i.test(sample) || /<svg\b/i.test(sample);
 }
 
 async function decodeAurumImageElement(blob: Blob): Promise<HTMLImageElement> {
