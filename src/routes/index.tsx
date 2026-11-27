@@ -804,7 +804,7 @@ function InicioPublico() {
                   <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#f3d66e]">ESTUDIO DIGITAL DE JOYERÍA</p>
                   <p className="mt-1 text-sm font-semibold text-white">AURUM RENDER</p>
                 </div>
-                <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
+                <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10"><img src="/brand/aurum-symbol.svg" alt="AURUM LAB" className="size-7 object-contain" /></span>
               </div>
               {mostrarDemo3D ? (
                 <ClientOnly fallback={null}>
