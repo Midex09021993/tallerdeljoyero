@@ -2575,6 +2575,9 @@ function MiNubePage() {
       )}
       {presentacionGLB.length > 0 && <PresentacionColeccionGLB modelos={presentacionGLB} onClose={() => setPresentacionGLB([])} />}
 
+    </AppShell>
+  );
+}
 function PresentacionColeccionGLB({ modelos, onClose }: { modelos: Array<{ nombre: string; url: string }>; onClose: () => void }) {
   const [indice, setIndice] = useState(0);
   const [auto, setAuto] = useState(false);
@@ -2590,6 +2593,4 @@ function PresentacionColeccionGLB({ modelos, onClose }: { modelos: Array<{ nombr
     <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[#e6dfd2] bg-white px-4 py-3 sm:px-6"><button type="button" onClick={() => setIndice(v => (v - 1 + modelos.length) % modelos.length)} disabled={modelos.length < 2} className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-40"><ChevronLeft className="size-4"/>Anterior</button><div className="flex max-w-[55vw] items-center gap-1 overflow-x-auto">{modelos.map((item,i)=><button key={item.url} type="button" onClick={()=>{setIndice(i);setAuto(false);}} title={item.nombre} aria-label={"Mostrar "+item.nombre} className={`size-2.5 shrink-0 rounded-full ${i===indice?"bg-[#c5a15d]":"bg-[#d8d4cb]"}`} />)}</div><button type="button" onClick={() => setIndice(v => (v+1)%modelos.length)} disabled={modelos.length<2} className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-40">Siguiente<ChevronRight className="size-4"/></button></footer>
   </div>, document.body);
 }
-    </AppShell>
-  );
-}
+
