@@ -375,6 +375,7 @@ function TalleresDeLaComunidad() {
 
 function InicioPublico() {
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
+  const [videoDemoAurumAbierto, setVideoDemoAurumAbierto] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [comunidadMovilAbierta, setComunidadMovilAbierta] = useState(false);
@@ -783,7 +784,7 @@ function InicioPublico() {
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Conecta Rhino 7 u 8 con <strong>AURUM CONNECT</strong> y lleva tus modelos al estudio de visualización.</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link to="/auth" {...(esPCDeEscritorio() ? { target: "_blank" } : {})} rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Descubrir AURUM RENDER <ArrowRight className="size-4" /></Link>
-              <Link to="/aurum-render-public" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]">Probar el visor público 3D</Link>
+              <button type="button" onClick={() => setVideoDemoAurumAbierto(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]"><Camera className="size-4" /> Probar visor público</button>
             </div>
             <p className="mt-4 text-xs leading-5 text-slate-400">Prepara la presentación de tu joya con <strong>AURUM RENDER</strong> y comparte el modelo con el visor público 3D.</p>
           </div>
@@ -1120,6 +1121,24 @@ function InicioPublico() {
           </div>
         </div>
       </footer>
+      {videoDemoAurumAbierto && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#05080c]/90 p-3 backdrop-blur-md sm:p-6" role="dialog" aria-modal="true" aria-labelledby="aurum-demo-video-title" onClick={(event) => { if (event.target === event.currentTarget) setVideoDemoAurumAbierto(false); }}>
+          <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl border border-[#d4aa19]/35 bg-[#101820] shadow-[0_30px_100px_rgba(0,0,0,.65)] sm:rounded-3xl">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4">
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#f3d66e]">DEMO · AURUM RENDER</p>
+                <h2 id="aurum-demo-video-title" className="mt-1 truncate text-sm font-bold text-white sm:text-base">Visualización profesional de joyería en 3D</h2>
+              </div>
+              <button type="button" onClick={() => setVideoDemoAurumAbierto(false)} aria-label="Cerrar demostración" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/15 text-white transition hover:border-[#f8c928] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]"><X className="size-5" /></button>
+            </div>
+            <video className="max-h-[72vh] w-full bg-black object-contain" src="/Galaxy-Tab-S7-tallerdeljoyero.com-dwn_j3tja-mr2y.webm" controls autoPlay muted playsInline preload="metadata" />
+            <div className="flex flex-col gap-3 border-t border-white/10 bg-[#101820] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+              <p className="text-xs leading-5 text-slate-300">Descubre cómo presentar tus diseños con metales, gemas e iluminación de estudio.</p>
+              <Link to="/aurum-render-public" onClick={() => setVideoDemoAurumAbierto(false)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-extrabold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Ver AURUM RENDER en acción <ArrowRight className="size-4" /></Link>
+            </div>
+          </div>
+        </div>
+      )}
           <AuriPublicoBoton />
 </main>
   );
