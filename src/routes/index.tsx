@@ -386,9 +386,6 @@ function InicioPublico() {
   const demo3DSectionRef = useRef<HTMLElement | null>(null);
 
 
-  useEffect(() => {
-    // La animación del titular se controla por CSS, sin depender del ciclo de React.
-  }, []);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
