@@ -381,6 +381,102 @@ function InicioPublico() {
   const [comunidadMovilAbierta, setComunidadMovilAbierta] = useState(false);
   const demo3DSectionRef = useRef<HTMLElement | null>(null);
 
+  // Seasonal gold sparkle overlay for the public homepage only.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("aria-hidden", "true");
+    canvas.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;opacity:.72";
+    document.body.appendChild(canvas);
+    const context = canvas.getContext("2d");
+    if (!context) {
+      canvas.remove();
+      return;
+    }
+
+    const colors = ["#D4AF37", "#F6DC93", "#FFF8E6", "#FFFFFF"];
+    let width = 0;
+    let height = 0;
+    let frame = 0;
+    let previous = 0;
+    let particles: Array<{ x: number; y: number; size: number; speed: number; phase: number; drift: number; color: string }> = [];
+
+    const resize = () => {
+      const scale = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
+      context.setTransform(scale, 0, 0, scale, 0, 0);
+      const count = width < 700 ? 18 : 42;
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: 1.2 + Math.random() * 2.2,
+        speed: 12 + Math.random() * 22,
+        phase: Math.random() * Math.PI * 2,
+        drift: 5 + Math.random() * 10,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      }));
+    };
+
+    const draw = (now: number) => {
+      if (document.hidden) {
+        frame = 0;
+        return;
+      }
+      const delta = Math.min((now - (previous || now)) / 1000, 0.05);
+      previous = now;
+      context.clearRect(0, 0, width, height);
+      particles.forEach((particle) => {
+        particle.y += particle.speed * delta;
+        particle.x += Math.sin(now / 1300 + particle.phase) * particle.drift * delta;
+        if (particle.y > height + particle.size) {
+          particle.y = -particle.size;
+          particle.x = Math.random() * width;
+        }
+        const twinkle = 0.22 + 0.42 * (0.5 + 0.5 * Math.sin(now / 900 + particle.phase));
+        context.globalAlpha = twinkle;
+        context.fillStyle = particle.color;
+        context.shadowColor = "#D4AF37";
+        context.shadowBlur = particle.size * 2.5;
+        context.beginPath();
+        context.moveTo(particle.x, particle.y - particle.size);
+        context.lineTo(particle.x + particle.size * 0.45, particle.y);
+        context.lineTo(particle.x, particle.y + particle.size);
+        context.lineTo(particle.x - particle.size * 0.45, particle.y);
+        context.closePath();
+        context.fill();
+      });
+      context.globalAlpha = 1;
+      context.shadowBlur = 0;
+      frame = requestAnimationFrame(draw);
+    };
+
+    const start = () => {
+      if (!document.hidden && frame === 0) {
+        previous = 0;
+        frame = requestAnimationFrame(draw);
+      }
+    };
+    const pause = () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      previous = 0;
+    };
+    resize();
+    start();
+    window.addEventListener("resize", resize, { passive: true });
+    document.addEventListener("visibilitychange", () => document.hidden ? pause() : start());
+
+    return () => {
+      pause();
+      window.removeEventListener("resize", resize);
+      canvas.remove();
+    };
+  }, []);
+
   useEffect(() => {
     const root = mainRef.current;
     if (!root) return;
