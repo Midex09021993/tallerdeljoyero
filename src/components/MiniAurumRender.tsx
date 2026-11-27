@@ -18,13 +18,13 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
     if (!host) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#111820");
-    scene.fog = new THREE.Fog("#111820", 5, 11);
+    scene.background = null;
+    scene.fog = null;
 
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
     camera.position.set(0, 0.65, 4.9);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -258,7 +258,7 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
   }, []);
 
   return (
-    <div className={`relative isolate overflow-hidden rounded-xl border border-white/[.08] bg-[#111820] ${className}`}>
+    <div className={`relative isolate overflow-hidden rounded-xl border border-white/[.08] bg-[#031a14] bg-[url(/backgrounds/navidad-esmeralda.svg)] bg-cover bg-center ${className}`}>
       <div ref={hostRef} className="absolute inset-0" />
       {estadoModelo !== "listo" && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6 text-center">
@@ -269,7 +269,7 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
           </div>
         </div>
       )}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_36%,rgba(248,201,40,.13),transparent_48%),linear-gradient(145deg,rgba(32,43,53,.08),rgba(9,13,17,.45))]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_36%,rgba(248,201,40,.18),transparent_48%),linear-gradient(145deg,rgba(3,26,20,.12),rgba(3,26,20,.38))]" />
       <div className="pointer-events-none absolute inset-5 rounded-xl border border-white/[.06]" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/10 sm:size-60" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/15 sm:size-44" />
