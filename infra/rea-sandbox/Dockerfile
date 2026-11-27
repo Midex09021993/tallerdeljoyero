@@ -1,15 +1,14 @@
 FROM node:22-bookworm-slim AS node-runtime
 
-# Temurin supplies a preconfigured Java 21 runtime/JDK. This avoids Debian's
-# ca-certificates-java post-install hook failing while dpkg configures OpenJDK.
-FROM eclipse-temurin:21-jdk-jammy
+# Ghidra 12.2 requires JDK 25. Temurin provides a preconfigured runtime/JDK.
+FROM eclipse-temurin:25-jdk-jammy
 
 COPY --from=node-runtime /usr/local/ /usr/local/
 
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV JAVA_HOME=/opt/java/openjdk
-ENV GHIDRA_INSTALL_DIR=/opt/ghidra_12.1.4_PUBLIC
+ENV GHIDRA_INSTALL_DIR=/opt/ghidra_12.2_PUBLIC
 # Keep the JVM bounded inside Railway 1 GiB runner memory.
 ENV JAVA_TOOL_OPTIONS="-Xms128m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseSerialGC"
 ENV PATH="${JAVA_HOME}/bin:/usr/local/bin:${PATH}"
@@ -23,8 +22,8 @@ RUN apt-get update \
 
 RUN curl -fL --retry 3 \
     -o /tmp/ghidra.zip \
-    https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_12.1.4_build/ghidra_12.1.4_PUBLIC_20260921.zip \
-  && echo "ddac49f903da9d5bac833e5cc79395098b9c33cfd3279be5f31bd00387d2d4db  /tmp/ghidra.zip" | sha256sum -c - \
+    https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_12.2_build/ghidra_12.2_PUBLIC_20261016.zip \
+  && echo "2c2cd776db3c1f6a097ba418922378ac3649cadd5e844a6f5f088ae628a7be67  /tmp/ghidra.zip" | sha256sum -c - \
   && unzip -q /tmp/ghidra.zip -d /opt \
   && rm /tmp/ghidra.zip \
   && test -x "${GHIDRA_INSTALL_DIR}/support/analyzeHeadless" \
