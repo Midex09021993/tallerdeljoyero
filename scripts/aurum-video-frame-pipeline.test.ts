@@ -208,3 +208,16 @@ test("AURUM MP4 encoder rejects frame sizes above the documented H.264 WebCodecs
   expect(() => assertAurumVideoFrameBudget(3840, 3840)).toThrow(/9,437,184/);
   expect(() => assertAurumVideoFrameBudget(0, 1080)).toThrow(/dimensiones válidas/);
 });
+
+
+test("AURUM video background loader identifies SVG by MIME type", async () => {
+  const { isAurumSvgBlob } = await import("../src/lib/aurum/video-exporter");
+  expect(await isAurumSvgBlob(new Blob(["<svg/>"], { type: "image/svg+xml" }))).toBe(true);
+});
+
+test("AURUM video background loader identifies SVG content without a MIME type", async () => {
+  const { isAurumSvgBlob } = await import("../src/lib/aurum/video-exporter");
+  const svg = new Blob(['<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>'], { type: "application/octet-stream" });
+  expect(await isAurumSvgBlob(svg)).toBe(true);
+  expect(await isAurumSvgBlob(new Blob(["plain image payload"], { type: "application/octet-stream" }))).toBe(false);
+});
