@@ -138,10 +138,10 @@ function HerramientasPublicasPage() {
           >
             <ArrowLeft className="size-4" /> Volver a AURUM LAB
           </Link>
-          <div className="flex items-center gap-2 text-[#987400]">
-            <Gem className="size-5" />
-            <span className="text-xs font-semibold uppercase tracking-[.22em]">Aurum Lab</span>
-          </div>
+          <Link to="/" aria-label="AURUM LAB — Inicio" className="inline-flex items-center gap-2.5 text-[#987400] transition-opacity hover:opacity-80">
+            <img src="/brand/aurum-symbol.svg" alt="Logotipo AURUM LAB" width={36} height={28} className="h-7 w-9 object-contain" />
+            <span className="text-xs font-semibold uppercase tracking-[.22em]">AURUM LAB</span>
+          </Link>
         </header>
 
         <section className="py-10 sm:py-14">
