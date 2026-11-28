@@ -97,6 +97,60 @@ function normalizarBusqueda(valor: string) {
     .trim();
 }
 
+const seoStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://tallerdeljoyero.com/#organization",
+      "name": "AURUM LAB",
+      "alternateName": "Taller del Joyero",
+      "url": "https://tallerdeljoyero.com/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://tallerdeljoyero.com/brand/aurum-symbol.svg"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://tallerdeljoyero.com/#website",
+      "url": "https://tallerdeljoyero.com/",
+      "name": "AURUM LAB | Taller del Joyero",
+      "publisher": { "@id": "https://tallerdeljoyero.com/#organization" },
+      "inLanguage": "es-PE"
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://tallerdeljoyero.com/herramientas-publicas#webpage",
+      "url": "https://tallerdeljoyero.com/herramientas-publicas",
+      "name": "Calculadoras para joyería: oro, gemas y peso 3D | AURUM LAB",
+      "description": "Calcula aleaciones, peso de gemas, tallas de anillos y revestimiento para fundición con herramientas de joyería.",
+      "isPartOf": { "@id": "https://tallerdeljoyero.com/#website" },
+      "about": { "@id": "https://tallerdeljoyero.com/#organization" },
+      "breadcrumb": { "@id": "https://tallerdeljoyero.com/herramientas-publicas#breadcrumb" },
+      "inLanguage": "es-PE"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://tallerdeljoyero.com/herramientas-publicas#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Inicio",
+          "item": "https://tallerdeljoyero.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Herramientas públicas",
+          "item": "https://tallerdeljoyero.com/herramientas-publicas"
+        }
+      ]
+    }
+  ]
+};
+
 function HerramientasPublicasPage() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [busqueda, setBusqueda] = useState("");
@@ -128,7 +182,9 @@ function HerramientasPublicasPage() {
   const mostrarTransfer = !termino || coincideConPalabras(palabrasTransfer);
   const mostrarCotizar = !termino || coincideConPalabras(palabrasCotizar);
   return (
-    <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
+    <>
+      <script type="application/ld+json">{JSON.stringify(seoStructuredData)}</script>
+      <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(248,201,40,.16),transparent_68%)]" />
       <div className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-7 lg:px-10">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
@@ -266,6 +322,7 @@ function HerramientasPublicasPage() {
           Aurum Lab · Herramientas técnicas para el sector joyero
         </footer>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
