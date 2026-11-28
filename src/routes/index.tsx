@@ -976,9 +976,9 @@ function InicioPublico() {
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
-                <div className="rounded-lg border border-emerald-400/20 bg-gradient-to-br from-[#12372d] to-[#0b211b] px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]"><p className="text-[9px] uppercase tracking-wider text-[#e7c85a]">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
-                <div className="rounded-lg border border-[#d7b34a]/25 bg-gradient-to-br from-[#392b12] to-[#21190b] px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]"><p className="text-[9px] uppercase tracking-wider text-[#e7c85a]">Iluminación</p><p className="mt-1 text-xs font-semibold text-white">Entornos HDR</p></div>
-                <div className="rounded-lg border border-red-400/20 bg-gradient-to-br from-[#481d20] to-[#2b1013] px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]"><p className="text-[9px] uppercase tracking-wider text-[#e7c85a]">Captura</p><p className="mt-1 text-xs font-semibold text-white">Foto y vídeo</p></div>
+                <div className="rounded-lg border border-emerald-300/35 bg-gradient-to-br from-[#2f805a] to-[#1b573b] px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.10),0_4px_14px_rgba(18,73,48,.18)]"><p className="text-[9px] uppercase tracking-wider text-white/95">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
+                <div className="rounded-lg border border-amber-300/40 bg-gradient-to-br from-[#8b6418] to-[#654812] px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.10),0_4px_14px_rgba(83,58,14,.20)]"><p className="text-[9px] uppercase tracking-wider text-white/95">Iluminación</p><p className="mt-1 text-xs font-semibold text-white">Entornos HDR</p></div>
+                <div className="rounded-lg border border-red-300/40 bg-gradient-to-br from-[#a83e47] to-[#70252c] px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.10),0_4px_14px_rgba(100,28,35,.20)]"><p className="text-[9px] uppercase tracking-wider text-white/95">Captura</p><p className="mt-1 text-xs font-semibold text-white">Foto y vídeo</p></div>
               </div>
             </div>
           </div>
