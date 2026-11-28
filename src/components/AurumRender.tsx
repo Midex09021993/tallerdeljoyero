@@ -1206,6 +1206,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const getActiveDiamondBvhEnvironmentUrl = () => isMiniDiamondControlledTest() ? MINI_AURUM_DIAMOND_HDR : gemEnvironmentUrl;
       const getActiveDiamondBvhRotation = () => isMiniDiamondControlledTest() ? 0 : gemEnvironmentRotation;
       const getActiveDiamondBvhIntensityScale = () => isMiniDiamondControlledTest() ? 1 : gemEnvironmentIntensityScale;
+      // Exact Mini AURUM RENDER lighting rig for the controlled diamond test.
+      // Hide existing scene lights only in this opt-in mode, preserving production lighting.
+      const miniAurumTestLights: THREE.Light[] = [];
+      if (isMiniDiamondControlledTest()) {
+        escena.traverse((object) => {
+          if ((object as THREE.Light).isLight) object.visible = false;
+        });
+        const miniHemisphere = new THREE.HemisphereLight(0xeaf3ff, 0x241a08, 2.1);
+        const miniKey = new THREE.DirectionalLight(0xffe5a0, 4.5);
+        miniKey.position.set(-3, 4, 4);
+        const miniRim = new THREE.DirectionalLight(0x8abfff, 3.2);
+        miniRim.position.set(3, 1, -3);
+        const miniFront = new THREE.PointLight(0xffffff, 22, 8);
+        miniFront.position.set(0, 1.5, 3);
+        miniAurumTestLights.push(miniHemisphere, miniKey, miniRim, miniFront);
+        miniAurumTestLights.forEach((light) => {
+          light.name = "MINI_AURUM_DIAMOND_TEST_LIGHT";
+          escena.add(light);
+        });
+      }
       const aplicarEntornoGema = (targets?:readonly THREE.Mesh[]) => {
         if (!modelo || !entornoGema) return;
         if (targets?.length) {
@@ -1766,7 +1786,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ? THREE.NoToneMapping
           : THREE.ACESFilmicToneMapping;
       renderer.toneMapping = toneModeOverride;
-      renderer.toneMappingExposure = PUBLIC_VIEWER_PRESENTATION_MODE ? 1.0 : photoInicial.exposure;
+      renderer.toneMappingExposure = isMiniDiamondControlledTest() ? 1.15 : (PUBLIC_VIEWER_PRESENTATION_MODE ? 1.0 : photoInicial.exposure);
       const toneMappingLabel = (value: number) => value === THREE.ACESFilmicToneMapping
         ? "ACESFilmic"
         : value === THREE.AgXToneMapping
