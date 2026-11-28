@@ -630,8 +630,8 @@ function InicioPublico() {
       <main ref={mainRef} className="min-h-screen bg-white text-[#17232d]">
       <style>{`
         @keyframes aurum-hero-enter {
-          from { opacity: 0; transform: translate3d(0, 26px, 0) scale(.985); filter: blur(5px); }
-          to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+          from { opacity: .94; }
+          to { opacity: 1; }
         }
         @keyframes aurum-orb-drift {
           0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
@@ -662,26 +662,15 @@ function InicioPublico() {
         .aurum-hero-enter-delay-1 { animation-delay: .12s; }
         .aurum-hero-enter-delay-2 { animation-delay: .24s; }
         .aurum-hero-enter-delay-3 { animation-delay: .36s; }
-        .aurum-motion-ready [data-aurum-reveal] {
-          opacity: 0;
-          translate: 0 30px;
-          transition:
-            opacity .75s cubic-bezier(.2,.75,.25,1),
-            translate .75s cubic-bezier(.2,.75,.25,1),
-            scale .75s cubic-bezier(.2,.75,.25,1);
-          transition-delay: var(--aurum-reveal-delay, 0ms);
-        }
-        .aurum-motion-ready [data-aurum-reveal="scale"] {
-          translate: 0 18px;
-          scale: .965;
-        }
-        .aurum-motion-ready [data-aurum-reveal="left"] {
-          translate: -34px 0;
-        }
+        /* Keep reveal targets visible in their final layout to avoid entrance-related visual shifts. */
+        .aurum-motion-ready [data-aurum-reveal],
+        .aurum-motion-ready [data-aurum-reveal="scale"],
+        .aurum-motion-ready [data-aurum-reveal="left"],
         .aurum-motion-ready [data-aurum-reveal].aurum-is-visible {
           opacity: 1;
           translate: 0 0;
           scale: 1;
+          transition: none;
         }
         .aurum-ambient-orb { animation: aurum-orb-drift 13s ease-in-out infinite; }
         .aurum-ambient-glow { animation: aurum-glow-breathe 8s ease-in-out infinite; }
