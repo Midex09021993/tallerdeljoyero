@@ -26,6 +26,7 @@ export const AURUM_DIAMOND_MATERIAL_DEFAULTS = Object.freeze({
 
 export const AURUM_WHITE_DIAMOND_PROFILE_IDS = Object.freeze([
   "diamante_natural",
+  "diamante_mini_aurum",
   "diamante_vs",
   "diamante_inclusiones",
 ]);
