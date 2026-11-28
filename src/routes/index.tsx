@@ -392,28 +392,31 @@ function InicioPublico() {
       setHeroTextoVisible(texto);
       return;
     }
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    let indice = 0;
-    let borrando = false;
-    const avanzar = () => {
-      if (!borrando) {
-        indice += 1;
-        setHeroTextoVisible(texto.slice(0, indice));
-        if (indice >= texto.length) {
-          borrando = true;
-          timeout = setTimeout(avanzar, 1500);
-        } else timeout = setTimeout(avanzar, 85);
-      } else {
-        indice -= 1;
-        setHeroTextoVisible(texto.slice(0, indice));
-        if (indice <= 0) {
-          borrando = false;
-          timeout = setTimeout(avanzar, 450);
-        } else timeout = setTimeout(avanzar, 38);
-      }
+
+    setHeroTextoVisible("");
+    let letras = 0;
+    let escritura: number | undefined;
+    let pausa: number | undefined;
+    const inicio = window.setTimeout(() => {
+      escritura = window.setInterval(() => {
+        if (letras < texto.length) {
+          letras += 1;
+          setHeroTextoVisible(texto.slice(0, letras));
+          if (letras === texto.length) {
+            pausa = window.setTimeout(() => {
+              letras = 0;
+              setHeroTextoVisible("");
+            }, 1400);
+          }
+        }
+      }, 850);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(inicio);
+      if (escritura !== undefined) window.clearInterval(escritura);
+      if (pausa !== undefined) window.clearTimeout(pausa);
     };
-    timeout = setTimeout(avanzar, 350);
-    return () => { if (timeout) clearTimeout(timeout); };
   }, []);
 
   useEffect(() => {
