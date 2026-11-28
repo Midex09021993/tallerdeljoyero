@@ -84,7 +84,6 @@ function CursosDiseno3DPage() {
   const culqiReservaUrl = "https://express.culqi.com/pago/3EC9A474CD";
   const [programaAbierto, setProgramaAbierto] = useState(false);
   const [bonoAbierto, setBonoAbierto] = useState(false);
-  const [nivelEscrito, setNivelEscrito] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -105,33 +104,7 @@ function CursosDiseno3DPage() {
     return () => { vigente = false; };
   }, []);
 
-  useEffect(() => {
-    // La escritura es parte visible de la identidad del curso:
-    // se ejecuta también cuando el sistema solicita reducir movimiento.
-    setNivelEscrito(0);
-    let letras = 0;
-    let escritura: number | undefined;
-    let pausa: number | undefined;
-    const inicio = window.setTimeout(() => {
-      escritura = window.setInterval(() => {
-        if (letras < 7) {
-          letras += 1;
-          setNivelEscrito(letras);
-          if (letras === 7) {
-            pausa = window.setTimeout(() => {
-              letras = 0;
-              setNivelEscrito(0);
-            }, 1400);
-          }
-        }
-      }, 850);
-    }, 500);
-    return () => {
-      window.clearTimeout(inicio);
-      if (escritura !== undefined) window.clearInterval(escritura);
-      if (pausa !== undefined) window.clearTimeout(pausa);
-    };
-  }, []);
+
 
   return (
     <>
