@@ -68,14 +68,14 @@ const soluciones = [
   },
   {
     numero: "02",
-    etiqueta: "PRESENTA MEJOR",
-    icon: Gem,
-    titulo: "Presenta tus diseños en 3D", 
-    texto: "Metales, gemas y luz de estudio para cada diseño.",
-    beneficio: "Rhino 7 y Rhino 8", 
-    enlace: "/aurum-render-public" as const,
-    accion: "Explorar Render", 
-    preview: "render",
+    etiqueta: "CATÁLOGO DIGITAL",
+    icon: Layers3,
+    titulo: "Tu catálogo de joyas", 
+    texto: "Organiza piezas, colecciones e información de cada diseño.",
+    beneficio: "Productos y colecciones", 
+    enlace: "/catalogo" as const,
+    accion: "Abrir catálogo", 
+    preview: "catalogo",
   },
   {
     numero: "03",
@@ -1048,7 +1048,7 @@ function InicioPublico() {
                   </div>
                   <div className="aurum-tools-preview mt-3" aria-hidden={preview !== "render" ? "true" : undefined}>
                     {preview === "aleacion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Calculadora de aleación</span><span className="aurum-preview-chip">18K</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><span>Oro fino</span><div className="aurum-preview-bar gold mt-1 w-3/4" /></div><div className="aurum-preview-box"><span>Ligadura</span><div className="aurum-preview-bar mt-1 w-1/2" /></div></div><div className="aurum-preview-row"><div className="aurum-preview-box flex justify-between"><span>Metal requerido</span><strong className="text-[#806000]">g</strong></div></div></div>}
-                    {preview === "render" && <div className="aurum-render-preview relative flex h-full flex-col justify-between overflow-hidden bg-[#fffdf8] p-2.5 text-[#17232d]"><div className="absolute -right-8 -top-10 size-32 rounded-full bg-[#d8b54d]/10 blur-2xl" /><div className="aurum-preview-top relative"><span className="tracking-[.12em] text-[#17232d]">AURUM RENDER</span><span className="aurum-preview-chip">3D</span></div><div className="aurum-render-feature-grid relative grid grid-cols-3 gap-1.5"><div className="aurum-render-feature"><span className="aurum-render-feature-icon"><Gem aria-hidden="true" /></span><span className="aurum-render-feature-title">Materiales</span><span className="aurum-render-feature-detail">Oro · Plata</span></div><div className="aurum-render-feature"><span className="aurum-render-feature-icon"><Sparkles aria-hidden="true" /></span><span className="aurum-render-feature-title">Iluminación</span><span className="aurum-render-feature-detail">HDRI · Gemas</span></div><div className="aurum-render-feature"><span className="aurum-render-feature-icon"><Camera aria-hidden="true" /></span><span className="aurum-render-feature-title">Fotografía</span><span className="aurum-render-feature-detail">Estudio 3D</span></div></div></div>}
+                    {preview === "catalogo" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Catálogo de joyas</span><span className="aurum-preview-chip">Colección</span></div><div className="grid grid-cols-3 gap-1.5"><div className="overflow-hidden rounded-md border border-[#e7dfcc] bg-white"><div className="grid h-12 place-items-center bg-gradient-to-br from-[#fff8e8] to-[#f1e4c7] text-[#a17b1b]"><Gem className="size-5" /></div><div className="px-1.5 py-1 text-[7px] font-semibold text-[#17232d]">Anillo</div></div><div className="overflow-hidden rounded-md border border-[#e7dfcc] bg-white"><div className="grid h-12 place-items-center bg-gradient-to-br from-[#fff8e8] to-[#f1e4c7] text-[#a17b1b]"><Sparkles className="size-5" /></div><div className="px-1.5 py-1 text-[7px] font-semibold text-[#17232d]">Dije</div></div><div className="overflow-hidden rounded-md border border-[#e7dfcc] bg-white"><div className="grid h-12 place-items-center bg-gradient-to-br from-[#fff8e8] to-[#f1e4c7] text-[#a17b1b]"><Gem className="size-5" /></div><div className="px-1.5 py-1 text-[7px] font-semibold text-[#17232d]">Aretes</div></div></div><div className="aurum-preview-bar gold mt-1.5 w-2/3" /></div>}
                     {preview === "gestion" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Panel de taller</span><span className="aurum-preview-chip">Hoy</span></div><div className="aurum-preview-row"><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">12</strong><span className="block">Pedidos</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">04</strong><span className="block">Cotizaciones</span></div><div className="aurum-preview-box"><strong className="text-sm text-[#17232d]">08</strong><span className="block">Clientes</span></div></div><div className="aurum-preview-bar gold w-4/5" /><div className="aurum-preview-bar w-2/3" /></div>}
                     {preview === "nube" && <div className="aurum-tools-preview-ui"><div className="aurum-preview-top"><span>Mi Nube</span><span className="aurum-preview-chip">Catálogo</span></div><div className="aurum-preview-row"><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#fff1bd] p-2 text-[#806000]">◇</span><span>Diseños</span></div><div className="aurum-preview-box flex items-center gap-2"><span className="rounded bg-[#e9f0f8] p-2 text-[#48647e]">↗</span><span>Compartir</span></div></div><div className="aurum-preview-bar gold w-3/4" /><div className="aurum-preview-bar w-1/2" /></div>}
                   </div>
