@@ -58,8 +58,8 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   let bakedShadowPositioned = false;
   let presetGroundVisible = true;
   let presetShadowVisible = false;
-  let groundVisibilityOverride: boolean | null = null;
-  let hdriGroundEnabled = false;
+  // The floor control starts enabled in the UI; keep it visible even when a scene preset hides its floor.\n  let groundVisibilityOverride: boolean | null = true;
+  let hdriGroundEnabled = false;\n  // Start with the uploaded PBR porcelain instead of the nearly invisible matte fallback.\n  material.map = porcelainBaseColor;\n  material.roughnessMap = porcelainRoughness;\n  material.normalMap = porcelainNormal;\n  material.normalScale?.set?.(0.18, 0.18);\n  material.roughness = 0.82;\n  material.metalness = 0;\n  material.color.setHex(0xffffff);\n  material.transparent = false;\n  material.opacity = 1;\n  material.depthWrite = true;
   const syncGroundVisibility = () => {
     const visible = groundVisibilityOverride ?? presetGroundVisible;
     mesh.visible = visible;
