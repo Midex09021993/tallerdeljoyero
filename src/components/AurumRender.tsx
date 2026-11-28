@@ -1198,6 +1198,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let gemEnvironmentUrl = getAurumGemHdriUrl("ijewelGem");
       let gemEnvironmentRotation = 0;
       let gemEnvironmentIntensityScale = 1;
+      // Controlled Mini AURUM diamond comparison mode: ?aurumDiamondMiniTest=1.
+      // This isolates diamonds from AURUM's broader gemstone routing without changing production defaults.
+      const isMiniDiamondControlledTest = () => typeof window !== "undefined"
+        && new URLSearchParams(window.location.search).get("aurumDiamondMiniTest") === "1";
+      const MINI_AURUM_DIAMOND_HDR = "https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr";
+      const getActiveDiamondBvhEnvironmentUrl = () => isMiniDiamondControlledTest() ? MINI_AURUM_DIAMOND_HDR : gemEnvironmentUrl;
+      const getActiveDiamondBvhRotation = () => isMiniDiamondControlledTest() ? 0 : gemEnvironmentRotation;
+      const getActiveDiamondBvhIntensityScale = () => isMiniDiamondControlledTest() ? 1 : gemEnvironmentIntensityScale;
       const aplicarEntornoGema = (targets?:readonly THREE.Mesh[]) => {
         if (!modelo || !entornoGema) return;
         if (targets?.length) {
@@ -1256,14 +1264,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // The BVH consumes the raw gem HDR URL. Reuse its runtime when
             // only the preset rotation/intensity changes or the same HDR is reselected.
             // Rebuild only when the underlying optical environment actually changes.
-            if (diamondBvhRuntime && diamondBvhRuntimeUrl !== gemEnvironmentUrl) {
+            if (diamondBvhRuntime && diamondBvhRuntimeUrl !== getActiveDiamondBvhEnvironmentUrl()) {
               diamondBvhRuntime.dispose();
               diamondBvhRuntime = null;
               diamondBvhRuntimeRef.current = null;
               diamondBvhRuntimeUrl = null;
             }
-            if (diamondBvhRuntime && diamondBvhRuntimeUrl === gemEnvironmentUrl) {
-              diamondBvhRuntime.updateEnvironment(gemEnvironmentRotation, gemEnvironmentIntensityScale);
+            if (diamondBvhRuntime && diamondBvhRuntimeUrl === getActiveDiamondBvhEnvironmentUrl()) {
+              diamondBvhRuntime.updateEnvironment(getActiveDiamondBvhRotation(), getActiveDiamondBvhIntensityScale());
             } else if (modelo && !diamondBvhRuntime) {
               void asegurarDiamanteBvh();
             }
@@ -1411,7 +1419,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           });
         }
         diamondBvhRuntimePending = true;
-        const requestedEnvironmentUrl = gemEnvironmentUrl;
+        const requestedEnvironmentUrl = getActiveDiamondBvhEnvironmentUrl();
         let environmentChangedWhileLoading = false;
         try {
           const runtime = await createAurumDiamondBvhRuntime({
@@ -1419,9 +1427,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             RGBELoader,
             EXRLoader,
             url: requestedEnvironmentUrl,
-            environmentRotationRadians: gemEnvironmentRotation,
-            // Match Mini AURUM RENDER diamond optics (0° reference), canceling only the shared +90° diagnostic offset.
-            diamondEnvironmentRotationOffsetRadians: -Math.PI / 2,
+            ...(isMiniDiamondControlledTest() ? {} : { environmentRotationRadians: gemEnvironmentRotation }),
+            // Production keeps its diagnostic rotation; controlled mode uses Mini's exact 0° default.
+            ...(isMiniDiamondControlledTest() ? {} : { diamondEnvironmentRotationOffsetRadians: -Math.PI / 2 }),
             camera: camara,
             getViewportHeight: () => renderer.domElement.height,
             quality: "interactive",
@@ -1429,16 +1437,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // SMALL and BRILLIANT), plus rubies through their dedicated profile.
             // Screen-space tiers keep secondary melee optics controlled without
             // excluding those meshes from BVH. ?aurumBvhTest=off disables all.
-            targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi", "Esmeralda", "Moissanita", "Zafiro", "Sapphire", "Aguamarina", "Aquamarina", "Amatista", "Citrino", "Topacio", "topacio", "Topacio azul", "Topacio imperial"],
-            diamondCenterOnly: false,
-            // First-pass optical calibration is editor-only; the public viewer
-            // keeps its established center/secondary BVH values unchanged.
-            calibrateSecondaryDiamonds: true,
+            targetFamilies: isMiniDiamondControlledTest() ? ["diamante"] : (getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi", "Esmeralda", "Moissanita", "Zafiro", "Sapphire", "Aguamarina", "Aquamarina", "Amatista", "Citrino", "Topacio", "topacio", "Topacio azul", "Topacio imperial"]),
+            ...(isMiniDiamondControlledTest() ? {} : { diamondCenterOnly: false, calibrateSecondaryDiamonds: true }),
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
-          if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
+          if (!vivo || requestedEnvironmentUrl !== getActiveDiamondBvhEnvironmentUrl()) {
             runtime.dispose();
-            environmentChangedWhileLoading = vivo && requestedEnvironmentUrl !== gemEnvironmentUrl;
+            environmentChangedWhileLoading = vivo && requestedEnvironmentUrl !== getActiveDiamondBvhEnvironmentUrl();
             return;
           }
           diamondBvhRuntime = runtime;
@@ -4738,6 +4743,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const diamondMicroPipeline = createAurumDiamondMicroPipeline(escena, camara, () => renderer.domElement.height, { includeMediumTier: true });
       diamondMicroPipelineRef.current = diamondMicroPipeline;
+      // Mini comparison intentionally bypasses AURUM screen-size tier calibration.
+      if (isMiniDiamondControlledTest()) diamondMicroPipeline.setEnabled(false);
       if (!diamondMicroEnabledRef.current) diamondMicroPipeline.setEnabled(false);
 
       const viewerLoop = startAurumViewerLoop(
