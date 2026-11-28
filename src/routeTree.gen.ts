@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AgendaDemoRouteImport } from './routes/agenda-demo'
+import { Route as AurumDiamondLabRouteImport } from './routes/aurum-diamond-lab'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
@@ -39,7 +40,6 @@ import { Route as AuthenticatedAurumRenderPluginRouteImport } from './routes/_au
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
-import { Route as AuthenticatedPizarraRouteImport } from './routes/_authenticated/pizarra'
 import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated/compras'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
@@ -59,6 +59,7 @@ import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticated/operario'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedPizarraRouteImport } from './routes/_authenticated/pizarra'
 import { Route as AuthenticatedServiciosExternosRouteImport } from './routes/_authenticated/servicios-externos'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 import { Route as AuthenticatedTiendaAdminRouteImport } from './routes/_authenticated/tienda-admin'
@@ -107,6 +108,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AgendaDemoRoute = AgendaDemoRouteImport.update({
   id: '/agenda-demo',
   path: '/agenda-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AurumDiamondLabRoute = AurumDiamondLabRouteImport.update({
+  id: '/aurum-diamond-lab',
+  path: '/aurum-diamond-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AurumRenderPublicRoute = AurumRenderPublicRouteImport.update({
@@ -240,11 +246,6 @@ const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   path: '/catalogo',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPizarraRoute = AuthenticatedPizarraRouteImport.update({
-  id: '/pizarra',
-  path: '/pizarra',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -349,6 +350,11 @@ const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPizarraRoute = AuthenticatedPizarraRouteImport.update({
+  id: '/pizarra',
+  path: '/pizarra',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedServiciosExternosRoute =
@@ -518,6 +524,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRouteWithChildren
   '/agenda-demo': typeof AgendaDemoRoute
+  '/aurum-diamond-lab': typeof AurumDiamondLabRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -543,7 +550,6 @@ export interface FileRoutesByFullPath {
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/clientes': typeof AuthenticatedClientesRoute
-  '/pizarra': typeof AuthenticatedPizarraRoute
   '/compras': typeof AuthenticatedComprasRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
@@ -563,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/operario': typeof AuthenticatedOperarioRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/pizarra': typeof AuthenticatedPizarraRoute
   '/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/tienda-admin': typeof AuthenticatedTiendaAdminRoute
@@ -598,6 +605,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda-demo': typeof AgendaDemoRoute
+  '/aurum-diamond-lab': typeof AurumDiamondLabRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -640,6 +648,7 @@ export interface FileRoutesByTo {
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/pizarra': typeof AuthenticatedPizarraRoute
   '/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/tienda-admin': typeof AuthenticatedTiendaAdminRoute
@@ -678,6 +687,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$slug': typeof SlugRouteWithChildren
   '/agenda-demo': typeof AgendaDemoRoute
+  '/aurum-diamond-lab': typeof AurumDiamondLabRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -703,7 +713,6 @@ export interface FileRoutesById {
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
-  '/_authenticated/pizarra': typeof AuthenticatedPizarraRoute
   '/_authenticated/compras': typeof AuthenticatedComprasRoute
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
@@ -723,6 +732,7 @@ export interface FileRoutesById {
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/pizarra': typeof AuthenticatedPizarraRoute
   '/_authenticated/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/tienda-admin': typeof AuthenticatedTiendaAdminRoute
@@ -761,6 +771,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/agenda-demo'
+    | '/aurum-diamond-lab'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -805,6 +816,7 @@ export interface FileRouteTypes {
     | '/operario'
     | '/pedidos'
     | '/perfil'
+    | '/pizarra'
     | '/servicios-externos'
     | '/taller'
     | '/tienda-admin'
@@ -840,6 +852,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agenda-demo'
+    | '/aurum-diamond-lab'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -882,6 +895,7 @@ export interface FileRouteTypes {
     | '/monitor'
     | '/operario'
     | '/perfil'
+    | '/pizarra'
     | '/servicios-externos'
     | '/taller'
     | '/tienda-admin'
@@ -919,6 +933,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$slug'
     | '/agenda-demo'
+    | '/aurum-diamond-lab'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -963,6 +978,7 @@ export interface FileRouteTypes {
     | '/_authenticated/operario'
     | '/_authenticated/pedidos'
     | '/_authenticated/perfil'
+    | '/_authenticated/pizarra'
     | '/_authenticated/servicios-externos'
     | '/_authenticated/taller'
     | '/_authenticated/tienda-admin'
@@ -1001,6 +1017,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRouteWithChildren
   AgendaDemoRoute: typeof AgendaDemoRoute
+  AurumDiamondLabRoute: typeof AurumDiamondLabRoute
   AurumRenderPublicRoute: typeof AurumRenderPublicRoute
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
@@ -1056,6 +1073,13 @@ declare module '@tanstack/react-router' {
       path: '/agenda-demo'
       fullPath: '/agenda-demo'
       preLoaderRoute: typeof AgendaDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aurum-diamond-lab': {
+      id: '/aurum-diamond-lab'
+      path: '/aurum-diamond-lab'
+      fullPath: '/aurum-diamond-lab'
+      preLoaderRoute: typeof AurumDiamondLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/aurum-render-public': {
@@ -1373,6 +1397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pizarra': {
+      id: '/_authenticated/pizarra'
+      path: '/pizarra'
+      fullPath: '/pizarra'
+      preLoaderRoute: typeof AuthenticatedPizarraRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/servicios-externos': {
       id: '/_authenticated/servicios-externos'
       path: '/servicios-externos'
@@ -1639,7 +1670,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
-  AuthenticatedPizarraRoute: typeof AuthenticatedPizarraRoute
   AuthenticatedComprasRoute: typeof AuthenticatedComprasRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRouteWithChildren
@@ -1659,6 +1689,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedPizarraRoute: typeof AuthenticatedPizarraRoute
   AuthenticatedServiciosExternosRoute: typeof AuthenticatedServiciosExternosRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedTiendaAdminRoute: typeof AuthenticatedTiendaAdminRoute
@@ -1681,7 +1712,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
-  AuthenticatedPizarraRoute: AuthenticatedPizarraRoute,
   AuthenticatedComprasRoute: AuthenticatedComprasRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRouteWithChildren,
@@ -1702,6 +1732,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedPizarraRoute: AuthenticatedPizarraRoute,
   AuthenticatedServiciosExternosRoute: AuthenticatedServiciosExternosRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedTiendaAdminRoute: AuthenticatedTiendaAdminRoute,
@@ -1767,6 +1798,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRouteWithChildren,
   AgendaDemoRoute: AgendaDemoRoute,
+  AurumDiamondLabRoute: AurumDiamondLabRoute,
   AurumRenderPublicRoute: AurumRenderPublicRoute,
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
