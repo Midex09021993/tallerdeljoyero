@@ -196,7 +196,7 @@ function CursosDiseno3DPage() {
           <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-0 size-72 rounded-full bg-[#fff0c5]/60 blur-3xl" />
           <div className="relative order-2 flex items-center justify-center lg:order-1">
             <div className="absolute size-64 rounded-full bg-gradient-to-br from-[#fff2c9] to-[#e7eef5] blur-2xl" />
-            <img src="/Robot%20futurista%20sonriente%20con%20pulgar%20arriba.png" alt="AURI, asistente de inteligencia artificial de AURUM LAB" width="360" height="420" loading="lazy" decoding="async" className="relative z-10 h-auto max-h-[22rem] w-64 object-contain drop-shadow-[0_18px_24px_rgba(31,45,58,.16)] sm:w-72" />
+            <img src="/auri-mascota.webp" alt="AURI, asistente de inteligencia artificial de AURUM LAB" width="360" height="420" loading="lazy" decoding="async" className="relative z-10 h-auto max-h-[22rem] w-64 object-contain drop-shadow-[0_18px_24px_rgba(31,45,58,.16)] sm:w-72" />
           </div>
           <div className="relative order-1 lg:order-2">
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e7d6a6] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Bot className="size-3.5" /> Tecnología propia de AURUM LAB</p>
