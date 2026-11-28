@@ -1,3 +1,5 @@
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
+
 export interface AurumGroundController {
   mesh: any;
   hdriGround?: any;
@@ -5,6 +7,7 @@ export interface AurumGroundController {
   setBakedShadowVisible: (visible: boolean) => void;
   setMaterial: (config: { color?: number; roughness?: number; metalness?: number }) => void;
   setShadowIntensity: (intensity: number) => void;
+  setSurfacePreset: (preset: "matte" | "porcelain" | "satin" | "mirror", strength?: number) => void;
   setHdriGroundTexture: (texture:any) => void;
   setHdriGroundEnabled: (enabled:boolean) => void;
   updateFromPreset: (preset: any) => void;
@@ -33,6 +36,10 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   scene.add(mesh);
 
   let hdriGround:any = null;
+  let mirrorSurface:any = null;
+  let mirrorStrength = 0.72;
+  const removeMirror = () => { if (!mirrorSurface) return; scene.remove(mirrorSurface); mirrorSurface.geometry?.dispose?.(); mirrorSurface.getRenderTarget?.()?.dispose?.(); mirrorSurface.material?.dispose?.(); mirrorSurface = null; };
+  const createMirror = () => { removeMirror(); mirrorSurface = new Reflector(new THREE.PlaneGeometry(40,40), {clipBias:0.003, textureWidth:1024, textureHeight:1024, color:0xffffff}); mirrorSurface.rotation.x=-Math.PI/2; mirrorSurface.position.y=mesh.position.y+0.001; mirrorSurface.renderOrder=-0.25; mirrorSurface.material.transparent=true; mirrorSurface.material.opacity=mirrorStrength; mirrorSurface.visible=mesh.visible; scene.add(mirrorSurface); };
   let hdriGroundTexture:any = null;
   let bakedShadowUserVisible = true;
   let bakedShadowPositioned = false;
@@ -47,6 +54,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     bakedShadow.visible = visible && bakedShadowPositioned && bakedShadowUserVisible && presetShadowVisible;
     // The HDRI studio floor is a separate mesh; keep it under the same user toggle.
     if (hdriGround) hdriGround.visible = visible;
+    if (mirrorSurface) mirrorSurface.visible = visible;
   };
   const shadowSize=128;
   const shadowData=new Uint8Array(shadowSize*shadowSize*4);
@@ -106,6 +114,12 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       if (config.metalness !== undefined) mesh.material.metalness = Math.max(0, Math.min(1, config.metalness));
       mesh.material.needsUpdate = true;
     },
+    setSurfacePreset(preset, strength = 0.72) {
+      mirrorStrength = Math.max(0, Math.min(1, Number(strength) || 0));
+      if (preset === "mirror") { mesh.material.color.setHex(0xffffff); mesh.material.roughness=0; mesh.material.metalness=0; mesh.material.opacity=0; mesh.material.transparent=true; createMirror(); }
+      else { removeMirror(); mesh.material.transparent=true; mesh.material.opacity=preset==="matte" ? 0.06 : 0.96; mesh.material.color.setHex(preset==="porcelain" ? 0xf6f5f2 : preset==="satin" ? 0xecebe8 : 0xffffff); mesh.material.roughness=preset==="matte" ? 1 : preset==="porcelain" ? 0.32 : 0.58; mesh.material.metalness=0; }
+      mesh.material.needsUpdate=true; syncGroundVisibility();
+    },
     setShadowIntensity(intensity) {
       const strength = Math.max(0, Math.min(1, Number(intensity) || 0));
       bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + strength * .48));
@@ -161,10 +175,10 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       if (!box) return;
       const size = new THREE.Vector3();
       box.getSize(size);
-      mesh.position.y = box.min.y - Math.max(size.y * .035, .015);
+      mesh.position.y = box.min.y - Math.max(size.y * .035, .015);\n      if (mirrorSurface) mirrorSurface.position.y=mesh.position.y+0.001;
     },
     dispose() {
-      scene.remove(mesh);
+      removeMirror();\n      scene.remove(mesh);
       mesh.geometry?.dispose?.();
       mesh.material?.dispose?.();
       scene.remove(bakedShadow);
