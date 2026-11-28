@@ -37,6 +37,18 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
 
   let hdriGround:any = null;
   let mirrorSurface:any = null;
+  const textureLoader = new THREE.TextureLoader();
+  const porcelainBaseColor = textureLoader.load('/aurum/textures/ground/porcelain/porcelanato_basecolor.png');
+  const porcelainRoughness = textureLoader.load('/aurum/textures/ground/porcelain/porcelanato_roughness.png');
+  const porcelainNormal = textureLoader.load('/aurum/textures/ground/porcelain/porcelanato_normal.png');
+  porcelainBaseColor.colorSpace = THREE.SRGBColorSpace;
+  porcelainRoughness.colorSpace = THREE.NoColorSpace;
+  porcelainNormal.colorSpace = THREE.NoColorSpace;
+  for (const texture of [porcelainBaseColor, porcelainRoughness, porcelainNormal]) {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(3, 3);
+    texture.anisotropy = 8;
+  }
   let mirrorStrength = 0.72;
   const removeMirror = () => { if (!mirrorSurface) return; scene.remove(mirrorSurface); mirrorSurface.geometry?.dispose?.(); mirrorSurface.material?.dispose?.(); mirrorSurface = null; };
   const createMirror = () => { removeMirror(); mirrorSurface = new Reflector(new THREE.PlaneGeometry(40,40), {clipBias:0.003, textureWidth:1024, textureHeight:1024, color:new THREE.Color(Math.round(255*mirrorStrength)*0x010101)}); mirrorSurface.rotation.x=-Math.PI/2; mirrorSurface.position.y=mesh.position.y+0.001; mirrorSurface.renderOrder=-0.25; mirrorSurface.visible=mesh.visible; scene.add(mirrorSurface); };
