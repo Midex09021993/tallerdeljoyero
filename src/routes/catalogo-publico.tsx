@@ -64,7 +64,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
       return !q || [item.nombre, item.descripcion, item.formacion_titulo, item.formacion_descripcion, item.identidad_nombre, item.identidad_ciudad, item.identidad_pais, item.identidad_sitio_web].filter(Boolean).join(" ").toLocaleLowerCase("es").includes(q);
     });
   }, [data, busqueda, filtro]);
-  const paises = [...new Set(data.filter(x => x.tipo === "taller").map(x => x.identidad_pais?.trim()).filter((x): x is string => Boolean(x)))].sort((a,b)=>a.localeCompare(b,"es"));
+  const paises = useMemo(() => [...new Set(data.filter(x => x.tipo === "taller").map(x => x.identidad_pais?.trim()).filter((x): x is string => Boolean(x)))].sort((a,b)=>a.localeCompare(b,"es")), [data]);
   const [paisFiltro, setPaisFiltro] = useState("todos");
   const [orden, setOrden] = useState<"alfabetico"|"productos"|"ranking">("ranking");
   const entradasOrdenadas = useMemo(() => {
@@ -120,7 +120,7 @@ export function ComunidadPublicaPage({ initialData }: { initialData?: EntradaPub
           </div>
           <div className="flex flex-1 flex-col p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              {logo ? <img src={logo} alt={`Logo de ${titulo}`} loading="lazy" className="size-14 shrink-0 rounded-xl border border-slate-200 bg-white object-contain p-2"/> : <div aria-label={`Iniciales de ${titulo}`} className="grid size-14 shrink-0 place-items-center rounded-xl border border-[#d4aa19]/35 bg-[#fff4d2] text-lg font-semibold text-[#987400]">{initials}</div>}
+              {logo ? <img src={logo} alt={`Logo de ${titulo}`} width={56} height={56} loading="lazy" decoding="async" className="size-14 shrink-0 rounded-xl border border-slate-200 bg-white object-contain p-2"/> : <div aria-label={`Iniciales de ${titulo}`} className="grid size-14 shrink-0 place-items-center rounded-xl border border-[#d4aa19]/35 bg-[#fff4d2] text-lg font-semibold text-[#987400]">{initials}</div>}
               <div className="min-w-0 flex-1"><h2 className="line-clamp-2 font-display text-xl leading-tight tracking-[-.02em] text-[#17232d]">{titulo}</h2><p className="mt-1 truncate text-xs text-slate-500">{[city,country].filter(Boolean).join(" · ") || "Comunidad joyera"}</p></div>
             </div>
             <p className="mt-4 line-clamp-2 min-h-[3rem] text-sm leading-6 text-slate-600">{descripcion?.trim() || "Descripción pendiente de completar."}</p>
