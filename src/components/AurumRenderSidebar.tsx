@@ -27,8 +27,8 @@ const toolbarItems = [
   { id: "cad-tree", label: "CAD", icon: Layers2 },
   { id: "positions", label: "Posiciones", icon: Crosshair },
   { id: "diamond-control", label: "Óptica", icon: SlidersHorizontal },
-  { id: "export", label: "Exportar", icon: Upload },
   { id: "import", label: "Importar", icon: FolderInput },
+  { id: "export", label: "Exportar", icon: Upload },
 
   // Herramientas pendientes de conexión: se mantienen al final
   { id: "timing", label: "", icon: Timer },
