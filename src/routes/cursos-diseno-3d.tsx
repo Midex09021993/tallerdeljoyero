@@ -13,9 +13,9 @@ export const Route = createFileRoute("/cursos-diseno-3d")({
       { title: "Diseño CAD 3D para Joyería con IA – Nivel 1 | AURUM LAB" },
       {
         name: "description",
-        content: "Aprende diseño CAD 3D para joyería con docente, laboratorios interactivos y AURI Tutor, nuestro asistente de inteligencia artificial integrado en AURUM LAB.",
+        content: "Aprende CAD 3D para joyería con docente, laboratorios interactivos y AURI Tutor, el asistente inteligente de AURUM LAB.",
       },
-      { property: "og:title", content: "Diseño CAD 3D para Joyería y Manufactura Aditiva con IA – Nivel 1 | AURUM LAB" },
+      { property: "og:title", content: "Diseño CAD 3D para Joyería con IA – Nivel 1 | AURUM LAB" },
       { property: "og:description", content: "Curso online en vivo de Rhinoceros para joyería, con docente, 10 sesiones y laboratorios interactivos." },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/cursos-diseno-3d" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
@@ -160,7 +160,7 @@ function CursosDiseno3DPage() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
             
-            <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial <span className="text-[#b58b37]">– <span className="inline-block min-w-[1ch] whitespace-nowrap border-r-2 border-[#b58b37] pr-[.08em] align-bottom animate-pulse" style={{ borderRightColor: nivelEscrito >= 7 ? "transparent" : "#b58b37" }}>{ "Nivel 1".slice(0, nivelEscrito) }<span className="sr-only">Nivel 1</span></span></span></h1>
+            <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.02] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-[3.15rem] xl:text-[3.55rem]">Diseño CAD 3D para Joyería y Manufactura Aditiva con Inteligencia Artificial – Nivel 1</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#52677b] sm:text-lg sm:leading-7">Formación profesional en diseño 3D, modelado de joyería, fabricación digital e inteligencia artificial aplicada.</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#ead7a5] bg-[#fff8e6] px-3 py-2 text-xs font-bold text-[#8d6926]"><Clock3 className="size-4" /> Inicio de clases: 30 de noviembre</span>
