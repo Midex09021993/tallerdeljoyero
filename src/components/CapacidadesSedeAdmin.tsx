@@ -13,7 +13,8 @@ const CAPACIDADES_COMERCIALES = ["Pedidos", "Cotizaciones", "Contratos", "Client
 const CAPACIDADES_INVENTARIO = ["Inventario", "Compras"] as const;
 const CAPACIDADES_HERRAMIENTAS = ["Herramientas", "Mi nube", "Pizarra"] as const;
 const CAPACIDADES_ADMINISTRACION = ["Migración"] as const;
-const SUBCAPACIDADES_TALLER = ["Engaste", "Pulido", "Grabado"] as const;
+const SUBCAPACIDADES_TALLER = ["Engaste"] as const;
+const CAPACIDADES_OCULTAS = new Set(["Fotografía", "Gemología", "Grabado", "Pulido"]);
 
 export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { sedeId: string | null; sedeNombre?: string; esDueno?: boolean }) {
   const qc = useQueryClient();
@@ -66,9 +67,10 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
   const ids = seleccionadas ?? idsActuales;
 
   const porCategoria = useMemo(() => {
+    const visibles = especialidades.filter((e) => !CAPACIDADES_OCULTAS.has(e.nombre));
     const ordenar = (nombres: readonly string[]) => {
       const orden = new Map(nombres.map((nombre, indice) => [nombre, indice]));
-      return especialidades.filter((e) => orden.has(e.nombre)).sort((a, b) => (orden.get(a.nombre) ?? 99) - (orden.get(b.nombre) ?? 99));
+      return visibles.filter((e) => orden.has(e.nombre)).sort((a, b) => (orden.get(a.nombre) ?? 99) - (orden.get(b.nombre) ?? 99));
     };
     const produccion = ordenar(CAPACIDADES_PRODUCCION);
     const comercial = ordenar(CAPACIDADES_COMERCIALES);
@@ -76,7 +78,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
     const herramientas = ordenar(CAPACIDADES_HERRAMIENTAS);
     const administracion = ordenar(CAPACIDADES_ADMINISTRACION);
     const conocidas = new Set<string>([...CAPACIDADES_PRODUCCION, ...CAPACIDADES_COMERCIALES, ...CAPACIDADES_INVENTARIO, ...CAPACIDADES_HERRAMIENTAS, ...CAPACIDADES_ADMINISTRACION]);
-    const servicios = especialidades.filter((e) => !conocidas.has(e.nombre)).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+    const servicios = visibles.filter((e) => !conocidas.has(e.nombre)).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
     return [
       ...(produccion.length ? [["Producción", produccion] as [string, Especialidad[]]] : []),
       ...(comercial.length ? [["Comercial", comercial] as [string, Especialidad[]]] : []),
