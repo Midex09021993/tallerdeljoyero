@@ -3,7 +3,6 @@ import {
   CircleDot,
   Code2,
   Diamond,
-  Image,
   Gem,
   Layers2,
   ScanEye,
@@ -12,6 +11,7 @@ import {
   Tags,
   Timer,
   Upload,
+  FolderInput,
   Wallpaper,
   Crosshair,
 } from "lucide-react";
@@ -27,10 +27,10 @@ const toolbarItems = [
   { id: "cad-tree", label: "CAD", icon: Layers2 },
   { id: "positions", label: "Posiciones", icon: Crosshair },
   { id: "diamond-control", label: "Óptica", icon: SlidersHorizontal },
-  { id: "export", label: "", icon: Upload },
+  { id: "export", label: "Exportar", icon: Upload },
+  { id: "import", label: "Importar", icon: FolderInput },
 
   // Herramientas pendientes de conexión: se mantienen al final
-  { id: "images", label: "", icon: Image },
   { id: "timing", label: "", icon: Timer },
   { id: "boolean", label: "B×", icon: Blend, beta: true },
   { id: "code", label: "", icon: Code2 },
@@ -42,7 +42,7 @@ const toolbarItems = [
  * Barra lateral visual de Aurum Render.
  * Escena agrupa los controles del suelo y las sombras de contacto.
  */
-export function AurumRenderSidebar({ activeToolId, onMetalHdrClick, onGemHdrClick, onBackgroundClick, onSceneClick, onMaterialsClick, onGemsClick, onCadTreeClick, onPositionsClick, onDiamondControlClick, onRhinoExportClick }: { activeToolId: string; onMetalHdrClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void; onMaterialsClick: () => void; onGemsClick: () => void; onCadTreeClick: () => void; onPositionsClick: () => void; onDiamondControlClick: () => void; onRhinoExportClick: () => void;  }) {
+export function AurumRenderSidebar({ activeToolId, onMetalHdrClick, onGemHdrClick, onBackgroundClick, onSceneClick, onMaterialsClick, onGemsClick, onCadTreeClick, onPositionsClick, onDiamondControlClick, onRhinoExportClick, onImportClick }: { activeToolId: string; onMetalHdrClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void; onMaterialsClick: () => void; onGemsClick: () => void; onCadTreeClick: () => void; onPositionsClick: () => void; onDiamondControlClick: () => void; onRhinoExportClick: () => void; onImportClick: () => void; }) {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
@@ -57,10 +57,11 @@ export function AurumRenderSidebar({ activeToolId, onMetalHdrClick, onGemHdrClic
         const isMaterials = item.id === "materiales";
         const isGems = item.id === "gemas";
         const isRhinoExport = item.id === "export";
+        const isImport = item.id === "import";
         const isCadTree = item.id === "cad-tree";
         const isPositions = item.id === "positions";
         const isDiamondControl = item.id === "diamond-control";
-        const active = (isMetalHdr && activeToolId === "hdrMetales") || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas") || (isMaterials && activeToolId === "materiales") || (isGems && activeToolId === "gemas") || (isRhinoExport && activeToolId === "rhino-export") || (isCadTree && activeToolId === "cad-tree") || (isPositions && activeToolId === "positions") || (isDiamondControl && activeToolId === "diamond-control");
+        const active = (isMetalHdr && activeToolId === "hdrMetales") || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas") || (isMaterials && activeToolId === "materiales") || (isGems && activeToolId === "gemas") || (isRhinoExport && activeToolId === "rhino-export") || (isImport && activeToolId === "import") || (isCadTree && activeToolId === "cad-tree") || (isPositions && activeToolId === "positions") || (isDiamondControl && activeToolId === "diamond-control");
         const contents = (
           <>
             {active && (
@@ -82,9 +83,9 @@ export function AurumRenderSidebar({ activeToolId, onMetalHdrClick, onGemHdrClic
           </>
         );
         const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
-        if (isMetalHdr || isGemHdr || isBackground || isScene || isMaterials || isGems || isCadTree || isPositions || isDiamondControl || isRhinoExport) {
-          const title = isMetalHdr ? "HDR Metales" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : isScene ? "Escenas" : isMaterials ? "Materiales" : isGems ? "Gemas" : isCadTree ? "Árbol CAD · Capas y objetos" : isPositions ? "AURUM POSITIONS · Gestor de posiciones" : isDiamondControl ? "Control óptico del diamante" : "Exportar para Rhinoceros";
-          const onClick = isMetalHdr ? onMetalHdrClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : isScene ? onSceneClick : isMaterials ? onMaterialsClick : isGems ? onGemsClick : isCadTree ? onCadTreeClick : isPositions ? onPositionsClick : isDiamondControl ? onDiamondControlClick : onRhinoExportClick;
+        if (isMetalHdr || isGemHdr || isBackground || isScene || isMaterials || isGems || isCadTree || isPositions || isDiamondControl || isRhinoExport || isImport) {
+          const title = isMetalHdr ? "HDR Metales" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : isScene ? "Escenas" : isMaterials ? "Materiales" : isGems ? "Gemas" : isCadTree ? "Árbol CAD · Capas y objetos" : isPositions ? "AURUM POSITIONS · Gestor de posiciones" : isDiamondControl ? "Control óptico del diamante" : isImport ? "Importar modelo" : "Exportar para Rhinoceros";
+          const onClick = isMetalHdr ? onMetalHdrClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : isScene ? onSceneClick : isMaterials ? onMaterialsClick : isGems ? onGemsClick : isCadTree ? onCadTreeClick : isPositions ? onPositionsClick : isDiamondControl ? onDiamondControlClick : isImport ? onImportClick : onRhinoExportClick;
           return (
             <button key={item.id} type="button" title={title} aria-label={title} aria-pressed={active} onClick={onClick} className={className}>
               {contents}
