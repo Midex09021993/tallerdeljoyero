@@ -182,6 +182,7 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
                 url: "https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
                 camera,
                 quality: "interactive",
+                miniAurumDiamondMaterialReference: true,
                 targetFamilies: ["diamante"],
                 onError: (error) => console.warn("[AURUM mini] El BVH del diamante no se pudo aplicar; se conserva el material original.", error),
               });
