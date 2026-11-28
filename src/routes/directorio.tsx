@@ -21,8 +21,8 @@ export const Route = createFileRoute("/directorio")({
           "@type": "CollectionPage",
           "@id": "https://www.tallerdeljoyero.com/directorio#collection",
           "url": "https://www.tallerdeljoyero.com/directorio",
-          "name": "Directorio de talleres y joyerías de Latinoamérica | AURUM LAB",
-          "description": "Descubre talleres, joyerías y formación de la comunidad joyera de Latinoamérica en AURUM LAB.",
+          "name": "Directorio de joyeros de Latinoamérica | AURUM LAB",
+          "description": "Encuentra talleres, joyerías y formación de la comunidad joyera latinoamericana en AURUM LAB.",
           "inLanguage": "es",
           "mainEntity": { "@id": "https://www.tallerdeljoyero.com/directorio#items" }
         },
@@ -52,13 +52,13 @@ export const Route = createFileRoute("/directorio")({
     return {
     links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/directorio" }],
     meta: [
-      { title: "Directorio de talleres y joyerías de Latinoamérica | AURUM LAB" },
+      { title: "Directorio de joyeros de Latinoamérica | AURUM LAB" },
       {
         name: "description",
         content: "Encuentra talleres, joyerías y formación de la comunidad joyera de Latinoamérica. Explora perfiles, catálogos y propuestas en AURUM LAB.",
       },
       { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "Directorio de talleres y joyerías de Latinoamérica | AURUM LAB" },
+      { property: "og:title", content: "Directorio de joyeros de Latinoamérica | AURUM LAB" },
       { property: "og:description", content: "Encuentra talleres, joyerías y formación de la comunidad joyera de Latinoamérica en AURUM LAB." },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/directorio" },
       { property: "og:type", content: "website" },
