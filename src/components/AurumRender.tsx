@@ -376,7 +376,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const calibratedCameraViewsRef = useRef<Partial<Record<VistaId, any>>>({});
   const [materialAplicarTodos, setMaterialAplicarTodos] = useState(false);
   const [blueCastWashStage, setBlueCastWashStage] = useState<"before"|"after">("before");
-  const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
+  const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumDiamondMiniTest") === "1" ? "diamante_mini_aurum" : "diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
   const pendingGemApplicationRef = useRef<GemaConfig | null>(null);
   const vistaRef = useRef<VistaId>("frontal");
