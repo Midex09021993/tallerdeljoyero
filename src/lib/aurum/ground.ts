@@ -39,7 +39,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   let mirrorSurface:any = null;
   let mirrorStrength = 0.72;
   const removeMirror = () => { if (!mirrorSurface) return; scene.remove(mirrorSurface); mirrorSurface.geometry?.dispose?.(); mirrorSurface.material?.dispose?.(); mirrorSurface = null; };
-  const createMirror = () => { removeMirror(); mirrorSurface = new Reflector(new THREE.PlaneGeometry(40,40), {clipBias:0.003, textureWidth:1024, textureHeight:1024, color:Math.round(255*mirrorStrength)*0x010101}); mirrorSurface.rotation.x=-Math.PI/2; mirrorSurface.position.y=mesh.position.y+0.001; mirrorSurface.renderOrder=-0.25; mirrorSurface.visible=mesh.visible; scene.add(mirrorSurface); };
+  const createMirror = () => { removeMirror(); mirrorSurface = new Reflector(new THREE.PlaneGeometry(40,40), {clipBias:0.003, textureWidth:1024, textureHeight:1024, color:new THREE.Color(Math.round(255*mirrorStrength)*0x010101)}); mirrorSurface.rotation.x=-Math.PI/2; mirrorSurface.position.y=mesh.position.y+0.001; mirrorSurface.renderOrder=-0.25; mirrorSurface.visible=mesh.visible; scene.add(mirrorSurface); };
   let hdriGroundTexture:any = null;
   let bakedShadowUserVisible = true;
   let bakedShadowPositioned = false;
@@ -179,7 +179,8 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       if (mirrorSurface) mirrorSurface.position.y=mesh.position.y+0.001;
     },
     dispose() {
-      removeMirror();\n      scene.remove(mesh);
+      removeMirror();
+      scene.remove(mesh);
       mesh.geometry?.dispose?.();
       mesh.material?.dispose?.();
       scene.remove(bakedShadow);
