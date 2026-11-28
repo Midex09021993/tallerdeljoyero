@@ -2583,7 +2583,8 @@ function PresentacionColeccionGLB({ modelos, onClose }: { modelos: Array<{ nombr
   const [auto, setAuto] = useState(false);
   const [segundos, setSegundos] = useState(30);
   useEffect(() => { if (!auto || modelos.length < 2) return; const id = window.setInterval(() => setIndice(actual => (actual + 1) % modelos.length), segundos * 1000); return () => window.clearInterval(id); }, [auto, segundos, modelos.length]);
-  const modelo = modelos[indice];
+  const modelo = modelos[indice] ?? modelos[0];
+  if (!modelo) return null;
   return createPortal(<div className="fixed inset-0 z-[120] flex flex-col bg-[#f7f6f2]" role="dialog" aria-modal="true" aria-label="Presentación de colección">
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e6dfd2] bg-white px-4 py-3 sm:px-6">
       <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987538]">AURUM SHOWCASE</p><h2 className="truncate text-sm font-semibold sm:text-base">{modelo.nombre.replace(/\.(glb|gltf)$/i, "")}</h2><p className="text-xs text-muted-foreground">{indice + 1} de {modelos.length} modelos listos</p></div>

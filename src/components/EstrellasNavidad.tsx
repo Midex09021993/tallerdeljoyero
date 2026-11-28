@@ -61,7 +61,7 @@ export function EstrellasNavidad() {
       estrellas = Array.from({ length: ancho < 700 ? 26 : 54 }, () => ({
         x: Math.random() * ancho, y: Math.random() * alto, r: 3.5 + Math.random() * 5.5,
         v: 30 + Math.random() * 45, fase: Math.random() * Math.PI * 2,
-        color: COLORES[Math.floor(Math.random() * COLORES.length)],
+        color: COLORES[Math.floor(Math.random() * COLORES.length)] ?? "#ffffff",
       }));
       dibujar(0, false);
     };

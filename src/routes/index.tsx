@@ -448,7 +448,7 @@ function InicioPublico() {
         speed: 18 + Math.random() * 32,
         phase: Math.random() * Math.PI * 2,
         drift: 8 + Math.random() * 18,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color: colors[Math.floor(Math.random() * colors.length)] ?? "#ffffff",
       }));
     };
 
