@@ -50,6 +50,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     texture.anisotropy = 8;
   }
   let mirrorStrength = 0.72;
+  let activeSurfacePreset: "matte" | "porcelain" | "satin" | "mirror" = "matte";
   const removeMirror = () => { if (!mirrorSurface) return; scene.remove(mirrorSurface); mirrorSurface.geometry?.dispose?.(); mirrorSurface.material?.dispose?.(); mirrorSurface = null; };
   const createMirror = () => { removeMirror(); mirrorSurface = new Reflector(new THREE.PlaneGeometry(40,40), {clipBias:0.003, textureWidth:1024, textureHeight:1024, color:new THREE.Color(Math.round(255*mirrorStrength)*0x010101)}); mirrorSurface.rotation.x=-Math.PI/2; mirrorSurface.position.y=mesh.position.y+0.001; mirrorSurface.renderOrder=-0.25; mirrorSurface.visible=mesh.visible; scene.add(mirrorSurface); };
   let hdriGroundTexture:any = null;
@@ -127,6 +128,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       mesh.material.needsUpdate = true;
     },
     setSurfacePreset(preset, strength = 0.72) {
+      activeSurfacePreset = preset;
       mirrorStrength = Math.max(0, Math.min(1, Number(strength) || 0));
       removeMirror();
       mesh.material.map = null;
@@ -147,15 +149,16 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
         mesh.material.roughnessMap = porcelainRoughness;
         mesh.material.normalMap = porcelainNormal;
         mesh.material.normalScale?.set?.(0.18, 0.18);
-        mesh.material.roughness = 0.32;
+        mesh.material.roughness = 0.82;
+        mesh.material.metalness = 0;
+      } else if (preset === "satin") {
+        mesh.material.color.setHex(0xecebe8);
+        mesh.material.roughness = 0.58;
         mesh.material.metalness = 0;
       } else {
-        mesh.material.color.setHex(preset === "satin" ? 0xecebe8 : 0xffffff);
-        mesh.material.roughness = preset === "matte" ? 1 : 0.58;
+        mesh.material.color.setHex(0xffffff);
+        mesh.material.roughness = 1;
         mesh.material.metalness = 0;
-        mesh.material.opacity = preset === "matte" ? 0.06 : 1;
-        mesh.material.transparent = preset === "matte";
-        mesh.material.depthWrite = preset !== "matte";
       }
       mesh.material.needsUpdate = true;
       syncGroundVisibility();
@@ -189,24 +192,47 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       presetGroundVisible = preset.groundVisible !== false;
       const reflectionRequested = preset.groundReflection === true;
       mesh.userData.aurumGroundReflectionRequested = reflectionRequested;
-      // Match the authored iJewel floor footprint (8 for matte, 10 for reflective).
       const groundSize = Number(preset.groundSize);
       mesh.scale.setScalar(Number.isFinite(groundSize) && groundSize > 0 ? groundSize / 40 : 1);
       const shadowStrength = Number.isFinite(Number(preset.shadowIntensity)) ? Number(preset.shadowIntensity) : .22;
-      // Contact shadow remains an independent photographic layer. Non-reflective
-      // scenes use a nearly invisible seamless floor instead of a gray polygon.
       bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + shadowStrength * .48));
       presetShadowVisible = shadowStrength > .03;
-      if (reflectionRequested) {
-        mesh.material.color.setHex(preset.ground ?? 0xffffff);
-        mesh.material.roughness = preset.groundRoughness ?? .82;
-        mesh.material.metalness = preset.groundMetalness ?? 0;
-        mesh.material.opacity = .96;
+      // Apply the scene base color first, then preserve the user's selected
+      // photographic surface. Scene changes must never silently reset textures.
+      mesh.material.color.setHex(preset.ground ?? 0xffffff);
+      mesh.material.roughness = preset.groundRoughness ?? .82;
+      mesh.material.metalness = preset.groundMetalness ?? 0;
+      mesh.material.map = null;
+      mesh.material.roughnessMap = null;
+      mesh.material.normalMap = null;
+      mesh.material.transparent = false;
+      mesh.material.opacity = 1;
+      mesh.material.depthWrite = true;
+      removeMirror();
+      if (activeSurfacePreset === "porcelain") {
+        mesh.material.color.setHex(0xffffff);
+        mesh.material.map = porcelainBaseColor;
+        mesh.material.roughnessMap = porcelainRoughness;
+        mesh.material.normalMap = porcelainNormal;
+        mesh.material.normalScale?.set?.(0.18, 0.18);
+        mesh.material.roughness = .82;
+        mesh.material.metalness = 0;
+      } else if (activeSurfacePreset === "mirror") {
+        mesh.material.color.setHex(0xffffff);
+        mesh.material.roughness = 0;
+        mesh.material.metalness = 0;
+        createMirror();
+      } else if (activeSurfacePreset === "satin") {
+        mesh.material.color.setHex(0xecebe8);
+        mesh.material.roughness = .58;
+        mesh.material.metalness = 0;
       } else {
         mesh.material.color.setHex(0xffffff);
         mesh.material.roughness = 1;
         mesh.material.metalness = 0;
         mesh.material.opacity = .06;
+        mesh.material.transparent = true;
+        mesh.material.depthWrite = false;
       }
       mesh.material.needsUpdate = true;
       syncGroundVisibility();
