@@ -586,6 +586,63 @@ export type Database = {
         }
         Relationships: []
       }
+      aurum_board_notes: {
+        Row: {
+          categoria: string
+          color: string
+          contenido: string
+          created_at: string
+          estado: string
+          fecha_recordatorio: string | null
+          fijada: boolean
+          id: string
+          participante_id: string
+          posicion_x: number
+          posicion_y: number
+          sede_id: string | null
+          titulo: string
+          updated_at: string
+          user_id: string
+          visibilidad: string
+        }
+        Insert: {
+          categoria?: string
+          color?: string
+          contenido?: string
+          created_at?: string
+          estado?: string
+          fecha_recordatorio?: string | null
+          fijada?: boolean
+          id?: string
+          participante_id: string
+          posicion_x?: number
+          posicion_y?: number
+          sede_id?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id: string
+          visibilidad?: string
+        }
+        Update: {
+          categoria?: string
+          color?: string
+          contenido?: string
+          created_at?: string
+          estado?: string
+          fecha_recordatorio?: string | null
+          fijada?: boolean
+          id?: string
+          participante_id?: string
+          posicion_x?: number
+          posicion_y?: number
+          sede_id?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+          visibilidad?: string
+        }
+        Relationships: []
+      }
       aurum_camera_calibration_global: {
         Row: {
           calibration_data: Json
@@ -5544,6 +5601,18 @@ export type Database = {
         Returns: {
           disponible: boolean
           fecha: string
+        }[]
+      }
+      agenda_listar_eventos: {
+        Args: { _desde: string; _hasta: string }
+        Returns: {
+          descripcion: string
+          fin_at: string
+          id: string
+          inicio_at: string
+          tipo: string
+          titulo: string
+          todo_el_dia: boolean
         }[]
       }
       agenda_listar_horarios: {
