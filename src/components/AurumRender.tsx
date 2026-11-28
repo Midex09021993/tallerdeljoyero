@@ -1453,6 +1453,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             camera: camara,
             getViewportHeight: () => renderer.domElement.height,
             quality: "interactive",
+            ...(isMiniDiamondControlledTest() ? { miniAurumDiamondMaterialReference: true } : {}),
             // Production BVH covers every compatible diamond size (MICRO,
             // SMALL and BRILLIANT), plus rubies through their dedicated profile.
             // Screen-space tiers keep secondary melee optics controlled without
