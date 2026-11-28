@@ -658,6 +658,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       // approved calibration; Diamante rosado 2 is the explicit exception because
       // its imported .dmat is the requested source calibration for every size.
       const isWhiteDiamondProfile = activeGemId === "diamante_natural"
+        || activeGemId === "diamante_mini_aurum"
         || activeGemId === "diamante_vs"
         || activeGemId === "diamante_inclusiones";
       // White catalog profiles define reflectivity/gamma for every stone,
@@ -678,6 +679,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           : !calibrateSecondaryDiamond
             ? 0.010
             : (activeGemId === "diamante_natural"
+              || activeGemId === "diamante_mini_aurum"
               || activeGemId === "diamante_vs"
               || activeGemId === "diamante_inclusiones")
               ? 0.010
@@ -909,7 +911,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             const resolvedOptics = resolveAurumDiamondProfileOptics(nextProfile, initialDiamondProfileBaseline);
             const nextDispersion = resolvedOptics.dispersion;
             const nextEnvironmentIntensity = resolvedOptics.environmentIntensity;
-            const isWhiteDiamondProfile = ["diamante_natural", "diamante_vs", "diamante_inclusiones"].includes(profileId);
+            const isWhiteDiamondProfile = ["diamante_natural", "diamante_mini_aurum", "diamante_vs", "diamante_inclusiones"].includes(profileId);
             const nextReflectivity = isWhiteDiamondProfile ? 0.5 : resolvedOptics.reflectivity;
             const nextGamma = isWhiteDiamondProfile ? 1 : resolvedOptics.gamma;
             // Preserve the established blue/pink response; all other profiles
