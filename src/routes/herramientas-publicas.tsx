@@ -138,9 +138,8 @@ function HerramientasPublicasPage() {
           >
             <ArrowLeft className="size-4" /> Volver a AURUM LAB
           </Link>
-          <Link to="/" aria-label="AURUM LAB — Inicio" className="inline-flex items-center gap-2.5 text-[#987400] transition-opacity hover:opacity-80">
-            <img src="/brand/aurum-symbol.svg" alt="Logotipo AURUM LAB" width={36} height={28} className="h-7 w-9 object-contain" />
-            <span className="text-xs font-semibold uppercase tracking-[.22em]">AURUM LAB</span>
+          <Link to="/" aria-label="AURUM LAB — Inicio" className="inline-flex items-center text-[#987400] transition-opacity hover:opacity-80">
+            <img src="/brand/aurum-symbol.svg" alt="AURUM LAB" width={36} height={28} className="h-7 w-9 object-contain" />
           </Link>
         </header>
 
