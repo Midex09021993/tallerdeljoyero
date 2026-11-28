@@ -21,11 +21,11 @@ export const Route = createFileRoute("/herramientas-publicas")({
       {
         name: "description",
         content:
-          "Calcula aleaciones de oro, peso de gemas y modelos 3D, convierte tallas de anillos y prepara revestimiento para fundición con herramientas técnicas para joyeros.",
+          "Calcula aleaciones, peso de gemas, tallas de anillos y revestimiento para fundición con herramientas de joyería.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Calculadoras para joyería: oro, gemas y peso 3D | AURUM LAB" },
-      { property: "og:url", content: "https://www.tallerdeljoyero.com/herramientas-publicas" },
+      { property: "og:url", content: "https://tallerdeljoyero.com/herramientas-publicas" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Calculadoras para joyería: oro, gemas y peso 3D | AURUM LAB" },
       { name: "twitter:description", content: "Calcula aleaciones de oro, peso de gemas y modelos 3D, convierte tallas y prepara revestimiento para fundición." },
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/herramientas-publicas")({
       { property: "og:site_name", content: "AURUM LAB" },
       { property: "og:locale", content: "es_PE" },
     ],
-    links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas-publicas" }],
+    links: [{ rel: "canonical", href: "https://tallerdeljoyero.com/herramientas-publicas" }],
   }),
   component: HerramientasPublicasPage,
 });
