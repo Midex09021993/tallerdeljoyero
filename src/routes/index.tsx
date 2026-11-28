@@ -388,11 +388,6 @@ function InicioPublico() {
 
   useEffect(() => {
     const texto = FRASE_HERO_TURQUESA;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setHeroTextoVisible(texto);
-      return;
-    }
-
     setHeroTextoVisible("");
     let letras = 0;
     let escritura: number | undefined;
@@ -411,7 +406,6 @@ function InicioPublico() {
         }
       }, 850);
     }, 500);
-
     return () => {
       window.clearTimeout(inicio);
       if (escritura !== undefined) window.clearInterval(escritura);
