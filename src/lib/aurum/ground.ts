@@ -116,9 +116,37 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     },
     setSurfacePreset(preset, strength = 0.72) {
       mirrorStrength = Math.max(0, Math.min(1, Number(strength) || 0));
-      if (preset === "mirror") { mesh.material.color.setHex(0xffffff); mesh.material.roughness=0; mesh.material.metalness=0; mesh.material.opacity=0; mesh.material.transparent=true; createMirror(); }
-      else { removeMirror(); mesh.material.transparent=true; mesh.material.opacity=preset==="matte" ? 0.06 : 0.96; mesh.material.color.setHex(preset==="porcelain" ? 0xf6f5f2 : preset==="satin" ? 0xecebe8 : 0xffffff); mesh.material.roughness=preset==="matte" ? 1 : preset==="porcelain" ? 0.32 : 0.58; mesh.material.metalness=0; }
-      mesh.material.needsUpdate=true; syncGroundVisibility();
+      removeMirror();
+      mesh.material.map = null;
+      mesh.material.roughnessMap = null;
+      mesh.material.normalMap = null;
+      mesh.material.normalScale?.set?.(1, 1);
+      mesh.material.transparent = false;
+      mesh.material.opacity = 1;
+      mesh.material.depthWrite = true;
+      if (preset === "mirror") {
+        mesh.material.color.setHex(0xffffff);
+        mesh.material.roughness = 0;
+        mesh.material.metalness = 0;
+        createMirror();
+      } else if (preset === "porcelain") {
+        mesh.material.color.setHex(0xffffff);
+        mesh.material.map = porcelainBaseColor;
+        mesh.material.roughnessMap = porcelainRoughness;
+        mesh.material.normalMap = porcelainNormal;
+        mesh.material.normalScale?.set?.(0.18, 0.18);
+        mesh.material.roughness = 0.32;
+        mesh.material.metalness = 0;
+      } else {
+        mesh.material.color.setHex(preset === "satin" ? 0xecebe8 : 0xffffff);
+        mesh.material.roughness = preset === "matte" ? 1 : 0.58;
+        mesh.material.metalness = 0;
+        mesh.material.opacity = preset === "matte" ? 0.06 : 1;
+        mesh.material.transparent = preset === "matte";
+        mesh.material.depthWrite = preset !== "matte";
+      }
+      mesh.material.needsUpdate = true;
+      syncGroundVisibility();
     },
     setShadowIntensity(intensity) {
       const strength = Math.max(0, Math.min(1, Number(intensity) || 0));
@@ -183,6 +211,9 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       scene.remove(mesh);
       mesh.geometry?.dispose?.();
       mesh.material?.dispose?.();
+      porcelainBaseColor.dispose?.();
+      porcelainRoughness.dispose?.();
+      porcelainNormal.dispose?.();
       scene.remove(bakedShadow);
       bakedShadow.geometry?.dispose?.();
       bakedShadow.material?.dispose?.();
