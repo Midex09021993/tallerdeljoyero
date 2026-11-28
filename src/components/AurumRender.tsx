@@ -1022,10 +1022,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       if (a.familia === "Diamante" && b.familia === "Diamante") {
         const ordenDiamante: Record<string, number> = {
           diamante_natural: 0,
-          diamante_vs: 1,
-          diamante_inclusiones: 2,
-          diamante_rosa: 3,
-          diamante_azul: 4,
+          diamante_mini_aurum: 1,
+          diamante_vs: 2,
+          diamante_inclusiones: 3,
+          diamante_rosa: 4,
+          diamante_azul: 5,
         };
         return (ordenDiamante[a.id] ?? 99) - (ordenDiamante[b.id] ?? 99);
       }
