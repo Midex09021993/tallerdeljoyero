@@ -249,8 +249,11 @@ export async function createAurumDiamondBvhRuntime(options: {
   diamondCenterOnly?: boolean;
   /** Enables the new physical IOR / reduced-fire calibration for editor secondary diamonds only. */
   calibrateSecondaryDiamonds?: boolean;
+  /** Force the exact Mini AURUM white-diamond material calibration, independent of catalog metadata. */
+  miniAurumDiamondMaterialReference?: boolean;
   onError?: (error: unknown) => void;
 }): Promise<AurumDiamondBvhRuntime> {
+  const miniAurumDiamondMaterialReference = options.miniAurumDiamondMaterialReference === true;
   const diamondRgbAuditEnabled = typeof window !== "undefined"
     && new URLSearchParams(window.location.search).get("aurumDiamondRgbAudit") === "1";
   const THREE_NS = options.THREE;
@@ -668,12 +671,13 @@ export async function createAurumDiamondBvhRuntime(options: {
         ? currentMaterial?.userData?.aurumIJEWELParameters ?? null
         : null;
       const initialDiamondParameters = currentMaterial?.userData?.aurumIJEWELParameters ?? {};
-      const initialDiamondTransmission = Math.max(0, Math.min(1, Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)));
-      const initialDiamondGeometryFactor = Number(initialDiamondParameters.geometryFactor ?? 0.5);
-      const initialDiamondSquashFactor = Number(initialDiamondParameters.squashFactor ?? 0.98);
-      const initialDiamondAbsorptionFactor = Math.max(0, Number(initialDiamondParameters.absorptionFactor ?? 1));
+      const initialDiamondTransmission = miniAurumDiamondMaterialReference ? 0 : Math.max(0, Math.min(1, Number(currentMaterial?.transmission ?? initialDiamondParameters.transmission ?? 0)));
+      const initialDiamondGeometryFactor = miniAurumDiamondMaterialReference ? 0.5 : Number(initialDiamondParameters.geometryFactor ?? 0.5);
+      const initialDiamondSquashFactor = miniAurumDiamondMaterialReference ? 0.98 : Number(initialDiamondParameters.squashFactor ?? 0.98);
+      const initialDiamondAbsorptionFactor = miniAurumDiamondMaterialReference ? 1 : Math.max(0, Number(initialDiamondParameters.absorptionFactor ?? 1));
       let baseDiamondDispersion = family !== "diamante"
         ? undefined
+        : miniAurumDiamondMaterialReference ? 0.01
         : diamondSourceParameters
           ? Math.max(0, Number(diamondSourceParameters.dispersion ?? 0.006))
           : !calibrateSecondaryDiamond
@@ -789,14 +793,14 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The Micro Pipeline applies a restrained dispersion multiplier only
           // to secondary MICRO/SMALL stones; the protected center remains 1:1.
           // Gamma, IOR, environment and the underlying material response stay fixed.
-          rgbBoost: initialRgbBoost,
+          rgbBoost: miniAurumDiamondMaterialReference ? [1, 1, 1] : initialRgbBoost,
           environmentIntensity: family === "diamante"
-            ? (diamondSourceParameters ? Number(currentMaterial?.envMapIntensity ?? 1.30) : (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25))
+            ? (miniAurumDiamondMaterialReference ? 1.30 : diamondSourceParameters ? Number(currentMaterial?.envMapIntensity ?? 1.30) : (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25))
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           dispersion: family === "diamante"
             ? baseDiamondDispersion
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
-          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (diamondSourceParameters ? Number(diamondSourceParameters.refractiveIndex ?? 2.6) : (calibrateSecondaryDiamond ? 2.417 : 2.6)) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
+          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (miniAurumDiamondMaterialReference ? 2.6 : diamondSourceParameters ? Number(diamondSourceParameters.refractiveIndex ?? 2.6) : (calibrateSecondaryDiamond ? 2.417 : 2.6)) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           absorption: family === "diamante"
             ? initialDiamondAbsorptionFactor
             : useEmeraldBvhOptics
@@ -823,8 +827,8 @@ export async function createAurumDiamondBvhRuntime(options: {
           ...(family === "diamante" ? { environmentRotationEuler: getAurumDiamondEnvironmentRotationEuler(meshEnvironmentAlignment.rotationRadians + sourceEnvironmentOffset, meshEnvironmentAlignment.correctionQuaternion) } : {}),
         });
         let baseDiamondEnvironmentIntensity = prepared.diagnostics.environmentIntensity;
-        let baseDiamondReflectivity = family === "diamante" ? Number(diamondSourceParameters?.reflectivity ?? (isWhiteDiamondProfile ? 0.5 : 0.46)) : (prepared.material as any).reflectivity ?? 0.46;
-        let baseDiamondGamma = family === "diamante" ? Number(diamondSourceParameters?.gammaFactor ?? (isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09)) : 1.09;
+        let baseDiamondReflectivity = family === "diamante" ? (miniAurumDiamondMaterialReference ? 0.5 : Number(diamondSourceParameters?.reflectivity ?? (isWhiteDiamondProfile ? 0.5 : 0.46))) : (prepared.material as any).reflectivity ?? 0.46;
+        let baseDiamondGamma = family === "diamante" ? (miniAurumDiamondMaterialReference ? 1 : Number(diamondSourceParameters?.gammaFactor ?? (isWhiteDiamondProfile ? 1 : isPinkDiamond ? 0.90 : 1.09))) : 1.09;
         const initialDiamondProfileBaseline: AurumDiamondOpticalProfileBaseline = {
           profileId: activeGemId,
           dispersion: baseDiamondDispersion,
@@ -854,13 +858,13 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The protected center always receives exact 1:1 calibrated values.
           const effectiveTier = isProtectedCenter() ? "brilliant" : requestedTier;
           const profile = getAurumDiamondMicroOpticalProfile(effectiveTier);
-          const dispersion = baseDiamondDispersion * profile.dispersionScale;
-          const environmentIntensity = baseDiamondEnvironmentIntensity * profile.environmentIntensityScale;
+          const dispersion = miniAurumDiamondMaterialReference ? 0.01 : baseDiamondDispersion * profile.dispersionScale;
+          const environmentIntensity = miniAurumDiamondMaterialReference ? 1.30 : baseDiamondEnvironmentIntensity * profile.environmentIntensityScale;
           // Reflectivity and gamma are calibrated profile controls, not size
           // compensation. Keep their exact catalog values across MICRO/SMALL/
           // MEDIUM/BRILLIANT; size tiers continue to scale dispersion and energy.
-          const reflectivity = baseDiamondReflectivity;
-          const gamma = baseDiamondGamma;
+          const reflectivity = miniAurumDiamondMaterialReference ? 0.5 : baseDiamondReflectivity;
+          const gamma = miniAurumDiamondMaterialReference ? 1 : baseDiamondGamma;
           packageApi.setDiamondOptions(prepared.material, {
             dispersion,
             environmentIntensity,
@@ -1029,7 +1033,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (family === "diamante") {
               // One source of truth: the requested BVH quality determines
               // internal ray bounces for every diamond, regardless of size or color.
-              const rayBounces = diamondSourceParameters
+              const rayBounces = miniAurumDiamondMaterialReference ? 5 : diamondSourceParameters
                 ? Math.max(1, Math.min(8, Math.floor(Number(diamondSourceParameters.rayBounces ?? 5))))
                 : quality === "final" ? 5 : quality === "high" ? 4 : 3;
               packageApi.setDiamondOptions(prepared.material, { rayBounces });
